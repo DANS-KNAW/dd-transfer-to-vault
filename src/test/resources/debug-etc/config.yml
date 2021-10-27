@@ -1,0 +1,29 @@
+
+server:
+  applicationContextPath: /
+  adminContextPath: /
+  applicationConnectors:
+    - type: http
+      # Replace with port number unique for this service
+      port: 20000
+  adminConnectors:
+    - type: http
+      # Replace with port number unique for this service
+      port: 20001
+
+#
+# See https://www.dropwizard.io/en/latest/manual/configuration.html#logging
+#
+logging:
+  level: INFO
+  loggers:
+    "dans.knaw.nl":
+      level: TRACE
+      additive: false
+  appenders:
+    - type: console
+      logFormat: "%-5p [%d{ISO8601}] [%t] %c: %m%n%rEx"
+
+    - type: file
+      archive: false
+      currentLogFilename: data/dd-transfer-to-vault.log

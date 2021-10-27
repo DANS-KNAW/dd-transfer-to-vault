@@ -1,0 +1,9 @@
+# configuration for authorized and required reviewers
+* @DANS-KNAW/dataversedans-leads
+
+# code
+# no overrides
+
+# policies
+/.github/PULL_REQUEST_TEMPLATE.md @DANS-KNAW/dataversedans-leads
+/.github/CODEOWNERS @DANS-KNAW/dataversedans-leads

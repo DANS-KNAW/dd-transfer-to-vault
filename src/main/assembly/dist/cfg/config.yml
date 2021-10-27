@@ -1,0 +1,17 @@
+#
+# Module configuration file
+#
+# Please, modify the configuration below to match your environment. Also, delete and/or modify
+# this description.
+
+server:
+  applicationContextPath: /
+  adminContextPath: /
+  applicationConnectors:
+    - type: http
+      # Replace with port number unique for this service
+      port: 20000
+  adminConnectors:
+    - type: http
+      # Replace with port number unique for this service
+      port: 20001

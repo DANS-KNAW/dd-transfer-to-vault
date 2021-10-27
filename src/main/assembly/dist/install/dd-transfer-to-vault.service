@@ -1,0 +1,13 @@
+[Unit]
+Description=${project.name} Service
+
+[Service]
+ExecStart=/opt/dans.knaw.nl/dd-transfer-to-vault/bin/dd-transfer-to-vault server /etc/opt/dans.knaw.nl/dd-transfer-to-vault/config.yml
+# Java returns 143 even if the SIGTERM was handled correctly.
+SuccessExitStatus=143
+
+User=dd-transfer-to-vault
+Group=dd-transfer-to-vault
+
+[Install]
+WantedBy=multi-user.target
