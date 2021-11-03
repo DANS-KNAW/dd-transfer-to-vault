@@ -17,14 +17,25 @@
 package nl.knaw.dans.ttv;
 
 import io.dropwizard.Application;
+import io.dropwizard.db.PooledDataSourceFactory;
+import io.dropwizard.hibernate.HibernateBundle;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
+import nl.knaw.dans.ttv.core.TransferItem;
+import nl.knaw.dans.ttv.db.TransferItemDAO;
 
 public class DdTransferToVaultApplication extends Application<DdTransferToVaultConfiguration> {
 
     public static void main(final String[] args) throws Exception {
         new DdTransferToVaultApplication().run(args);
     }
+
+    private final HibernateBundle<DdTransferToVaultConfiguration> hibernate = new HibernateBundle<DdTransferToVaultConfiguration>(TransferItem.class) {
+        @Override
+        public PooledDataSourceFactory getDataSourceFactory(DdTransferToVaultConfiguration ddTransferToVaultConfiguration) {
+            return ddTransferToVaultConfiguration.getDataSourceFactory();
+        }
+    };
 
     @Override
     public String getName() {
@@ -33,12 +44,12 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
 
     @Override
     public void initialize(final Bootstrap<DdTransferToVaultConfiguration> bootstrap) {
-        // TODO: application initialization
+        bootstrap.addBundle(hibernate);
+
     }
 
     @Override
     public void run(final DdTransferToVaultConfiguration configuration, final Environment environment) {
-
     }
 
 }

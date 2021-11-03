@@ -19,9 +19,24 @@ import io.dropwizard.hibernate.AbstractDAO;
 import nl.knaw.dans.ttv.core.TransferItem;
 import org.hibernate.SessionFactory;
 
+import java.util.List;
+import java.util.Optional;
+
 public class TransferItemDAO extends AbstractDAO<TransferItem> {
 
     public TransferItemDAO(SessionFactory sessionFactory) {
         super(sessionFactory);
+    }
+
+    public Optional<TransferItem> findById(Long id) {
+        return Optional.ofNullable(get(id));
+    }
+
+    public TransferItem create(TransferItem transferItem) {
+        return persist(transferItem);
+    }
+
+    public List<TransferItem> findAll() {
+        return list(namedTypedQuery(TransferItem.TRANSFER_ITEM_FIND_ALL));
     }
 }

@@ -20,12 +20,19 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "transfer_queue")
+@NamedQueries({
+        @NamedQuery(name = "TransferItem.findAll", query = "SELECT t FROM TransferItem t"),
+})
 public class TransferItem {
+
+    public static final String TRANSFER_ITEM_FIND_ALL = "TransferItem.findAll";
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -53,12 +60,13 @@ public class TransferItem {
 
     }
 
-    public TransferItem(String datasetPid, String datasetVersion, int versionMajor, int versionMinor, String metadataFile) {
+    public TransferItem(String datasetPid, String datasetVersion, int versionMajor, int versionMinor, String metadataFile, LocalDateTime creationTime) {
         this.datasetPid = datasetPid;
         this.datasetVersion = datasetVersion;
         this.versionMajor = versionMajor;
         this.versionMinor = versionMinor;
         this.metadataFile = metadataFile;
+        this.creationTime = creationTime;
     }
 
     public long getId() {

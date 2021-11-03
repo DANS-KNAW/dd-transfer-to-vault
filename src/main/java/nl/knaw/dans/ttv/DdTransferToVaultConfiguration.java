@@ -24,11 +24,17 @@ import javax.sql.DataSource;
 import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 public class DdTransferToVaultConfiguration extends Configuration {
     @Valid
     @NotNull
     private DataSourceFactory database = new DataSourceFactory();
+
+    @NotNull
+    private List<Map<String, String>> inboxes = Collections.emptyList();
 
     @JsonProperty("database")
     public DataSourceFactory getDataSourceFactory() {
@@ -40,4 +46,13 @@ public class DdTransferToVaultConfiguration extends Configuration {
         this.database = dataSourceFactory;
     }
 
+    @JsonProperty("inboxes")
+    public List<Map<String, String>> getInboxes() {
+        return inboxes;
+    }
+
+    @JsonProperty("inboxes")
+    public void setInboxes(List<Map<String, String>> inboxes) {
+        this.inboxes = inboxes;
+    }
 }
