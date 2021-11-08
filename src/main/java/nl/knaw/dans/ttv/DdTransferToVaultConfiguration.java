@@ -19,14 +19,17 @@ package nl.knaw.dans.ttv;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.dropwizard.Configuration;
 import io.dropwizard.db.DataSourceFactory;
+import nl.knaw.dans.ttv.core.Inbox;
 
 import javax.sql.DataSource;
 import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
+import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class DdTransferToVaultConfiguration extends Configuration {
     @Valid
@@ -54,5 +57,13 @@ public class DdTransferToVaultConfiguration extends Configuration {
     @JsonProperty("inboxes")
     public void setInboxes(List<Map<String, String>> inboxes) {
         this.inboxes = inboxes;
+    }
+
+    public List<Inbox> buildInboxes(){
+        List<Inbox> inboxList = new java.util.ArrayList<>(Collections.emptyList());
+        for (Map<String, String> inbox : inboxes){
+            inboxList.add(new Inbox(inbox.get("name"), Paths.get(inbox.get("path"))));
+        }
+        return inboxList;
     }
 }
