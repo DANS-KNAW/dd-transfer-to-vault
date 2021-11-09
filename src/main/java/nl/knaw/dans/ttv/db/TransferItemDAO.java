@@ -39,4 +39,8 @@ public class TransferItemDAO extends AbstractDAO<TransferItem> {
     public List<TransferItem> findAll() {
         return list(namedTypedQuery(TransferItem.TRANSFER_ITEM_FIND_ALL));
     }
+
+    public List<TransferItem> findAllStatusExtract() {
+        return list(namedTypedQuery(TransferItem.TRANSFER_ITEM_FIND_ALL_STATUS_EXTRACT));
+    }
 }
