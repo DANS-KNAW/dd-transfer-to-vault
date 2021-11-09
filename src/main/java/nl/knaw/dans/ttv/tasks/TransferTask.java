@@ -72,12 +72,9 @@ public class TransferTask extends Task implements Runnable {
 
     public void buildTransferQueue() throws IOException {
         //walk inbox and filter .zip files
-        List<Path> datasetVersionExportPaths = walkInboxPathsAndFilterDve(inboxes);
-
         //match file name to pattern and group pid, version, creationTime and metadata file path -> create TransferItem
-        datasetVersionExportPaths.forEach((datasetVersionExportPath) -> {
-            transferItemDAO.create(dissectDve(datasetVersionExportPath));
-        });
+        walkInboxPathsAndFilterDve(inboxes).forEach((datasetVersionExportPath) -> transferItemDAO.create(dissectDve(datasetVersionExportPath)));
+
         //TODO for items already in the database, verify that they are consistent with what is found on disk.
 
     }
