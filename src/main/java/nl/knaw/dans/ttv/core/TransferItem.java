@@ -95,7 +95,7 @@ public class TransferItem {
     private long bagSize;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "transfer_status")
+    @Column(name = "transfer_status", nullable = false)
     private TransferStatus transferStatus;
 
     @Column(name = "oai_ore")
@@ -117,12 +117,13 @@ public class TransferItem {
 
     }
 
-    public TransferItem(String datasetPid, int versionMajor, int versionMinor, String metadataFile, LocalDateTime creationTime) {
+    public TransferItem(String datasetPid, int versionMajor, int versionMinor, String metadataFile, LocalDateTime creationTime, TransferStatus transferStatus) {
         this.datasetPid = datasetPid;
         this.versionMajor = versionMajor;
         this.versionMinor = versionMinor;
         this.metadataFile = metadataFile;
         this.creationTime = creationTime;
+        this.transferStatus = transferStatus;
     }
 
     public long getId() {

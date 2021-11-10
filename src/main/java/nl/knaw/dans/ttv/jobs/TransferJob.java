@@ -13,18 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ttv.tasks;
+package nl.knaw.dans.ttv.jobs;
 
-import io.dropwizard.servlets.tasks.Task;
 import nl.knaw.dans.ttv.core.Inbox;
 import nl.knaw.dans.ttv.core.TransferItem;
 import nl.knaw.dans.ttv.db.TransferItemDAO;
-import nl.knaw.dans.ttv.exceptions.InvalidTransferItemException;
+import nl.knaw.dans.ttv.core.InvalidTransferItemException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
@@ -32,24 +30,23 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.zip.ZipFile;
 
-public class TransferTask extends Task implements Runnable {
+public class TransferJob implements Runnable {
 
-    private static final Logger log = LoggerFactory.getLogger(TransferTask.class);
+    private static final Logger log = LoggerFactory.getLogger(TransferJob.class);
     private static final String expectedFilePattern = "" + "(?<doi>doi-10-[0-9]{4,}-[A-Za-z0-9]{2,}-[A-Za-z0-9]{6})-?" + "(?<schema>datacite)?.?" + "v(?<major>[0-9]+).(?<minor>[0-9]+)" + "(?<extension>.zip|.xml)";
     private static final Pattern pattern = Pattern.compile(expectedFilePattern);
     private final List<Inbox> inboxes;
     private final TransferItemDAO transferItemDAO;
 
 
-    public TransferTask(List<Inbox> inboxes, TransferItemDAO transferItemDAO) {
-        super(TransferTask.class.getName());
+    public TransferJob(List<Inbox> inboxes, TransferItemDAO transferItemDAO) {
         this.inboxes = inboxes;
         this.transferItemDAO = transferItemDAO;
     }
@@ -65,18 +62,13 @@ public class TransferTask extends Task implements Runnable {
 
     }
 
-    @Override
-    public void execute(Map<String, List<String>> map, PrintWriter printWriter){
-        run();
-    }
-
     public void buildTransferQueue() throws IOException {
-        //walk inbox and filter .zip files
-        //match file name to pattern and group pid, version, creationTime and metadata file path -> create TransferItem
-        walkInboxPathsAndFilterDve(inboxes).forEach((datasetVersionExportPath) -> transferItemDAO.create(dissectDve(datasetVersionExportPath)));
-
-        //TODO for items already in the database, verify that they are consistent with what is found on disk.
-
+        List<TransferItem> itemsOnDisk = walkInboxPathsAndFilterDve(inboxes).stream().map(this::dissectDve).collect(Collectors.toList());
+        itemsOnDisk.forEach((transferItemDAO::create));
+        if (!itemsOnDisk.containsAll(transferItemDAO.findAllStatusExtract())) {
+            log.error("Inconsistency found with TransferItems found on disk and in database");
+            throw new InvalidTransferItemException("Inconsistency found with TransferItems found on disk and in database");
+        }
     }
 
     public List<Path> walkInboxPathsAndFilterDve(List<Inbox> inboxes) throws IOException {

@@ -24,7 +24,7 @@ import io.dropwizard.setup.Environment;
 import nl.knaw.dans.ttv.core.Inbox;
 import nl.knaw.dans.ttv.core.TransferItem;
 import nl.knaw.dans.ttv.db.TransferItemDAO;
-import nl.knaw.dans.ttv.tasks.TransferTask;
+import nl.knaw.dans.ttv.jobs.TransferJob;
 
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -57,11 +57,7 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
     public void run(final DdTransferToVaultConfiguration configuration, final Environment environment) {
         final TransferItemDAO transferItemDAO = new TransferItemDAO(hibernateBundle.getSessionFactory());
         final List<Inbox> inboxes = configuration.buildInboxes();
-        final TransferTask transferTask = new TransferTask(inboxes, transferItemDAO);
-
-        /*adds the transfer task to a callable list which can be invoked with: curl -X POST http://localhost:20001/tasks/nl.knaw.dans.ttv.tasks.TransferTask
-        https://www.dropwizard.io/en/latest/manual/core.html#tasks*/
-        environment.admin().addTask(transferTask);
+        final TransferJob transferJob = new TransferJob(inboxes, transferItemDAO);
 
         //TODO make config parameters configurable
         ExecutorService executorService = environment.lifecycle()
@@ -70,7 +66,7 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
                 .workQueue(new LinkedBlockingDeque<>(100))
                 .build();
 
-        executorService.execute(transferTask);
+        executorService.execute(transferJob);
     }
 
 }
