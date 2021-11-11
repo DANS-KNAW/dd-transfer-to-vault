@@ -19,6 +19,7 @@ package nl.knaw.dans.ttv;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.dropwizard.Configuration;
 import io.dropwizard.db.DataSourceFactory;
+import io.dropwizard.server.DefaultServerFactory;
 import nl.knaw.dans.ttv.core.Inbox;
 
 import javax.sql.DataSource;
@@ -36,8 +37,22 @@ public class DdTransferToVaultConfiguration extends Configuration {
     @NotNull
     private DataSourceFactory database = new DataSourceFactory();
 
+    @Valid
+    @NotNull
+    private DefaultServerFactory server = new DefaultServerFactory();
+
     @NotNull
     private List<Map<String, String>> inboxes = Collections.emptyList();
+
+    @JsonProperty("server")
+    public DefaultServerFactory getDefaultServerFactory() {
+        return server;
+    }
+
+    @JsonProperty("server")
+    public void setDefaultServerFactory(DefaultServerFactory defaultServerFactory) {
+        this.server = defaultServerFactory;
+    }
 
     @JsonProperty("database")
     public DataSourceFactory getDataSourceFactory() {

@@ -19,12 +19,15 @@ package nl.knaw.dans.ttv;
 import io.dropwizard.Application;
 import io.dropwizard.db.PooledDataSourceFactory;
 import io.dropwizard.hibernate.HibernateBundle;
+import io.dropwizard.server.DefaultServerFactory;
+import io.dropwizard.server.ServerFactory;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import nl.knaw.dans.ttv.core.Inbox;
 import nl.knaw.dans.ttv.core.TransferItem;
 import nl.knaw.dans.ttv.db.TransferItemDAO;
 import nl.knaw.dans.ttv.jobs.TransferJob;
+import org.eclipse.jetty.server.Server;
 
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -38,8 +41,8 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
 
     private final HibernateBundle<DdTransferToVaultConfiguration> hibernateBundle = new HibernateBundle<DdTransferToVaultConfiguration>(TransferItem.class) {
         @Override
-        public PooledDataSourceFactory getDataSourceFactory(DdTransferToVaultConfiguration ddTransferToVaultConfiguration) {
-            return ddTransferToVaultConfiguration.getDataSourceFactory();
+        public PooledDataSourceFactory getDataSourceFactory(DdTransferToVaultConfiguration configuration) {
+            return configuration.getDataSourceFactory();
         }
     };
 
@@ -58,12 +61,13 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
         final TransferItemDAO transferItemDAO = new TransferItemDAO(hibernateBundle.getSessionFactory());
         final List<Inbox> inboxes = configuration.buildInboxes();
         final TransferJob transferJob = new TransferJob(inboxes, transferItemDAO);
+        final DefaultServerFactory server = configuration.getDefaultServerFactory();
 
-        //TODO make config parameters configurable
         ExecutorService executorService = environment.lifecycle()
-                .executorService("TransferQueue")
-                .maxThreads(10)
-                .workQueue(new LinkedBlockingDeque<>(100))
+                .executorService(DdTransferToVaultApplication.class.getName())
+                .maxThreads(server.getMaxThreads())
+                .minThreads(server.getMinThreads())
+                .workQueue(new LinkedBlockingDeque<>(server.getMaxQueuedRequests()))
                 .build();
 
         executorService.execute(transferJob);

@@ -19,6 +19,7 @@ import io.dropwizard.testing.junit5.DAOTestExtension;
 import io.dropwizard.testing.junit5.DropwizardExtensionsSupport;
 import org.hibernate.exception.ConstraintViolationException;
 import nl.knaw.dans.ttv.core.TransferItem;
+import org.hsqldb.jdbc.JDBCDriver;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -38,6 +39,7 @@ class TransferItemDAOTest {
 
     public DAOTestExtension daoTestRule = DAOTestExtension.newBuilder()
             .addEntityClass(TransferItem.class)
+            .setDriver("org.hsqldb.jdbcDriver")
             .build();
 
     private TransferItemDAO transferItemDAO;

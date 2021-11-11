@@ -337,12 +337,4 @@ public class TransferItem {
         TransferItem that = (TransferItem) o;
         return versionMajor == that.versionMajor && versionMinor == that.versionMinor && bagSize == that.bagSize && datasetPid.equals(that.datasetPid) && Objects.equals(datasetVersion, that.datasetVersion) && creationTime.equals(that.creationTime) && metadataFile.equals(that.metadataFile) && Objects.equals(bagId, that.bagId) && Objects.equals(nbn, that.nbn) && Objects.equals(otherId, that.otherId) && Objects.equals(otherIdVersion, that.otherIdVersion) && Objects.equals(swordToken, that.swordToken) && Objects.equals(datasetDvInstance, that.datasetDvInstance) && Objects.equals(bagChecksum, that.bagChecksum) && Objects.equals(queueDate, that.queueDate) && transferStatus == that.transferStatus && Arrays.equals(oaiOre, that.oaiOre) && Arrays.equals(pidMapping, that.pidMapping) && Objects.equals(aipTarEntryName, that.aipTarEntryName) && Objects.equals(aipsTar, that.aipsTar) && Objects.equals(bagDepositDate, that.bagDepositDate);
     }
-
-    @Override
-    public int hashCode() {
-        int result = Objects.hash(id, datasetPid, datasetVersion, versionMajor, versionMinor, creationTime, metadataFile, bagId, nbn, otherId, otherIdVersion, swordToken, datasetDvInstance, bagChecksum, queueDate, bagSize, transferStatus, aipTarEntryName, aipsTar, bagDepositDate);
-        result = 31 * result + Arrays.hashCode(oaiOre);
-        result = 31 * result + Arrays.hashCode(pidMapping);
-        return result;
-    }
 }

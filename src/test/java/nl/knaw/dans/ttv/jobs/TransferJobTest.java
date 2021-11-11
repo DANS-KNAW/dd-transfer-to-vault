@@ -21,6 +21,7 @@ import nl.knaw.dans.ttv.core.Inbox;
 import nl.knaw.dans.ttv.core.InvalidTransferItemException;
 import nl.knaw.dans.ttv.core.TransferItem;
 import nl.knaw.dans.ttv.db.TransferItemDAO;
+import org.hsqldb.jdbc.JDBCDriver;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -47,6 +48,7 @@ class TransferJobTest {
 
     public DAOTestExtension daoTestRule = DAOTestExtension.newBuilder()
             .addEntityClass(TransferItem.class)
+            .setDriver("org.hsqldb.jdbcDriver")
             .build();
 
     @BeforeEach
