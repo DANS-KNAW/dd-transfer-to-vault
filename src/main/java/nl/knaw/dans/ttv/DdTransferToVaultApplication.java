@@ -19,19 +19,16 @@ package nl.knaw.dans.ttv;
 import io.dropwizard.Application;
 import io.dropwizard.db.PooledDataSourceFactory;
 import io.dropwizard.hibernate.HibernateBundle;
-import io.dropwizard.server.DefaultServerFactory;
-import io.dropwizard.server.ServerFactory;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import nl.knaw.dans.ttv.core.Inbox;
+import nl.knaw.dans.ttv.core.InboxWatcher;
 import nl.knaw.dans.ttv.core.TransferItem;
+import nl.knaw.dans.ttv.core.TransferTask;
 import nl.knaw.dans.ttv.db.TransferItemDAO;
-import nl.knaw.dans.ttv.jobs.TransferJob;
-import org.eclipse.jetty.server.Server;
 
 import java.util.List;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingDeque;
 
 public class DdTransferToVaultApplication extends Application<DdTransferToVaultConfiguration> {
 
@@ -60,17 +57,11 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
     public void run(final DdTransferToVaultConfiguration configuration, final Environment environment) {
         final TransferItemDAO transferItemDAO = new TransferItemDAO(hibernateBundle.getSessionFactory());
         final List<Inbox> inboxes = configuration.buildInboxes();
-        final TransferJob transferJob = new TransferJob(inboxes, transferItemDAO);
-        final DefaultServerFactory server = configuration.getDefaultServerFactory();
+        //final TransferTask transferTask = new TransferTask(inboxes, transferItemDAO);
+        ExecutorService executorService = configuration.getJobQueue().build(environment);
 
-        ExecutorService executorService = environment.lifecycle()
-                .executorService(DdTransferToVaultApplication.class.getName())
-                .maxThreads(server.getMaxThreads())
-                .minThreads(server.getMinThreads())
-                .workQueue(new LinkedBlockingDeque<>(server.getMaxQueuedRequests()))
-                .build();
-
-        executorService.execute(transferJob);
+        final InboxWatcher inboxWatcher = new InboxWatcher(inboxes, transferItemDAO, executorService);
+        //executorService.execute(transferTask);
     }
 
 }
