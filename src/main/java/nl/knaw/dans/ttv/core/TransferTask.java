@@ -15,58 +15,24 @@
  */
 package nl.knaw.dans.ttv.core;
 
-import nl.knaw.dans.ttv.db.TransferItemDAO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.util.List;
-import java.util.stream.Collectors;
-
-public class TransferTask extends Task<TransferItem> {
+public class TransferTask<T> extends Task<TransferItem> {
 
     private static final Logger log = LoggerFactory.getLogger(TransferTask.class);
 
-    private final TransferItem transferItem;
-
 
     public TransferTask(TransferItem transferItem) {
-        this.transferItem = transferItem;
+        super(transferItem);
     }
 
     @Override
-    public void run() {
+    public TransferItem call() throws Exception {
         log.info("Running task" + this);
         extractMetadata();
-
-
-        /*List<TransferItem> itemsOnDisk;
-        try {
-            itemsOnDisk = walkTransferInboxPathsAndFilterDve(inboxes).stream().map(this::transformDvePathToTransferItem).collect(Collectors.toList());
-        } catch (IOException e) {
-            throw new InvalidTransferItemException("Invalid TransferItem",e);
-        }
-        itemsOnDisk.forEach(transferItemDAO::create);
-        if (!itemsOnDisk.containsAll(transferItemDAO.findAllStatusExtract())) {
-            log.error("Inconsistency found with TransferItems found on disk and in database");
-            throw new InvalidTransferItemException("Inconsistency found with TransferItems found on disk and in database");
-        }*/
-
+        return getTransferItem();
     }
-
-    public TransferItem getTransferItem() {
-        return transferItem;
-    }
-
-    /*public void buildTransferQueue() throws IOException {
-        *//*List<TransferItem> itemsOnDisk = walkTransferInboxPathsAndFilterDve(inboxes).stream().map(this::transformDvePathToTransferItem).collect(Collectors.toList());
-        itemsOnDisk.forEach((transferItemDAO::create));
-        if (!itemsOnDisk.containsAll(transferItemDAO.findAllStatusExtract())) {
-            log.error("Inconsistency found with TransferItems found on disk and in database");
-            throw new InvalidTransferItemException("Inconsistency found with TransferItems found on disk and in database");
-        }*//*
-    }*/
-
 
     public void extractMetadata() {
         //TODO pre condition: transfer-inbox contains Dataset-Version-Exports (DVE) as exported from the Data Station, without the additional files
@@ -81,5 +47,6 @@ public class TransferTask extends Task<TransferItem> {
 
         //TODO post condition: TransferItem created, xml-file deleted
     }
+
 
 }
