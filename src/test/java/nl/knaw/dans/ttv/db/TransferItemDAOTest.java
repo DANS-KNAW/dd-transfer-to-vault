@@ -82,5 +82,4 @@ class TransferItemDAOTest {
         assertThatExceptionOfType(ConstraintViolationException.class).isThrownBy(() ->
                 daoTestRule.inTransaction(() -> transferItemDAO.create(new TransferItem(null, 1, 0, "src/test/resources/doi-10-5072-fk2-p4phv7v-1-0/metadata/oai-ore.jsonld", LocalDateTime.parse("2020-08-03T00:15:22"), TransferItem.TransferStatus.EXTRACT))));
     }
-
 }
