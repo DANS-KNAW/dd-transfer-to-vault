@@ -68,7 +68,7 @@ class InboxTest{
             transferItemDAO.createOrUpdate(new TransferItem("doi:10.5072/FK2/QZ0LJQ", 1, 2, "src/test/resources/doi-10-5072-fk2-qz0ljqv-1-2/metadata/oai-ore.jsonld", LocalDateTime.parse("2020-08-03T00:15:22"), TransferItem.TransferStatus.EXTRACT));
         });
         List<Task<TransferItem>> sortedTransferItemTasks = transferItemDAO.findAllStatusExtract().stream()
-                .map((Function<TransferItem, TransferTask<TransferItem>>) TransferTask::new)
+                .map(transferItem -> new TransferTask<TransferItem>(transferItem, transferItemDAO))
                 .sorted(Inbox.TASK_QUEUE_DATE_COMPARATOR)
                 .collect(Collectors.toList());
         assertThat(sortedTransferItemTasks.get(0).getTransferItem().getCreationTime()).isEqualTo(LocalDateTime.parse("2007-12-03T10:15:30"));

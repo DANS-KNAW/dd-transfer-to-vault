@@ -119,6 +119,7 @@ public class Inbox {
             } catch (IOException e) {
                 throw new InvalidTransferItemException("Invalid TransferItem",e);
             }
+            transferItem.setDveFilePath(String.valueOf(datasetVersionExportPath));
             transferItem.setTransferStatus(TransferItem.TransferStatus.EXTRACT);
             transferItem.setDatasetDvInstance(name);
         }
