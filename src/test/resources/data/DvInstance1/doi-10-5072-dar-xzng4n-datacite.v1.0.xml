@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource xsi:schemaLocation="http://datacite.org/schema/kernel-4 http://schema.datacite.org/meta/kernel-4/metadata.xsd"
+          xmlns="http://datacite.org/schema/kernel-4"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <identifier identifierType="DOI">10.5072/DAR/XZNG4N</identifier>
+    <creators><creator><creatorName>Golino, Hudson</creatorName><affiliation>(Universidade Federal de Minas Gerais)</affiliation></creator><creator><creatorName>Gomes, Cristiano</creatorName><affiliation>(Universidade Federal de Minas Gerais)</affiliation></creator></creators>
+    <titles>
+        <title>Data from the BAFACALO project: The Brazilian Intelligence Battery based on two state-of-the-art models: Carroll's model and the CHC model.</title>
+    </titles>
+    <publisher>DANS Archaeology Data Station (dev)</publisher>
+    <publicationYear>2021</publicationYear>
+    <resourceType resourceTypeGeneral="Dataset"/>
+    
+    <descriptions>
+        <description descriptionType="Abstract">The BAFACALO&apos;s dataset presents answers from 292 Brazilian high-school students from a public school to 18 cognitive tests developed to assess different hierarchical levels of the intelligence structure. Most of the participants were girls (53.40%) and their age ranged from 14 to 20 years old (Mean = 15.71, Standard Deviation = 1.15). The BAFACALO&apos;s tests were constructed by Gomes (2005, 2010) based on the Educational Testing Service&apos;s Kit of Factor-Referenced Cognitive Tests (Ekstrom, French, Harman &amp; Dirmen, 1976).</description>
+    </descriptions>
+    <contributors></contributors>
+</resource>

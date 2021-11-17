@@ -16,6 +16,7 @@
 package nl.knaw.dans.ttv.core;
 
 import nl.knaw.dans.ttv.db.TransferItemDAO;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,12 +29,10 @@ import java.time.ZoneId;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Objects;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.zip.ZipFile;
 
 public class Inbox {
 
@@ -54,19 +53,19 @@ public class Inbox {
         this.path = path;
     }
 
-    public String getName() {
+    /*public String getName() {
         return name;
     }
 
     public Path getPath() {
         return path;
-    }
+    }*/
 
     public List<Task<TransferItem>> createTransferItemTasks(TransferItemDAO transferItemDAO) {
         List<Task<TransferItem>> transferItemTasks = new java.util.ArrayList<>(Collections.emptyList());
         List<TransferItem> transferItemsOnDisk = createTransferItemsFromDisk();
 
-        transferItemsOnDisk.forEach(transferItemDAO::create);
+        transferItemsOnDisk.forEach(transferItemDAO::createOrUpdate);
         List<TransferItem> transferItemsInDB = transferItemDAO.findAllStatusExtract();
 
         // consistency check
@@ -75,7 +74,7 @@ public class Inbox {
             throw new InvalidTransferItemException("Inconsistency found with TransferItems found on disk and in database");
         } else {
             transferItemTasks.addAll(transferItemsInDB.stream()
-                    .map((Function<TransferItem, TransferTask<TransferItem>>) TransferTask::new)
+                    .map(transferItem -> new TransferTask<TransferItem>(transferItem, transferItemDAO))
                     .collect(Collectors.toList()));
         }
         return transferItemTasks;
@@ -114,18 +113,14 @@ public class Inbox {
                 if (Files.getAttribute(datasetVersionExportPath, "creationTime") != null){
                     FileTime creationTime = (FileTime) Files.getAttribute(datasetVersionExportPath, "creationTime");
                     transferItem.setCreationTime(LocalDateTime.ofInstant(creationTime.toInstant(), ZoneId.systemDefault()));
+                    transferItem.setBagChecksum(new DigestUtils("SHA-256").digestAsHex(Files.readAllBytes(datasetVersionExportPath)));
+                    transferItem.setBagSize(Files.size(datasetVersionExportPath));
                 }
             } catch (IOException e) {
                 throw new InvalidTransferItemException("Invalid TransferItem",e);
             }
-            String metadataFilePath;
-            try {
-                metadataFilePath = Objects.requireNonNull(new ZipFile(datasetVersionExportPath.toFile()).stream().filter(zipEntry -> zipEntry.getName().endsWith(".jsonld")).findAny().orElse(null)).getName();
-            } catch (IOException e) {
-                throw new InvalidTransferItemException("Invalid TransferItem",e);
-            }
-            transferItem.setMetadataFile(metadataFilePath);
             transferItem.setTransferStatus(TransferItem.TransferStatus.EXTRACT);
+            transferItem.setDatasetDvInstance(name);
         }
         return transferItem;
     }

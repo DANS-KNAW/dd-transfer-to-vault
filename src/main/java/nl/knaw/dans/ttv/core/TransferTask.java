@@ -15,38 +15,67 @@
  */
 package nl.knaw.dans.ttv.core;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import nl.knaw.dans.ttv.db.TransferItemDAO;
+import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Paths;
+import java.time.LocalDateTime;
+import java.util.Objects;
+import java.util.zip.ZipFile;
 
 public class TransferTask<T> extends Task<TransferItem> {
 
     private static final Logger log = LoggerFactory.getLogger(TransferTask.class);
 
 
-    public TransferTask(TransferItem transferItem) {
-        super(transferItem);
+    public TransferTask(TransferItem transferItem, TransferItemDAO transferItemDAO) {
+        super(transferItem, transferItemDAO);
     }
 
     @Override
     public TransferItem call() throws Exception {
         log.info("Running task" + this);
         extractMetadata();
-        return getTransferItem();
+        return transferItemDAO.createOrUpdate(transferItem);
     }
 
-    public void extractMetadata() {
-        //TODO pre condition: transfer-inbox contains Dataset-Version-Exports (DVE) as exported from the Data Station, without the additional files
-        //
+    public void extractMetadata() throws IOException {
+        ZipFile datasetVersionExport = new ZipFile(Paths.get(transferItem.getDveFilePath()).toFile());
+        String metadataFilePath = Objects.requireNonNull(datasetVersionExport.stream()
+                .filter(zipEntry -> zipEntry.getName().endsWith(".jsonld"))
+                .findAny().orElse(null)).getName();
+        String pidMappingFilePath = Objects.requireNonNull(datasetVersionExport.stream()
+                .filter(zipEntry -> zipEntry.getName().contains("pid-mapping.txt"))
+                .findAny().orElse(null)).getName();
 
-        /* TODO Extract PID and version from DVE name
-         * TODO Using PID and version, obtain dataset metadata, including Data Vault extension metadata, from DVE oai-ore.jsonld. This yields: DV PID, DV PID version, bagID, NBN, Other ID, Other ID version, SWORD token from Data Vault extension metadata
-         * TODO Obtain Source DV instance from directory in which DVE resides
-         * TODO Compute hash over zipped DVE to use as BagChecksum
-         * TODO Update TransferItem with all the extracted metadata. Update the status to MOVE
-         *  */
+        byte[] pidMapping = IOUtils.toByteArray(datasetVersionExport.getInputStream(datasetVersionExport.getEntry(pidMappingFilePath)));
+        byte[] oaiOre = IOUtils.toByteArray(datasetVersionExport.getInputStream(datasetVersionExport.getEntry(metadataFilePath)));
 
-        //TODO post condition: TransferItem created, xml-file deleted
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonNode jsonNode = objectMapper.readTree(oaiOre);
+
+        String nbn = jsonNode.get("ore:describes").get("dansDataVaultMetadata:NBN").toString();
+        String dvPidVersion = jsonNode.get("ore:describes").get("dansDataVaultMetadata:DV PID Version").toString();
+        String bagId = jsonNode.get("ore:describes").get("dansDataVaultMetadata:Bag ID").toString();
+
+        //TODO Other ID, Other ID Version and SWORD token missing
+        transferItem.setPidMapping(pidMapping);
+        transferItem.setOaiOre(oaiOre);
+        transferItem.setNbn(nbn);
+        transferItem.setDatasetVersion(dvPidVersion);
+        transferItem.setBagId(bagId);
+        transferItem.setQueueDate(LocalDateTime.now());
+        transferItem.setTransferStatus(TransferItem.TransferStatus.MOVE);
     }
+
+
 
 
 }

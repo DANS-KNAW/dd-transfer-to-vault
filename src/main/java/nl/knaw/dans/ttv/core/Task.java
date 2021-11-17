@@ -15,14 +15,18 @@
  */
 package nl.knaw.dans.ttv.core;
 
+import nl.knaw.dans.ttv.db.TransferItemDAO;
+
 import java.util.concurrent.Callable;
 
 public abstract class Task<T> implements Callable<TransferItem> {
 
-    private final TransferItem transferItem;
+    protected final TransferItem transferItem;
+    protected final TransferItemDAO transferItemDAO;
 
-    protected Task(TransferItem transferItem) {
+    protected Task(TransferItem transferItem, TransferItemDAO transferItemDAO) {
         this.transferItem = transferItem;
+        this.transferItemDAO = transferItemDAO;
     }
 
     public TransferItem getTransferItem() {

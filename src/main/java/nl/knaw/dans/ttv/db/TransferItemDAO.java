@@ -32,7 +32,7 @@ public class TransferItemDAO extends AbstractDAO<TransferItem> {
         return Optional.ofNullable(get(id));
     }
 
-    public TransferItem create(TransferItem transferItem) {
+    public TransferItem createOrUpdate(TransferItem transferItem) {
         return persist(transferItem);
     }
 
