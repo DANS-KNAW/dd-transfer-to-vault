@@ -19,7 +19,7 @@ import nl.knaw.dans.ttv.db.TransferItemDAO;
 
 import java.util.concurrent.Callable;
 
-public abstract class Task<T> implements Callable<TransferItem> {
+public abstract class Task implements Callable<TransferItem> {
 
     protected final TransferItem transferItem;
     protected final TransferItemDAO transferItemDAO;

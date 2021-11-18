@@ -24,11 +24,14 @@ import io.dropwizard.setup.Environment;
 import nl.knaw.dans.ttv.core.Inbox;
 import nl.knaw.dans.ttv.core.Task;
 import nl.knaw.dans.ttv.core.TransferItem;
+import nl.knaw.dans.ttv.core.TransferTask;
 import nl.knaw.dans.ttv.db.TransferItemDAO;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 
 public class DdTransferToVaultApplication extends Application<DdTransferToVaultConfiguration> {
 
@@ -57,15 +60,27 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
     public void run(final DdTransferToVaultConfiguration configuration, final Environment environment) {
         final TransferItemDAO transferItemDAO = new TransferItemDAO(hibernateBundle.getSessionFactory());
         final List<Inbox> inboxes = configuration.buildInboxes();
+        final ExecutorService executorService = configuration.getJobQueue().build(environment);
 
         //get a list of sorted(creationTime) TransferTasks containing TransferItems, which have been checked for consistency disk/db
-        List<Task<TransferItem>> tasks = new java.util.ArrayList<>(Collections.emptyList());
-        for (Inbox inbox: inboxes) tasks.addAll(inbox.createTransferItemTasks(transferItemDAO));
+        List<Task> tasks = new java.util.ArrayList<>(Collections.emptyList());
+        for (Inbox inbox: inboxes) {
+            inbox.setSessionFactory(hibernateBundle.getSessionFactory());
+            inbox.setTransferItemDAO(transferItemDAO);
+            tasks.addAll(inbox.createTransferItemTasks());
+        }
         tasks.sort(Inbox.TASK_QUEUE_DATE_COMPARATOR);
+        List<Future<TransferItem>> futures = new java.util.ArrayList<>(Collections.emptyList());
 
-        ExecutorService executorService = configuration.getJobQueue().build(environment);
         try {
-            executorService.invokeAll(tasks);
+            futures.addAll(executorService.invokeAll(tasks));
+            futures.forEach(transferItemFuture -> {
+                try {
+                    System.out.println(transferItemFuture.get().toString());
+                } catch (InterruptedException | ExecutionException e) {
+                    e.printStackTrace();
+                }
+            });
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

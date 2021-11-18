@@ -99,9 +99,11 @@ public class TransferItem {
     private TransferStatus transferStatus;
 
     @Column(name = "oai_ore")
+    @org.hibernate.annotations.Type( type="materialized_blob" )
     private byte[] oaiOre;
 
     @Column(name = "pid_mapping")
+    @org.hibernate.annotations.Type( type="materialized_blob" )
     private byte[] pidMapping;
 
     @Column(name = "aip_tar_entry_name")

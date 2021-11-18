@@ -17,20 +17,19 @@ package nl.knaw.dans.ttv.core;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.dropwizard.hibernate.UnitOfWork;
 import nl.knaw.dans.ttv.db.TransferItemDAO;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.zip.ZipFile;
 
-public class TransferTask<T> extends Task<TransferItem> {
+public class TransferTask extends Task {
 
     private static final Logger log = LoggerFactory.getLogger(TransferTask.class);
 
@@ -43,9 +42,10 @@ public class TransferTask<T> extends Task<TransferItem> {
     public TransferItem call() throws Exception {
         log.info("Running task" + this);
         extractMetadata();
-        return transferItemDAO.createOrUpdate(transferItem);
+        return transferItem;
     }
 
+    @UnitOfWork
     public void extractMetadata() throws IOException {
         ZipFile datasetVersionExport = new ZipFile(Paths.get(transferItem.getDveFilePath()).toFile());
         String metadataFilePath = Objects.requireNonNull(datasetVersionExport.stream()
@@ -73,6 +73,7 @@ public class TransferTask<T> extends Task<TransferItem> {
         transferItem.setBagId(bagId);
         transferItem.setQueueDate(LocalDateTime.now());
         transferItem.setTransferStatus(TransferItem.TransferStatus.MOVE);
+        transferItemDAO.save(transferItem);
     }
 
 

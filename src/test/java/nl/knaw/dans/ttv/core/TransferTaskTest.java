@@ -15,22 +15,69 @@
  */
 package nl.knaw.dans.ttv.core;
 
+import io.dropwizard.lifecycle.setup.ExecutorServiceBuilder;
+import io.dropwizard.testing.junit5.DAOTestExtension;
+import io.dropwizard.testing.junit5.DropwizardExtensionsSupport;
+import nl.knaw.dans.ttv.db.TransferItemDAO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
-import static org.junit.jupiter.api.Assertions.*;
+import java.nio.file.Paths;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
+@ExtendWith(DropwizardExtensionsSupport.class)
 class TransferTaskTest {
+
+    private final DAOTestExtension daoTestRule = DAOTestExtension.newBuilder()
+            .addEntityClass(TransferItem.class)
+            .build();
+
+    private final Inbox inbox = new Inbox("DvInstance1", Paths.get("src/test/resources/data/DvInstance1"));
+    ExecutorService executorService;
+
+    private List<Task> tasks;
+    private TransferItemDAO transferItemDAO;
 
     @BeforeEach
     void setUp() {
+        executorService =
+                new ThreadPoolExecutor(1, 5, 60000L, TimeUnit.MILLISECONDS,
+                        new LinkedBlockingQueue<>(5));
+        transferItemDAO = new TransferItemDAO(daoTestRule.getSessionFactory());
+        inbox.setSessionFactory(daoTestRule.getSessionFactory());
+        inbox.setTransferItemDAO(transferItemDAO);
+        tasks = inbox.createTransferItemTasks();
+        tasks.sort(Inbox.TASK_QUEUE_DATE_COMPARATOR);
     }
 
     @Test
-    void call() {
+    void call() throws Exception {
+        List<Future<TransferItem>> futures = executorService.invokeAll(tasks);
+        Objects.requireNonNull(futures).forEach(transferItemFuture -> {
+            assertThat(transferItemFuture.isDone()).isTrue();
+            try {
+                assertThat(transferItemFuture.get().getPidMapping()).isNotNull();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+
+
     }
 
     @Test
     void extractMetadata() {
+
     }
 }

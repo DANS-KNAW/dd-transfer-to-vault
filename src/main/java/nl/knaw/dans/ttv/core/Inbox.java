@@ -15,8 +15,10 @@
  */
 package nl.knaw.dans.ttv.core;
 
+import io.dropwizard.hibernate.UnitOfWorkAwareProxyFactory;
 import nl.knaw.dans.ttv.db.TransferItemDAO;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.hibernate.SessionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,7 +31,6 @@ import java.time.ZoneId;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -41,31 +42,26 @@ public class Inbox {
     private final String name;
     private final Path path;
 
+    private TransferItemDAO transferItemDAO;
+    private SessionFactory sessionFactory;
+
     private static final String DOI_PATTERN = "(?<doi>doi-10-[0-9]{4,}-[A-Za-z0-9]{2,}-[A-Za-z0-9]{6})-?";
     private static final String SCHEMA_PATTERN = "(?<schema>datacite)?.?";
     private static final String DATASET_VERSION_PATTERN = "v(?<major>[0-9]+).(?<minor>[0-9]+)";
     private static final String EXTENSION_PATTERN = "(?<extension>.zip|.xml)";
     private static final Pattern PATTERN = Pattern.compile(DOI_PATTERN + SCHEMA_PATTERN + DATASET_VERSION_PATTERN + EXTENSION_PATTERN);
-    public static final Comparator<Task<TransferItem>> TASK_QUEUE_DATE_COMPARATOR = Comparator.comparing(task -> task.getTransferItem().getCreationTime());
+    public static final Comparator<Task> TASK_QUEUE_DATE_COMPARATOR = Comparator.comparing(task -> task.getTransferItem().getCreationTime());
 
     public Inbox(String name, Path path) {
         this.name = name;
         this.path = path;
     }
 
-    /*public String getName() {
-        return name;
-    }
-
-    public Path getPath() {
-        return path;
-    }*/
-
-    public List<Task<TransferItem>> createTransferItemTasks(TransferItemDAO transferItemDAO) {
-        List<Task<TransferItem>> transferItemTasks = new java.util.ArrayList<>(Collections.emptyList());
+    public List<Task> createTransferItemTasks() {
+        List<Task> transferItemTasks = new java.util.ArrayList<>(Collections.emptyList());
         List<TransferItem> transferItemsOnDisk = createTransferItemsFromDisk();
 
-        transferItemsOnDisk.forEach(transferItemDAO::createOrUpdate);
+        transferItemsOnDisk.forEach(transferItemDAO::save);
         List<TransferItem> transferItemsInDB = transferItemDAO.findAllStatusExtract();
 
         // consistency check
@@ -73,9 +69,14 @@ public class Inbox {
             log.error("Inconsistency found with TransferItems found on disk and in database");
             throw new InvalidTransferItemException("Inconsistency found with TransferItems found on disk and in database");
         } else {
-            transferItemTasks.addAll(transferItemsInDB.stream()
+            /*transferItemTasks.addAll(transferItemsInDB.stream()
                     .map(transferItem -> new TransferTask<TransferItem>(transferItem, transferItemDAO))
-                    .collect(Collectors.toList()));
+                    .collect(Collectors.toList()));*/
+            for (TransferItem transferItem : transferItemsInDB) {
+                TransferTask transferTask = new UnitOfWorkAwareProxyFactory("TransferTaskProxy", sessionFactory)
+                        .create(TransferTask.class, new Class[] {TransferItem.class, TransferItemDAO.class}, new Object[] {transferItem, transferItemDAO});
+                transferItemTasks.add(transferTask);
+            }
         }
         return transferItemTasks;
     }
@@ -124,6 +125,14 @@ public class Inbox {
             transferItem.setDatasetDvInstance(name);
         }
         return transferItem;
+    }
+
+    public void setTransferItemDAO(TransferItemDAO transferItemDAO) {
+        this.transferItemDAO = transferItemDAO;
+    }
+
+    public void setSessionFactory(SessionFactory sessionFactory) {
+        this.sessionFactory = sessionFactory;
     }
 
     @Override
