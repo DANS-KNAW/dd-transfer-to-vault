@@ -70,4 +70,12 @@ public class DdTransferToVaultConfiguration extends Configuration {
     public void setInboxes(List<Map<String, String>> inboxes) {
         this.inboxes = inboxes;
     }
+
+    public List<Inbox> buildInboxes(){
+        List<Inbox> inboxList = new java.util.ArrayList<>(Collections.emptyList());
+        for (Map<String, String> inbox : inboxes){
+            inboxList.add(new Inbox(inbox.get("name"), Paths.get(inbox.get("path"))));
+        }
+        return inboxList;
+    }
 }

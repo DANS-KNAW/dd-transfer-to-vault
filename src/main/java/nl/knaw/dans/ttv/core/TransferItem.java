@@ -15,8 +15,6 @@
  */
 package nl.knaw.dans.ttv.core;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -28,10 +26,8 @@ import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
-import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Arrays;
-import java.util.Base64;
 import java.util.Objects;
 
 @Entity
@@ -102,11 +98,11 @@ public class TransferItem {
     @Column(name = "transfer_status", nullable = false)
     private TransferStatus transferStatus;
 
-    @Column(name = "oai_ore", length = 10000)
+    @Column(name = "oai_ore")
     @org.hibernate.annotations.Type( type="materialized_blob" )
     private byte[] oaiOre;
 
-    @Column(name = "pid_mapping", length = 10000)
+    @Column(name = "pid_mapping")
     @org.hibernate.annotations.Type( type="materialized_blob" )
     private byte[] pidMapping;
 
@@ -308,15 +304,6 @@ public class TransferItem {
         this.bagDepositDate = bagDepositDate;
     }
 
-    private String prettyPrintJson(byte[] bytes) {
-        try {
-            return new ObjectMapper().readTree(bytes).toPrettyString();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
     @Override
     public String toString() {
         return "TransferItem{" +
@@ -337,7 +324,7 @@ public class TransferItem {
                 ", queueDate=" + queueDate +
                 ", bagSize=" + bagSize +
                 ", transferStatus=" + transferStatus +
-                ", oaiOre=" + prettyPrintJson(oaiOre) +
+                ", oaiOre=" + Arrays.toString(oaiOre) +
                 ", pidMapping=" + Arrays.toString(pidMapping) +
                 ", aipTarEntryName='" + aipTarEntryName + '\'' +
                 ", aipsTar='" + aipsTar + '\'' +
