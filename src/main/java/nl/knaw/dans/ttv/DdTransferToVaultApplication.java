@@ -32,7 +32,9 @@ import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 
 public class DdTransferToVaultApplication extends Application<DdTransferToVaultConfiguration> {
 
@@ -74,8 +76,17 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
         tasks.sort(Inbox.TASK_QUEUE_DATE_COMPARATOR);
 
         ExecutorService executorService = configuration.getJobQueue().build(environment);
+        List<Future<TransferItem>> futures = new java.util.ArrayList<>(Collections.emptyList());
+
         try {
-            executorService.invokeAll(tasks);
+            futures.addAll(executorService.invokeAll(tasks));
+            futures.forEach(transferItemFuture -> {
+                try {
+                    System.out.println(transferItemFuture.get().toString());
+                } catch (InterruptedException | ExecutionException e) {
+                    e.printStackTrace();
+                }
+            });
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
