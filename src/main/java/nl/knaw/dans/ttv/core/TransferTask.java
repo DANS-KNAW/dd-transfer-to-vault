@@ -15,16 +15,17 @@
  */
 package nl.knaw.dans.ttv.core;
 
+import nl.knaw.dans.ttv.db.TransferItemDAO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TransferTask<T> extends Task<TransferItem> {
+public class TransferTask extends Task {
 
     private static final Logger log = LoggerFactory.getLogger(TransferTask.class);
 
 
-    public TransferTask(TransferItem transferItem) {
-        super(transferItem);
+    public TransferTask(TransferItem transferItem, TransferItemDAO transferItemDAO) {
+        super(transferItem, transferItemDAO);
     }
 
     @Override

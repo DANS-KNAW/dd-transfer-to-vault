@@ -71,8 +71,12 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
         }
 
         //get a list of sorted(creationTime) TransferTasks containing TransferItems, which have been checked for consistency disk/db
-        List<Task<TransferItem>> tasks = new java.util.ArrayList<>(Collections.emptyList());
-        for (Inbox inbox: inboxes) tasks.addAll(inbox.createTransferItemTasks(transferItemDAO));
+        List<Task> tasks = new java.util.ArrayList<>(Collections.emptyList());
+        for (Inbox inbox: inboxes) {
+            inbox.setSessionFactory(hibernateBundle.getSessionFactory());
+            inbox.setTransferItemDAO(transferItemDAO);
+            tasks.addAll(inbox.createTransferItemTasks());
+        }
         tasks.sort(Inbox.TASK_QUEUE_DATE_COMPARATOR);
 
         ExecutorService executorService = configuration.getJobQueue().build(environment);
