@@ -47,14 +47,13 @@ class TransferTaskTest {
     ExecutorService executorService;
 
     private List<Task> tasks;
-    private TransferItemDAO transferItemDAO;
 
     @BeforeEach
     void setUp() {
         executorService =
                 new ThreadPoolExecutor(1, 5, 60000L, TimeUnit.MILLISECONDS,
                         new LinkedBlockingQueue<>(5));
-        transferItemDAO = new TransferItemDAO(daoTestRule.getSessionFactory());
+        TransferItemDAO transferItemDAO = new TransferItemDAO(daoTestRule.getSessionFactory());
         inbox.setSessionFactory(daoTestRule.getSessionFactory());
         inbox.setTransferItemDAO(transferItemDAO);
         tasks = inbox.createTransferItemTasks();

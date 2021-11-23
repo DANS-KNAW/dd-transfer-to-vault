@@ -81,6 +81,12 @@ public class Inbox {
         return transferItemTasks;
     }
 
+    public Task createTransferItemTask(Path datasetVersionExportPath) {
+        TransferItem transferItem = transferItemDAO.save(transformDvePathToTransferItem(datasetVersionExportPath));
+        return new UnitOfWorkAwareProxyFactory("TransferTaskProxy", sessionFactory)
+                .create(TransferTask.class, new Class[] {TransferItem.class, TransferItemDAO.class}, new Object[] {transferItem, transferItemDAO});
+    }
+
     private List<TransferItem> createTransferItemsFromDisk() {
         List<TransferItem> transferItemsOnDisk;
         try {
@@ -94,7 +100,7 @@ public class Inbox {
         return transferItemsOnDisk;
     }
 
-    private TransferItem transformDvePathToTransferItem(Path datasetVersionExportPath){
+    public TransferItem transformDvePathToTransferItem(Path datasetVersionExportPath){
         Matcher matcher = PATTERN.matcher(datasetVersionExportPath.getFileName().toString());
 
         TransferItem transferItem = new TransferItem();
@@ -133,6 +139,10 @@ public class Inbox {
 
     public void setSessionFactory(SessionFactory sessionFactory) {
         this.sessionFactory = sessionFactory;
+    }
+
+    public Path getPath() {
+        return path;
     }
 
     @Override
