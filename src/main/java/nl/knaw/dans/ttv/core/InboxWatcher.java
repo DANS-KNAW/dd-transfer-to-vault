@@ -22,7 +22,9 @@ import java.nio.file.Path;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 
 public class InboxWatcher implements Runnable {
 
@@ -45,7 +47,12 @@ public class InboxWatcher implements Runnable {
                         .filter(Files::isRegularFile)
                         .filter(path -> path.getFileName().toString().endsWith(".zip"))
                         .forEach(path -> {
-                            executorService.submit(inbox.createTransferItemTask(path));
+                            Future<TransferItem> transferItemFuture = executorService.submit(inbox.createTransferItemTask(path));
+                            try {
+                                System.out.println("InboxWatchers TransferItem: " + transferItemFuture.get().toString());
+                            } catch (InterruptedException | ExecutionException e) {
+                                e.printStackTrace();
+                            }
                         });
                 key.reset();
             }
