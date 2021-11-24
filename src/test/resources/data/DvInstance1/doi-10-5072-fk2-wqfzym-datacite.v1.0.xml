@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource xsi:schemaLocation="http://datacite.org/schema/kernel-4 http://schema.datacite.org/meta/kernel-4/metadata.xsd"
+          xmlns="http://datacite.org/schema/kernel-4"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <identifier identifierType="DOI">10.5072/FK2/WQFZYM</identifier>
+    <creators><creator><creatorName>Castro, Eleni</creatorName><nameIdentifier schemeURI="https://orcid.org/" nameIdentifierScheme="ORCID"><a href="#authorIdentifierScheme14252638xx" target="_blank">14252638xx</a></nameIdentifier><affiliation>(Harvard)</affiliation></creator></creators>
+    <titles>
+        <title>10+ FITS files and subsetted data files</title>
+    </titles>
+    <publisher>Dataverse Development Tests</publisher>
+    <publicationYear>2019</publicationYear>
+    <resourceType resourceTypeGeneral="Dataset"/>
+    
+    <descriptions>
+        <description descriptionType="Abstract">This is my dataset</description>
+    </descriptions>
+    <contributors><contributor contributorType="ContactPerson"><contributorName>Admin, Dataverse</contributorName><affiliation>(Dataverse.org)</affiliation></contributor></contributors>
+</resource>
