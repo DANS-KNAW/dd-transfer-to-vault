@@ -15,6 +15,10 @@
  */
 package nl.knaw.dans.ttv.core;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -26,6 +30,7 @@ import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Objects;
@@ -38,6 +43,7 @@ import java.util.Objects;
 })
 public class TransferItem {
 
+    private static final Logger log = LoggerFactory.getLogger(TransferItem.class);
     public static final String TRANSFER_ITEM_FIND_ALL = "TransferItem.findAll";
     public static final String TRANSFER_ITEM_FIND_ALL_STATUS_EXTRACT = "TransferItem.findAllWithStatusExtract";
 
@@ -98,11 +104,11 @@ public class TransferItem {
     @Column(name = "transfer_status", nullable = false)
     private TransferStatus transferStatus;
 
-    @Column(name = "oai_ore")
+    @Column(name = "oai_ore", length = 10000)
     @org.hibernate.annotations.Type( type="materialized_blob" )
     private byte[] oaiOre;
 
-    @Column(name = "pid_mapping")
+    @Column(name = "pid_mapping", length = 10000)
     @org.hibernate.annotations.Type( type="materialized_blob" )
     private byte[] pidMapping;
 
@@ -304,6 +310,15 @@ public class TransferItem {
         this.bagDepositDate = bagDepositDate;
     }
 
+    public String bytesToJsonPrettyString(byte[] bytes) {
+        try {
+            return new ObjectMapper().readTree(bytes).toPrettyString();
+        } catch (IOException e) {
+            log.error(e.getMessage());
+        }
+        return null;
+    }
+
     @Override
     public String toString() {
         return "TransferItem{" +
@@ -324,7 +339,7 @@ public class TransferItem {
                 ", queueDate=" + queueDate +
                 ", bagSize=" + bagSize +
                 ", transferStatus=" + transferStatus +
-                ", oaiOre=" + Arrays.toString(oaiOre) +
+                ", oaiOre=" + bytesToJsonPrettyString(oaiOre) +
                 ", pidMapping=" + Arrays.toString(pidMapping) +
                 ", aipTarEntryName='" + aipTarEntryName + '\'' +
                 ", aipsTar='" + aipsTar + '\'' +

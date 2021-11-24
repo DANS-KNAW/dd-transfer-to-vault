@@ -89,6 +89,7 @@ public class Inbox {
                     .filter(path1 -> path1.getFileName().toString().endsWith(".zip"))
                     .map(this::transformDvePathToTransferItem).collect(Collectors.toList());
         } catch (IOException ioException) {
+            log.error("Invalid TransferItem");
             throw new InvalidTransferItemException("Invalid TransferItem", ioException);
         }
         return transferItemsOnDisk;
