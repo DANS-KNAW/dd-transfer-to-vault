@@ -15,9 +15,11 @@
  */
 package nl.knaw.dans.ttv.core;
 
-import io.dropwizard.hibernate.UnitOfWorkAwareProxyFactory;
 import nl.knaw.dans.ttv.db.TransferItemDAO;
 import org.apache.commons.codec.digest.DigestUtils;
+import io.dropwizard.hibernate.UnitOfWork;
+import io.dropwizard.hibernate.UnitOfWorkAwareProxyFactory;
+import nl.knaw.dans.ttv.db.TransferItemDAO;
 import org.hibernate.SessionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,6 +59,7 @@ public class Inbox {
         this.path = path;
     }
 
+    @UnitOfWork
     public List<Task> createTransferItemTasks() {
         List<Task> transferItemTasks = new java.util.ArrayList<>(Collections.emptyList());
         List<TransferItem> transferItemsOnDisk = createTransferItemsFromDisk();
@@ -69,9 +72,6 @@ public class Inbox {
             log.error("Inconsistency found with TransferItems found on disk and in database");
             throw new InvalidTransferItemException("Inconsistency found with TransferItems found on disk and in database");
         } else {
-            /*transferItemTasks.addAll(transferItemsInDB.stream()
-                    .map(transferItem -> new TransferTask<TransferItem>(transferItem, transferItemDAO))
-                    .collect(Collectors.toList()));*/
             for (TransferItem transferItem : transferItemsInDB) {
                 TransferTask transferTask = new UnitOfWorkAwareProxyFactory("TransferTaskProxy", sessionFactory)
                         .create(TransferTask.class, new Class[] {TransferItem.class, TransferItemDAO.class}, new Object[] {transferItem, transferItemDAO});
