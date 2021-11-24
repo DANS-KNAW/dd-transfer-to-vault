@@ -28,6 +28,8 @@ import nl.knaw.dans.ttv.core.Task;
 import nl.knaw.dans.ttv.core.TransferItem;
 import nl.knaw.dans.ttv.core.TransferTask;
 import nl.knaw.dans.ttv.db.TransferItemDAO;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -39,6 +41,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
 public class DdTransferToVaultApplication extends Application<DdTransferToVaultConfiguration> {
+
+    private static final Logger log = LoggerFactory.getLogger(DdTransferToVaultApplication.class);
 
     public static void main(final String[] args) throws Exception {
         new DdTransferToVaultApplication().run(args);
@@ -64,7 +68,7 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
     @Override
     public void run(final DdTransferToVaultConfiguration configuration, final Environment environment) {
         final TransferItemDAO transferItemDAO = new TransferItemDAO(hibernateBundle.getSessionFactory());
-        ExecutorService executorService = configuration.getJobQueue().build(environment);
+        final ExecutorService executorService = configuration.getJobQueue().build(environment);
         List<Inbox> inboxes = new java.util.ArrayList<>(Collections.emptyList());
         List<InboxWatcher> inboxWatchers = new java.util.ArrayList<>(Collections.emptyList());
 
@@ -85,7 +89,6 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
         tasks.sort(Inbox.TASK_QUEUE_DATE_COMPARATOR);
         List<Future<TransferItem>> futures = new java.util.ArrayList<>(Collections.emptyList());
 
-
         try {
             futures.addAll(executorService.invokeAll(tasks));
             inboxWatchers.forEach(executorService::execute);
@@ -93,11 +96,11 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
                 try {
                     System.out.println(transferItemFuture.get().toString());
                 } catch (InterruptedException | ExecutionException e) {
-                    e.printStackTrace();
+                    log.error(e.getMessage());
                 }
             });
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            log.error(e.getMessage());
         }
     }
 

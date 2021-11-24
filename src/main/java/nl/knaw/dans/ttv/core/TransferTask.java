@@ -33,7 +33,6 @@ public class TransferTask extends Task {
 
     private static final Logger log = LoggerFactory.getLogger(TransferTask.class);
 
-
     public TransferTask(TransferItem transferItem, TransferItemDAO transferItemDAO) {
         super(transferItem, transferItemDAO);
     }
