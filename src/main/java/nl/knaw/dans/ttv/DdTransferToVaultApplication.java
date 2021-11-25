@@ -34,12 +34,9 @@ import org.slf4j.LoggerFactory;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
 
 public class DdTransferToVaultApplication extends Application<DdTransferToVaultConfiguration> {
 
@@ -73,6 +70,7 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
         List<Inbox> inboxes = new ArrayList<>();
         List<InboxWatcher> inboxWatchers = new ArrayList<>();
 
+        //Initialize inboxes
         for (Map<String, String> inbox : configuration.getInboxes()) {
             Inbox newInbox = new UnitOfWorkAwareProxyFactory(hibernateBundle)
                     .create(Inbox.class, new Class[] {String.class, Path.class}, new Object[] {inbox.get("name"), Paths.get(inbox.get("path"))});
@@ -89,19 +87,8 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
         }
         tasks.sort(Inbox.TASK_QUEUE_DATE_COMPARATOR);
 
-        try {
-            List<Future<TransferItem>> futures = new ArrayList<>(executorService.invokeAll(tasks));
-            inboxWatchers.forEach(executorService::execute);
-            futures.forEach(transferItemFuture -> {
-                try {
-                    System.out.println(transferItemFuture.get().toString());
-                } catch (InterruptedException | ExecutionException e) {
-                    log.error(e.getMessage());
-                }
-            });
-        } catch (InterruptedException e) {
-            log.error(e.getMessage());
-        }
+        tasks.forEach(executorService::execute);
+        inboxWatchers.forEach(executorService::execute);
     }
 
 }

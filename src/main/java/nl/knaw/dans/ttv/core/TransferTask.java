@@ -38,10 +38,9 @@ public class TransferTask extends Task {
     }
 
     @Override
-    public TransferItem call() throws Exception {
+    public void run() {
         log.info("Running task" + this);
         extractMetadata();
-        return transferItem;
     }
 
     @UnitOfWork
@@ -74,8 +73,4 @@ public class TransferTask extends Task {
         transferItem.setTransferStatus(TransferItem.TransferStatus.MOVE);
         transferItemDAO.save(transferItem);
     }
-
-
-
-
 }
