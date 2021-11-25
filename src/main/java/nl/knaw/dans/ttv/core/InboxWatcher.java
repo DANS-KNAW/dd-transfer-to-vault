@@ -49,12 +49,8 @@ public class InboxWatcher implements Runnable {
                             .filter(Files::isRegularFile)
                             .filter(path -> path.getFileName().toString().endsWith(".zip"))
                             .forEach(path -> {
-                                Future<TransferItem> transferItemFuture = executorService.submit(inbox.createTransferItemTask(path));
-                                try {
-                                    System.out.println("InboxWatchers TransferItem: " + transferItemFuture.get().toString());
-                                } catch (InterruptedException | ExecutionException e) {
-                                    e.printStackTrace();
-                                }
+                                System.out.println(path);
+                                executorService.submit(inbox.createTransferItemTask(path));
                             });
                 }
                 assert key != null;
