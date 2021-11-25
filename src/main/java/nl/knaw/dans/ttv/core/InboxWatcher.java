@@ -41,22 +41,26 @@ public class InboxWatcher implements Runnable {
             inbox.getPath().register(watchService, StandardWatchEventKinds.ENTRY_CREATE);
 
             WatchKey key;
-            while ((key = watchService.take()) != null) {
-                key.pollEvents().stream()
-                        .map(watchEvent -> (Path) watchEvent.context())
-                        .filter(Files::isRegularFile)
-                        .filter(path -> path.getFileName().toString().endsWith(".zip"))
-                        .forEach(path -> {
-                            Future<TransferItem> transferItemFuture = executorService.submit(inbox.createTransferItemTask(path));
-                            try {
-                                System.out.println("InboxWatchers TransferItem: " + transferItemFuture.get().toString());
-                            } catch (InterruptedException | ExecutionException e) {
-                                e.printStackTrace();
-                            }
-                        });
+            while (true) {
+                key = watchService.poll();
+                if (key != null) {
+                    key.pollEvents().stream()
+                            .map(watchEvent -> (Path) watchEvent.context())
+                            .filter(Files::isRegularFile)
+                            .filter(path -> path.getFileName().toString().endsWith(".zip"))
+                            .forEach(path -> {
+                                Future<TransferItem> transferItemFuture = executorService.submit(inbox.createTransferItemTask(path));
+                                try {
+                                    System.out.println("InboxWatchers TransferItem: " + transferItemFuture.get().toString());
+                                } catch (InterruptedException | ExecutionException e) {
+                                    e.printStackTrace();
+                                }
+                            });
+                }
+                assert key != null;
                 key.reset();
             }
-        } catch (IOException | InterruptedException ioException) {
+        } catch (IOException ioException) {
             ioException.printStackTrace();
         }
     }

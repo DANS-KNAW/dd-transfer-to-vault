@@ -33,6 +33,7 @@ import org.slf4j.LoggerFactory;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -69,8 +70,8 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
     public void run(final DdTransferToVaultConfiguration configuration, final Environment environment) {
         final TransferItemDAO transferItemDAO = new TransferItemDAO(hibernateBundle.getSessionFactory());
         final ExecutorService executorService = configuration.getJobQueue().build(environment);
-        List<Inbox> inboxes = new java.util.ArrayList<>(Collections.emptyList());
-        List<InboxWatcher> inboxWatchers = new java.util.ArrayList<>(Collections.emptyList());
+        List<Inbox> inboxes = new ArrayList<>();
+        List<InboxWatcher> inboxWatchers = new ArrayList<>();
 
         for (Map<String, String> inbox : configuration.getInboxes()) {
             Inbox newInbox = new UnitOfWorkAwareProxyFactory(hibernateBundle)
@@ -80,17 +81,16 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
         }
 
         //get a list of sorted(creationTime) TransferTasks containing TransferItems, which have been checked for consistency disk/db
-        List<Task> tasks = new java.util.ArrayList<>(Collections.emptyList());
+        List<Task> tasks = new ArrayList<>();
         for (Inbox inbox: inboxes) {
             inbox.setSessionFactory(hibernateBundle.getSessionFactory());
             inbox.setTransferItemDAO(transferItemDAO);
             tasks.addAll(inbox.createTransferItemTasks());
         }
         tasks.sort(Inbox.TASK_QUEUE_DATE_COMPARATOR);
-        List<Future<TransferItem>> futures = new java.util.ArrayList<>(Collections.emptyList());
 
         try {
-            futures.addAll(executorService.invokeAll(tasks));
+            List<Future<TransferItem>> futures = new ArrayList<>(executorService.invokeAll(tasks));
             inboxWatchers.forEach(executorService::execute);
             futures.forEach(transferItemFuture -> {
                 try {
