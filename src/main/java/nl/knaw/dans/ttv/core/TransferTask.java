@@ -29,10 +29,9 @@ public class TransferTask extends Task {
     }
 
     @Override
-    public TransferItem call() throws Exception {
+    public void run() {
         log.info("Running task" + this);
         extractMetadata();
-        return getTransferItem();
     }
 
     public void extractMetadata() {
@@ -48,6 +47,4 @@ public class TransferTask extends Task {
 
         //TODO post condition: TransferItem created, xml-file deleted
     }
-
-
 }
