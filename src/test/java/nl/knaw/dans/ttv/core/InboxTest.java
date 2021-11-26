@@ -15,6 +15,7 @@
  */
 package nl.knaw.dans.ttv.core;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.dropwizard.testing.junit5.DAOTestExtension;
 import io.dropwizard.testing.junit5.DropwizardExtensionsSupport;
 import nl.knaw.dans.ttv.db.TransferItemDAO;
@@ -43,6 +44,7 @@ class InboxTest{
 
     private TransferItemDAO transferItemDAO;
     private final Inbox inbox = new Inbox("DvInstance1", Paths.get("src/test/resources/data/DvInstance1"));
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @BeforeEach
     void setUp() {
@@ -69,7 +71,7 @@ class InboxTest{
             transferItemDAO.save(new TransferItem("doi:10.5072/FK2/QZ0LJQ", 1, 2, "src/test/resources/doi-10-5072-fk2-qz0ljqv-1-2/metadata/oai-ore.jsonld", LocalDateTime.parse("2020-08-03T00:15:22"), TransferItem.TransferStatus.EXTRACT));
         });
         List<Task> sortedTransferItemTasks = transferItemDAO.findAllStatusExtract().stream()
-                .map(transferItem -> new TransferTask(transferItem, transferItemDAO))
+                .map(transferItem -> new TransferTask(transferItem, transferItemDAO, objectMapper))
                 .sorted(Inbox.TASK_QUEUE_DATE_COMPARATOR)
                 .collect(Collectors.toList());
         assertThat(sortedTransferItemTasks.get(0).getTransferItem().getCreationTime()).isEqualTo(LocalDateTime.parse("2007-12-03T10:15:30"));

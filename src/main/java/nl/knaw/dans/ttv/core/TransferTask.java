@@ -33,14 +33,19 @@ public class TransferTask extends Task {
 
     private static final Logger log = LoggerFactory.getLogger(TransferTask.class);
 
-    public TransferTask(TransferItem transferItem, TransferItemDAO transferItemDAO) {
-        super(transferItem, transferItemDAO);
+    public TransferTask(TransferItem transferItem, TransferItemDAO transferItemDAO, ObjectMapper objectMapper) {
+        super(transferItem, transferItemDAO, objectMapper);
     }
 
     @Override
     public void run() {
         log.info("Running task" + this);
-        extractMetadata();
+        try {
+            extractMetadata();
+        } catch (IOException | NullPointerException e) {
+            log.error(e.getMessage(), e);
+            throw new InvalidTransferItemException(e.getMessage());
+        }
     }
 
     @UnitOfWork
@@ -48,21 +53,18 @@ public class TransferTask extends Task {
         ZipFile datasetVersionExport = new ZipFile(Paths.get(transferItem.getDveFilePath()).toFile());
         String metadataFilePath = Objects.requireNonNull(datasetVersionExport.stream()
                 .filter(zipEntry -> zipEntry.getName().endsWith(".jsonld"))
-                .findAny().orElse(null)).getName();
+                .findAny().orElse(null), "metadataFilePath can't be null" + transferItem.onError()).getName();
         String pidMappingFilePath = Objects.requireNonNull(datasetVersionExport.stream()
                 .filter(zipEntry -> zipEntry.getName().contains("pid-mapping.txt"))
-                .findAny().orElse(null)).getName();
+                .findAny().orElse(null), "pidMappingFilePath can't be null" + transferItem.onError()).getName();
+        byte[] pidMapping = Objects.requireNonNull(IOUtils.toByteArray(datasetVersionExport.getInputStream(datasetVersionExport.getEntry(pidMappingFilePath))), "pidMapping can't be null" + transferItem.onError());
+        byte[] oaiOre = Objects.requireNonNull(IOUtils.toByteArray(datasetVersionExport.getInputStream(datasetVersionExport.getEntry(metadataFilePath))), "oaiOre can't be null" + transferItem.onError());
 
-        byte[] pidMapping = IOUtils.toByteArray(datasetVersionExport.getInputStream(datasetVersionExport.getEntry(pidMappingFilePath)));
-        byte[] oaiOre = IOUtils.toByteArray(datasetVersionExport.getInputStream(datasetVersionExport.getEntry(metadataFilePath)));
+        JsonNode jsonNode = Objects.requireNonNull(objectMapper.readTree(oaiOre), "jsonld metadata can't be null" + transferItem.onError());
 
-        ObjectMapper objectMapper = new ObjectMapper();
-        JsonNode jsonNode = objectMapper.readTree(oaiOre);
-
-        String nbn = jsonNode.get("ore:describes").get("dansDataVaultMetadata:NBN").toString();
-        String dvPidVersion = jsonNode.get("ore:describes").get("dansDataVaultMetadata:DV PID Version").toString();
-        String bagId = jsonNode.get("ore:describes").get("dansDataVaultMetadata:Bag ID").toString();
-
+        String nbn = Objects.requireNonNull(jsonNode.get("ore:describes").get("dansDataVaultMetadata:NBN").toString(), "NBN can't be null" + transferItem.onError());
+        String dvPidVersion = Objects.requireNonNull(jsonNode.get("ore:describes").get("dansDataVaultMetadata:DV PID Version").toString(), "DV PID Version can't be null" + transferItem.onError());
+        String bagId = Objects.requireNonNull(jsonNode.get("ore:describes").get("dansDataVaultMetadata:Bag ID").toString(), "Bag ID can't be null" + transferItem.onError());
         //TODO Other ID, Other ID Version and SWORD token missing
         transferItem.setPidMapping(pidMapping);
         transferItem.setOaiOre(oaiOre);

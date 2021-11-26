@@ -40,12 +40,14 @@ import java.util.Objects;
 @NamedQueries({
         @NamedQuery(name = "TransferItem.findAll", query = "SELECT t FROM TransferItem t"),
         @NamedQuery(name = "TransferItem.findAllWithStatusExtract", query = "SELECT t FROM TransferItem t WHERE t.transferStatus = 'EXTRACT'"),
+        @NamedQuery(name = "TransferItem.findAllWithStatusMove", query = "SELECT t FROM TransferItem t WHERE t.transferStatus = 'MOVE'"),
 })
 public class TransferItem {
 
     private static final Logger log = LoggerFactory.getLogger(TransferItem.class);
     public static final String TRANSFER_ITEM_FIND_ALL = "TransferItem.findAll";
     public static final String TRANSFER_ITEM_FIND_ALL_STATUS_EXTRACT = "TransferItem.findAllWithStatusExtract";
+    public static final String TRANSFER_ITEM_FIND_ALL_STATUS_MOVE = "TransferItem.findAllWithStatusMove";
 
     public enum TransferStatus {
         EXTRACT, MOVE, OCFL, TAR, POLL
@@ -317,6 +319,10 @@ public class TransferItem {
             log.error(e.getMessage());
         }
         return null;
+    }
+
+    public String onError(){
+        return " for dve: " + dveFilePath;
     }
 
     @Override

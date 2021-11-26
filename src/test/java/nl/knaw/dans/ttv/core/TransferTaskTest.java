@@ -15,7 +15,7 @@
  */
 package nl.knaw.dans.ttv.core;
 
-import io.dropwizard.lifecycle.setup.ExecutorServiceBuilder;
+import io.dropwizard.hibernate.UnitOfWorkAwareProxyFactory;
 import io.dropwizard.testing.junit5.DAOTestExtension;
 import io.dropwizard.testing.junit5.DropwizardExtensionsSupport;
 import nl.knaw.dans.ttv.db.TransferItemDAO;
@@ -23,11 +23,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
+import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -43,11 +43,10 @@ class TransferTaskTest {
             .addEntityClass(TransferItem.class)
             .build();
 
-    private final Inbox inbox = new Inbox("DvInstance1", Paths.get("src/test/resources/data/DvInstance1"));
-    ExecutorService executorService;
+    private TransferItemDAO transferItemDAO;
+    private ExecutorService executorService;
 
     private List<Task> tasks;
-    private TransferItemDAO transferItemDAO;
 
     @BeforeEach
     void setUp() {
@@ -55,6 +54,8 @@ class TransferTaskTest {
                 new ThreadPoolExecutor(1, 5, 60000L, TimeUnit.MILLISECONDS,
                         new LinkedBlockingQueue<>(5));
         transferItemDAO = new TransferItemDAO(daoTestRule.getSessionFactory());
+        Inbox inbox = new UnitOfWorkAwareProxyFactory("UnitOfWorkProxy", daoTestRule.getSessionFactory())
+                .create(Inbox.class, new Class[]{String.class, Path.class}, new Object[]{"DvInstance1", Paths.get("src/test/resources/data/DvInstance1")});
         inbox.setSessionFactory(daoTestRule.getSessionFactory());
         inbox.setTransferItemDAO(transferItemDAO);
         tasks = inbox.createTransferItemTasks();
@@ -62,22 +63,11 @@ class TransferTaskTest {
     }
 
     @Test
-    void call() throws Exception {
-        List<Future<TransferItem>> futures = executorService.invokeAll(tasks);
-        Objects.requireNonNull(futures).forEach(transferItemFuture -> {
-            assertThat(transferItemFuture.isDone()).isTrue();
-            try {
-                assertThat(transferItemFuture.get().getPidMapping()).isNotNull();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        });
-
-
-    }
-
-    @Test
-    void extractMetadata() {
-
+    void testMetadataExtractionSuccess() {
+        List<Future<String>> futures = new ArrayList<>();
+        tasks.forEach(task -> futures.add(executorService.submit(task, "Complete")));
+        Objects.requireNonNull(futures).forEach(future -> assertThat(future.isDone()).isTrue());
+        final List<TransferItem> transferItems = transferItemDAO.findAllStatusMove();
+        assertThat(transferItems).extracting("transferStatus").containsOnly(TransferItem.TransferStatus.MOVE);
     }
 }
