@@ -312,15 +312,6 @@ public class TransferItem {
         this.bagDepositDate = bagDepositDate;
     }
 
-    public String bytesToJsonPrettyString(byte[] bytes) {
-        try {
-            return new ObjectMapper().readTree(bytes).toPrettyString();
-        } catch (IOException e) {
-            log.error(e.getMessage());
-        }
-        return null;
-    }
-
     public String onError(){
         return " for dve: " + dveFilePath;
     }
@@ -345,7 +336,7 @@ public class TransferItem {
                 ", queueDate=" + queueDate +
                 ", bagSize=" + bagSize +
                 ", transferStatus=" + transferStatus +
-                ", oaiOre=" + bytesToJsonPrettyString(oaiOre) +
+                ", oaiOre=" + Arrays.toString(oaiOre) +
                 ", pidMapping=" + Arrays.toString(pidMapping) +
                 ", aipTarEntryName='" + aipTarEntryName + '\'' +
                 ", aipsTar='" + aipsTar + '\'' +
