@@ -16,6 +16,7 @@
 
 package nl.knaw.dans.ttv;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.dropwizard.Application;
 import io.dropwizard.db.PooledDataSourceFactory;
 import io.dropwizard.hibernate.HibernateBundle;
@@ -43,6 +44,7 @@ import java.util.concurrent.ExecutorService;
 public class DdTransferToVaultApplication extends Application<DdTransferToVaultConfiguration> {
 
     private static final Logger log = LoggerFactory.getLogger(DdTransferToVaultApplication.class);
+
 
     public static void main(final String[] args) throws Exception {
         new DdTransferToVaultApplication().run(args);
@@ -89,6 +91,7 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
         for (Inbox inbox: inboxes) {
             inbox.setSessionFactory(hibernateBundle.getSessionFactory());
             inbox.setTransferItemDAO(transferItemDAO);
+            inbox.setObjectMapper(environment.getObjectMapper());
             tasks.addAll(inbox.createTransferItemTasks());
         }
         tasks.sort(Inbox.TASK_QUEUE_DATE_COMPARATOR);

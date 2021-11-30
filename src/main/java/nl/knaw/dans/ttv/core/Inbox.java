@@ -15,6 +15,7 @@
  */
 package nl.knaw.dans.ttv.core;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import nl.knaw.dans.ttv.db.TransferItemDAO;
 import org.apache.commons.codec.digest.DigestUtils;
 import io.dropwizard.hibernate.UnitOfWork;
@@ -46,6 +47,7 @@ public class Inbox {
 
     private TransferItemDAO transferItemDAO;
     private SessionFactory sessionFactory;
+    private ObjectMapper objectMapper;
 
     private static final String DOI_PATTERN = "(?<doi>doi-10-[0-9]{4,}-[A-Za-z0-9]{2,}-[A-Za-z0-9]{6})-?";
     private static final String SCHEMA_PATTERN = "(?<schema>datacite)?.?";
@@ -73,8 +75,8 @@ public class Inbox {
             throw new InvalidTransferItemException("Inconsistency found with TransferItems found on disk and in database");
         } else {
             for (TransferItem transferItem : transferItemsInDB) {
-                TransferTask transferTask = new UnitOfWorkAwareProxyFactory("TransferTaskProxy", sessionFactory)
-                        .create(TransferTask.class, new Class[] {TransferItem.class, TransferItemDAO.class}, new Object[] {transferItem, transferItemDAO});
+                TransferTask transferTask = new UnitOfWorkAwareProxyFactory("UnitOfWorkProxy", sessionFactory)
+                        .create(TransferTask.class, new Class[] {TransferItem.class, TransferItemDAO.class, ObjectMapper.class}, new Object[] {transferItem, transferItemDAO, objectMapper});
                 transferItemTasks.add(transferTask);
             }
         }
@@ -142,10 +144,16 @@ public class Inbox {
     public void setSessionFactory(SessionFactory sessionFactory) {
         this.sessionFactory = sessionFactory;
     }
+    
+    public void setObjectMapper(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
+    }
 
     public Path getPath() {
         return path;
     }
+
+    
 
     @Override
     public String toString() {
