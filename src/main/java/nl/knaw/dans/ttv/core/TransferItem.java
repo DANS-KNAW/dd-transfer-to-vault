@@ -34,6 +34,7 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.Optional;
 
 @Entity
 @Table(name = "transfer_queue", uniqueConstraints={@UniqueConstraint(columnNames = {"dataset_pid" , "version_major", "version_minor"})})
@@ -310,15 +311,6 @@ public class TransferItem {
         this.bagDepositDate = bagDepositDate;
     }
 
-    public String bytesToJsonPrettyString(byte[] bytes) {
-        try {
-            return new ObjectMapper().readTree(bytes).toPrettyString();
-        } catch (IOException e) {
-            log.error(e.getMessage());
-        }
-        return null;
-    }
-
     @Override
     public String toString() {
         return "TransferItem{" +
@@ -339,7 +331,7 @@ public class TransferItem {
                 ", queueDate=" + queueDate +
                 ", bagSize=" + bagSize +
                 ", transferStatus=" + transferStatus +
-                ", oaiOre=" + bytesToJsonPrettyString(oaiOre) +
+                ", oaiOre=" + Arrays.toString(oaiOre) +
                 ", pidMapping=" + Arrays.toString(pidMapping) +
                 ", aipTarEntryName='" + aipTarEntryName + '\'' +
                 ", aipsTar='" + aipsTar + '\'' +

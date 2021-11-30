@@ -81,6 +81,7 @@ public class Inbox {
         return transferItemTasks;
     }
 
+    @UnitOfWork
     public Task createTransferItemTask(Path datasetVersionExportPath) {
         TransferItem transferItem = transferItemDAO.save(transformDvePathToTransferItem(datasetVersionExportPath));
         return new UnitOfWorkAwareProxyFactory("TransferTaskProxy", sessionFactory)

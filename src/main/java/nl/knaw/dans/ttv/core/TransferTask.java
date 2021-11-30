@@ -39,8 +39,13 @@ public class TransferTask extends Task {
 
     @Override
     public void run() {
-        log.info("Running task" + this);
-        extractMetadata();
+        log.info("Running task: " + this);
+        try {
+            extractMetadata();
+        } catch (IOException e) {
+            log.error(e.getMessage(), e);
+            throw new InvalidTransferItemException(e.getMessage());
+        }
     }
 
     @UnitOfWork
@@ -72,5 +77,12 @@ public class TransferTask extends Task {
         transferItem.setQueueDate(LocalDateTime.now());
         transferItem.setTransferStatus(TransferItem.TransferStatus.MOVE);
         transferItemDAO.save(transferItem);
+    }
+
+    @Override
+    public String toString() {
+        return "TransferTask{" +
+                "transferItem=" + transferItem.getDveFilePath() +
+                '}';
     }
 }

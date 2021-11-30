@@ -15,54 +15,57 @@
  */
 package nl.knaw.dans.ttv.core;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardWatchEventKinds;
+import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
+import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
 public class InboxWatcher implements Runnable {
 
+    private static final Logger log = LoggerFactory.getLogger(InboxWatcher.class);
+
     private final Inbox inbox;
     private final ExecutorService executorService;
+    private final WatchService watchService;
 
-    public InboxWatcher(Inbox inbox, ExecutorService executorService) {
+    public InboxWatcher(Inbox inbox, ExecutorService executorService, WatchService watchService) {
         this.inbox = inbox;
         this.executorService = executorService;
+        this.watchService = watchService;
     }
 
-    private void startWatchService() {
-        try (WatchService watchService = FileSystems.getDefault().newWatchService()) {
-            inbox.getPath().register(watchService, StandardWatchEventKinds.ENTRY_CREATE);
+    private void startWatchService() throws IOException, InterruptedException {
+        inbox.getPath().register(watchService, StandardWatchEventKinds.ENTRY_CREATE);
 
-            WatchKey key;
-            while (true) {
-                key = watchService.poll();
-                if (key != null) {
-                    key.pollEvents().stream()
-                            .map(watchEvent -> (Path) watchEvent.context())
-                            .filter(Files::isRegularFile)
-                            .filter(path -> path.getFileName().toString().endsWith(".zip"))
-                            .forEach(path -> {
-                                System.out.println(path);
-                                executorService.submit(inbox.createTransferItemTask(path));
-                            });
-                }
-                assert key != null;
-                key.reset();
-            }
-        } catch (IOException ioException) {
-            ioException.printStackTrace();
+        WatchKey key;
+        while (true) {
+            key = watchService.take();
+            key.pollEvents().stream()
+                    .map(watchEvent -> ((Path) watchEvent.context()))
+                    .filter(path -> path.getFileName().toString().endsWith(".zip"))
+                    .map(path -> inbox.createTransferItemTask(inbox.getPath().resolve(path.getFileName())))
+                            .forEach(executorService::execute);
+            key.reset();
         }
     }
 
     @Override
     public void run() {
-        startWatchService();
+        try {
+            startWatchService();
+        } catch (IOException | InterruptedException e) {
+            log.error(e.getMessage(), e);
+        }
     }
 }
