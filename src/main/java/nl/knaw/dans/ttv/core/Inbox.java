@@ -87,7 +87,7 @@ public class Inbox {
     public Task createTransferItemTask(Path datasetVersionExportPath) {
         TransferItem transferItem = transferItemDAO.save(transformDvePathToTransferItem(datasetVersionExportPath));
         return new UnitOfWorkAwareProxyFactory("TransferTaskProxy", sessionFactory)
-                .create(TransferTask.class, new Class[] {TransferItem.class, TransferItemDAO.class}, new Object[] {transferItem, transferItemDAO});
+                .create(TransferTask.class, new Class[] {TransferItem.class, TransferItemDAO.class, ObjectMapper.class}, new Object[] {transferItem, transferItemDAO, objectMapper});
     }
 
     private List<TransferItem> createTransferItemsFromDisk() {

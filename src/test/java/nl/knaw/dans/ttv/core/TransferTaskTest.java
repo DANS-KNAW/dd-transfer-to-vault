@@ -80,17 +80,17 @@ class TransferTaskTest {
         withStatusMove.forEach(System.out::println);*/
 
 
-    @Test
+    /*@Test
     void testMetadataExtractionSuccess() {
         List<Task> tasks = inbox.createTransferItemTasks();
         tasks.sort(Inbox.TASK_QUEUE_DATE_COMPARATOR);
         tasks.forEach(task -> System.out.println(task.transferItem.toString()));
 
-        *//*List<Future<String>> futures = new ArrayList<>();
+        List<Future<String>> futures = new ArrayList<>();
         tasks.forEach(task -> futures.add(executorService.submit(task, "Complete")));
-        Objects.requireNonNull(futures).forEach(future -> assertThat(future.isDone()).isTrue());*//*
-        *//*tasks.forEach(executorService::execute);
+        Objects.requireNonNull(futures).forEach(future -> assertThat(future.isDone()).isTrue());
+        tasks.forEach(executorService::execute);
         final List<TransferItem> transferItems = transferItemDAO.findAllStatusMove();
-        assertThat(transferItems).extracting("transferStatus").containsOnly(TransferItem.TransferStatus.MOVE);*//*
+        assertThat(transferItems).extracting("transferStatus").containsOnly(TransferItem.TransferStatus.MOVE);
     }*/
 }
