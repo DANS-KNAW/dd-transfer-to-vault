@@ -67,8 +67,8 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
     @Override
     public void run(final DdTransferToVaultConfiguration configuration, final Environment environment) {
         final TransferItemDAO transferItemDAO = new TransferItemDAO(hibernateBundle.getSessionFactory());
-        final ExecutorService executorService = configuration.getJobQueue().build(environment);
         List<Inbox> inboxes = new ArrayList<>();
+        ExecutorService executorService = configuration.getJobQueue().build(environment);
 
         //Initialize inboxes
         for (Map<String, String> inbox : configuration.getInboxes()) {
@@ -86,7 +86,6 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
             tasks.addAll(inbox.createTransferItemTasks());
         }
         tasks.sort(Inbox.TASK_QUEUE_DATE_COMPARATOR);
-
         tasks.forEach(executorService::execute);
     }
 
