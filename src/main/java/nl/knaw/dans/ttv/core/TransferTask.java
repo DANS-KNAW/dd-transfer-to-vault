@@ -76,6 +76,10 @@ public class TransferTask extends Task {
         transferItemDAO.save(transferItem);
     }
 
+    public void generateOCFLarchiveAndStageForTransfer() {
+        //TODO
+    }
+
     @Override
     public String toString() {
         return "TransferTask{" +

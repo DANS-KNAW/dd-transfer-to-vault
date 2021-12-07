@@ -41,16 +41,15 @@ class InboxTest{
     private final DAOTestExtension daoTestRule = DAOTestExtension.newBuilder()
             .addEntityClass(TransferItem.class)
             .build();
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     private TransferItemDAO transferItemDAO;
-    private final Inbox inbox = new Inbox("DvInstance1", Paths.get("src/test/resources/data/DvInstance1"));
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private Inbox inbox;
 
     @BeforeEach
     void setUp() {
         transferItemDAO = new TransferItemDAO(daoTestRule.getSessionFactory());
-        inbox.setSessionFactory(daoTestRule.getSessionFactory());
-        inbox.setTransferItemDAO(transferItemDAO);
+        inbox = new Inbox("inbox", Paths.get("src/test/resources/data/inbox"), transferItemDAO, daoTestRule.getSessionFactory(), objectMapper);
     }
 
     @Test
@@ -59,7 +58,7 @@ class InboxTest{
         assertThat(transferItemTasks).extracting("transferItem").extracting("datasetPid").containsOnly("10.5072/DAR/MIHEZ7", "10.5072/DAR/KXTEQT", "10.5072/DAR/VFSPUQ", "10.5072/DAR/XZNG4N");
         assertThat(transferItemTasks).extracting("transferItem").extracting("versionMajor").containsOnly(1);
         assertThat(transferItemTasks).extracting("transferItem").extracting("versionMinor").containsOnly(0);
-        assertThat(transferItemTasks).extracting("transferItem").extracting("dveFilePath").containsOnly("src/test/resources/data/DvInstance1/doi-10-5072-dar-mihez7v1.0.zip", "src/test/resources/data/DvInstance1/doi-10-5072-dar-kxteqtv1.0.zip", "src/test/resources/data/DvInstance1/doi-10-5072-dar-vfspuqv1.0.zip", "src/test/resources/data/DvInstance1/doi-10-5072-dar-xzng4nv1.0.zip");
+        assertThat(transferItemTasks).extracting("transferItem").extracting("dveFilePath").containsOnly("src/test/resources/data/inbox/doi-10-5072-dar-mihez7v1.0.zip", "src/test/resources/data/inbox/doi-10-5072-dar-kxteqtv1.0.zip", "src/test/resources/data/inbox/doi-10-5072-dar-vfspuqv1.0.zip", "src/test/resources/data/inbox/doi-10-5072-dar-xzng4nv1.0.zip");
         assertThat(transferItemTasks).extracting("transferItem").extracting("transferStatus").containsOnly(TransferItem.TransferStatus.EXTRACT);
     }
 

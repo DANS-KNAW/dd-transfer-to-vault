@@ -16,11 +16,12 @@
 package nl.knaw.dans.ttv.core;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.dropwizard.hibernate.HibernateBundle;
+import nl.knaw.dans.ttv.DdTransferToVaultConfiguration;
 import nl.knaw.dans.ttv.db.TransferItemDAO;
 import org.apache.commons.codec.digest.DigestUtils;
 import io.dropwizard.hibernate.UnitOfWork;
 import io.dropwizard.hibernate.UnitOfWorkAwareProxyFactory;
-import nl.knaw.dans.ttv.db.TransferItemDAO;
 import org.hibernate.SessionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,12 +43,14 @@ public class Inbox {
 
     private static final Logger log = LoggerFactory.getLogger(Inbox.class);
 
-    private final String name;
-    private final Path path;
+    private final String datastationName;
+    private final Path datastationInbox;
+    public static Path transferOutbox;
+    public static Path ocflWorkDir;
 
-    private TransferItemDAO transferItemDAO;
-    private SessionFactory sessionFactory;
-    private ObjectMapper objectMapper;
+    private final TransferItemDAO transferItemDAO;
+    private final SessionFactory sessionFactory;
+    private final ObjectMapper objectMapper;
 
     private static final String DOI_PATTERN = "(?<doi>doi-10-[0-9]{4,}-[A-Za-z0-9]{2,}-[A-Za-z0-9]{6})-?";
     private static final String SCHEMA_PATTERN = "(?<schema>datacite)?.?";
@@ -56,9 +59,12 @@ public class Inbox {
     private static final Pattern PATTERN = Pattern.compile(DOI_PATTERN + SCHEMA_PATTERN + DATASET_VERSION_PATTERN + EXTENSION_PATTERN);
     public static final Comparator<Task> TASK_QUEUE_DATE_COMPARATOR = Comparator.comparing(task -> task.getTransferItem().getCreationTime());
 
-    public Inbox(String name, Path path) {
-        this.name = name;
-        this.path = path;
+    public Inbox(String datastationName, Path datastationInbox, TransferItemDAO transferItemDAO, SessionFactory sessionFactory, ObjectMapper objectMapper) {
+        this.datastationName = datastationName;
+        this.datastationInbox = datastationInbox;
+        this.transferItemDAO = transferItemDAO;
+        this.sessionFactory = sessionFactory;
+        this.objectMapper = objectMapper;
     }
 
     @UnitOfWork
@@ -76,7 +82,9 @@ public class Inbox {
         } else {
             for (TransferItem transferItem : transferItemsInDB) {
                 TransferTask transferTask = new UnitOfWorkAwareProxyFactory("UnitOfWorkProxy", sessionFactory)
-                        .create(TransferTask.class, new Class[] {TransferItem.class, TransferItemDAO.class, ObjectMapper.class}, new Object[] {transferItem, transferItemDAO, objectMapper});
+                        .create(TransferTask.class,
+                                new Class[] {TransferItem.class, TransferItemDAO.class, ObjectMapper.class},
+                                new Object[] {transferItem, transferItemDAO, objectMapper});
                 transferItemTasks.add(transferTask);
             }
         }
@@ -86,14 +94,16 @@ public class Inbox {
     @UnitOfWork
     public Task createTransferItemTask(Path datasetVersionExportPath) {
         TransferItem transferItem = transferItemDAO.save(transformDvePathToTransferItem(datasetVersionExportPath));
-        return new UnitOfWorkAwareProxyFactory("TransferTaskProxy", sessionFactory)
-                .create(TransferTask.class, new Class[] {TransferItem.class, TransferItemDAO.class, ObjectMapper.class}, new Object[] {transferItem, transferItemDAO, objectMapper});
+        return new UnitOfWorkAwareProxyFactory("UnitOfWorkProxy", sessionFactory)
+                .create(TransferTask.class,
+                        new Class[] {TransferItem.class, TransferItemDAO.class, ObjectMapper.class},
+                        new Object[] {transferItem, transferItemDAO, objectMapper});
     }
 
     private List<TransferItem> createTransferItemsFromDisk() {
         List<TransferItem> transferItemsOnDisk;
         try {
-            transferItemsOnDisk = Files.walk(path, 1)
+            transferItemsOnDisk = Files.walk(datastationInbox, 1)
                     .filter(Files::isRegularFile)
                     .filter(path1 -> path1.getFileName().toString().endsWith(".zip"))
                     .map(this::transformDvePathToTransferItem).collect(Collectors.toList());
@@ -132,10 +142,11 @@ public class Inbox {
             }
             transferItem.setDveFilePath(String.valueOf(datasetVersionExportPath));
             transferItem.setTransferStatus(TransferItem.TransferStatus.EXTRACT);
-            transferItem.setDatasetDvInstance(name);
+            transferItem.setDatasetDvInstance(datastationName);
         }
         return transferItem;
     }
+/*
 
     public void setTransferItemDAO(TransferItemDAO transferItemDAO) {
         this.transferItemDAO = transferItemDAO;
@@ -148,9 +159,10 @@ public class Inbox {
     public void setObjectMapper(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
     }
+*/
 
-    public Path getPath() {
-        return path;
+    public Path getDatastationInbox() {
+        return datastationInbox;
     }
 
     
@@ -158,8 +170,8 @@ public class Inbox {
     @Override
     public String toString() {
         return "Inbox{" +
-                "name='" + name + '\'' +
-                ", path=" + path +
+                "name='" + datastationName + '\'' +
+                ", path=" + datastationInbox +
                 '}';
     }
 }

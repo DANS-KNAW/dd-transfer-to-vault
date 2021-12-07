@@ -19,17 +19,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.nio.file.FileSystems;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardWatchEventKinds;
-import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
-import java.util.Optional;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
 
 public class InboxWatcher implements Runnable {
 
@@ -46,7 +40,7 @@ public class InboxWatcher implements Runnable {
     }
 
     private void startWatchService() throws IOException, InterruptedException {
-        inbox.getPath().register(watchService, StandardWatchEventKinds.ENTRY_CREATE);
+        inbox.getDatastationInbox().register(watchService, StandardWatchEventKinds.ENTRY_CREATE);
 
         WatchKey key;
         while (true) {
@@ -54,7 +48,7 @@ public class InboxWatcher implements Runnable {
             key.pollEvents().stream()
                     .map(watchEvent -> ((Path) watchEvent.context()))
                     .filter(path -> path.getFileName().toString().endsWith(".zip"))
-                    .map(path -> inbox.createTransferItemTask(inbox.getPath().resolve(path.getFileName())))
+                    .map(path -> inbox.createTransferItemTask(inbox.getDatastationInbox().resolve(path.getFileName())))
                             .forEach(executorService::execute);
             key.reset();
         }

@@ -50,7 +50,7 @@ class TransferTaskTest {
             new ThreadPoolExecutor(1, 5, 60000L, TimeUnit.MILLISECONDS,
                     new LinkedBlockingQueue<>(5));
     private final Inbox inbox = new UnitOfWorkAwareProxyFactory("UnitOfWorkProxy", daoTestRule.getSessionFactory())
-            .create(Inbox.class, new Class[]{String.class, Path.class}, new Object[]{"DvInstance1", Paths.get("src/test/resources/data/DvInstance1")});
+            .create(Inbox.class, new Class[]{String.class, Path.class}, new Object[]{"DvInstance1", Paths.get("src/test/resources/data/inbox")});
 
     private TransferItemDAO transferItemDAO;
 
