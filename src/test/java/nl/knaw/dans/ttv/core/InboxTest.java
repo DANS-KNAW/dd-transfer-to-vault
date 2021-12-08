@@ -16,12 +16,14 @@
 package nl.knaw.dans.ttv.core;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import edu.wisc.library.ocfl.api.OcflRepository;
 import io.dropwizard.testing.junit5.DAOTestExtension;
 import io.dropwizard.testing.junit5.DropwizardExtensionsSupport;
 import nl.knaw.dans.ttv.db.TransferItemDAO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,13 +45,15 @@ class InboxTest{
             .build();
     private final ObjectMapper objectMapper = new ObjectMapper();
 
+    private final OcflRepository ocflRepository = Mockito.mock(OcflRepository.class);
+
     private TransferItemDAO transferItemDAO;
     private Inbox inbox;
 
     @BeforeEach
     void setUp() {
         transferItemDAO = new TransferItemDAO(daoTestRule.getSessionFactory());
-        inbox = new Inbox("inbox", Paths.get("src/test/resources/data/inbox"), transferItemDAO, daoTestRule.getSessionFactory(), objectMapper);
+        inbox = new Inbox("inbox", Paths.get("src/test/resources/data/inbox"), transferItemDAO, ocflRepository, daoTestRule.getSessionFactory(), objectMapper);
     }
 
     @Test
@@ -70,7 +74,7 @@ class InboxTest{
             transferItemDAO.save(new TransferItem("doi:10.5072/FK2/QZ0LJQ", 1, 2, "src/test/resources/doi-10-5072-fk2-qz0ljqv-1-2/metadata/oai-ore.jsonld", LocalDateTime.parse("2020-08-03T00:15:22"), TransferItem.TransferStatus.EXTRACT));
         });
         List<Task> sortedTransferItemTasks = transferItemDAO.findAllStatusExtract().stream()
-                .map(transferItem -> new TransferTask(transferItem, transferItemDAO, objectMapper))
+                .map(transferItem -> new TransferTask(transferItem, transferItemDAO, ocflRepository, objectMapper))
                 .sorted(Inbox.TASK_QUEUE_DATE_COMPARATOR)
                 .collect(Collectors.toList());
         assertThat(sortedTransferItemTasks.get(0).getTransferItem().getCreationTime()).isEqualTo(LocalDateTime.parse("2007-12-03T10:15:30"));

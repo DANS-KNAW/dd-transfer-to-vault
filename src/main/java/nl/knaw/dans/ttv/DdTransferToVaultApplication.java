@@ -17,6 +17,9 @@
 package nl.knaw.dans.ttv;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import edu.wisc.library.ocfl.api.OcflRepository;
+import edu.wisc.library.ocfl.core.OcflRepositoryBuilder;
+import edu.wisc.library.ocfl.core.extension.storage.layout.config.FlatOmitPrefixLayoutConfig;
 import io.dropwizard.Application;
 import io.dropwizard.db.PooledDataSourceFactory;
 import io.dropwizard.hibernate.HibernateBundle;
@@ -73,15 +76,23 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
         List<Inbox> inboxes = new ArrayList<>();
         Map<String,String> outboxes = configuration.getOutboxes();
         List<InboxWatcher> inboxWatchers = new ArrayList<>();
-        Inbox.transferOutbox = Path.of(outboxes.get("transferOutboxPath"));
-        Inbox.ocflWorkDir = Path.of(outboxes.get("ocflWorkPath"));
+
+        //TODO initialize the OCFL repo
+        Inbox.TRANSFER_OUTBOX = Path.of(outboxes.get("transferOutboxPath"));
+        Inbox.OCFL_STAGING_DIR = Path.of(outboxes.get("ocflWorkPath"));
+
+        OcflRepository ocflRepository = new OcflRepositoryBuilder()
+                .defaultLayoutConfig(new FlatOmitPrefixLayoutConfig().setDelimiter("urn:uuid:"))
+                .storage(ocflStorageBuilder -> ocflStorageBuilder.fileSystem(Inbox.TRANSFER_OUTBOX))
+                .workDir(Inbox.OCFL_STAGING_DIR)
+                .build();
 
         //Initialize inboxes
         for (Map<String, String> inbox : configuration.getInboxes()) {
             Inbox newInbox = new UnitOfWorkAwareProxyFactory(hibernateBundle)
                     .create(Inbox.class,
-                            new Class[] {String.class, Path.class, TransferItemDAO.class, SessionFactory.class, ObjectMapper.class},
-                            new Object[] {inbox.get("name"), Paths.get(inbox.get("path")), transferItemDAO, hibernateBundle.getSessionFactory(), environment.getObjectMapper()});
+                            new Class[] {String.class, Path.class, TransferItemDAO.class, OcflRepository.class, SessionFactory.class, ObjectMapper.class},
+                            new Object[] {inbox.get("name"), Paths.get(inbox.get("path")), transferItemDAO, ocflRepository, hibernateBundle.getSessionFactory(), environment.getObjectMapper()});
             inboxes.add(newInbox);
             try {
                 inboxWatchers.add(new InboxWatcher(newInbox, executorService, FileSystems.getDefault().newWatchService()));

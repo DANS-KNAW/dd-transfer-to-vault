@@ -16,6 +16,7 @@
 package nl.knaw.dans.ttv.core;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import edu.wisc.library.ocfl.api.OcflRepository;
 import io.dropwizard.hibernate.HibernateBundle;
 import nl.knaw.dans.ttv.DdTransferToVaultConfiguration;
 import nl.knaw.dans.ttv.db.TransferItemDAO;
@@ -43,14 +44,15 @@ public class Inbox {
 
     private static final Logger log = LoggerFactory.getLogger(Inbox.class);
 
+    public static Path TRANSFER_OUTBOX;
+    public static Path OCFL_STAGING_DIR;
+
     private final String datastationName;
     private final Path datastationInbox;
-    public static Path transferOutbox;
-    public static Path ocflWorkDir;
-
     private final TransferItemDAO transferItemDAO;
     private final SessionFactory sessionFactory;
     private final ObjectMapper objectMapper;
+    private final OcflRepository ocflRepository;
 
     private static final String DOI_PATTERN = "(?<doi>doi-10-[0-9]{4,}-[A-Za-z0-9]{2,}-[A-Za-z0-9]{6})-?";
     private static final String SCHEMA_PATTERN = "(?<schema>datacite)?.?";
@@ -59,12 +61,13 @@ public class Inbox {
     private static final Pattern PATTERN = Pattern.compile(DOI_PATTERN + SCHEMA_PATTERN + DATASET_VERSION_PATTERN + EXTENSION_PATTERN);
     public static final Comparator<Task> TASK_QUEUE_DATE_COMPARATOR = Comparator.comparing(task -> task.getTransferItem().getCreationTime());
 
-    public Inbox(String datastationName, Path datastationInbox, TransferItemDAO transferItemDAO, SessionFactory sessionFactory, ObjectMapper objectMapper) {
+    public Inbox(String datastationName, Path datastationInbox, TransferItemDAO transferItemDAO, OcflRepository ocflRepository, SessionFactory sessionFactory, ObjectMapper objectMapper) {
         this.datastationName = datastationName;
         this.datastationInbox = datastationInbox;
         this.transferItemDAO = transferItemDAO;
         this.sessionFactory = sessionFactory;
         this.objectMapper = objectMapper;
+        this.ocflRepository = ocflRepository;
     }
 
     @UnitOfWork
@@ -83,8 +86,8 @@ public class Inbox {
             for (TransferItem transferItem : transferItemsInDB) {
                 TransferTask transferTask = new UnitOfWorkAwareProxyFactory("UnitOfWorkProxy", sessionFactory)
                         .create(TransferTask.class,
-                                new Class[] {TransferItem.class, TransferItemDAO.class, ObjectMapper.class},
-                                new Object[] {transferItem, transferItemDAO, objectMapper});
+                                new Class[] {TransferItem.class, TransferItemDAO.class, OcflRepository.class, ObjectMapper.class},
+                                new Object[] {transferItem, transferItemDAO, ocflRepository, objectMapper});
                 transferItemTasks.add(transferTask);
             }
         }
@@ -96,8 +99,8 @@ public class Inbox {
         TransferItem transferItem = transferItemDAO.save(transformDvePathToTransferItem(datasetVersionExportPath));
         return new UnitOfWorkAwareProxyFactory("UnitOfWorkProxy", sessionFactory)
                 .create(TransferTask.class,
-                        new Class[] {TransferItem.class, TransferItemDAO.class, ObjectMapper.class},
-                        new Object[] {transferItem, transferItemDAO, objectMapper});
+                        new Class[] {TransferItem.class, TransferItemDAO.class, OcflRepository.class, ObjectMapper.class},
+                        new Object[] {transferItem, transferItemDAO, ocflRepository, objectMapper});
     }
 
     private List<TransferItem> createTransferItemsFromDisk() {
@@ -146,20 +149,6 @@ public class Inbox {
         }
         return transferItem;
     }
-/*
-
-    public void setTransferItemDAO(TransferItemDAO transferItemDAO) {
-        this.transferItemDAO = transferItemDAO;
-    }
-
-    public void setSessionFactory(SessionFactory sessionFactory) {
-        this.sessionFactory = sessionFactory;
-    }
-    
-    public void setObjectMapper(ObjectMapper objectMapper) {
-        this.objectMapper = objectMapper;
-    }
-*/
 
     public Path getDatastationInbox() {
         return datastationInbox;
