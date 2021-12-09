@@ -1,0 +1,4 @@
+{
+  "extension" : "0006-flat-omit-prefix-storage-layout",
+  "description" : "The OCFL object identifiers are expected to contain prefixes which are removed in the mapping to directory names. The OCFL object identifier prefix is defined as all characters before and including a configurable delimiter."
+}
