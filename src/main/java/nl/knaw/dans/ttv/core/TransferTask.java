@@ -86,9 +86,6 @@ public class TransferTask extends Task {
 
     @UnitOfWork
     public void generateOcflArchiveAndStageForTransfer() throws IOException {
-        /*
-        TODO compare this transferItem with database transferItem (equal)
-        * */
         if (transferItem.equals(transferItemDAO.findById(transferItem.getId()).orElseThrow())) {
             String bagId = Objects.requireNonNull(transferItem.getBagId(), "Bag ID can't be null" + transferItem.onError());
             String objectId = bagId.substring(0,9) + bagId.substring(9, 11) + "/" + bagId.substring(11,13) + "/" + bagId.substring(13,15) + "/" + bagId.substring(15);
@@ -99,20 +96,18 @@ public class TransferTask extends Task {
             Files.copy(source, target);
             ocflRepository.putObject(ObjectVersionId.head(objectId), target, new VersionInfo().setMessage("initial commit"), OcflOption.MOVE_SOURCE);
 
-            //TODO update transferItem
+            //update transferItem
             String aipTarEntryName = Inbox.TRANSFER_OUTBOX + "/" + objectId.substring(9);
             if (Files.exists(Paths.get(aipTarEntryName))) {
                 transferItem.setTransferStatus(TransferItem.TransferStatus.TAR);
                 transferItem.setAipTarEntryName(aipTarEntryName);
-                transferItemDAO.save(transferItem);
+                transferItemDAO.merge(transferItem);
+                transferItemDAO.flush();
             } else {
                 log.error(aipTarEntryName + " doesn't exist");
                 throw new InvalidTransferItemException(aipTarEntryName + " doesn't exist");
             }
-
-            //TODO remove DVE from inbox when tested.
         }
-
     }
 
     @Override
