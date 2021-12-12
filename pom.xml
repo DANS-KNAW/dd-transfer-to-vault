@@ -16,8 +16,7 @@
     limitations under the License.
 
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <build>
         <plugins>
@@ -40,7 +39,7 @@
 
     <groupId>nl.knaw.dans</groupId>
     <artifactId>dd-transfer-to-vault</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>0.0.1</version>
 
     <name>Dd Transfer To Vault</name>
     <url>https://github.com/DANS-KNAW/dd-transfer-to-vault</url>
@@ -53,7 +52,7 @@
 
     <scm>
         <developerConnection>scm:git:https://github.com/DANS-KNAW/dd-transfer-to-vault</developerConnection>
-        <tag>HEAD</tag>
+        <tag>v0.0.1</tag>
     </scm>
 
     <dependencies>
