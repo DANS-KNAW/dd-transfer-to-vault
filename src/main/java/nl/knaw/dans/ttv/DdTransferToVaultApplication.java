@@ -97,6 +97,7 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
         }
         tasks.sort(Inbox.TASK_QUEUE_DATE_COMPARATOR);
         tasks.forEach(executorService::execute);
+        // Inbox watchers should each execute on their own thread instead of using the threadpool  of the tasks
         inboxWatchers.forEach(executorService::execute);
     }
 
