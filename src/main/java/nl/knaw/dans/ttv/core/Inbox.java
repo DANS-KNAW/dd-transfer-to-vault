@@ -15,6 +15,9 @@
  */
 package nl.knaw.dans.ttv.core;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import nl.knaw.dans.ttv.db.TransferItemDAO;
+import org.apache.commons.codec.digest.DigestUtils;
 import io.dropwizard.hibernate.UnitOfWork;
 import io.dropwizard.hibernate.UnitOfWorkAwareProxyFactory;
 import nl.knaw.dans.ttv.db.TransferItemDAO;
@@ -31,12 +34,9 @@ import java.time.ZoneId;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Objects;
-import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.zip.ZipFile;
 
 public class Inbox {
 
@@ -47,6 +47,7 @@ public class Inbox {
 
     private TransferItemDAO transferItemDAO;
     private SessionFactory sessionFactory;
+    private ObjectMapper objectMapper;
 
     private static final String DOI_PATTERN = "(?<doi>doi-10-[0-9]{4,}-[A-Za-z0-9]{2,}-[A-Za-z0-9]{6})-?";
     private static final String SCHEMA_PATTERN = "(?<schema>datacite)?.?";
@@ -65,7 +66,7 @@ public class Inbox {
         List<Task> transferItemTasks = new java.util.ArrayList<>(Collections.emptyList());
         List<TransferItem> transferItemsOnDisk = createTransferItemsFromDisk();
 
-        transferItemsOnDisk.forEach(transferItemDAO::create);
+        transferItemsOnDisk.forEach(transferItemDAO::save);
         List<TransferItem> transferItemsInDB = transferItemDAO.findAllStatusExtract();
 
         // consistency check
@@ -74,8 +75,8 @@ public class Inbox {
             throw new InvalidTransferItemException("Inconsistency found with TransferItems found on disk and in database");
         } else {
             for (TransferItem transferItem : transferItemsInDB) {
-                TransferTask transferTask = new UnitOfWorkAwareProxyFactory("TransferTaskProxy", sessionFactory)
-                        .create(TransferTask.class, new Class[] {TransferItem.class, TransferItemDAO.class}, new Object[] {transferItem, transferItemDAO});
+                TransferTask transferTask = new UnitOfWorkAwareProxyFactory("UnitOfWorkProxy", sessionFactory)
+                        .create(TransferTask.class, new Class[] {TransferItem.class, TransferItemDAO.class, ObjectMapper.class}, new Object[] {transferItem, transferItemDAO, objectMapper});
                 transferItemTasks.add(transferTask);
             }
         }
@@ -90,6 +91,7 @@ public class Inbox {
                     .filter(path1 -> path1.getFileName().toString().endsWith(".zip"))
                     .map(this::transformDvePathToTransferItem).collect(Collectors.toList());
         } catch (IOException ioException) {
+            log.error("Invalid TransferItem");
             throw new InvalidTransferItemException("Invalid TransferItem", ioException);
         }
         return transferItemsOnDisk;
@@ -115,18 +117,15 @@ public class Inbox {
                 if (Files.getAttribute(datasetVersionExportPath, "creationTime") != null){
                     FileTime creationTime = (FileTime) Files.getAttribute(datasetVersionExportPath, "creationTime");
                     transferItem.setCreationTime(LocalDateTime.ofInstant(creationTime.toInstant(), ZoneId.systemDefault()));
+                    transferItem.setBagChecksum(new DigestUtils("SHA-256").digestAsHex(Files.readAllBytes(datasetVersionExportPath)));
+                    transferItem.setBagSize(Files.size(datasetVersionExportPath));
                 }
             } catch (IOException e) {
                 throw new InvalidTransferItemException("Invalid TransferItem",e);
             }
-            String metadataFilePath;
-            try {
-                metadataFilePath = Objects.requireNonNull(new ZipFile(datasetVersionExportPath.toFile()).stream().filter(zipEntry -> zipEntry.getName().endsWith(".jsonld")).findAny().orElse(null)).getName();
-            } catch (IOException e) {
-                throw new InvalidTransferItemException("Invalid TransferItem",e);
-            }
-            transferItem.setMetadataFile(metadataFilePath);
+            transferItem.setDveFilePath(String.valueOf(datasetVersionExportPath));
             transferItem.setTransferStatus(TransferItem.TransferStatus.EXTRACT);
+            transferItem.setDatasetDvInstance(name);
         }
         return transferItem;
     }
@@ -137,6 +136,10 @@ public class Inbox {
 
     public void setSessionFactory(SessionFactory sessionFactory) {
         this.sessionFactory = sessionFactory;
+    }
+
+    public void setObjectMapper(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
     }
 
     @Override

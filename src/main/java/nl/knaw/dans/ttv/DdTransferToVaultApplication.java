@@ -16,6 +16,7 @@
 
 package nl.knaw.dans.ttv;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.dropwizard.Application;
 import io.dropwizard.db.PooledDataSourceFactory;
 import io.dropwizard.hibernate.HibernateBundle;
@@ -25,7 +26,10 @@ import io.dropwizard.setup.Environment;
 import nl.knaw.dans.ttv.core.Inbox;
 import nl.knaw.dans.ttv.core.Task;
 import nl.knaw.dans.ttv.core.TransferItem;
+import nl.knaw.dans.ttv.core.TransferTask;
 import nl.knaw.dans.ttv.db.TransferItemDAO;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -35,6 +39,9 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 
 public class DdTransferToVaultApplication extends Application<DdTransferToVaultConfiguration> {
+
+    private static final Logger log = LoggerFactory.getLogger(DdTransferToVaultApplication.class);
+
 
     public static void main(final String[] args) throws Exception {
         new DdTransferToVaultApplication().run(args);
@@ -61,6 +68,7 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
     public void run(final DdTransferToVaultConfiguration configuration, final Environment environment) {
         final TransferItemDAO transferItemDAO = new TransferItemDAO(hibernateBundle.getSessionFactory());
         List<Inbox> inboxes = new ArrayList<>();
+        ExecutorService executorService = configuration.getJobQueue().build(environment);
 
         //Initialize inboxes
         for (Map<String, String> inbox : configuration.getInboxes()) {
@@ -74,11 +82,10 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
         for (Inbox inbox: inboxes) {
             inbox.setSessionFactory(hibernateBundle.getSessionFactory());
             inbox.setTransferItemDAO(transferItemDAO);
+            inbox.setObjectMapper(environment.getObjectMapper());
             tasks.addAll(inbox.createTransferItemTasks());
         }
         tasks.sort(Inbox.TASK_QUEUE_DATE_COMPARATOR);
-
-        ExecutorService executorService = configuration.getJobQueue().build(environment);
         tasks.forEach(executorService::execute);
     }
 

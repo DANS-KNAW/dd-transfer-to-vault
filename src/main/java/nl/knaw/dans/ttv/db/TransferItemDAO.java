@@ -18,11 +18,15 @@ package nl.knaw.dans.ttv.db;
 import io.dropwizard.hibernate.AbstractDAO;
 import nl.knaw.dans.ttv.core.TransferItem;
 import org.hibernate.SessionFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Optional;
 
 public class TransferItemDAO extends AbstractDAO<TransferItem> {
+
+    private static final Logger log = LoggerFactory.getLogger(TransferItemDAO.class);
 
     public TransferItemDAO(SessionFactory sessionFactory) {
         super(sessionFactory);
@@ -32,7 +36,7 @@ public class TransferItemDAO extends AbstractDAO<TransferItem> {
         return Optional.ofNullable(get(id));
     }
 
-    public TransferItem create(TransferItem transferItem) {
+    public TransferItem save(TransferItem transferItem) {
         return persist(transferItem);
     }
 
@@ -42,5 +46,9 @@ public class TransferItemDAO extends AbstractDAO<TransferItem> {
 
     public List<TransferItem> findAllStatusExtract() {
         return list(namedTypedQuery(TransferItem.TRANSFER_ITEM_FIND_ALL_STATUS_EXTRACT));
+    }
+
+    public List<TransferItem> findAllStatusMove() {
+        return list(namedTypedQuery(TransferItem.TRANSFER_ITEM_FIND_ALL_STATUS_MOVE));
     }
 }

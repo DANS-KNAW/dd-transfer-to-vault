@@ -15,6 +15,7 @@
  */
 package nl.knaw.dans.ttv.core;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.dropwizard.testing.junit5.DAOTestExtension;
 import io.dropwizard.testing.junit5.DropwizardExtensionsSupport;
 import nl.knaw.dans.ttv.db.TransferItemDAO;
@@ -27,8 +28,6 @@ import org.slf4j.LoggerFactory;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -45,6 +44,7 @@ class InboxTest{
 
     private TransferItemDAO transferItemDAO;
     private final Inbox inbox = new Inbox("DvInstance1", Paths.get("src/test/resources/data/DvInstance1"));
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @BeforeEach
     void setUp() {
@@ -56,22 +56,22 @@ class InboxTest{
     @Test
     void createTransferItemTasks() {
         List<Task> transferItemTasks = inbox.createTransferItemTasks();
-        assertThat(transferItemTasks).extracting("transferItem").extracting("datasetPid").containsOnly("10.5072/FK2/WQFZYM", "10.5072/FK2/U9GJXT", "10.5072/FK2/WQFZYM", "10.5072/FK2/NG48BD");
+        assertThat(transferItemTasks).extracting("transferItem").extracting("datasetPid").containsOnly("10.5072/DAR/MIHEZ7", "10.5072/DAR/KXTEQT", "10.5072/DAR/VFSPUQ", "10.5072/DAR/XZNG4N");
         assertThat(transferItemTasks).extracting("transferItem").extracting("versionMajor").containsOnly(1);
-        assertThat(transferItemTasks).extracting("transferItem").extracting("versionMinor").containsOnly(2, 0);
-        assertThat(transferItemTasks).extracting("transferItem").extracting("metadataFile").containsOnly("doi-10-5072-FK2-WQFZYMv-1-0/metadata/oai-ore.jsonld", "doi-10-5072-FK2-U9GJXTv-1-0/metadata/oai-ore.jsonld", "doi-10-5072-FK2-WQFZYMv-1-0/metadata/oai-ore.jsonld", "doi-10-5072-FK2-NG48BDv-1-0/metadata/oai-ore.jsonld");
+        assertThat(transferItemTasks).extracting("transferItem").extracting("versionMinor").containsOnly(0);
+        assertThat(transferItemTasks).extracting("transferItem").extracting("dveFilePath").containsOnly("src/test/resources/data/DvInstance1/doi-10-5072-dar-mihez7v1.0.zip", "src/test/resources/data/DvInstance1/doi-10-5072-dar-kxteqtv1.0.zip", "src/test/resources/data/DvInstance1/doi-10-5072-dar-vfspuqv1.0.zip", "src/test/resources/data/DvInstance1/doi-10-5072-dar-xzng4nv1.0.zip");
         assertThat(transferItemTasks).extracting("transferItem").extracting("transferStatus").containsOnly(TransferItem.TransferStatus.EXTRACT);
     }
 
     @Test
     void taskQueueDateComparatorTest() {
         daoTestRule.inTransaction(() -> {
-            transferItemDAO.create(new TransferItem("doi:10.5072/FK2/P4PHV7", 1, 0, "src/test/resources/doi-10-5072-fk2-p4phv7v-1-0/metadata/oai-ore.jsonld", LocalDateTime.parse("2007-12-03T10:15:30"), TransferItem.TransferStatus.EXTRACT));
-            transferItemDAO.create(new TransferItem("doi:10.5072/FK2/JOY8UU", 2, 0, "src/test/resources/doi-10-5072-fk2-joy8uuv-2-0/metadata/oai-ore.jsonld", LocalDateTime.parse("2008-12-03T11:30:00"), TransferItem.TransferStatus.EXTRACT));
-            transferItemDAO.create(new TransferItem("doi:10.5072/FK2/QZ0LJQ", 1, 2, "src/test/resources/doi-10-5072-fk2-qz0ljqv-1-2/metadata/oai-ore.jsonld", LocalDateTime.parse("2020-08-03T00:15:22"), TransferItem.TransferStatus.EXTRACT));
+            transferItemDAO.save(new TransferItem("doi:10.5072/FK2/P4PHV7", 1, 0, "src/test/resources/doi-10-5072-fk2-p4phv7v-1-0/metadata/oai-ore.jsonld", LocalDateTime.parse("2007-12-03T10:15:30"), TransferItem.TransferStatus.EXTRACT));
+            transferItemDAO.save(new TransferItem("doi:10.5072/FK2/JOY8UU", 2, 0, "src/test/resources/doi-10-5072-fk2-joy8uuv-2-0/metadata/oai-ore.jsonld", LocalDateTime.parse("2008-12-03T11:30:00"), TransferItem.TransferStatus.EXTRACT));
+            transferItemDAO.save(new TransferItem("doi:10.5072/FK2/QZ0LJQ", 1, 2, "src/test/resources/doi-10-5072-fk2-qz0ljqv-1-2/metadata/oai-ore.jsonld", LocalDateTime.parse("2020-08-03T00:15:22"), TransferItem.TransferStatus.EXTRACT));
         });
         List<Task> sortedTransferItemTasks = transferItemDAO.findAllStatusExtract().stream()
-                .map(transferItem -> new TransferTask(transferItem, transferItemDAO))
+                .map(transferItem -> new TransferTask(transferItem, transferItemDAO, objectMapper))
                 .sorted(Inbox.TASK_QUEUE_DATE_COMPARATOR)
                 .collect(Collectors.toList());
         assertThat(sortedTransferItemTasks.get(0).getTransferItem().getCreationTime()).isEqualTo(LocalDateTime.parse("2007-12-03T10:15:30"));
@@ -82,9 +82,9 @@ class InboxTest{
     @Test
     void failedConsistencyCheck() {
         daoTestRule.inTransaction(() -> {
-            transferItemDAO.create(new TransferItem("doi:10.5072/FK2/P4PHV7", 1, 0, "src/test/resources/doi-10-5072-fk2-p4phv7v-1-0/metadata/oai-ore.jsonld", LocalDateTime.parse("2007-12-03T10:15:30"), TransferItem.TransferStatus.EXTRACT));
-            transferItemDAO.create(new TransferItem("doi:10.5072/FK2/JOY8UU", 2, 0, "src/test/resources/doi-10-5072-fk2-joy8uuv-2-0/metadata/oai-ore.jsonld", LocalDateTime.parse("2008-12-03T11:30:00"), TransferItem.TransferStatus.EXTRACT));
-            transferItemDAO.create(new TransferItem("doi:10.5072/FK2/QZ0LJQ", 1, 2, "src/test/resources/doi-10-5072-fk2-qz0ljqv-1-2/metadata/oai-ore.jsonld", LocalDateTime.parse("2020-08-03T00:15:22"), TransferItem.TransferStatus.EXTRACT));
+            transferItemDAO.save(new TransferItem("doi:10.5072/FK2/P4PHV7", 1, 0, "src/test/resources/doi-10-5072-fk2-p4phv7v-1-0/metadata/oai-ore.jsonld", LocalDateTime.parse("2007-12-03T10:15:30"), TransferItem.TransferStatus.EXTRACT));
+            transferItemDAO.save(new TransferItem("doi:10.5072/FK2/JOY8UU", 2, 0, "src/test/resources/doi-10-5072-fk2-joy8uuv-2-0/metadata/oai-ore.jsonld", LocalDateTime.parse("2008-12-03T11:30:00"), TransferItem.TransferStatus.EXTRACT));
+            transferItemDAO.save(new TransferItem("doi:10.5072/FK2/QZ0LJQ", 1, 2, "src/test/resources/doi-10-5072-fk2-qz0ljqv-1-2/metadata/oai-ore.jsonld", LocalDateTime.parse("2020-08-03T00:15:22"), TransferItem.TransferStatus.EXTRACT));
         });
         assertThatExceptionOfType(InvalidTransferItemException.class).isThrownBy(inbox::createTransferItemTasks);
     }
