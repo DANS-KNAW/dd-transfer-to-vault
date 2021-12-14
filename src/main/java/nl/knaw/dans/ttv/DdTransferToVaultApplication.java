@@ -95,7 +95,6 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
             tasks.addAll(inbox.createTransferItemTasks());
         }
         tasks.sort(Inbox.TASK_QUEUE_DATE_COMPARATOR);
-
         tasks.forEach(executorService::execute);
         inboxWatchers.forEach(executorService::execute);
     }

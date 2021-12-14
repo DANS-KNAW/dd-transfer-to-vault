@@ -155,6 +155,10 @@ public class Inbox {
 
     
 
+    public void setObjectMapper(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
+    }
+
     @Override
     public String toString() {
         return "Inbox{" +

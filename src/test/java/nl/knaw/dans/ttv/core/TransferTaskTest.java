@@ -64,6 +64,7 @@ class TransferTaskTest {
         inbox.setTransferItemDAO(transferItemDAO);
     }
 
+
     @Test
     void run() throws Exception {
         /*List<Future<TransferItem>> futures = executorService.invokeAll(tasks);
