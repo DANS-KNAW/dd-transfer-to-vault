@@ -30,7 +30,6 @@ import nl.knaw.dans.ttv.core.Inbox;
 import nl.knaw.dans.ttv.core.InboxWatcher;
 import nl.knaw.dans.ttv.core.Task;
 import nl.knaw.dans.ttv.core.TransferItem;
-import nl.knaw.dans.ttv.core.TransferTask;
 import nl.knaw.dans.ttv.db.TransferItemDAO;
 import org.hibernate.SessionFactory;
 import org.slf4j.Logger;
@@ -73,7 +72,7 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
     @Override
     public void run(final DdTransferToVaultConfiguration configuration, final Environment environment) {
         final TransferItemDAO transferItemDAO = new TransferItemDAO(hibernateBundle.getSessionFactory());
-        final ExecutorService executorService = configuration.getJobQueue().build(environment);
+        final ExecutorService executorService = configuration.getTaskQueue().build(environment);
         List<Inbox> inboxes = new ArrayList<>();
         Map<String,String> outboxes = configuration.getOutboxes();
         List<InboxWatcher> inboxWatchers = new ArrayList<>();
@@ -88,7 +87,6 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
                 .workDir(Inbox.OCFL_STAGING_DIR)
                 .build();
 
-        //Initialize inboxes
         for (Map<String, String> inbox : configuration.getInboxes()) {
             Inbox newInbox = new UnitOfWorkAwareProxyFactory(hibernateBundle)
                     .create(Inbox.class,
@@ -96,13 +94,13 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
                             new Object[] {inbox.get("name"), Paths.get(inbox.get("path")), transferItemDAO, ocflRepository, hibernateBundle.getSessionFactory(), environment.getObjectMapper()});
             inboxes.add(newInbox);
             try {
-                inboxWatchers.add(new InboxWatcher(newInbox, executorService, FileSystems.getDefault().newWatchService()));
+                inboxWatchers.add(new InboxWatcher(newInbox, executorService));
             } catch (IOException e) {
                 log.error(e.getMessage(), e);
+                throw new RuntimeException("InboxWatcher failed to start");
             }
         }
 
-        //get a list of sorted(creationTime) TransferTasks containing TransferItems, which have been checked for consistency disk/db
         List<Task> tasks = new ArrayList<>();
         for (Inbox inbox: inboxes) {
             tasks.addAll(inbox.createTransferItemTasks());
@@ -110,7 +108,7 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
         tasks.sort(Inbox.TASK_QUEUE_DATE_COMPARATOR);
 
         tasks.forEach(executorService::execute);
-        inboxWatchers.forEach(executorService::execute);
+        inboxWatchers.forEach(inboxWatcher -> environment.lifecycle().manage(inboxWatcher));
     }
 
 }

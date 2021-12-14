@@ -3,6 +3,16 @@
 #
 # Please, modify the configuration below to match your environment. Also, delete and/or modify
 # this description.
+database:
+  driverClass: org.hsqldb.jdbcDriver
+  url: jdbc:hsqldb:hsql://localhost:9001/dd-transfer-to-vault
+  user: changeme
+  password: changeme
+  logValidationErrors: true
+  validationQuery: SELECT * FROM INFORMATION_SCHEMA.SYSTEM_TABLES
+  properties:
+    hibernate.dialect: 'org.hibernate.dialect.HSQLDialect'
+    hibernate.hbm2ddl.auto: update
 
 server:
   applicationContextPath: /
@@ -15,3 +25,21 @@ server:
     - type: http
       # Replace with port number unique for this service
       port: 20001
+
+taskQueue:
+  nameFormat: "task-execution-thread-%d"
+  maxQueueSize: 5000
+  # Number of threads will be increased when maxQueueSize is exceeded.
+  minThreads: 1
+  # No more than maxThreads will be created though
+  maxThreads: 10
+  # Threads will die after 60 seconds of idleness
+  keepAliveTime: 60 seconds
+
+inboxes:
+  - name: Test
+    path: src/test/resources/data/inbox
+
+outboxes:
+  transferOutboxPath: src/test/resources/data/outbox
+  ocflWorkPath: src/test/resources/data/workdir

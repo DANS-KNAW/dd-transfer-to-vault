@@ -18,13 +18,11 @@ package nl.knaw.dans.ttv;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.dropwizard.Configuration;
-import nl.knaw.dans.lib.util.ExecutorServiceFactory;
 import io.dropwizard.db.DataSourceFactory;
-import nl.knaw.dans.ttv.core.Inbox;
+import nl.knaw.dans.lib.util.ExecutorServiceFactory;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
-import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -36,7 +34,7 @@ public class DdTransferToVaultConfiguration extends Configuration {
 
     @Valid
     @NotNull
-    private ExecutorServiceFactory jobQueue;
+    private ExecutorServiceFactory taskQueue;
 
     @NotNull
     private List<Map<String, String>> inboxes = Collections.emptyList();
@@ -44,14 +42,14 @@ public class DdTransferToVaultConfiguration extends Configuration {
     @NotNull
     private Map<String, String> outboxes = Collections.emptyMap();
 
-    @JsonProperty("jobQueue")
-    public void setJobQueue(ExecutorServiceFactory taskExecutorThreadPool) {
-        this.jobQueue = taskExecutorThreadPool;
+    @JsonProperty("taskQueue")
+    public void setTaskQueue(ExecutorServiceFactory taskExecutorThreadPool) {
+        this.taskQueue = taskExecutorThreadPool;
     }
 
-    @JsonProperty("jobQueue")
-    public ExecutorServiceFactory getJobQueue() {
-        return jobQueue;
+    @JsonProperty("taskQueue")
+    public ExecutorServiceFactory getTaskQueue() {
+        return taskQueue;
     }
 
     @JsonProperty("database")

@@ -15,17 +15,19 @@
  */
 package nl.knaw.dans.ttv.core;
 
+import io.dropwizard.lifecycle.Managed;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
 import java.util.concurrent.ExecutorService;
 
-public class InboxWatcher implements Runnable {
+public class InboxWatcher implements Managed {
 
     private static final Logger log = LoggerFactory.getLogger(InboxWatcher.class);
 
@@ -33,12 +35,13 @@ public class InboxWatcher implements Runnable {
     private final ExecutorService executorService;
     private final WatchService watchService;
 
-    public InboxWatcher(Inbox inbox, ExecutorService executorService, WatchService watchService) {
+    public InboxWatcher(Inbox inbox, ExecutorService executorService) throws IOException {
         this.inbox = inbox;
         this.executorService = executorService;
-        this.watchService = watchService;
+        this.watchService = FileSystems.getDefault().newWatchService();
     }
 
+    @SuppressWarnings("InfiniteLoopStatement")
     private void startWatchService() throws IOException, InterruptedException {
         inbox.getDatastationInbox().register(watchService, StandardWatchEventKinds.ENTRY_CREATE);
 
@@ -55,11 +58,17 @@ public class InboxWatcher implements Runnable {
     }
 
     @Override
-    public void run() {
+    public void start() throws Exception {
         try {
             startWatchService();
         } catch (IOException | InterruptedException e) {
             log.error(e.getMessage(), e);
+            throw new InvalidTransferItemException(e.getMessage());
         }
+    }
+
+    @Override
+    public void stop() throws Exception {
+        //TODO?
     }
 }

@@ -19,8 +19,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.wisc.library.ocfl.api.OcflRepository;
 import nl.knaw.dans.ttv.db.TransferItemDAO;
 
-import java.util.concurrent.Callable;
-
 public abstract class Task implements Runnable {
 
     protected final TransferItem transferItem;
