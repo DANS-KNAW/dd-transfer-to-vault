@@ -24,6 +24,7 @@ import io.dropwizard.hibernate.UnitOfWorkAwareProxyFactory;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import nl.knaw.dans.ttv.core.Inbox;
+import nl.knaw.dans.ttv.core.InboxWatcher;
 import nl.knaw.dans.ttv.core.Task;
 import nl.knaw.dans.ttv.core.TransferItem;
 import nl.knaw.dans.ttv.core.TransferTask;
@@ -31,6 +32,8 @@ import nl.knaw.dans.ttv.db.TransferItemDAO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -67,14 +70,20 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
     @Override
     public void run(final DdTransferToVaultConfiguration configuration, final Environment environment) {
         final TransferItemDAO transferItemDAO = new TransferItemDAO(hibernateBundle.getSessionFactory());
+        final ExecutorService executorService = configuration.getJobQueue().build(environment);
         List<Inbox> inboxes = new ArrayList<>();
-        ExecutorService executorService = configuration.getJobQueue().build(environment);
+        List<InboxWatcher> inboxWatchers = new ArrayList<>();
 
         //Initialize inboxes
         for (Map<String, String> inbox : configuration.getInboxes()) {
             Inbox newInbox = new UnitOfWorkAwareProxyFactory(hibernateBundle)
                     .create(Inbox.class, new Class[] {String.class, Path.class}, new Object[] {inbox.get("name"), Paths.get(inbox.get("path"))});
             inboxes.add(newInbox);
+            try {
+                inboxWatchers.add(new InboxWatcher(newInbox, executorService, FileSystems.getDefault().newWatchService()));
+            } catch (IOException e) {
+                log.error(e.getMessage(), e);
+            }
         }
 
         //get a list of sorted(creationTime) TransferTasks containing TransferItems, which have been checked for consistency disk/db
@@ -87,6 +96,7 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
         }
         tasks.sort(Inbox.TASK_QUEUE_DATE_COMPARATOR);
         tasks.forEach(executorService::execute);
+        inboxWatchers.forEach(executorService::execute);
     }
 
 }

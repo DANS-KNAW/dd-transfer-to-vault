@@ -39,7 +39,7 @@ public class TransferTask extends Task {
 
     @Override
     public void run() {
-        log.info("Running task" + this);
+        log.info("Running task: " + this);
         try {
             extractMetadata();
         } catch (IOException | NullPointerException e) {
@@ -74,5 +74,12 @@ public class TransferTask extends Task {
         transferItem.setQueueDate(LocalDateTime.now());
         transferItem.setTransferStatus(TransferItem.TransferStatus.MOVE);
         transferItemDAO.save(transferItem);
+    }
+
+    @Override
+    public String toString() {
+        return "TransferTask{" +
+                "transferItem=" + transferItem.getDveFilePath() +
+                '}';
     }
 }

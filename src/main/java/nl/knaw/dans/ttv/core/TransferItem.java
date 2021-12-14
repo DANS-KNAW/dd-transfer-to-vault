@@ -34,6 +34,7 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.Optional;
 
 @Entity
 @Table(name = "transfer_queue", uniqueConstraints={@UniqueConstraint(columnNames = {"dataset_pid" , "version_major", "version_minor"})})

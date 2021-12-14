@@ -34,6 +34,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -41,6 +42,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class TransferTaskTest {
 
     private final DAOTestExtension daoTestRule = DAOTestExtension.newBuilder()
+            .setUrl("jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE")
             .addEntityClass(TransferItem.class)
             .build();
 
@@ -63,18 +65,33 @@ class TransferTaskTest {
     }
 
 
-
     @Test
+    void run() throws Exception {
+        /*List<Future<TransferItem>> futures = executorService.invokeAll(tasks);
+        Objects.requireNonNull(futures).forEach(transferItemFuture -> {
+            assertThat(transferItemFuture.isDone()).isTrue();
+            try {
+                assertThat(transferItemFuture.get().getPidMapping()).isNotNull();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });*/
+        /*tasks.forEach(task -> executorService.execute(task));
+        List<TransferItem> withStatusMove = transferItemDAO.findAllStatusExtract();
+        withStatusMove.forEach(System.out::println);*/
+
+
+    /*@Test
     void testMetadataExtractionSuccess() {
         List<Task> tasks = inbox.createTransferItemTasks();
         tasks.sort(Inbox.TASK_QUEUE_DATE_COMPARATOR);
         tasks.forEach(task -> System.out.println(task.transferItem.toString()));
 
-        *//*List<Future<String>> futures = new ArrayList<>();
+        List<Future<String>> futures = new ArrayList<>();
         tasks.forEach(task -> futures.add(executorService.submit(task, "Complete")));
-        Objects.requireNonNull(futures).forEach(future -> assertThat(future.isDone()).isTrue());*//*
-        *//*tasks.forEach(executorService::execute);
+        Objects.requireNonNull(futures).forEach(future -> assertThat(future.isDone()).isTrue());
+        tasks.forEach(executorService::execute);
         final List<TransferItem> transferItems = transferItemDAO.findAllStatusMove();
-        assertThat(transferItems).extracting("transferStatus").containsOnly(TransferItem.TransferStatus.MOVE);*//*
+        assertThat(transferItems).extracting("transferStatus").containsOnly(TransferItem.TransferStatus.MOVE);
     }*/
 }
