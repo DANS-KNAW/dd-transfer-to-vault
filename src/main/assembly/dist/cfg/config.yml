@@ -15,3 +15,5 @@ server:
     - type: http
       # Replace with port number unique for this service
       port: 20001
+
+# Provide reasonable defaults for non-optional settings
