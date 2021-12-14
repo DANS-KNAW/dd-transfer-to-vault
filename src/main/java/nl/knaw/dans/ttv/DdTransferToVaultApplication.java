@@ -30,6 +30,7 @@ import nl.knaw.dans.ttv.core.Inbox;
 import nl.knaw.dans.ttv.core.InboxWatcher;
 import nl.knaw.dans.ttv.core.Task;
 import nl.knaw.dans.ttv.core.TransferItem;
+import nl.knaw.dans.ttv.core.TransferTask;
 import nl.knaw.dans.ttv.db.TransferItemDAO;
 import org.hibernate.SessionFactory;
 import org.slf4j.Logger;
