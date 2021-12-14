@@ -96,7 +96,7 @@ public class TransferTask extends Task {
             Files.copy(source, target);
             ocflRepository.putObject(ObjectVersionId.head(objectId), target, new VersionInfo().setMessage("initial commit"), OcflOption.MOVE_SOURCE);
 
-            //update transferItem
+            //TODO use objectId for aipTarEntryName, so you can use ocflRepository.containsObject(objectId)
             String aipTarEntryName = Inbox.TRANSFER_OUTBOX + "/" + objectId.substring(9);
             if (Files.exists(Paths.get(aipTarEntryName))) {
                 transferItem.setTransferStatus(TransferItem.TransferStatus.TAR);
