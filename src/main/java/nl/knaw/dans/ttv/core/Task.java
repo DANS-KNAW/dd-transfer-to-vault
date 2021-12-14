@@ -18,8 +18,6 @@ package nl.knaw.dans.ttv.core;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import nl.knaw.dans.ttv.db.TransferItemDAO;
 
-import java.util.concurrent.Callable;
-
 public abstract class Task implements Runnable {
 
     protected final TransferItem transferItem;

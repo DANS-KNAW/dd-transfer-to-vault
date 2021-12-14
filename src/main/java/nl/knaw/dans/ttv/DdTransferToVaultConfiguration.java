@@ -18,13 +18,11 @@ package nl.knaw.dans.ttv;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.dropwizard.Configuration;
-import nl.knaw.dans.lib.util.ExecutorServiceFactory;
 import io.dropwizard.db.DataSourceFactory;
-import nl.knaw.dans.ttv.core.Inbox;
+import nl.knaw.dans.lib.util.ExecutorServiceFactory;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
-import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;

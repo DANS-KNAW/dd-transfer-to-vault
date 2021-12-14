@@ -16,7 +16,6 @@
 
 package nl.knaw.dans.ttv;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.dropwizard.Application;
 import io.dropwizard.db.PooledDataSourceFactory;
 import io.dropwizard.hibernate.HibernateBundle;
@@ -27,7 +26,6 @@ import nl.knaw.dans.ttv.core.Inbox;
 import nl.knaw.dans.ttv.core.InboxWatcher;
 import nl.knaw.dans.ttv.core.Task;
 import nl.knaw.dans.ttv.core.TransferItem;
-import nl.knaw.dans.ttv.core.TransferTask;
 import nl.knaw.dans.ttv.db.TransferItemDAO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

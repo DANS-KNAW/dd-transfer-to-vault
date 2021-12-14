@@ -16,11 +16,10 @@
 package nl.knaw.dans.ttv.core;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import nl.knaw.dans.ttv.db.TransferItemDAO;
-import org.apache.commons.codec.digest.DigestUtils;
 import io.dropwizard.hibernate.UnitOfWork;
 import io.dropwizard.hibernate.UnitOfWorkAwareProxyFactory;
 import nl.knaw.dans.ttv.db.TransferItemDAO;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.hibernate.SessionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -160,5 +159,5 @@ public class Inbox {
                 ", path=" + path +
                 '}';
     }
-    
+
 }
