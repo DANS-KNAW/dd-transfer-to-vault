@@ -80,6 +80,7 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
             try {
                 inboxWatchers.add(new InboxWatcher(newInbox, executorService, FileSystems.getDefault().newWatchService()));
             } catch (IOException e) {
+                // I will not see this if the service starts up normally otherwise
                 log.error(e.getMessage(), e);
             }
         }
