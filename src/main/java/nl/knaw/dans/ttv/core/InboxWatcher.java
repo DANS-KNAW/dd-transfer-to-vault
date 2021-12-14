@@ -43,6 +43,7 @@ public class InboxWatcher implements Runnable {
         inbox.getPath().register(watchService, StandardWatchEventKinds.ENTRY_CREATE);
 
         WatchKey key;
+        // IntelliJ: while statement cannot complete without exception
         while (true) {
             key = watchService.take();
             key.pollEvents().stream()
@@ -59,6 +60,7 @@ public class InboxWatcher implements Runnable {
         try {
             startWatchService();
         } catch (IOException | InterruptedException e) {
+            // You are not recovering the error, so I'd just rethrow it as an unchecked exception
             log.error(e.getMessage(), e);
         }
     }

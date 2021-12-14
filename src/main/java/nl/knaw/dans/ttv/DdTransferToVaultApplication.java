@@ -72,15 +72,17 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
         List<Inbox> inboxes = new ArrayList<>();
         List<InboxWatcher> inboxWatchers = new ArrayList<>();
 
-        //Initialize inboxes
+        //Initialize inboxes <- comment doesn't really say a whole lot, listen to Uncle Bob and remove it.
         for (Map<String, String> inbox : configuration.getInboxes()) {
             Inbox newInbox = new UnitOfWorkAwareProxyFactory(hibernateBundle)
                     .create(Inbox.class, new Class[] {String.class, Path.class}, new Object[] {inbox.get("name"), Paths.get(inbox.get("path"))});
             inboxes.add(newInbox);
             try {
+                // The watch service to use is always FileSystems.getDefault().newWatchService(), yet is is passed in as parameter
                 inboxWatchers.add(new InboxWatcher(newInbox, executorService, FileSystems.getDefault().newWatchService()));
             } catch (IOException e) {
                 // I will not see this if the service starts up normally otherwise
+                // This is only thrown by FileSystems.getDefault().newWatchService(), not by teh InboxWatcher constructor.
                 log.error(e.getMessage(), e);
             }
         }
