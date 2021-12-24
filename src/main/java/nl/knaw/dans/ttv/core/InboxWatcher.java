@@ -47,10 +47,10 @@ public class InboxWatcher implements Runnable {
         while (true) {
             key = watchService.take();
             key.pollEvents().stream()
-                    .map(watchEvent -> ((Path) watchEvent.context()))
-                    .filter(path -> path.getFileName().toString().endsWith(".zip"))
-                    .map(path -> inbox.createTransferItemTask(inbox.getPath().resolve(path.getFileName())))
-                            .forEach(executorService::execute);
+                .map(watchEvent -> ((Path) watchEvent.context()))
+                .filter(path -> path.getFileName().toString().endsWith(".zip"))
+                .map(path -> inbox.createTransferItemTask(inbox.getPath().resolve(path.getFileName())))
+                .forEach(executorService::execute);
             key.reset();
         }
     }
@@ -59,7 +59,8 @@ public class InboxWatcher implements Runnable {
     public void run() {
         try {
             startWatchService();
-        } catch (IOException | InterruptedException e) {
+        }
+        catch (IOException | InterruptedException e) {
             // You are not recovering the error, so I'd just rethrow it as an unchecked exception
             log.error(e.getMessage(), e);
         }
