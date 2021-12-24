@@ -35,18 +35,19 @@ public class InboxWatcher implements Managed {
     private final ExecutorService executorService;
     private final WatchService watchService;
 
+    private boolean running = true;
+
     public InboxWatcher(Inbox inbox, ExecutorService executorService) throws IOException {
         this.inbox = inbox;
         this.executorService = executorService;
         this.watchService = FileSystems.getDefault().newWatchService();
     }
 
-    @SuppressWarnings("InfiniteLoopStatement")
     private void startWatchService() throws IOException, InterruptedException {
         inbox.getDatastationInbox().register(watchService, StandardWatchEventKinds.ENTRY_CREATE);
 
         WatchKey key;
-        while (true) {
+        while (running) {
             key = watchService.take();
             key.pollEvents().stream()
                     .map(watchEvent -> ((Path) watchEvent.context()))
@@ -55,6 +56,7 @@ public class InboxWatcher implements Managed {
                             .forEach(executorService::execute);
             key.reset();
         }
+        watchService.close();
     }
 
     @Override
@@ -70,5 +72,7 @@ public class InboxWatcher implements Managed {
     @Override
     public void stop() throws Exception {
         //TODO?
+        // Something like this? (Haven't tested it)
+        running = false;
     }
 }

@@ -37,9 +37,11 @@ taskQueue:
   keepAliveTime: 60 seconds
 
 inboxes:
-  - name: Test
-    path: src/test/resources/data/inbox
+# Add inboxes with the following properties
+#  - name: inboxname
+#    path: /path/to/inbox
 
 outboxes:
-  transferOutboxPath: src/test/resources/data/outbox
-  ocflWorkPath: src/test/resources/data/workdir
+# Multiple outboxes, but not a list??
+#  transferOutboxPath: src/test/resources/data/outbox
+#  ocflWorkPath: src/test/resources/data/workdir
