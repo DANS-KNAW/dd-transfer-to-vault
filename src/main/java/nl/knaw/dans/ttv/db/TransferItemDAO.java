@@ -51,4 +51,12 @@ public class TransferItemDAO extends AbstractDAO<TransferItem> {
     public List<TransferItem> findAllStatusMove() {
         return list(namedTypedQuery(TransferItem.TRANSFER_ITEM_FIND_ALL_STATUS_MOVE));
     }
+
+    public void merge(TransferItem transferItem) {
+        currentSession().merge(transferItem);
+    }
+
+    public void flush() {
+        currentSession().flush();
+    }
 }

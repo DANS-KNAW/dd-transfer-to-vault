@@ -16,19 +16,20 @@
 package nl.knaw.dans.ttv.core;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import edu.wisc.library.ocfl.api.OcflRepository;
 import nl.knaw.dans.ttv.db.TransferItemDAO;
-
-import java.util.concurrent.Callable;
 
 public abstract class Task implements Runnable {
 
     protected final TransferItem transferItem;
     protected final TransferItemDAO transferItemDAO;
+    protected final OcflRepository ocflRepository;
     protected final ObjectMapper objectMapper;
 
-    protected Task(TransferItem transferItem, TransferItemDAO transferItemDAO, ObjectMapper objectMapper) {
+    protected Task(TransferItem transferItem, TransferItemDAO transferItemDAO, OcflRepository ocflRepository, ObjectMapper objectMapper) {
         this.transferItem = transferItem;
         this.transferItemDAO = transferItemDAO;
+        this.ocflRepository = ocflRepository;
         this.objectMapper = objectMapper;
     }
 
