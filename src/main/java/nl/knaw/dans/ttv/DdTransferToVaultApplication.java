@@ -36,7 +36,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -74,17 +73,20 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
         final TransferItemDAO transferItemDAO = new TransferItemDAO(hibernateBundle.getSessionFactory());
         final ExecutorService executorService = configuration.getTaskQueue().build(environment);
         List<Inbox> inboxes = new ArrayList<>();
-        Map<String,String> outboxes = configuration.getOutboxes();
+        List<Map<String, String>> ocflDirectories = configuration.getOcflDirectories();
         List<InboxWatcher> inboxWatchers = new ArrayList<>();
 
-        //TODO initialize the OCFL repo
-        Inbox.TRANSFER_OUTBOX = Path.of(outboxes.get("transferOutboxPath"));
-        Inbox.OCFL_STAGING_DIR = Path.of(outboxes.get("ocflWorkPath"));
+        for (Map<String, String> ocflDir: ocflDirectories) {
+            if (ocflDir.containsValue("OCFL_Storage_Root"))
+            Inbox.OCFL_STORAGE_ROOT = Path.of(ocflDir.get("path"));
+            if (ocflDir.containsValue("OCFL_Work_Dir"))
+            Inbox.OCFL_WORK_DIR = Path.of(ocflDir.get("path"));
+        }
 
         OcflRepository ocflRepository = new OcflRepositoryBuilder()
                 .defaultLayoutConfig(new FlatOmitPrefixLayoutConfig().setDelimiter("urn:uuid:"))
-                .storage(ocflStorageBuilder -> ocflStorageBuilder.fileSystem(Inbox.TRANSFER_OUTBOX))
-                .workDir(Inbox.OCFL_STAGING_DIR)
+                .storage(ocflStorageBuilder -> ocflStorageBuilder.fileSystem(Inbox.OCFL_STORAGE_ROOT))
+                .workDir(Inbox.OCFL_WORK_DIR)
                 .build();
 
         for (Map<String, String> inbox : configuration.getInboxes()) {

@@ -3,28 +3,25 @@
 #
 # Please, modify the configuration below to match your environment. Also, delete and/or modify
 # this description.
-database:
-  driverClass: org.hsqldb.jdbcDriver
-  url: jdbc:hsqldb:hsql://localhost:9001/dd-transfer-to-vault
-  user: changeme
-  password: changeme
-  logValidationErrors: true
-  validationQuery: SELECT * FROM INFORMATION_SCHEMA.SYSTEM_TABLES
-  properties:
-    hibernate.dialect: 'org.hibernate.dialect.HSQLDialect'
-    hibernate.hbm2ddl.auto: update
+inboxes:
+  - name: DS_Archaeology
+    path: /var/opt/dans.knaw.nl/tmp/transfer-inboxes/archaeology
 
-server:
-  applicationContextPath: /
-  adminContextPath: /
-  applicationConnectors:
-    - type: http
-      # Replace with port number unique for this service
-      port: 20000
-  adminConnectors:
-    - type: http
-      # Replace with port number unique for this service
-      port: 20001
+ocflDirectories:
+  - name: OCFL_Storage_Root
+    path: /var/opt/dans.knaw.nl/tmp/ocfl-directories/ocfl-storage-root
+  - name: OCFL_Work_Dir
+    path: /var/opt/dans.knaw.nl/tmp/ocfl-directories/ocfl-work-dir
+
+database:
+  driverClass: org.postgresql.Driver
+  url: jdbc:postgresql://localhost:5432/dd_transfer_to_vault
+  user: change_me
+  password: change_me
+  logValidationErrors: true
+  properties:
+    hibernate.dialect: 'org.hibernate.dialect.PostgreSQL95Dialect'
+    hibernate.hbm2ddl.auto: update
 
 taskQueue:
   nameFormat: "task-execution-thread-%d"
@@ -36,10 +33,13 @@ taskQueue:
   # Threads will die after 60 seconds of idleness
   keepAliveTime: 60 seconds
 
-inboxes:
-  - name: Test
-    path: src/test/resources/data/inbox
-
-outboxes:
-  transferOutboxPath: src/test/resources/data/outbox
-  ocflWorkPath: src/test/resources/data/workdir
+logging:
+  level: INFO
+  loggers:
+    "dans.knaw.nl":
+      level: INFO
+      additive: false
+  appenders:
+    - type: file
+      archive: false
+      currentLogFilename: '/var/opt/dans.knaw.nl/log/dd-transfer-to-vault/dd-transfer-to-vault.log'

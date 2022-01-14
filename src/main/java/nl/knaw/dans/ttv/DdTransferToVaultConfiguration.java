@@ -40,7 +40,7 @@ public class DdTransferToVaultConfiguration extends Configuration {
     private List<Map<String, String>> inboxes = Collections.emptyList();
 
     @NotNull
-    private Map<String, String> outboxes = Collections.emptyMap();
+    private List<Map<String, String>> ocflDirectories = Collections.emptyList();
 
     @JsonProperty("taskQueue")
     public void setTaskQueue(ExecutorServiceFactory taskExecutorThreadPool) {
@@ -72,13 +72,13 @@ public class DdTransferToVaultConfiguration extends Configuration {
         this.inboxes = inboxes;
     }
 
-    @JsonProperty("outboxes")
-    public Map<String, String> getOutboxes() {
-        return outboxes;
+    @JsonProperty("ocflDirectories")
+    public List<Map<String, String>> getOcflDirectories() {
+        return ocflDirectories;
     }
 
-    @JsonProperty("outboxes")
-    public void setOutboxes(Map<String, String> outboxes) {
-        this.outboxes = outboxes;
+    @JsonProperty("ocflDirectories")
+    public void setOcflDirectories(List<Map<String, String>> ocflDirectories) {
+        this.ocflDirectories = ocflDirectories;
     }
 }

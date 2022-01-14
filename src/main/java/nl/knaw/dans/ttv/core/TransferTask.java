@@ -34,6 +34,7 @@ import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.NoSuchElementException;
 import java.util.Objects;
+import java.util.regex.Matcher;
 import java.util.zip.ZipFile;
 
 public class TransferTask extends Task {
@@ -49,6 +50,7 @@ public class TransferTask extends Task {
         log.info("Running task: " + this);
         try {
             extractMetadata();
+            cleanUpXmlFile();
             generateOcflArchiveAndStageForTransfer();
         } catch (NoSuchElementException | IOException | NullPointerException e) {
             log.error(e.getMessage(), e);
@@ -93,11 +95,11 @@ public class TransferTask extends Task {
             Path target = Objects.requireNonNull(Paths.get(transferItem.getDveFilePath()).getParent().resolve(Paths.get(bagId + ".zip")), "dveFilePath can't be null" + transferItem.onError());
 
             //TODO change to Files.move(source, target) when tested.
-            Files.copy(source, target);
+            Files.move(source, target);
             ocflRepository.putObject(ObjectVersionId.head(objectId), target, new VersionInfo().setMessage("initial commit"), OcflOption.MOVE_SOURCE);
 
             //TODO use objectId for aipTarEntryName, so you can use ocflRepository.containsObject(objectId)
-            String aipTarEntryName = Inbox.TRANSFER_OUTBOX + "/" + objectId.substring(9);
+            String aipTarEntryName = Inbox.OCFL_STORAGE_ROOT + "/" + objectId.substring(9);
             if (Files.exists(Paths.get(aipTarEntryName))) {
                 transferItem.setTransferStatus(TransferItem.TransferStatus.TAR);
                 transferItem.setAipTarEntryName(aipTarEntryName);
@@ -107,6 +109,15 @@ public class TransferTask extends Task {
                 log.error(aipTarEntryName + " doesn't exist");
                 throw new InvalidTransferItemException(aipTarEntryName + " doesn't exist");
             }
+        }
+    }
+
+    public void cleanUpXmlFile() throws IOException {
+        Path dvePath = Paths.get(transferItem.getDveFilePath());
+        Matcher matcher = Inbox.PATTERN.matcher(dvePath.getFileName().toString());
+        String xml = matcher.matches() ? matcher.group("doi") + "-datacite.v" + matcher.group("major") + "." + matcher.group("minor") + ".xml" : null;
+        if (xml != null) {
+            Files.deleteIfExists(dvePath.getParent().resolve(xml));
         }
     }
 
