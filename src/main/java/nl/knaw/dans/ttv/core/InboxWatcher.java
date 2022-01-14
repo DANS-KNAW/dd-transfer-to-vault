@@ -16,9 +16,14 @@
 package nl.knaw.dans.ttv.core;
 
 import io.dropwizard.lifecycle.Managed;
+import org.apache.commons.io.monitor.FileAlterationListener;
+import org.apache.commons.io.monitor.FileAlterationListenerAdaptor;
+import org.apache.commons.io.monitor.FileAlterationMonitor;
+import org.apache.commons.io.monitor.FileAlterationObserver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
@@ -32,36 +37,36 @@ public class InboxWatcher implements Managed {
     private static final Logger log = LoggerFactory.getLogger(InboxWatcher.class);
 
     private final Inbox inbox;
+    private FileAlterationMonitor monitor;
+
     private final ExecutorService executorService;
-    private final WatchService watchService;
-    private boolean runWhile = true;
 
     public InboxWatcher(Inbox inbox, ExecutorService executorService) throws IOException {
         this.inbox = inbox;
         this.executorService = executorService;
-        this.watchService = FileSystems.getDefault().newWatchService();
     }
 
-    private void startWatchService() throws IOException, InterruptedException {
-        inbox.getDatastationInbox().register(watchService, StandardWatchEventKinds.ENTRY_CREATE);
-
-        WatchKey key;
-        while (runWhile) {
-            key = watchService.take();
-            key.pollEvents().stream()
-                    .map(watchEvent -> ((Path) watchEvent.context()))
-                    .filter(path -> path.getFileName().toString().endsWith(".zip"))
-                    .map(path -> inbox.createTransferItemTask(inbox.getDatastationInbox().resolve(path.getFileName())))
-                            .forEach(executorService::execute);
-            key.reset();
-        }
-        watchService.close();
+    private void startFileAlterationMonitor() throws Exception {
+        FileAlterationObserver observer = new FileAlterationObserver(inbox.getDatastationInbox().toFile());
+        monitor = new FileAlterationMonitor(500);
+        FileAlterationListener listener = new FileAlterationListenerAdaptor() {
+            @Override
+            public void onFileCreate(File file) {
+                if (file.isFile() && file.getName().endsWith(".zip")) {
+                    Task task = inbox.createTransferItemTask(Path.of(file.getAbsolutePath()));
+                    executorService.execute(task);
+                }
+            }
+        };
+        observer.addListener(listener);
+        monitor.addObserver(observer);
+        monitor.start();
     }
 
     @Override
     public void start() throws Exception {
         try {
-            startWatchService();
+            startFileAlterationMonitor();
         } catch (IOException | InterruptedException e) {
             log.error(e.getMessage(), e);
             throw new InvalidTransferItemException(e.getMessage());
@@ -69,7 +74,7 @@ public class InboxWatcher implements Managed {
     }
 
     @Override
-    public void stop() {
-        runWhile = false;
+    public void stop() throws Exception {
+        monitor.stop();
     }
 }

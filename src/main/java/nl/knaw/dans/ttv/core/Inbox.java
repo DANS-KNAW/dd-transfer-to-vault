@@ -42,8 +42,8 @@ public class Inbox {
 
     private static final Logger log = LoggerFactory.getLogger(Inbox.class);
 
-    public static Path TRANSFER_OUTBOX;
-    public static Path OCFL_STAGING_DIR;
+    public static Path OCFL_STORAGE_ROOT;
+    public static Path OCFL_WORK_DIR;
 
     private final String datastationName;
     private final Path datastationInbox;
@@ -56,7 +56,7 @@ public class Inbox {
     private static final String SCHEMA_PATTERN = "(?<schema>datacite)?.?";
     private static final String DATASET_VERSION_PATTERN = "v(?<major>[0-9]+).(?<minor>[0-9]+)";
     private static final String EXTENSION_PATTERN = "(?<extension>.zip|.xml)";
-    private static final Pattern PATTERN = Pattern.compile(DOI_PATTERN + SCHEMA_PATTERN + DATASET_VERSION_PATTERN + EXTENSION_PATTERN);
+    public static final Pattern PATTERN = Pattern.compile(DOI_PATTERN + SCHEMA_PATTERN + DATASET_VERSION_PATTERN + EXTENSION_PATTERN);
     public static final Comparator<Task> TASK_QUEUE_DATE_COMPARATOR = Comparator.comparing(task -> task.getTransferItem().getCreationTime());
 
     public Inbox(String datastationName, Path datastationInbox, TransferItemDAO transferItemDAO, OcflRepository ocflRepository, SessionFactory sessionFactory, ObjectMapper objectMapper) {
