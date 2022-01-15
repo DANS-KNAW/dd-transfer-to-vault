@@ -41,7 +41,7 @@
     <artifactId>dd-transfer-to-vault</artifactId>
     <version>0.0.2-SNAPSHOT</version>
 
-    <name>Dd Transfer To Vault</name>
+    <name>DD Transfer To Vault</name>
     <url>https://github.com/DANS-KNAW/dd-transfer-to-vault</url>
     <description>Transfer AIPs to the Vault</description>
     <inceptionYear>2021</inceptionYear>
