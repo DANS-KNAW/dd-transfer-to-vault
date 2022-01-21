@@ -18,7 +18,6 @@ package nl.knaw.dans.ttv.core;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.wisc.library.ocfl.api.OcflOption;
-import edu.wisc.library.ocfl.api.OcflRepository;
 import edu.wisc.library.ocfl.api.model.ObjectVersionId;
 import edu.wisc.library.ocfl.api.model.VersionInfo;
 import io.dropwizard.hibernate.UnitOfWork;
@@ -41,7 +40,7 @@ public class TransferTask extends Task {
 
     private static final Logger log = LoggerFactory.getLogger(TransferTask.class);
 
-    public TransferTask(TransferItem transferItem, TransferItemDAO transferItemDAO, OcflRepository ocflRepository, ObjectMapper objectMapper) {
+    public TransferTask(TransferItem transferItem, TransferItemDAO transferItemDAO, OcflRepositoryManager ocflRepository, ObjectMapper objectMapper) {
         super(transferItem, transferItemDAO, ocflRepository, objectMapper);
     }
 
@@ -61,12 +60,8 @@ public class TransferTask extends Task {
     @UnitOfWork
     public void extractMetadata() throws IOException {
         ZipFile datasetVersionExport = new ZipFile(Paths.get(transferItem.getDveFilePath()).toFile());
-        String metadataFilePath = Objects.requireNonNull(datasetVersionExport.stream()
-                .filter(zipEntry -> zipEntry.getName().endsWith(".jsonld"))
-                .findAny().orElse(null), "metadataFilePath can't be null" + transferItem.onError()).getName();
-        String pidMappingFilePath = Objects.requireNonNull(datasetVersionExport.stream()
-                .filter(zipEntry -> zipEntry.getName().contains("pid-mapping.txt"))
-                .findAny().orElse(null), "pidMappingFilePath can't be null" + transferItem.onError()).getName();
+        String metadataFilePath = Objects.requireNonNull(datasetVersionExport.stream().filter(zipEntry -> zipEntry.getName().endsWith(".jsonld")).findAny().orElse(null), "metadataFilePath can't be null" + transferItem.onError()).getName();
+        String pidMappingFilePath = Objects.requireNonNull(datasetVersionExport.stream().filter(zipEntry -> zipEntry.getName().contains("pid-mapping.txt")).findAny().orElse(null), "pidMappingFilePath can't be null" + transferItem.onError()).getName();
         byte[] pidMapping = Objects.requireNonNull(IOUtils.toByteArray(datasetVersionExport.getInputStream(datasetVersionExport.getEntry(pidMappingFilePath))), "pidMapping can't be null" + transferItem.onError());
         byte[] oaiOre = Objects.requireNonNull(IOUtils.toByteArray(datasetVersionExport.getInputStream(datasetVersionExport.getEntry(metadataFilePath))), "oaiOre can't be null" + transferItem.onError());
 
@@ -90,21 +85,22 @@ public class TransferTask extends Task {
     public void generateOcflArchiveAndStageForTransfer() throws IOException {
         if (transferItem.equals(transferItemDAO.findById(transferItem.getId()).orElseThrow())) {
             String bagId = Objects.requireNonNull(transferItem.getBagId(), "Bag ID can't be null" + transferItem.onError());
-            String objectId = bagId.substring(0,9) + bagId.substring(9, 11) + "/" + bagId.substring(11,13) + "/" + bagId.substring(13,15) + "/" + bagId.substring(15);
+            String objectId = bagId.substring(0, 9) + bagId.substring(9, 11) + "/" + bagId.substring(11, 13) + "/" + bagId.substring(13, 15) + "/" + bagId.substring(15);
             Path source = Objects.requireNonNull(Path.of(transferItem.getDveFilePath()), "dveFilePath can't be null" + transferItem.onError());
             Path target = Objects.requireNonNull(Paths.get(transferItem.getDveFilePath()).getParent().resolve(Paths.get(bagId + ".zip")), "dveFilePath can't be null" + transferItem.onError());
 
             //TODO change to Files.move(source, target) when tested.
             Files.move(source, target);
-            ocflRepository.putObject(ObjectVersionId.head(objectId), target, new VersionInfo().setMessage("initial commit"), OcflOption.MOVE_SOURCE);
+            ocflRepository.getOcflRepository().putObject(ObjectVersionId.head(objectId), target, new VersionInfo().setMessage("initial commit"), OcflOption.MOVE_SOURCE);
 
             //TODO use objectId for aipTarEntryName, so you can use ocflRepository.containsObject(objectId)
             String aipTarEntryName = Inbox.OCFL_STORAGE_ROOT + "/" + objectId.substring(9);
             if (Files.exists(Paths.get(aipTarEntryName))) {
                 transferItem.setTransferStatus(TransferItem.TransferStatus.TAR);
-                transferItem.setAipTarEntryName(aipTarEntryName);
+                transferItem.setAipTarEntryName(objectId);
                 transferItemDAO.merge(transferItem);
                 transferItemDAO.flush();
+
             } else {
                 log.error(aipTarEntryName + " doesn't exist");
                 throw new InvalidTransferItemException(aipTarEntryName + " doesn't exist");
@@ -123,8 +119,6 @@ public class TransferTask extends Task {
 
     @Override
     public String toString() {
-        return "TransferTask{" +
-                "transferItem=" + transferItem.getDveFilePath() +
-                '}';
+        return "TransferTask{" + "transferItem=" + transferItem.getDveFilePath() + '}';
     }
 }

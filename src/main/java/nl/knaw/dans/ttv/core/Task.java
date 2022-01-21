@@ -23,10 +23,10 @@ public abstract class Task implements Runnable {
 
     protected final TransferItem transferItem;
     protected final TransferItemDAO transferItemDAO;
-    protected final OcflRepository ocflRepository;
+    protected final OcflRepositoryManager ocflRepository;
     protected final ObjectMapper objectMapper;
 
-    protected Task(TransferItem transferItem, TransferItemDAO transferItemDAO, OcflRepository ocflRepository, ObjectMapper objectMapper) {
+    protected Task(TransferItem transferItem, TransferItemDAO transferItemDAO, OcflRepositoryManager ocflRepository, ObjectMapper objectMapper) {
         this.transferItem = transferItem;
         this.transferItemDAO = transferItemDAO;
         this.ocflRepository = ocflRepository;

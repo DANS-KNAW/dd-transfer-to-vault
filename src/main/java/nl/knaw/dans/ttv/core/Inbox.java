@@ -34,32 +34,30 @@ import java.time.ZoneId;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.BlockingQueue;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class Inbox {
 
+    public static final Comparator<Task> TASK_QUEUE_DATE_COMPARATOR = Comparator.comparing(task -> task.getTransferItem().getCreationTime());
     private static final Logger log = LoggerFactory.getLogger(Inbox.class);
-
-    public static Path OCFL_STORAGE_ROOT;
-    public static Path OCFL_WORK_DIR;
-
-    private final String datastationName;
-    private final Path datastationInbox;
-    private final TransferItemDAO transferItemDAO;
-    private final SessionFactory sessionFactory;
-    private final ObjectMapper objectMapper;
-    private final OcflRepository ocflRepository;
-
     private static final String DOI_PATTERN = "(?<doi>doi-10-[0-9]{4,}-[A-Za-z0-9]{2,}-[A-Za-z0-9]{6})-?";
     private static final String SCHEMA_PATTERN = "(?<schema>datacite)?.?";
     private static final String DATASET_VERSION_PATTERN = "v(?<major>[0-9]+).(?<minor>[0-9]+)";
     private static final String EXTENSION_PATTERN = "(?<extension>.zip|.xml)";
     public static final Pattern PATTERN = Pattern.compile(DOI_PATTERN + SCHEMA_PATTERN + DATASET_VERSION_PATTERN + EXTENSION_PATTERN);
-    public static final Comparator<Task> TASK_QUEUE_DATE_COMPARATOR = Comparator.comparing(task -> task.getTransferItem().getCreationTime());
+    public static Path OCFL_STORAGE_ROOT;
+    public static Path OCFL_WORK_DIR;
+    private final String datastationName;
+    private final Path datastationInbox;
+    private final TransferItemDAO transferItemDAO;
+    private final SessionFactory sessionFactory;
+    private final ObjectMapper objectMapper;
+    private final OcflRepositoryManager ocflRepository;
 
-    public Inbox(String datastationName, Path datastationInbox, TransferItemDAO transferItemDAO, OcflRepository ocflRepository, SessionFactory sessionFactory, ObjectMapper objectMapper) {
+    public Inbox(String datastationName, Path datastationInbox, TransferItemDAO transferItemDAO, OcflRepositoryManager ocflRepository, SessionFactory sessionFactory, ObjectMapper objectMapper) {
         this.datastationName = datastationName;
         this.datastationInbox = datastationInbox;
         this.transferItemDAO = transferItemDAO;
@@ -84,8 +82,8 @@ public class Inbox {
             for (TransferItem transferItem : transferItemsInDB) {
                 TransferTask transferTask = new UnitOfWorkAwareProxyFactory("UnitOfWorkProxy", sessionFactory)
                         .create(TransferTask.class,
-                                new Class[] {TransferItem.class, TransferItemDAO.class, OcflRepository.class, ObjectMapper.class},
-                                new Object[] {transferItem, transferItemDAO, ocflRepository, objectMapper});
+                                new Class[]{TransferItem.class, TransferItemDAO.class, OcflRepositoryManager.class, ObjectMapper.class},
+                                new Object[]{transferItem, transferItemDAO, ocflRepository, objectMapper});
                 transferItemTasks.add(transferTask);
             }
         }
@@ -97,8 +95,8 @@ public class Inbox {
         TransferItem transferItem = transferItemDAO.save(transformDvePathToTransferItem(datasetVersionExportPath));
         return new UnitOfWorkAwareProxyFactory("UnitOfWorkProxy", sessionFactory)
                 .create(TransferTask.class,
-                        new Class[] {TransferItem.class, TransferItemDAO.class, OcflRepository.class, ObjectMapper.class},
-                        new Object[] {transferItem, transferItemDAO, ocflRepository, objectMapper});
+                        new Class[]{TransferItem.class, TransferItemDAO.class, OcflRepositoryManager.class, ObjectMapper.class},
+                        new Object[]{transferItem, transferItemDAO, ocflRepository, objectMapper});
     }
 
     private List<TransferItem> createTransferItemsFromDisk() {
@@ -115,7 +113,7 @@ public class Inbox {
         return transferItemsOnDisk;
     }
 
-    public TransferItem transformDvePathToTransferItem(Path datasetVersionExportPath){
+    public TransferItem transformDvePathToTransferItem(Path datasetVersionExportPath) {
         Matcher matcher = PATTERN.matcher(datasetVersionExportPath.getFileName().toString());
 
         TransferItem transferItem = new TransferItem();
@@ -132,14 +130,14 @@ public class Inbox {
                 transferItem.setVersionMinor(Integer.parseInt(matcher.group("minor")));
             }
             try {
-                if (Files.getAttribute(datasetVersionExportPath, "creationTime") != null){
+                if (Files.getAttribute(datasetVersionExportPath, "creationTime") != null) {
                     FileTime creationTime = (FileTime) Files.getAttribute(datasetVersionExportPath, "creationTime");
                     transferItem.setCreationTime(LocalDateTime.ofInstant(creationTime.toInstant(), ZoneId.systemDefault()));
                     transferItem.setBagChecksum(new DigestUtils("SHA-256").digestAsHex(Files.readAllBytes(datasetVersionExportPath)));
                     transferItem.setBagSize(Files.size(datasetVersionExportPath));
                 }
             } catch (IOException e) {
-                throw new InvalidTransferItemException("Invalid TransferItem",e);
+                throw new InvalidTransferItemException("Invalid TransferItem", e);
             }
             transferItem.setDveFilePath(String.valueOf(datasetVersionExportPath));
             transferItem.setTransferStatus(TransferItem.TransferStatus.EXTRACT);
@@ -152,7 +150,6 @@ public class Inbox {
         return datastationInbox;
     }
 
-    
 
     @Override
     public String toString() {

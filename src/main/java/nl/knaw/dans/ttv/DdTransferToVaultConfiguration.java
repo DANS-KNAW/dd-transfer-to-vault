@@ -20,6 +20,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.dropwizard.Configuration;
 import io.dropwizard.db.DataSourceFactory;
 import nl.knaw.dans.lib.util.ExecutorServiceFactory;
+import nl.knaw.dans.ttv.config.CollectConfiguration;
+import nl.knaw.dans.ttv.config.ConfirmArchivedConfiguration;
+import nl.knaw.dans.ttv.config.CreateOcflConfiguration;
+import nl.knaw.dans.ttv.config.CreateTarConfiguration;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -28,29 +32,26 @@ import java.util.List;
 import java.util.Map;
 
 public class DdTransferToVaultConfiguration extends Configuration {
+
     @Valid
     @NotNull
     private DataSourceFactory database = new DataSourceFactory();
 
     @Valid
     @NotNull
-    private ExecutorServiceFactory taskQueue;
+    private CollectConfiguration collect;
 
+    @Valid
     @NotNull
-    private List<Map<String, String>> inboxes = Collections.emptyList();
+    private CreateOcflConfiguration createOcfl;
 
+    @Valid
     @NotNull
-    private List<Map<String, String>> ocflDirectories = Collections.emptyList();
+    private CreateTarConfiguration createTar;
 
-    @JsonProperty("taskQueue")
-    public void setTaskQueue(ExecutorServiceFactory taskExecutorThreadPool) {
-        this.taskQueue = taskExecutorThreadPool;
-    }
-
-    @JsonProperty("taskQueue")
-    public ExecutorServiceFactory getTaskQueue() {
-        return taskQueue;
-    }
+    @Valid
+    @NotNull
+    private ConfirmArchivedConfiguration confirmArchived;
 
     @JsonProperty("database")
     public DataSourceFactory getDataSourceFactory() {
@@ -62,23 +63,19 @@ public class DdTransferToVaultConfiguration extends Configuration {
         this.database = dataSourceFactory;
     }
 
-    @JsonProperty("inboxes")
-    public List<Map<String, String>> getInboxes() {
-        return inboxes;
+    public CollectConfiguration getCollect() {
+        return collect;
     }
 
-    @JsonProperty("inboxes")
-    public void setInboxes(List<Map<String, String>> inboxes) {
-        this.inboxes = inboxes;
+    public CreateOcflConfiguration getCreateOcfl() {
+        return createOcfl;
     }
 
-    @JsonProperty("ocflDirectories")
-    public List<Map<String, String>> getOcflDirectories() {
-        return ocflDirectories;
+    public CreateTarConfiguration getCreateTar() {
+        return createTar;
     }
 
-    @JsonProperty("ocflDirectories")
-    public void setOcflDirectories(List<Map<String, String>> ocflDirectories) {
-        this.ocflDirectories = ocflDirectories;
+    public ConfirmArchivedConfiguration getConfirmArchived() {
+        return confirmArchived;
     }
 }

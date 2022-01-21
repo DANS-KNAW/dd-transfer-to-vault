@@ -39,6 +39,8 @@ import java.util.Objects;
         @NamedQuery(name = "TransferItem.findAll", query = "SELECT t FROM TransferItem t"),
         @NamedQuery(name = "TransferItem.findAllWithStatusExtract", query = "SELECT t FROM TransferItem t WHERE t.transferStatus = 'EXTRACT'"),
         @NamedQuery(name = "TransferItem.findAllWithStatusMove", query = "SELECT t FROM TransferItem t WHERE t.transferStatus = 'MOVE'"),
+        @NamedQuery(name = "TransferItem.findAllWithStatusTar", query = "SELECT t FROM TransferItem t WHERE t.transferStatus = 'TAR'"),
+        @NamedQuery(name = "TransferItem.findAllWithStatusTarring", query = "SELECT t FROM TransferItem t WHERE t.transferStatus = 'TARRING'"),
 })
 public class TransferItem {
 
@@ -46,9 +48,11 @@ public class TransferItem {
     public static final String TRANSFER_ITEM_FIND_ALL = "TransferItem.findAll";
     public static final String TRANSFER_ITEM_FIND_ALL_STATUS_EXTRACT = "TransferItem.findAllWithStatusExtract";
     public static final String TRANSFER_ITEM_FIND_ALL_STATUS_MOVE = "TransferItem.findAllWithStatusMove";
+    public static final String TRANSFER_ITEM_FIND_ALL_STATUS_TAR = "TransferItem.findAllWithStatusTar";
+    public static final String TRANSFER_ITEM_FIND_ALL_STATUS_TARRING = "TransferItem.findAllWithStatusTarring";
 
     public enum TransferStatus {
-        EXTRACT, MOVE, OCFL, TAR, POLL
+        EXTRACT, MOVE, OCFL, TAR, TARRING, TARCREATED, POLL
     }
 
     @Id

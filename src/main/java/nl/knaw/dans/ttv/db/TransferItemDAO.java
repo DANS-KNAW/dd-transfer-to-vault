@@ -52,11 +52,29 @@ public class TransferItemDAO extends AbstractDAO<TransferItem> {
         return list(namedTypedQuery(TransferItem.TRANSFER_ITEM_FIND_ALL_STATUS_MOVE));
     }
 
+    public List<TransferItem> findAllStatusTar() {
+        return list(namedTypedQuery(TransferItem.TRANSFER_ITEM_FIND_ALL_STATUS_TAR));
+    }
+
+    public List<TransferItem> findAllStatusTarring() {
+        return list(namedTypedQuery(TransferItem.TRANSFER_ITEM_FIND_ALL_STATUS_TARRING));
+    }
+
     public void merge(TransferItem transferItem) {
         currentSession().merge(transferItem);
     }
 
     public void flush() {
         currentSession().flush();
+    }
+
+    public List<TransferItem> refreshAll(List<TransferItem> transferItems) {
+        var session = currentSession();
+
+        for (var item: transferItems) {
+            session.refresh(item);
+        }
+
+        return transferItems;
     }
 }
