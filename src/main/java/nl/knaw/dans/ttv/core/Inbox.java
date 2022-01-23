@@ -90,6 +90,7 @@ public class Inbox {
         return transferItemTasks;
     }
 
+    // TODO: make naming consistent: "transfer task" or "transfer item task" throughout.
     @UnitOfWork
     public Task createTransferItemTask(Path datasetVersionExportPath) {
         TransferItem transferItem = transferItemDAO.save(transformDvePathToTransferItem(datasetVersionExportPath));
