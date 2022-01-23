@@ -18,8 +18,8 @@ collect:
     keepAliveTime: 60 seconds
 
 createOcfl:
-  inbox: data/tmp/ocfl-storage-root
-  workDir: data/tmp/ocfl-work-dir
+  inbox: data/tmp/ocfl-inbox
+  workDir: data/tmp/ocfl-workdirs
   taskQueue:
     nameFormat: "ocf-thread-%d"
     maxQueueSize: 5000
