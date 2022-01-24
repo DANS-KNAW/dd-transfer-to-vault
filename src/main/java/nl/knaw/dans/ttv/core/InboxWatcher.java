@@ -48,6 +48,7 @@ public class InboxWatcher implements Managed {
 
     private void startFileAlterationMonitor() throws Exception {
         FileAlterationObserver observer = new FileAlterationObserver(inbox.getDatastationInbox().toFile());
+        // TODO: make interval configurable
         monitor = new FileAlterationMonitor(500);
         FileAlterationListener listener = new FileAlterationListenerAdaptor() {
             @Override
