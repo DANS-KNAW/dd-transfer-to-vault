@@ -15,7 +15,18 @@
  */
 package nl.knaw.dans.ttv.core;
 
-public enum TarEventQueueMessage {
-    STOP,
-    CHECK,
+import edu.wisc.library.ocfl.api.OcflRepository;
+import edu.wisc.library.ocfl.core.OcflRepositoryBuilder;
+import edu.wisc.library.ocfl.core.extension.storage.layout.config.FlatOmitPrefixLayoutConfig;
+
+import java.nio.file.Path;
+
+public class OcflRepositoryFactory {
+    public OcflRepository createRepository(Path storageDirectory, Path workingDirectory) {
+        return new OcflRepositoryBuilder()
+            .defaultLayoutConfig(new FlatOmitPrefixLayoutConfig().setDelimiter("urn:uuid:"))
+            .storage(ocflStorageBuilder -> ocflStorageBuilder.fileSystem(storageDirectory))
+            .workDir(workingDirectory)
+            .build();
+    }
 }

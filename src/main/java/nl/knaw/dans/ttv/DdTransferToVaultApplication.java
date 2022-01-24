@@ -16,31 +16,23 @@
 
 package nl.knaw.dans.ttv;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.dropwizard.Application;
 import io.dropwizard.db.PooledDataSourceFactory;
 import io.dropwizard.hibernate.HibernateBundle;
 import io.dropwizard.hibernate.UnitOfWorkAwareProxyFactory;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
-import nl.knaw.dans.ttv.core.Inbox;
-import nl.knaw.dans.ttv.core.InboxWatcher;
-import nl.knaw.dans.ttv.core.OcflRepositoryManager;
-import nl.knaw.dans.ttv.core.OcflRepositoryManagerImpl;
-import nl.knaw.dans.ttv.core.TarThresholdWatcher;
-import nl.knaw.dans.ttv.core.Task;
+import nl.knaw.dans.ttv.core.CollectTaskManager;
+import nl.knaw.dans.ttv.core.ConfirmArchiveTaskManager;
+import nl.knaw.dans.ttv.core.OcflRepositoryFactory;
+import nl.knaw.dans.ttv.core.TarTaskManager;
 import nl.knaw.dans.ttv.core.TransferItem;
 import nl.knaw.dans.ttv.db.TransferItemDAO;
 import org.hibernate.SessionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.concurrent.ExecutorService;
 
 public class DdTransferToVaultApplication extends Application<DdTransferToVaultConfiguration> {
 
@@ -73,52 +65,36 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
 
         final var collectExecutorService = configuration.getCollect().getTaskQueue().build(environment);
         final var createOcflExecutorService = configuration.getCreateOcfl().getTaskQueue().build(environment);
-        List<Inbox> inboxes = new ArrayList<>();
-        List<InboxWatcher> inboxWatchers = new ArrayList<>();
 
-        Inbox.OCFL_STORAGE_ROOT = Path.of(configuration.getCreateOcfl().getInbox());
-        Inbox.OCFL_WORK_DIR = Path.of(configuration.getCreateOcfl().getWorkDir());
+        // the Collect task, which listens to new files on the network-drive shares
+        var collectTaskManager = new CollectTaskManager(configuration.getCollect().getInboxes(), configuration.getCreateTar().getInbox(), hibernateBundle.getSessionFactory(), collectExecutorService,
+            environment.getObjectMapper(), transferItemDAO);
 
-        OcflRepositoryManager ocflRepositoryManager = new OcflRepositoryManagerImpl();
+        environment.lifecycle().manage(collectTaskManager);
 
-        for (Map<String, String> inbox : configuration.getCollect().getInboxes()) {
-            Inbox newInbox = new UnitOfWorkAwareProxyFactory(hibernateBundle).create(Inbox.class,
-                new Class[] { String.class, Path.class, TransferItemDAO.class, OcflRepositoryManager.class, SessionFactory.class, ObjectMapper.class },
-                new Object[] { inbox.get("name"), Paths.get(inbox.get("path")), transferItemDAO, ocflRepositoryManager, hibernateBundle.getSessionFactory(), environment.getObjectMapper() });
-            inboxes.add(newInbox);
-            try {
-                inboxWatchers.add(new InboxWatcher(newInbox, collectExecutorService));
-            }
-            catch (IOException e) {
-                log.error(e.getMessage(), e);
-                throw new RuntimeException("InboxWatcher failed to start");
-            }
-        }
-
-        List<Task> tasks = new ArrayList<>();
-        for (Inbox inbox : inboxes) {
-            tasks.addAll(inbox.createTransferItemTasks());
-        }
-        tasks.sort(Inbox.TASK_QUEUE_DATE_COMPARATOR);
-        tasks.forEach(collectExecutorService::execute);
-        inboxWatchers.forEach(inboxWatcher -> environment.lifecycle().manage(inboxWatcher));
-
+        // the process that looks for new files in the tar-inbox, and when reaching a certain combined size, tars them
+        // and sends it to the archiving service
+        final var ocflRepositoryFactory = new OcflRepositoryFactory();
         final var createTarExecutorService = configuration.getCreateTar().getTaskQueue().build(environment);
 
-        // create tar task
-        var tarTresholdWatcher = new TarThresholdWatcher(
-            configuration.getCreateTar().getInbox(),
-            configuration.getCreateTar().getWorkDir(),
-            configuration.getCreateTar().getInboxThreshold(),
-            configuration.getCreateTar().getTarCommand(),
-            configuration.getCreateTar().getDataArchiveRoot(),
-            ocflRepositoryManager,
-            transferItemDAO,
-            hibernateBundle.getSessionFactory(),
-            createTarExecutorService
-        );
+        var tarTaskManager = new UnitOfWorkAwareProxyFactory(hibernateBundle).create(TarTaskManager.class,
+            new Class[] { String.class, String.class, long.class, String.class, String.class, TransferItemDAO.class, SessionFactory.class, ExecutorService.class, OcflRepositoryFactory.class },
+            new Object[] { configuration.getCreateTar().getInbox(), configuration.getCreateTar().getWorkDir(), configuration.getCreateTar().getInboxThreshold(),
+                configuration.getCreateTar().getTarCommand(), configuration.getCreateTar().getDataArchiveRoot(), transferItemDAO, hibernateBundle.getSessionFactory(), createTarExecutorService,
+                ocflRepositoryFactory });
 
-        environment.lifecycle().manage(tarTresholdWatcher);
+        environment.lifecycle().manage(tarTaskManager);
+
+        // the process that checks the archiving service for status
+        final var confirmArchiveExecutorService = configuration.getConfirmArchived().getTaskQueue().build(environment);
+        final var confirmConfig = configuration.getConfirmArchived();
+
+        var confirmArchiveTaskManager = new UnitOfWorkAwareProxyFactory(hibernateBundle).create(ConfirmArchiveTaskManager.class,
+            new Class[] { String.class, SessionFactory.class, TransferItemDAO.class, String.class, String.class, ExecutorService.class },
+            new Object[] { confirmConfig.getCron(), hibernateBundle.getSessionFactory(), transferItemDAO, configuration.getCreateTar().getWorkDir(), confirmConfig.getDataArchiveRoot(),
+                confirmArchiveExecutorService });
+
+        environment.lifecycle().manage(confirmArchiveTaskManager);
     }
 
 }

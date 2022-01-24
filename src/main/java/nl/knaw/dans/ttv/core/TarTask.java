@@ -15,9 +15,6 @@
  */
 package nl.knaw.dans.ttv.core;
 
-import edu.wisc.library.ocfl.core.OcflRepositoryBuilder;
-import edu.wisc.library.ocfl.core.extension.storage.layout.config.FlatOmitPrefixLayoutConfig;
-import io.dropwizard.hibernate.UnitOfWork;
 import nl.knaw.dans.ttv.db.TransferItemDAO;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
@@ -32,19 +29,17 @@ public class TarTask implements Runnable {
     private static final Logger log = LoggerFactory.getLogger(TarTask.class);
 
     private final TransferItemDAO transferItemDAO;
-    private final OcflRepositoryManager ocflRepositoryManager;
-    private final String inboxPath;
-    private final String workDir;
+    private final Path inboxPath;
     private final String dataArchiveRoot;
     private final String tarCommand;
+    private final UUID uuid;
 
-    public TarTask(TransferItemDAO transferItemDAO, OcflRepositoryManager ocflRepositoryManager, String inboxPath, String workDir, String dataArchiveRoot, String tarCommand) {
+    public TarTask(TransferItemDAO transferItemDAO, UUID uuid, Path inboxPath, String dataArchiveRoot, String tarCommand) {
         this.transferItemDAO = transferItemDAO;
-        this.ocflRepositoryManager = ocflRepositoryManager;
         this.inboxPath = inboxPath;
-        this.workDir = workDir;
         this.dataArchiveRoot = dataArchiveRoot;
         this.tarCommand = tarCommand;
+        this.uuid = uuid;
     }
 
     @Override
@@ -58,58 +53,42 @@ public class TarTask implements Runnable {
     }
 
     private void createTarArchive() throws IOException, InterruptedException {
-        var workDir = Path.of(this.workDir);
-        var uuid = UUID.randomUUID();
-
-        log.info("created new UUID for archive with value {}", uuid);
-
-        // move everything to a new folder, and reinitialize the ocflRepository as
-        // atomically as possible
-        log.info("moving all files to {}", workDir);
-        var ocflRepoPath = moveOutboxToWorkdir(workDir, uuid);
-
         // run dmftar and upload results
-        log.info("tarring directory {}/{}", workDir, uuid);
-        tarDirectory(uuid, ocflRepoPath);
+        log.info("tarring directory {} with UUID {}", this.inboxPath, uuid);
+        tarDirectory(uuid, this.inboxPath);
 
-        // cleanup working directory
-        log.info("cleaning up directory {}", ocflRepoPath);
-        cleanupWorkingDirectory(ocflRepoPath);
+        // TODO update all items in DB with new state
     }
 
     private void cleanupWorkingDirectory(Path ocflRepoPath) throws IOException {
         FileUtils.deleteDirectory(ocflRepoPath.toFile());
     }
-
-    @UnitOfWork
-    public Path moveOutboxToWorkdir(Path workDir, UUID id) throws IOException {
-        // get a list of all files and check if they are present
-        var transferItems = transferItemDAO.findAllStatusTar();
-        log.debug("retrieved {} TransferItem's to check", transferItems.size());
-
-        var newPath = Path.of(workDir.toString(), id.toString());
-        log.debug("moving ocfl repository to {}", newPath);
-        ocflRepositoryManager.transferRepository(newPath);
-
-        // TODO make this nicer
-        var ocflRepository = new OcflRepositoryBuilder()
-            .defaultLayoutConfig(new FlatOmitPrefixLayoutConfig().setDelimiter("urn:uuid:"))
-            .storage(ocflStorageBuilder -> ocflStorageBuilder.fileSystem(newPath))
-            .workDir(Inbox.OCFL_WORK_DIR)
-            .build();
-
-        // validate all the items in here
-        for (var item : transferItems) {
-            var objectId = item.getAipTarEntryName();
-
-            if (ocflRepository.containsObject(objectId)) {
-                item.setTransferStatus(TransferItem.TransferStatus.TARRING);
-                item.setAipsTar(id.toString());
-            }
-        }
-
-        return newPath;
-    }
+    //
+    //    @UnitOfWork
+    //    public Path moveOutboxToWorkdir(Path workDir, UUID id) throws IOException {
+    //        // get a list of all files and check if they are present
+    //        var transferItems = transferItemDAO.findAllStatusTar();
+    //        log.debug("retrieved {} TransferItem's to check", transferItems.size());
+    //
+    //        var newPath = Path.of(workDir.toString(), id.toString());
+    //        var newWorkdir = Path.of(workDir.toString(), id.toString() + "-workdir");
+    //        log.debug("moving ocfl repository to {}", newPath);
+    //        ocflRepositoryManager.transferRepository(newPath);
+    //
+    //        var ocflRepository = ocflRepositoryManager.buildRepository(newPath, newWorkdir);
+    //
+    //        // validate all the items in here
+    //        for (var item : transferItems) {
+    //            var objectId = item.getAipTarEntryName();
+    //
+    //            if (ocflRepository.containsObject(objectId)) {
+    //                item.setTransferStatus(TransferItem.TransferStatus.TARRING);
+    //                item.setAipsTar(id.toString());
+    //            }
+    //        }
+    //
+    //        return newPath;
+    //    }
 
     // TODO proper error handling, make this nicer
     private void tarDirectory(UUID packageName, Path sourceDirectory) throws IOException, InterruptedException {
@@ -131,16 +110,6 @@ public class TarTask implements Runnable {
 
         var errors = new String(process.getErrorStream().readAllBytes(), Charset.defaultCharset());
         log.info(errors);
-    }
-
-    private void cleanupTarFile(Path tarFile) throws IOException, InterruptedException {
-        var processBuilder = new ProcessBuilder("dmftar", "--delete-archive", "-f", tarFile.toString());
-
-        processBuilder.redirectOutput(ProcessBuilder.Redirect.PIPE);
-        processBuilder.redirectError(ProcessBuilder.Redirect.PIPE);
-        var process = processBuilder.start();
-        var result = process.waitFor();
-        var output = new String(process.getErrorStream().readAllBytes(), Charset.defaultCharset());
     }
 
 }

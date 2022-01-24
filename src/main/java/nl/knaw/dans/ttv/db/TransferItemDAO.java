@@ -68,13 +68,10 @@ public class TransferItemDAO extends AbstractDAO<TransferItem> {
         currentSession().flush();
     }
 
-    public List<TransferItem> refreshAll(List<TransferItem> transferItems) {
-        var session = currentSession();
+    public TransferItem findByDvePath(String path) {
+        var query = currentSession().createQuery("from TransferItem where dveFilePath = :path", TransferItem.class);
+        query.setParameter("path", path);
 
-        for (var item: transferItems) {
-            session.refresh(item);
-        }
-
-        return transferItems;
+        return query.getSingleResult();
     }
 }

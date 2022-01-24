@@ -21,24 +21,44 @@ import nl.knaw.dans.lib.util.ExecutorServiceFactory;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.util.List;
-import java.util.Map;
 
 public class CollectConfiguration {
+    public static class InboxEntry {
+        private String name;
+        private String path;
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public String getPath() {
+            return path;
+        }
+
+        public void setPath(String path) {
+            this.path = path;
+        }
+    }
+
     @Valid
     @NotNull
     @JsonProperty("inboxes")
-    private List<Map<String, String>> inboxes;
+    private List<InboxEntry> inboxes;
 
     @Valid
     @NotNull
     @JsonProperty("taskQueue")
     private ExecutorServiceFactory taskQueue;
 
-    public List<Map<String, String>> getInboxes() {
+    public List<InboxEntry> getInboxes() {
         return inboxes;
     }
 
-    public void setInboxes(List<Map<String, String>> inboxes) {
+    public void setInboxes(List<InboxEntry> inboxes) {
         this.inboxes = inboxes;
     }
 
