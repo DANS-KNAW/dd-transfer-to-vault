@@ -15,39 +15,26 @@ collect:
     # Threads will die after 60 seconds of idleness
     keepAliveTime: 60 seconds
 
-createOcfl:
+dataArchive:
+  baseDir: 'danstst0@archive.surfsara.nl:'
+
+createOcflTar:
   inbox: /var/opt/dans.knaw.nl/tmp/ocfl-directories/ocfl-storage-root
   workDir: /var/opt/dans.knaw.nl/tmp/ocfl-directories/ocfl-work-dir
-  taskQueue:
-    nameFormat: "ocf-thread-%d"
-    maxQueueSize: 5000
-    # Number of threads will be increased when maxQueueSize is exceeded.
-    minThreads: 1
-    # No more than maxThreads will be created though
-    maxThreads: 10
-    # Threads will die after 60 seconds of idleness
-    keepAliveTime: 60 seconds
-
-createTar:
-  inbox: /var/opt/dans.knaw.nl/tmp/tar-inbox
-  workDir: /var/opt/dans.knaw.nl/tmp/tar-workdirs
-  dataArchiveRoot: 'danstst0@archive.surfsara.nl:'
   inboxThreshold: 2G
   tarCommand: 'dmftar -c -f %s %s' # target, source
   taskQueue:
-    nameFormat: "tar-thread-%d"
+    nameFormat: "ocfl-tar-thread-%d"
     maxQueueSize: 5000
     # Number of threads will be increased when maxQueueSize is exceeded.
     minThreads: 1
     # No more than maxThreads will be created though
     maxThreads: 10
-
     # Threads will die after 60 seconds of idleness
     keepAliveTime: 60 seconds
 
 confirmArchived:
-  dataArchiveRoot: 'danstst0@archive.surfsara.nl:'
-  cron: '' # cron expression for triggering a polling round
+  cron: '0 0 * * * ?' # cron expression for triggering a polling round
   taskQueue:
     nameFormat: "confirm-thread-%d"
     maxQueueSize: 5000

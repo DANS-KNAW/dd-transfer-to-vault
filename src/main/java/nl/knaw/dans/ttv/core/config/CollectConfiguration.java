@@ -13,40 +13,53 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ttv.config;
+package nl.knaw.dans.ttv.core.config;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import nl.knaw.dans.lib.util.ExecutorServiceFactory;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import java.util.List;
 
-public class ConfirmArchivedConfiguration {
+public class CollectConfiguration {
+    public static class InboxEntry {
+        private String name;
+        private String path;
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public String getPath() {
+            return path;
+        }
+
+        public void setPath(String path) {
+            this.path = path;
+        }
+    }
+
     @Valid
     @NotNull
-    private String dataArchiveRoot;
+    @JsonProperty("inboxes")
+    private List<InboxEntry> inboxes;
 
     @Valid
     @NotNull
-    private String cron;
-
-    @Valid
-    @NotNull
+    @JsonProperty("taskQueue")
     private ExecutorServiceFactory taskQueue;
 
-    public String getDataArchiveRoot() {
-        return dataArchiveRoot;
+    public List<InboxEntry> getInboxes() {
+        return inboxes;
     }
 
-    public void setDataArchiveRoot(String dataArchiveRoot) {
-        this.dataArchiveRoot = dataArchiveRoot;
-    }
-
-    public String getCron() {
-        return cron;
-    }
-
-    public void setCron(String cron) {
-        this.cron = cron;
+    public void setInboxes(List<InboxEntry> inboxes) {
+        this.inboxes = inboxes;
     }
 
     public ExecutorServiceFactory getTaskQueue() {
@@ -56,5 +69,4 @@ public class ConfirmArchivedConfiguration {
     public void setTaskQueue(ExecutorServiceFactory taskQueue) {
         this.taskQueue = taskQueue;
     }
-
 }

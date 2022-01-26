@@ -19,16 +19,12 @@ package nl.knaw.dans.ttv;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.dropwizard.Configuration;
 import io.dropwizard.db.DataSourceFactory;
-import nl.knaw.dans.lib.util.ExecutorServiceFactory;
-import nl.knaw.dans.ttv.config.CollectConfiguration;
-import nl.knaw.dans.ttv.config.ConfirmArchivedConfiguration;
-import nl.knaw.dans.ttv.config.CreateOcflConfiguration;
-import nl.knaw.dans.ttv.config.CreateTarConfiguration;
+import nl.knaw.dans.ttv.core.config.CollectConfiguration;
+import nl.knaw.dans.ttv.core.config.ConfirmArchivedConfiguration;
+import nl.knaw.dans.ttv.core.config.CreateOcflTarConfiguration;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
-import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 
 public class DdTransferToVaultConfiguration extends Configuration {
@@ -43,15 +39,20 @@ public class DdTransferToVaultConfiguration extends Configuration {
 
     @Valid
     @NotNull
-    private CreateOcflConfiguration createOcfl;
-
-    @Valid
-    @NotNull
-    private CreateTarConfiguration createTar;
+    private CreateOcflTarConfiguration createOcflTar;
 
     @Valid
     @NotNull
     private ConfirmArchivedConfiguration confirmArchived;
+
+    @Valid
+    @NotNull
+    @JsonProperty("dataArchive")
+    private String dataArchiveRoot;
+
+    public CreateOcflTarConfiguration getCreateOcflTar() {
+        return createOcflTar;
+    }
 
     @JsonProperty("database")
     public DataSourceFactory getDataSourceFactory() {
@@ -67,15 +68,15 @@ public class DdTransferToVaultConfiguration extends Configuration {
         return collect;
     }
 
-    public CreateOcflConfiguration getCreateOcfl() {
-        return createOcfl;
-    }
-
-    public CreateTarConfiguration getCreateTar() {
-        return createTar;
-    }
-
     public ConfirmArchivedConfiguration getConfirmArchived() {
         return confirmArchived;
+    }
+
+    public String getDataArchiveRoot() {
+        return dataArchiveRoot;
+    }
+
+    public void setDataArchiveRoot(Map<String, String> dataArchive) {
+        this.dataArchiveRoot = dataArchive.get("baseDir");
     }
 }

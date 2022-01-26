@@ -13,15 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ttv.core;
+package nl.knaw.dans.ttv.core.service;
 
-public class InvalidTransferItemException extends Exception {
+import nl.knaw.dans.ttv.core.dto.ProcessResult;
 
-    public InvalidTransferItemException(String msg, Throwable t) {
-        super(msg, t);
+import java.io.IOException;
+import java.nio.file.Path;
+
+public class TarCommandRunnerImpl implements TarCommandRunner {
+    private final ProcessRunner processRunner;
+
+    public TarCommandRunnerImpl(ProcessRunner processRunner) {
+        this.processRunner = processRunner;
     }
 
-    public InvalidTransferItemException(String msg) {
-        this(msg, null);
+    @Override
+    public ProcessResult tarDirectory(Path path, String target) throws IOException, InterruptedException {
+        var command = String.format("dmftar -c -f %s %s", target, path);
+        return processRunner.run(command);
     }
 }

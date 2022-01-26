@@ -16,7 +16,6 @@
 package nl.knaw.dans.ttv.db;
 
 import io.dropwizard.hibernate.AbstractDAO;
-import nl.knaw.dans.ttv.core.TransferItem;
 import org.hibernate.SessionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,23 +40,7 @@ public class TransferItemDAO extends AbstractDAO<TransferItem> {
     }
 
     public List<TransferItem> findAll() {
-        return list(namedTypedQuery(TransferItem.TRANSFER_ITEM_FIND_ALL));
-    }
-
-    public List<TransferItem> findAllStatusExtract() {
-        return list(namedTypedQuery(TransferItem.TRANSFER_ITEM_FIND_ALL_STATUS_EXTRACT));
-    }
-
-    public List<TransferItem> findAllStatusMove() {
-        return list(namedTypedQuery(TransferItem.TRANSFER_ITEM_FIND_ALL_STATUS_MOVE));
-    }
-
-    public List<TransferItem> findAllStatusTar() {
-        return list(namedTypedQuery(TransferItem.TRANSFER_ITEM_FIND_ALL_STATUS_TAR));
-    }
-
-    public List<TransferItem> findAllStatusTarring() {
-        return list(namedTypedQuery(TransferItem.TRANSFER_ITEM_FIND_ALL_STATUS_TARRING));
+        return currentSession().createQuery("from TransferItem", TransferItem.class).list();
     }
 
     public void merge(TransferItem transferItem) {
@@ -73,5 +56,70 @@ public class TransferItemDAO extends AbstractDAO<TransferItem> {
         query.setParameter("path", path);
 
         return query.getSingleResult();
+    }
+
+    public List<TransferItem> findByStatus(TransferItem.TransferStatus status) {
+        var query = currentSession().createQuery("from TransferItem where transferStatus = :status", TransferItem.class);
+        query.setParameter("status", status);
+
+        return query.list();
+        //        return list(namedTypedQuery(TransferItem.TRANSFER_ITEM_FIND_ALL_STATUS_TARRING));
+    }
+
+    public List<TransferItem> findAllByTarId(String id) {
+        var query = currentSession().createQuery("from TransferItem where aipsTar = :id", TransferItem.class);
+        query.setParameter("id", id);
+
+        return query.list();
+    }
+
+    public void updateStatusByTar(String id, TransferItem.TransferStatus status) {
+        var query = currentSession().createQuery(
+            "update TransferItem "
+            + "set transferStatus = :status "
+            + "where aipsTar = :id");
+
+        query.setParameter("id", id);
+        query.setParameter("status", status);
+        query.executeUpdate();
+    }
+
+    public Optional<TransferItem> findByDatasetPidAndVersion(String datasetPid, int versionMajor, int versionMinor) {
+        var query = currentSession().createQuery(
+            "from TransferItem "
+                + "where datasetPid = :datasetPid "
+                + "and versionMajor = :versionMajor "
+                + "and versionMinor = :versionMinor ",
+            TransferItem.class);
+
+        query.setParameter("datasetPid", datasetPid);
+        query.setParameter("versionMajor", versionMajor);
+        query.setParameter("versionMinor", versionMinor);
+
+        return query.getResultStream().findFirst();
+    }
+
+    public List<TransferItem> findAllTarsToBeConfirmed() {
+        var query = currentSession().createQuery(
+            "from TransferItem "
+                + "where transferStatus = :status "
+                + "and confirmCheckInProgress = false ", TransferItem.class);
+
+        query.setParameter("status", TransferItem.TransferStatus.OCFLTARCREATED);
+
+        return query.list();
+    }
+
+    public void updateCheckingProgressResults(String id, TransferItem.TransferStatus status) {
+        var query = currentSession().createQuery(
+            "update TransferItem "
+                + "set transferStatus = :status, "
+                + "    confirmCheckInProgress = false "
+                + "where aipsTar = :id");
+
+        query.setParameter("id", id);
+        query.setParameter("status", status);
+
+        query.executeUpdate();
     }
 }

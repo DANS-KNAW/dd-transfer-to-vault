@@ -13,14 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ttv.config;
+package nl.knaw.dans.ttv.core.config;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import nl.knaw.dans.lib.util.ExecutorServiceFactory;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
-public class CreateOcflConfiguration {
+public class CreateOcflTarConfiguration {
 
     @Valid
     @NotNull
@@ -32,15 +33,16 @@ public class CreateOcflConfiguration {
 
     @Valid
     @NotNull
+    @JsonDeserialize(converter = StringByteSizeConverter.class)
+    private long inboxThreshold;
+
+    @Valid
+    @NotNull
+    private String tarCommand;
+
+    @Valid
+    @NotNull
     private ExecutorServiceFactory taskQueue;
-
-    public ExecutorServiceFactory getTaskQueue() {
-        return taskQueue;
-    }
-
-    public void setTaskQueue(ExecutorServiceFactory taskQueue) {
-        this.taskQueue = taskQueue;
-    }
 
     public String getInbox() {
         return inbox;
@@ -56,5 +58,29 @@ public class CreateOcflConfiguration {
 
     public void setWorkDir(String workDir) {
         this.workDir = workDir;
+    }
+
+    public long getInboxThreshold() {
+        return inboxThreshold;
+    }
+
+    public void setInboxThreshold(long inboxThreshold) {
+        this.inboxThreshold = inboxThreshold;
+    }
+
+    public String getTarCommand() {
+        return tarCommand;
+    }
+
+    public void setTarCommand(String tarCommand) {
+        this.tarCommand = tarCommand;
+    }
+
+    public ExecutorServiceFactory getTaskQueue() {
+        return taskQueue;
+    }
+
+    public void setTaskQueue(ExecutorServiceFactory taskQueue) {
+        this.taskQueue = taskQueue;
     }
 }

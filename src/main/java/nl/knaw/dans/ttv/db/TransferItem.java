@@ -13,8 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ttv.core;
+package nl.knaw.dans.ttv.db;
 
+import org.hibernate.annotations.ColumnDefault;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,8 +26,6 @@ import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.NamedQueries;
-import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 import java.time.LocalDateTime;
@@ -35,24 +34,16 @@ import java.util.Objects;
 
 @Entity
 @Table(name = "transfer_queue", uniqueConstraints={@UniqueConstraint(columnNames = {"dataset_pid" , "version_major", "version_minor"})})
-@NamedQueries({
-        @NamedQuery(name = "TransferItem.findAll", query = "SELECT t FROM TransferItem t"),
-        @NamedQuery(name = "TransferItem.findAllWithStatusExtract", query = "SELECT t FROM TransferItem t WHERE t.transferStatus = 'EXTRACT'"),
-        @NamedQuery(name = "TransferItem.findAllWithStatusMove", query = "SELECT t FROM TransferItem t WHERE t.transferStatus = 'MOVE'"),
-        @NamedQuery(name = "TransferItem.findAllWithStatusTar", query = "SELECT t FROM TransferItem t WHERE t.transferStatus = 'TAR'"),
-        @NamedQuery(name = "TransferItem.findAllWithStatusTarring", query = "SELECT t FROM TransferItem t WHERE t.transferStatus = 'TARRING'"),
-})
 public class TransferItem {
 
     private static final Logger log = LoggerFactory.getLogger(TransferItem.class);
-    public static final String TRANSFER_ITEM_FIND_ALL = "TransferItem.findAll";
-    public static final String TRANSFER_ITEM_FIND_ALL_STATUS_EXTRACT = "TransferItem.findAllWithStatusExtract";
-    public static final String TRANSFER_ITEM_FIND_ALL_STATUS_MOVE = "TransferItem.findAllWithStatusMove";
-    public static final String TRANSFER_ITEM_FIND_ALL_STATUS_TAR = "TransferItem.findAllWithStatusTar";
-    public static final String TRANSFER_ITEM_FIND_ALL_STATUS_TARRING = "TransferItem.findAllWithStatusTarring";
 
     public enum TransferStatus {
-        EXTRACT, MOVE, OCFL, TAR, TARRING, TARCREATED, POLL
+        EXTRACT,
+        COLLECTED,
+        TARRING,
+        OCFLTARCREATED,
+        CONFIRMEDARCHIVED
     }
 
     @Id
@@ -124,6 +115,10 @@ public class TransferItem {
 
     @Column(name = "bag_deposit_date")
     private LocalDateTime bagDepositDate;
+
+    @Column(name = "confirm_check_in_progress")
+    @ColumnDefault("false")
+    private boolean confirmCheckInProgress;
 
     public TransferItem(){
 
@@ -314,8 +309,12 @@ public class TransferItem {
         this.bagDepositDate = bagDepositDate;
     }
 
-    public String onError(){
-        return " for dve: " + dveFilePath;
+    public boolean isConfirmCheckInProgress() {
+        return confirmCheckInProgress;
+    }
+
+    public void setConfirmCheckInProgress(boolean confirmCheckInProgress) {
+        this.confirmCheckInProgress = confirmCheckInProgress;
     }
 
     @Override
@@ -338,8 +337,6 @@ public class TransferItem {
                 ", queueDate=" + queueDate +
                 ", bagSize=" + bagSize +
                 ", transferStatus=" + transferStatus +
-                ", oaiOre=" + Arrays.toString(oaiOre) +
-                ", pidMapping=" + Arrays.toString(pidMapping) +
                 ", aipTarEntryName='" + aipTarEntryName + '\'' +
                 ", aipsTar='" + aipsTar + '\'' +
                 ", bagDepositDate=" + bagDepositDate +
@@ -351,6 +348,6 @@ public class TransferItem {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         TransferItem that = (TransferItem) o;
-        return versionMajor == that.versionMajor && versionMinor == that.versionMinor && bagSize == that.bagSize && datasetPid.equals(that.datasetPid) && Objects.equals(datasetVersion, that.datasetVersion) && creationTime.equals(that.creationTime) && dveFilePath.equals(that.dveFilePath) && Objects.equals(bagId, that.bagId) && Objects.equals(nbn, that.nbn) && Objects.equals(otherId, that.otherId) && Objects.equals(otherIdVersion, that.otherIdVersion) && Objects.equals(swordToken, that.swordToken) && Objects.equals(datasetDvInstance, that.datasetDvInstance) && Objects.equals(bagChecksum, that.bagChecksum) && Objects.equals(queueDate, that.queueDate) && transferStatus == that.transferStatus && Arrays.equals(oaiOre, that.oaiOre) && Arrays.equals(pidMapping, that.pidMapping) && Objects.equals(aipTarEntryName, that.aipTarEntryName) && Objects.equals(aipsTar, that.aipsTar) && Objects.equals(bagDepositDate, that.bagDepositDate);
+        return versionMajor == that.versionMajor && versionMinor == that.versionMinor && bagSize == that.bagSize && datasetPid.equals(that.datasetPid) && Objects.equals(datasetVersion, that.datasetVersion) && creationTime.equals(that.creationTime) && dveFilePath.equals(that.dveFilePath) && Objects.equals(bagId, that.bagId) && Objects.equals(nbn, that.nbn) && Objects.equals(otherId, that.otherId) && Objects.equals(otherIdVersion, that.otherIdVersion) && Objects.equals(swordToken, that.swordToken) && Objects.equals(datasetDvInstance, that.datasetDvInstance) && Objects.equals(bagChecksum, that.bagChecksum) && Objects.equals(queueDate, that.queueDate) && transferStatus == that.transferStatus && Arrays.equals(oaiOre, that.oaiOre) && Arrays.equals(pidMapping, that.pidMapping) && Objects.equals(aipTarEntryName, that.aipTarEntryName) && Objects.equals(aipsTar, that.aipsTar) && Objects.equals(bagDepositDate, that.bagDepositDate) && confirmCheckInProgress == that.confirmCheckInProgress;
     }
 }

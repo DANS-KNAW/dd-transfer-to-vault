@@ -16,15 +16,15 @@
 package nl.knaw.dans.ttv.core;
 
 import io.dropwizard.lifecycle.Managed;
-import nl.knaw.dans.ttv.db.TransferItemDAO;
-import org.hibernate.SessionFactory;
+import nl.knaw.dans.ttv.core.service.ArchiveStatusService;
+import nl.knaw.dans.ttv.core.service.OcflRepositoryService;
+import nl.knaw.dans.ttv.core.service.TransferItemService;
 import org.quartz.CronScheduleBuilder;
 import org.quartz.CronTrigger;
 import org.quartz.JobBuilder;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.Scheduler;
-import org.quartz.SchedulerException;
 import org.quartz.SchedulerFactory;
 import org.quartz.TriggerBuilder;
 import org.quartz.impl.StdSchedulerFactory;
@@ -33,44 +33,48 @@ import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.ExecutorService;
 
-public class ConfirmArchiveTaskManager implements Managed {
-    private static final Logger log = LoggerFactory.getLogger(ConfirmArchiveTaskManager.class);
+public class ConfirmArchivedTaskManager implements Managed {
+    private static final Logger log = LoggerFactory.getLogger(ConfirmArchivedTaskManager.class);
 
-    private final Scheduler scheduler;
+    private Scheduler scheduler;
     private final String schedule;
 
-    private final SessionFactory sessionFactory;
-    private final TransferItemDAO transferItemDAO;
     private final String workingDir;
     private final String dataArchiveRoot;
     private final ExecutorService executorService;
+    private final TransferItemService transferItemService;
+    private final ArchiveStatusService archiveStatusService;
+    private final OcflRepositoryService ocflRepositoryService;
 
-    public ConfirmArchiveTaskManager(String schedule, SessionFactory sessionFactory, TransferItemDAO transferItemDAO, String workingDir, String dataArchiveRoot,
-        ExecutorService executorService) throws SchedulerException {
-        this.sessionFactory = sessionFactory;
-        this.transferItemDAO = transferItemDAO;
+    public ConfirmArchivedTaskManager(String schedule, String workingDir, String dataArchiveRoot,
+        ExecutorService executorService, TransferItemService transferItemService, ArchiveStatusService archiveStatusService, OcflRepositoryService ocflRepositoryService) {
+
         this.workingDir = workingDir;
         this.dataArchiveRoot = dataArchiveRoot;
         this.executorService = executorService;
         this.schedule = schedule;
-
-        SchedulerFactory sf = new StdSchedulerFactory();
-        this.scheduler = sf.getScheduler();
+        this.transferItemService = transferItemService;
+        this.archiveStatusService = archiveStatusService;
+        this.ocflRepositoryService = ocflRepositoryService;
     }
 
     @Override
     public void start() throws Exception {
+        SchedulerFactory sf = new StdSchedulerFactory();
+        this.scheduler = sf.getScheduler();
+
         var jobData = new JobDataMap();
 
         log.info("configuring JobDataMap for cron-based tasks");
 
-        jobData.put("sessionFactory", sessionFactory);
-        jobData.put("transferItemDAO", transferItemDAO);
+        jobData.put("transferItemService", transferItemService);
         jobData.put("workingDir", workingDir);
         jobData.put("dataArchiveRoot", dataArchiveRoot);
         jobData.put("executorService", executorService);
+        jobData.put("archiveStatusService", archiveStatusService);
+        jobData.put("ocflRepositoryService", ocflRepositoryService);
 
-        JobDetail job = JobBuilder.newJob(ConfirmArchiveTaskCreator.class)
+        JobDetail job = JobBuilder.newJob(ConfirmArchivedTaskCreator.class)
             .withIdentity("job", "group")
             .setJobData(jobData)
             .build();
@@ -80,10 +84,13 @@ public class ConfirmArchiveTaskManager implements Managed {
             .withSchedule(CronScheduleBuilder.cronSchedule(this.schedule))
             .build();
 
-        log.info("scheduling ConfirmArchiveTaskCreator for schedule '{}'", this.schedule);
+        log.info("scheduling ConfirmArchivedTaskCreator for schedule '{}'", this.schedule);
 
         this.scheduler.scheduleJob(job, trigger);
         this.scheduler.start();
+
+        log.info("trigger ConfirmArchivedTaskCreator task immediately after startup");
+        this.scheduler.triggerJob(job.getKey(), jobData);
     }
 
     @Override

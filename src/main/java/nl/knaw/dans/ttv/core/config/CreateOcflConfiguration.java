@@ -13,54 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ttv.config;
+package nl.knaw.dans.ttv.core.config;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import nl.knaw.dans.lib.util.ExecutorServiceFactory;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
-import java.util.List;
 
-public class CollectConfiguration {
-    public static class InboxEntry {
-        private String name;
-        private String path;
-
-        public String getName() {
-            return name;
-        }
-
-        public void setName(String name) {
-            this.name = name;
-        }
-
-        public String getPath() {
-            return path;
-        }
-
-        public void setPath(String path) {
-            this.path = path;
-        }
-    }
+public class CreateOcflConfiguration {
 
     @Valid
     @NotNull
-    @JsonProperty("inboxes")
-    private List<InboxEntry> inboxes;
+    private String inbox;
 
     @Valid
     @NotNull
-    @JsonProperty("taskQueue")
+    private String workDir;
+
+    @Valid
+    @NotNull
     private ExecutorServiceFactory taskQueue;
-
-    public List<InboxEntry> getInboxes() {
-        return inboxes;
-    }
-
-    public void setInboxes(List<InboxEntry> inboxes) {
-        this.inboxes = inboxes;
-    }
 
     public ExecutorServiceFactory getTaskQueue() {
         return taskQueue;
@@ -68,5 +40,21 @@ public class CollectConfiguration {
 
     public void setTaskQueue(ExecutorServiceFactory taskQueue) {
         this.taskQueue = taskQueue;
+    }
+
+    public String getInbox() {
+        return inbox;
+    }
+
+    public void setInbox(String inbox) {
+        this.inbox = inbox;
+    }
+
+    public String getWorkDir() {
+        return workDir;
+    }
+
+    public void setWorkDir(String workDir) {
+        this.workDir = workDir;
     }
 }

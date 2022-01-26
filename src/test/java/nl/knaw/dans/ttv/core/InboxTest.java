@@ -18,6 +18,7 @@ package nl.knaw.dans.ttv.core;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.dropwizard.testing.junit5.DAOTestExtension;
 import io.dropwizard.testing.junit5.DropwizardExtensionsSupport;
+import nl.knaw.dans.ttv.db.TransferItem;
 import nl.knaw.dans.ttv.db.TransferItemDAO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;

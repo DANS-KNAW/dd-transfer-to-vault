@@ -13,15 +13,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ttv.core;
+package nl.knaw.dans.ttv.core.config;
 
-public class InvalidTransferItemException extends Exception {
+import nl.knaw.dans.lib.util.ExecutorServiceFactory;
 
-    public InvalidTransferItemException(String msg, Throwable t) {
-        super(msg, t);
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
+
+public class ConfirmArchivedConfiguration {
+    @Valid
+    @NotNull
+    private String cron;
+
+    @Valid
+    @NotNull
+    private ExecutorServiceFactory taskQueue;
+
+    public String getCron() {
+        return cron;
     }
 
-    public InvalidTransferItemException(String msg) {
-        this(msg, null);
+    public void setCron(String cron) {
+        this.cron = cron;
     }
+
+    public ExecutorServiceFactory getTaskQueue() {
+        return taskQueue;
+    }
+
+    public void setTaskQueue(ExecutorServiceFactory taskQueue) {
+        this.taskQueue = taskQueue;
+    }
+
 }

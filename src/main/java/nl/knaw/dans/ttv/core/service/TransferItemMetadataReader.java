@@ -13,20 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ttv.core;
+package nl.knaw.dans.ttv.core.service;
 
-import edu.wisc.library.ocfl.api.OcflRepository;
-import edu.wisc.library.ocfl.core.OcflRepositoryBuilder;
-import edu.wisc.library.ocfl.core.extension.storage.layout.config.FlatOmitPrefixLayoutConfig;
+import nl.knaw.dans.ttv.core.InvalidTransferItemException;
+import nl.knaw.dans.ttv.core.dto.FileContentAttributes;
+import nl.knaw.dans.ttv.core.dto.FilenameAttributes;
+import nl.knaw.dans.ttv.core.dto.FilesystemAttributes;
 
 import java.nio.file.Path;
+import java.util.Optional;
 
-public class OcflRepositoryFactory {
-    public OcflRepository createRepository(Path storageDirectory, Path workingDirectory) {
-        return new OcflRepositoryBuilder()
-            .defaultLayoutConfig(new FlatOmitPrefixLayoutConfig().setDelimiter("urn:uuid:"))
-            .storage(ocflStorageBuilder -> ocflStorageBuilder.fileSystem(storageDirectory))
-            .workDir(workingDirectory)
-            .build();
-    }
+public interface TransferItemMetadataReader {
+
+    FilenameAttributes getFilenameAttributes(Path path) throws InvalidTransferItemException;
+
+    FilesystemAttributes getFilesystemAttributes(Path path) throws InvalidTransferItemException;
+
+    FileContentAttributes getFileContentAttributes(Path path) throws InvalidTransferItemException;
+
+    Optional<Path> getAssociatedXmlFile(Path path);
 }

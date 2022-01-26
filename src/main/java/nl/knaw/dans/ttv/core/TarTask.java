@@ -15,31 +15,32 @@
  */
 package nl.knaw.dans.ttv.core;
 
-import nl.knaw.dans.ttv.db.TransferItemDAO;
-import org.apache.commons.io.FileUtils;
+import nl.knaw.dans.ttv.core.service.TarCommandRunner;
+import nl.knaw.dans.ttv.core.service.TransferItemService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.util.UUID;
 
 public class TarTask implements Runnable {
     private static final Logger log = LoggerFactory.getLogger(TarTask.class);
 
-    private final TransferItemDAO transferItemDAO;
+    private final TransferItemService transferItemService;
     private final Path inboxPath;
     private final String dataArchiveRoot;
     private final String tarCommand;
     private final UUID uuid;
+    private final TarCommandRunner tarCommandRunner;
 
-    public TarTask(TransferItemDAO transferItemDAO, UUID uuid, Path inboxPath, String dataArchiveRoot, String tarCommand) {
-        this.transferItemDAO = transferItemDAO;
+    public TarTask(TransferItemService transferItemService, UUID uuid, Path inboxPath, String dataArchiveRoot, String tarCommand, TarCommandRunner tarCommandRunner) {
+        this.transferItemService = transferItemService;
         this.inboxPath = inboxPath;
         this.dataArchiveRoot = dataArchiveRoot;
         this.tarCommand = tarCommand;
         this.uuid = uuid;
+        this.tarCommandRunner = tarCommandRunner;
     }
 
     @Override
@@ -48,7 +49,7 @@ public class TarTask implements Runnable {
             createTarArchive();
         }
         catch (IOException | InterruptedException e) {
-            e.printStackTrace();
+            log.error("error while creating TAR archive", e);
         }
     }
 
@@ -57,59 +58,21 @@ public class TarTask implements Runnable {
         log.info("tarring directory {} with UUID {}", this.inboxPath, uuid);
         tarDirectory(uuid, this.inboxPath);
 
-        // TODO update all items in DB with new state
+        transferItemService.updateToCreatedForTarId(uuid.toString());
     }
 
-    private void cleanupWorkingDirectory(Path ocflRepoPath) throws IOException {
-        FileUtils.deleteDirectory(ocflRepoPath.toFile());
-    }
-    //
-    //    @UnitOfWork
-    //    public Path moveOutboxToWorkdir(Path workDir, UUID id) throws IOException {
-    //        // get a list of all files and check if they are present
-    //        var transferItems = transferItemDAO.findAllStatusTar();
-    //        log.debug("retrieved {} TransferItem's to check", transferItems.size());
-    //
-    //        var newPath = Path.of(workDir.toString(), id.toString());
-    //        var newWorkdir = Path.of(workDir.toString(), id.toString() + "-workdir");
-    //        log.debug("moving ocfl repository to {}", newPath);
-    //        ocflRepositoryManager.transferRepository(newPath);
-    //
-    //        var ocflRepository = ocflRepositoryManager.buildRepository(newPath, newWorkdir);
-    //
-    //        // validate all the items in here
-    //        for (var item : transferItems) {
-    //            var objectId = item.getAipTarEntryName();
-    //
-    //            if (ocflRepository.containsObject(objectId)) {
-    //                item.setTransferStatus(TransferItem.TransferStatus.TARRING);
-    //                item.setAipsTar(id.toString());
-    //            }
-    //        }
-    //
-    //        return newPath;
-    //    }
-
-    // TODO proper error handling, make this nicer
     private void tarDirectory(UUID packageName, Path sourceDirectory) throws IOException, InterruptedException {
-        var targetPackage = dataArchiveRoot + packageName.toString() + ".dfmtar";
-        var cmd = String.format(tarCommand, targetPackage, sourceDirectory);
-        log.debug("executing command {}", cmd);
-        // TODO this is far from safe, spaces break this, so fix it
-        var processBuilder = new ProcessBuilder(cmd.split(" "));
+        var targetPackage = dataArchiveRoot + packageName.toString() + ".dmftar";
+        var result = tarCommandRunner.tarDirectory(sourceDirectory, targetPackage);
 
-        // TODO see if we can get output asynchronously
-        processBuilder.redirectOutput(ProcessBuilder.Redirect.PIPE);
-        processBuilder.redirectError(ProcessBuilder.Redirect.PIPE);
-        log.debug("waiting for command {}", cmd);
-        var process = processBuilder.start();
-        var result = process.waitFor();
-        log.debug("received result from command: {}", result);
-        var output = new String(process.getInputStream().readAllBytes(), Charset.defaultCharset());
-        log.info(output);
+        log.debug("tar command return code: {}", result.getStatusCode());
+        log.debug("tar command output: '{}'", result.getStdout());
+        log.debug("tar command errors: '{}'", result.getStderr());
 
-        var errors = new String(process.getErrorStream().readAllBytes(), Charset.defaultCharset());
-        log.info(errors);
+        // it failed
+        if (result.getStatusCode() != 0) {
+            throw new IOException(String.format("unable to tar folder '%s' to location '%s", sourceDirectory, targetPackage));
+        }
     }
 
 }

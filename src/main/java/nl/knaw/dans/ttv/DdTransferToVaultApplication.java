@@ -22,17 +22,23 @@ import io.dropwizard.hibernate.HibernateBundle;
 import io.dropwizard.hibernate.UnitOfWorkAwareProxyFactory;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
+import nl.knaw.dans.ttv.core.service.ArchiveStatusService;
+import nl.knaw.dans.ttv.core.service.ArchiveStatusServiceImpl;
 import nl.knaw.dans.ttv.core.CollectTaskManager;
-import nl.knaw.dans.ttv.core.ConfirmArchiveTaskManager;
-import nl.knaw.dans.ttv.core.OcflRepositoryFactory;
+import nl.knaw.dans.ttv.core.ConfirmArchivedTaskManager;
+import nl.knaw.dans.ttv.core.service.FileServiceImpl;
+import nl.knaw.dans.ttv.core.service.InboxWatcherFactoryImpl;
+import nl.knaw.dans.ttv.core.service.OcflRepositoryFactory;
+import nl.knaw.dans.ttv.core.service.OcflRepositoryServiceImpl;
+import nl.knaw.dans.ttv.core.service.ProcessRunnerImpl;
+import nl.knaw.dans.ttv.core.service.TarCommandRunnerImpl;
 import nl.knaw.dans.ttv.core.TarTaskManager;
-import nl.knaw.dans.ttv.core.TransferItem;
+import nl.knaw.dans.ttv.core.service.TransferItemMetadataReaderImpl;
+import nl.knaw.dans.ttv.core.service.TransferItemServiceImpl;
+import nl.knaw.dans.ttv.db.TransferItem;
 import nl.knaw.dans.ttv.db.TransferItemDAO;
-import org.hibernate.SessionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.concurrent.ExecutorService;
 
 public class DdTransferToVaultApplication extends Application<DdTransferToVaultConfiguration> {
 
@@ -64,24 +70,32 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
         final TransferItemDAO transferItemDAO = new TransferItemDAO(hibernateBundle.getSessionFactory());
 
         final var collectExecutorService = configuration.getCollect().getTaskQueue().build(environment);
-        final var createOcflExecutorService = configuration.getCreateOcfl().getTaskQueue().build(environment);
+        final var fileService = new FileServiceImpl();
+
+        var inboxWatcherFactory = new InboxWatcherFactoryImpl();
+
+        var transferItemService = new UnitOfWorkAwareProxyFactory(hibernateBundle).create(TransferItemServiceImpl.class, TransferItemDAO.class, transferItemDAO);
+
+        var metadataReader = new TransferItemMetadataReaderImpl(environment.getObjectMapper(), fileService);
 
         // the Collect task, which listens to new files on the network-drive shares
-        var collectTaskManager = new CollectTaskManager(configuration.getCollect().getInboxes(), configuration.getCreateTar().getInbox(), hibernateBundle.getSessionFactory(), collectExecutorService,
-            environment.getObjectMapper(), transferItemDAO);
+        var collectTaskManager = new CollectTaskManager(configuration.getCollect().getInboxes(), configuration.getCreateOcflTar().getInbox(), collectExecutorService, transferItemService,
+            metadataReader, fileService, inboxWatcherFactory);
 
         environment.lifecycle().manage(collectTaskManager);
 
         // the process that looks for new files in the tar-inbox, and when reaching a certain combined size, tars them
         // and sends it to the archiving service
         final var ocflRepositoryFactory = new OcflRepositoryFactory();
-        final var createTarExecutorService = configuration.getCreateTar().getTaskQueue().build(environment);
+        final var ocflRepositoryService = new OcflRepositoryServiceImpl(fileService, ocflRepositoryFactory);
+        final var processRunner = new ProcessRunnerImpl();
+        final var tarCommandRunner = new TarCommandRunnerImpl(processRunner);
 
-        var tarTaskManager = new UnitOfWorkAwareProxyFactory(hibernateBundle).create(TarTaskManager.class,
-            new Class[] { String.class, String.class, long.class, String.class, String.class, TransferItemDAO.class, SessionFactory.class, ExecutorService.class, OcflRepositoryFactory.class },
-            new Object[] { configuration.getCreateTar().getInbox(), configuration.getCreateTar().getWorkDir(), configuration.getCreateTar().getInboxThreshold(),
-                configuration.getCreateTar().getTarCommand(), configuration.getCreateTar().getDataArchiveRoot(), transferItemDAO, hibernateBundle.getSessionFactory(), createTarExecutorService,
-                ocflRepositoryFactory });
+        final var createTarExecutorService = configuration.getCreateOcflTar().getTaskQueue().build(environment);
+
+        var tarTaskManager = new TarTaskManager(configuration.getCreateOcflTar().getInbox(), configuration.getCreateOcflTar().getWorkDir(), configuration.getCreateOcflTar().getInboxThreshold(),
+            configuration.getCreateOcflTar().getTarCommand(), configuration.getDataArchiveRoot(), createTarExecutorService, inboxWatcherFactory, fileService, ocflRepositoryService,
+            transferItemService, tarCommandRunner);
 
         environment.lifecycle().manage(tarTaskManager);
 
@@ -89,10 +103,10 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
         final var confirmArchiveExecutorService = configuration.getConfirmArchived().getTaskQueue().build(environment);
         final var confirmConfig = configuration.getConfirmArchived();
 
-        var confirmArchiveTaskManager = new UnitOfWorkAwareProxyFactory(hibernateBundle).create(ConfirmArchiveTaskManager.class,
-            new Class[] { String.class, SessionFactory.class, TransferItemDAO.class, String.class, String.class, ExecutorService.class },
-            new Object[] { confirmConfig.getCron(), hibernateBundle.getSessionFactory(), transferItemDAO, configuration.getCreateTar().getWorkDir(), confirmConfig.getDataArchiveRoot(),
-                confirmArchiveExecutorService });
+        final ArchiveStatusService archiveStatusService = new ArchiveStatusServiceImpl(processRunner, configuration.getDataArchiveRoot());
+
+        var confirmArchiveTaskManager = new ConfirmArchivedTaskManager(confirmConfig.getCron(), configuration.getCreateOcflTar().getWorkDir(), configuration.getDataArchiveRoot(),
+            confirmArchiveExecutorService, transferItemService, archiveStatusService, ocflRepositoryService);
 
         environment.lifecycle().manage(confirmArchiveTaskManager);
     }

@@ -13,9 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ttv.core;
+package nl.knaw.dans.ttv.core.service;
 
 import io.dropwizard.lifecycle.Managed;
+import nl.knaw.dans.ttv.core.InvalidTransferItemException;
 import org.apache.commons.io.monitor.FileAlterationListenerAdaptor;
 import org.apache.commons.io.monitor.FileAlterationMonitor;
 import org.apache.commons.io.monitor.FileAlterationObserver;
