@@ -22,17 +22,17 @@ import io.dropwizard.hibernate.HibernateBundle;
 import io.dropwizard.hibernate.UnitOfWorkAwareProxyFactory;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
-import nl.knaw.dans.ttv.core.service.ArchiveStatusService;
-import nl.knaw.dans.ttv.core.service.ArchiveStatusServiceImpl;
 import nl.knaw.dans.ttv.core.CollectTaskManager;
 import nl.knaw.dans.ttv.core.ConfirmArchivedTaskManager;
+import nl.knaw.dans.ttv.core.TarTaskManager;
+import nl.knaw.dans.ttv.core.service.ArchiveStatusService;
+import nl.knaw.dans.ttv.core.service.ArchiveStatusServiceImpl;
 import nl.knaw.dans.ttv.core.service.FileServiceImpl;
 import nl.knaw.dans.ttv.core.service.InboxWatcherFactoryImpl;
 import nl.knaw.dans.ttv.core.service.OcflRepositoryFactory;
 import nl.knaw.dans.ttv.core.service.OcflRepositoryServiceImpl;
 import nl.knaw.dans.ttv.core.service.ProcessRunnerImpl;
 import nl.knaw.dans.ttv.core.service.TarCommandRunnerImpl;
-import nl.knaw.dans.ttv.core.TarTaskManager;
 import nl.knaw.dans.ttv.core.service.TransferItemMetadataReaderImpl;
 import nl.knaw.dans.ttv.core.service.TransferItemServiceImpl;
 import nl.knaw.dans.ttv.db.TransferItem;
@@ -79,8 +79,16 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
         var metadataReader = new TransferItemMetadataReaderImpl(environment.getObjectMapper(), fileService);
 
         // the Collect task, which listens to new files on the network-drive shares
-        var collectTaskManager = new CollectTaskManager(configuration.getCollect().getInboxes(), configuration.getCreateOcflTar().getInbox(), collectExecutorService, transferItemService,
-            metadataReader, fileService, inboxWatcherFactory);
+        var collectTaskManager = new CollectTaskManager(
+            configuration.getCollect().getInboxes(),
+            configuration.getCreateOcflTar().getInbox(),
+            configuration.getCollect().getPollingInterval(),
+            collectExecutorService,
+            transferItemService,
+            metadataReader,
+            fileService,
+            inboxWatcherFactory
+        );
 
         environment.lifecycle().manage(collectTaskManager);
 
@@ -93,9 +101,20 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
 
         final var createTarExecutorService = configuration.getCreateOcflTar().getTaskQueue().build(environment);
 
-        var tarTaskManager = new TarTaskManager(configuration.getCreateOcflTar().getInbox(), configuration.getCreateOcflTar().getWorkDir(), configuration.getCreateOcflTar().getInboxThreshold(),
-            configuration.getCreateOcflTar().getTarCommand(), configuration.getDataArchiveRoot(), createTarExecutorService, inboxWatcherFactory, fileService, ocflRepositoryService,
-            transferItemService, tarCommandRunner);
+        var tarTaskManager = new TarTaskManager(
+            configuration.getCreateOcflTar().getInbox(),
+            configuration.getCreateOcflTar().getWorkDir(),
+            configuration.getCreateOcflTar().getInboxThreshold(),
+            configuration.getCreateOcflTar().getTarCommand(),
+            configuration.getDataArchiveRoot(),
+            configuration.getCreateOcflTar().getPollingInterval(),
+            createTarExecutorService,
+            inboxWatcherFactory,
+            fileService,
+            ocflRepositoryService,
+            transferItemService,
+            tarCommandRunner
+        );
 
         environment.lifecycle().manage(tarTaskManager);
 

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ttv.core.config;
+package nl.knaw.dans.ttv.core.config.converter;
 
 import com.fasterxml.jackson.databind.util.StdConverter;
 
@@ -25,7 +25,7 @@ public class StringByteSizeConverter extends StdConverter<String, Long> {
     @Override
     public Long convert(String s) {
         var pattern = Pattern.compile("(\\d+)([a-zA-Z])?", Pattern.CASE_INSENSITIVE);
-        var matched = pattern.matcher(s);
+        var matched = pattern.matcher(s.strip());
 
         if (matched.matches()) {
             var number = Long.parseLong(matched.group(1));
@@ -46,7 +46,7 @@ public class StringByteSizeConverter extends StdConverter<String, Long> {
                         break;
 
                     default:
-                        throw new IllegalArgumentException(String.format("suffix %s is not a valid size, expecting one of G, M, or K", suffix));
+                        throw new IllegalArgumentException(String.format("suffix %s is not a valid size, expecting one of G, M, or K, or no suffix", suffix));
                 }
             }
 

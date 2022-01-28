@@ -28,6 +28,7 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
@@ -36,6 +37,7 @@ public class CollectTaskManager implements Managed {
     private static final Logger log = LoggerFactory.getLogger(CollectTaskManager.class);
     private final List<CollectConfiguration.InboxEntry> inboxes;
     private final Path outbox;
+    private final long pollingInterval;
     private final ExecutorService executorService;
     private final TransferItemService transferItemService;
     private final TransferItemMetadataReader metadataReader;
@@ -43,11 +45,12 @@ public class CollectTaskManager implements Managed {
     private final InboxWatcherFactory inboxWatcherFactory;
     private List<InboxWatcher> inboxWatchers;
 
-    public CollectTaskManager(List<CollectConfiguration.InboxEntry> inboxes, String outbox, ExecutorService executorService,
+    public CollectTaskManager(List<CollectConfiguration.InboxEntry> inboxes, String outbox, long pollingInterval, ExecutorService executorService,
         TransferItemService transferItemService, TransferItemMetadataReader metadataReader, FileService fileService, InboxWatcherFactory inboxWatcherFactory) {
-        
+
         this.inboxes = Objects.requireNonNull(inboxes);
         this.outbox = Path.of(Objects.requireNonNull(outbox));
+        this.pollingInterval = pollingInterval;
         this.executorService = Objects.requireNonNull(executorService);
         this.transferItemService = Objects.requireNonNull(transferItemService);
         this.metadataReader = Objects.requireNonNull(metadataReader);
@@ -58,12 +61,14 @@ public class CollectTaskManager implements Managed {
     @Override
     public void start() throws Exception {
         // scan inboxes
-        log.info("scanning all inboxes for initial state");
+        log.info("creating InboxWatcher's for configured inboxes");
 
         this.inboxWatchers = inboxes.stream().map(entry -> {
+            log.debug("creating InboxWatcher for {}", entry);
+
             try {
                 return inboxWatcherFactory.getInboxWatcher(
-                    Path.of(entry.getPath()), entry.getName(), this::onFileAdded, 500
+                    Path.of(entry.getPath()), entry.getName(), this::onFileAdded, this.pollingInterval
                 );
             }
             catch (Exception e) {
@@ -80,7 +85,7 @@ public class CollectTaskManager implements Managed {
     }
 
     public void onFileAdded(File file, String datastationName) {
-        if (file.isFile() && file.getName().endsWith(".zip")) {
+        if (file.isFile() && file.getName().toLowerCase(Locale.ROOT).endsWith(".zip")) {
             var transferTask = new CollectTask(
                 file.toPath(), outbox, datastationName, transferItemService, metadataReader, fileService
             );

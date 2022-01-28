@@ -47,9 +47,10 @@ public class TarTaskManager implements Managed {
     private final OcflRepositoryService ocflRepositoryService;
     private final TransferItemService transferItemService;
     private final TarCommandRunner tarCommandRunner;
+    private final long pollingInterval;
     private InboxWatcher inboxWatcher;
 
-    public TarTaskManager(String inboxPath, String workDir, long inboxThreshold, String tarCommand, String dataArchiveRoot, ExecutorService executorService, InboxWatcherFactory inboxWatcherFactory,
+    public TarTaskManager(String inboxPath, String workDir, long inboxThreshold, String tarCommand, String dataArchiveRoot, long pollingInterval, ExecutorService executorService, InboxWatcherFactory inboxWatcherFactory,
         FileService fileService, OcflRepositoryService ocflRepositoryService, TransferItemService transferItemService, TarCommandRunner tarCommandRunner) {
         this.executorService = executorService;
         this.inboxPath = inboxPath;
@@ -62,6 +63,7 @@ public class TarTaskManager implements Managed {
         this.ocflRepositoryService = ocflRepositoryService;
         this.transferItemService = transferItemService;
         this.tarCommandRunner = tarCommandRunner;
+        this.pollingInterval = pollingInterval;
     }
 
     @Override
@@ -72,7 +74,7 @@ public class TarTaskManager implements Managed {
         this.inboxWatcher = inboxWatcherFactory.getInboxWatcher(Path.of(this.inboxPath), null, (file, ds) -> {
             log.trace("received InboxWatcher event for file {}", file);
             this.onNewItemInInbox(file);
-        }, 1000);
+        }, pollingInterval);
 
         this.inboxWatcher.start();
     }

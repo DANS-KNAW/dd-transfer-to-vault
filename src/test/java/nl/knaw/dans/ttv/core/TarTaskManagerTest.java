@@ -67,7 +67,7 @@ class TarTaskManagerTest {
     @Test
     void onNewItemInInbox() {
         var manager = new TarTaskManager(
-            "data/inbox", "data/workdir", 50, "dmf", "tst@account.com:",
+            "data/inbox", "data/workdir", 50, "dmf", "tst@account.com:", 100L,
             executorService, inboxWatcherFactory, fileService, ocflRepositoryService, transferItemService,
             tarCommandRunner);
 
@@ -113,7 +113,7 @@ class TarTaskManagerTest {
     @Test
     void testThresholdIsNotReached() {
         var manager = new TarTaskManager(
-            "data/inbox", "data/workdir", 50, "dmf", "tst@account.com:",
+            "data/inbox", "data/workdir", 50, "dmf", "tst@account.com:", 100L,
             executorService, inboxWatcherFactory, fileService, ocflRepositoryService, transferItemService,
             tarCommandRunner);
 

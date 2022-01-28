@@ -62,7 +62,7 @@ class CollectTaskManagerTest {
 
     @Test
     void createsInboxWatchersOnStart() {
-        var manager = new CollectTaskManager(inboxes, "data/outbox/", executorService, transferItemService, transferItemMetadataReader, fileService, inboxWatcherFactory);
+        var manager = new CollectTaskManager(inboxes, "data/outbox/", 100, executorService, transferItemService, transferItemMetadataReader, fileService, inboxWatcherFactory);
 
         try {
             manager.start();
@@ -71,13 +71,13 @@ class CollectTaskManagerTest {
                 Mockito.eq(Path.of("data/inbox/1")),
                 Mockito.eq("Datastation 1"),
                 Mockito.any(),
-                Mockito.eq(500L));
+                Mockito.eq(100L));
 
             Mockito.verify(inboxWatcherFactory, Mockito.times(1)).getInboxWatcher(
                 Mockito.eq(Path.of("data/inbox/2")),
                 Mockito.eq("Datastation 2"),
                 Mockito.any(),
-                Mockito.eq(500L));
+                Mockito.eq(100L));
         }
         catch (Exception e) {
             fail(e);
@@ -86,7 +86,7 @@ class CollectTaskManagerTest {
 
     @Test
     void onZipFileAdded() {
-        var manager = new CollectTaskManager(inboxes, "data/outbox/", executorService, transferItemService, transferItemMetadataReader, fileService, inboxWatcherFactory);
+        var manager = new CollectTaskManager(inboxes, "data/outbox/", 150L, executorService, transferItemService, transferItemMetadataReader, fileService, inboxWatcherFactory);
         var file = Mockito.mock(File.class);
         Mockito.when(file.isFile()).thenReturn(true);
         Mockito.when(file.getName()).thenReturn("some_file.zip");
@@ -98,7 +98,7 @@ class CollectTaskManagerTest {
 
     @Test
     void onNonZipFileAdded() {
-        var manager = new CollectTaskManager(inboxes, "data/outbox/", executorService, transferItemService, transferItemMetadataReader, fileService, inboxWatcherFactory);
+        var manager = new CollectTaskManager(inboxes, "data/outbox/", 100L, executorService, transferItemService, transferItemMetadataReader, fileService, inboxWatcherFactory);
         var file = Mockito.mock(File.class);
         Mockito.when(file.isFile()).thenReturn(true);
         Mockito.when(file.getName()).thenReturn("some_file.exe");

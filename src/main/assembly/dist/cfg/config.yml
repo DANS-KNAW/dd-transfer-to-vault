@@ -2,6 +2,8 @@ collect:
   inboxes:
     - name: DS_Archaeology
       path: /var/opt/dans.knaw.nl/tmp/transfer-inboxes/archaeology
+  # polling interval in milliseconds
+  pollingInterval: 500
   taskQueue:
     nameFormat: "add-worker-thread-%d"
     maxQueueSize: 5000
@@ -20,6 +22,8 @@ createOcflTar:
   workDir: /var/opt/dans.knaw.nl/tmp/ocfl-directories/ocfl-work-dir
   inboxThreshold: 2G
   tarCommand: 'dmftar -c -f %s %s' # target, source
+  # polling interval in milliseconds
+  pollingInterval: 500
   taskQueue:
     nameFormat: "ocfl-tar-thread-%d"
     maxQueueSize: 5000

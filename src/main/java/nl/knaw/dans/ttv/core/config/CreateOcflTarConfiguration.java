@@ -17,8 +17,10 @@ package nl.knaw.dans.ttv.core.config;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import nl.knaw.dans.lib.util.ExecutorServiceFactory;
+import nl.knaw.dans.ttv.core.config.converter.StringByteSizeConverter;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
 public class CreateOcflTarConfiguration {
@@ -42,7 +44,19 @@ public class CreateOcflTarConfiguration {
 
     @Valid
     @NotNull
+    @Min(1)
+    private long pollingInterval;
+    @Valid
+    @NotNull
     private ExecutorServiceFactory taskQueue;
+
+    public long getPollingInterval() {
+        return pollingInterval;
+    }
+
+    public void setPollingInterval(long pollingInterval) {
+        this.pollingInterval = pollingInterval;
+    }
 
     public String getInbox() {
         return inbox;
