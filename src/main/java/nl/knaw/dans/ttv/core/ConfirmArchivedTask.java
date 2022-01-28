@@ -59,9 +59,10 @@ public class ConfirmArchivedTask implements Runnable {
                 transferItemService.updateCheckingProgressResults(tarId, TransferItem.TransferStatus.CONFIRMEDARCHIVED);
 
                 try {
+                    log.info("cleaning workdir files and folders for tar archive '{}'", tarId);
                     ocflRepositoryService.cleanupRepository(Path.of(workingDir), tarId);
                 } catch (IOException e) {
-                    log.error("unable to cleanup TAR OCFL repository in directory '{}/{}'", workingDir, tarId);
+                    log.error("unable to cleanup TAR OCFL repository in directory '{}/{}'", workingDir, tarId, e);
                 }
             } else {
                 log.info("some files in tar archive '{}' have not yet been archived to tape", tarId);

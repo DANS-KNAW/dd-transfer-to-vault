@@ -25,7 +25,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.Objects;
 
 public class OcflRepositoryServiceImpl implements OcflRepositoryService {
@@ -44,20 +43,8 @@ public class OcflRepositoryServiceImpl implements OcflRepositoryService {
         var newPath = fileService.createDirectory(Path.of(path.toString(), id));
         var newPathWorkdir = fileService.createDirectory(Path.of(path.toString(), id + "-wd"));
 
-        log.trace("creating ocfl repository on location {} and working dir {}", newPath, newPathWorkdir);
+        log.trace("creating OCFL repository on location '{}' and working dir '{}'", newPath, newPathWorkdir);
         return ocflRepositoryFactory.createRepository(newPath, newPathWorkdir);
-    }
-
-    @Override
-    public void moveTransferItemsToRepository(OcflRepository ocflRepository, List<TransferItem> transferItems) {
-        for (var transferItem : transferItems) {
-            String bagId = Objects.requireNonNull(transferItem.getBagId(), "Bag ID can't be null: " + transferItem.getDveFilePath());
-            String objectId = bagId.substring(0, 9) + bagId.substring(9, 11) + "/" + bagId.substring(11, 13) + "/" + bagId.substring(13, 15) + "/" + bagId.substring(15);
-            Path source = Objects.requireNonNull(Path.of(transferItem.getDveFilePath()), "dveFilePath can't be null: " + transferItem.getDveFilePath());
-
-            log.debug("adding object to ocfl repository with bagId {}, objectId {} and source path {}", bagId, objectId, source);
-            ocflRepository.putObject(ObjectVersionId.head(objectId), source, new VersionInfo().setMessage("initial commit"), OcflOption.MOVE_SOURCE);
-        }
     }
 
     @Override
@@ -66,6 +53,7 @@ public class OcflRepositoryServiceImpl implements OcflRepositoryService {
         String objectId = bagId.substring(0, 9) + bagId.substring(9, 11) + "/" + bagId.substring(11, 13) + "/" + bagId.substring(13, 15) + "/" + bagId.substring(15);
         Path source = Objects.requireNonNull(Path.of(transferItem.getDveFilePath()), "dveFilePath can't be null: " + transferItem.getDveFilePath());
 
+        log.debug("importing file '{}' with objectId '{}' into OCFL repository", source, objectId);
         ocflRepository.putObject(ObjectVersionId.head(objectId), source, new VersionInfo().setMessage("initial commit"), OcflOption.MOVE_SOURCE);
 
         return objectId;
@@ -79,10 +67,13 @@ public class OcflRepositoryServiceImpl implements OcflRepositoryService {
     @Override
     public void cleanupRepository(Path path, String id) throws IOException {
         // does the inverse of createRepository
-        var newPath = fileService.createDirectory(Path.of(path.toString(), id));
-        var newPathWorkdir = fileService.createDirectory(Path.of(path.toString(), id + "-wd"));
+        var newPath = Path.of(path.toString(), id);
+        var newPathWorkdir = Path.of(path.toString(), id + "-wd");
 
-        fileService.deleteFile(newPath);
-        fileService.deleteFile(newPathWorkdir);
+        log.debug("deleting OCFL repository '{}'", newPath);
+        fileService.deleteDirectory(newPath);
+
+        log.debug("deleting OCFL repository workdir '{}'", newPathWorkdir);
+        fileService.deleteDirectory(newPathWorkdir);
     }
 }

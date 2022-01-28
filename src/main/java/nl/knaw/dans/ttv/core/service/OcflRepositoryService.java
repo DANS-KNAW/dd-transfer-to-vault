@@ -26,8 +26,6 @@ public interface OcflRepositoryService {
 
     OcflRepository createRepository(Path path, String id) throws IOException;
 
-    void moveTransferItemsToRepository(OcflRepository ocflRepository, List<TransferItem> transferItems);
-
     String importTransferItem(OcflRepository ocflRepository, TransferItem transferItem);
 
     void closeOcflRepository(OcflRepository ocflRepository);
