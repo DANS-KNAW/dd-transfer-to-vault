@@ -23,49 +23,59 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Objects;
 
 public class FileServiceImpl implements FileService {
     private static final Logger log = LoggerFactory.getLogger(FileServiceImpl.class);
 
     @Override
     public Path moveFile(Path current, Path newPath) throws IOException {
+        Objects.requireNonNull(current, "current path cannot be null");
+        Objects.requireNonNull(newPath, "newPath cannot be null");
         log.trace("moving file from {} to {}", current, newPath);
         return Files.move(current, newPath);
     }
 
     @Override
     public boolean deleteFile(Path path) throws IOException {
+        Objects.requireNonNull(path, "path cannot be null");
         log.trace("deleting file {}", path);
         return Files.deleteIfExists(path);
     }
 
     @Override
     public void deleteDirectory(Path path) throws IOException {
+        Objects.requireNonNull(path, "path cannot be null");
         FileUtils.deleteDirectory(path.toFile());
     }
 
     @Override
     public Object getFilesystemAttribute(Path path, String property) throws IOException {
+        Objects.requireNonNull(path, "path cannot be null");
+        Objects.requireNonNull(property, "property cannot be null");
         return Files.getAttribute(path, property);
     }
 
     @Override
     public String calculateChecksum(Path path) throws IOException {
+        Objects.requireNonNull(path, "path cannot be null");
         log.trace("calculating checksum for {}", path);
         return new DigestUtils("SHA-256").digestAsHex(Files.readAllBytes(path));
     }
 
     @Override
     public long getFileSize(Path path) throws IOException {
+        Objects.requireNonNull(path, "path cannot be null");
         log.trace("getting file size for path {}", path);
         return Files.size(path);
     }
 
     @Override
     public long getPathSize(Path path) throws IOException {
+        Objects.requireNonNull(path, "path cannot be null");
         return Files.walk(path).filter(Files::isRegularFile).map(p -> {
             try {
-                var size = Files.size(p);
+                var size = getFileSize(p);
                 log.trace("file size for file {} is {} bytes", p, size);
                 return size;
             }
@@ -77,6 +87,7 @@ public class FileServiceImpl implements FileService {
 
     @Override
     public Path createDirectory(Path path) throws IOException {
+        Objects.requireNonNull(path, "path cannot be null");
         return Files.createDirectories(path);
     }
 

@@ -19,6 +19,7 @@ import nl.knaw.dans.ttv.core.dto.ProcessResult;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Objects;
 
 public class TarCommandRunnerImpl implements TarCommandRunner {
     private final ProcessRunner processRunner;
@@ -29,7 +30,17 @@ public class TarCommandRunnerImpl implements TarCommandRunner {
 
     @Override
     public ProcessResult tarDirectory(Path path, String target) throws IOException, InterruptedException {
-        var command = String.format("dmftar -c -f %s %s", target, path);
+        Objects.requireNonNull(path, "path cannot be null");
+        Objects.requireNonNull(target, "target cannot be null");
+
+        var command = new String[] {
+            "dmftar",
+            "-c",
+            "-f",
+            target,
+            path.toString()
+        };
+
         return processRunner.run(command);
     }
 }

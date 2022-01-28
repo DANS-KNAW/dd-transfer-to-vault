@@ -87,10 +87,7 @@ public class ArchiveStatusServiceImpl implements ArchiveStatusService {
     public Pair<String, String> separateHostAndPath(String dataArchiveRoot) {
         var parts = dataArchiveRoot.split(":", 2);
 
-        if (parts.length == 0) {
-            return null;
-        }
-        else if (parts.length == 1) {
+        if (parts.length == 1) {
             return Pair.of(parts[0], "");
         }
         else {

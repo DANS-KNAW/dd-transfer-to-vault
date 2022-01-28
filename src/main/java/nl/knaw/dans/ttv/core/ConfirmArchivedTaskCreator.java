@@ -39,7 +39,7 @@ public class ConfirmArchivedTaskCreator implements Job {
         var ocflRepositoryService = (OcflRepositoryService) dataMap.get("ocflRepositoryService");
         var executorService = (ExecutorService) dataMap.get("executorService");
 
-        var tarIds = transferItemService.findAllTarsToBeConfirmed();
+        var tarIds = transferItemService.stageAllTarsToBeConfirmed();
 
         for (var tarId: tarIds) {
             var task = new ConfirmArchivedTask(tarId, transferItemService, archiveStatusService, ocflRepositoryService, workingDir, dataArchiveRoot);

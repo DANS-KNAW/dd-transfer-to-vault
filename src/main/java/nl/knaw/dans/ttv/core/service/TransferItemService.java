@@ -39,7 +39,7 @@ public interface TransferItemService {
 
     void updateToCreatedForTarId(String id);
 
-    List<String> findAllTarsToBeConfirmed();
+    List<String> stageAllTarsToBeConfirmed();
 
     void updateCheckingProgressResults(String id, TransferItem.TransferStatus status);
 }

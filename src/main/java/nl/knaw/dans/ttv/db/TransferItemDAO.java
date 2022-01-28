@@ -47,23 +47,11 @@ public class TransferItemDAO extends AbstractDAO<TransferItem> {
         currentSession().merge(transferItem);
     }
 
-    public void flush() {
-        currentSession().flush();
-    }
-
-    public TransferItem findByDvePath(String path) {
-        var query = currentSession().createQuery("from TransferItem where dveFilePath = :path", TransferItem.class);
-        query.setParameter("path", path);
-
-        return query.getSingleResult();
-    }
-
     public List<TransferItem> findByStatus(TransferItem.TransferStatus status) {
         var query = currentSession().createQuery("from TransferItem where transferStatus = :status", TransferItem.class);
         query.setParameter("status", status);
 
         return query.list();
-        //        return list(namedTypedQuery(TransferItem.TRANSFER_ITEM_FIND_ALL_STATUS_TARRING));
     }
 
     public List<TransferItem> findAllByTarId(String id) {
@@ -82,6 +70,11 @@ public class TransferItemDAO extends AbstractDAO<TransferItem> {
         query.setParameter("id", id);
         query.setParameter("status", status);
         query.executeUpdate();
+
+        // have to evict items so they are re-fetched and not pulled from cache
+        for (var item: findAllByTarId(id)) {
+            currentSession().evict(item);
+        }
     }
 
     public Optional<TransferItem> findByDatasetPidAndVersion(String datasetPid, int versionMajor, int versionMinor) {
@@ -121,5 +114,10 @@ public class TransferItemDAO extends AbstractDAO<TransferItem> {
         query.setParameter("status", status);
 
         query.executeUpdate();
+
+        // have to evict items so they are re-fetched and not pulled from cache
+        for (var item: findAllByTarId(id)) {
+            currentSession().evict(item);
+        }
     }
 }

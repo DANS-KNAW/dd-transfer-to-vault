@@ -26,6 +26,7 @@ import nl.knaw.dans.ttv.db.TransferItemDAO;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class TransferItemServiceImpl implements TransferItemService {
@@ -38,12 +39,14 @@ public class TransferItemServiceImpl implements TransferItemService {
     @Override
     @UnitOfWork
     public List<TransferItem> findByStatus(TransferItem.TransferStatus status) {
+        Objects.requireNonNull(status, "status cannot be null");
         return transferItemDAO.findByStatus(status);
     }
 
     @Override
     @UnitOfWork
     public List<TransferItem> findByTarId(String id) {
+        Objects.requireNonNull(id, "id cannot be null");
         return transferItemDAO.findAllByTarId(id);
     }
 
@@ -114,7 +117,7 @@ public class TransferItemServiceImpl implements TransferItemService {
 
     @Override
     @UnitOfWork
-    public List<String> findAllTarsToBeConfirmed() {
+    public List<String> stageAllTarsToBeConfirmed() {
         var results = transferItemDAO.findAllTarsToBeConfirmed();
 
         for (var item: results) {

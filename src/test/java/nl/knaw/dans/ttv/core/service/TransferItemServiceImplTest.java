@@ -28,11 +28,13 @@ import org.mockito.Mockito;
 
 import java.nio.file.Path;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 class TransferItemServiceImplTest {
@@ -124,5 +126,89 @@ class TransferItemServiceImplTest {
 
         assertEquals("new/path.zip", transferItem.getDveFilePath());
         assertEquals(TransferItem.TransferStatus.COLLECTED, transferItem.getTransferStatus());
+    }
+
+    @Test
+    void findByStatus() {
+        var transferItemService = new TransferItemServiceImpl(transferItemDao);
+        transferItemService.findByStatus(TransferItem.TransferStatus.TARRING);
+
+        Mockito.verify(transferItemDao).findByStatus(TransferItem.TransferStatus.TARRING);
+    }
+
+    @Test
+    void findByNullStatus() {
+        var transferItemService = new TransferItemServiceImpl(transferItemDao);
+        assertThrows(NullPointerException.class, () -> transferItemService.findByStatus(null));
+    }
+
+    @Test
+    void findByTarId() {
+        var transferItemService = new TransferItemServiceImpl(transferItemDao);
+        transferItemService.findByTarId("some_id");
+
+        Mockito.verify(transferItemDao).findAllByTarId("some_id");
+    }
+
+    @Test
+    void findByNullTarId() {
+        var transferItemService = new TransferItemServiceImpl(transferItemDao);
+        assertThrows(NullPointerException.class, () -> transferItemService.findByTarId(null));
+    }
+
+    @Test
+    void saveAll() {
+        var transferItemService = new TransferItemServiceImpl(transferItemDao);
+        var items = List.of(
+            new TransferItem("pid", 1, 0, "path", LocalDateTime.now(), TransferItem.TransferStatus.TARRING),
+            new TransferItem("pid2", 1, 0, "path", LocalDateTime.now(), TransferItem.TransferStatus.TARRING)
+        );
+        transferItemService.saveAll(items);
+
+        Mockito.verify(transferItemDao, Mockito.times(1)).merge(items.get(0));
+        Mockito.verify(transferItemDao, Mockito.times(1)).merge(items.get(1));
+    }
+
+    @Test
+    void updateToCreatedForTarId() {
+        var transferItemService = new TransferItemServiceImpl(transferItemDao);
+        transferItemService.updateToCreatedForTarId("some_id");
+
+        Mockito.verify(transferItemDao, Mockito.times(1)).updateStatusByTar("some_id", TransferItem.TransferStatus.OCFLTARCREATED);
+    }
+
+    @Test
+    void findAllTarsToBeConfirmed() {
+        var items = List.of(
+            new TransferItem("pid", 1, 0, "path", LocalDateTime.now(), TransferItem.TransferStatus.TARRING),
+            new TransferItem("pid2", 1, 0, "path", LocalDateTime.now(), TransferItem.TransferStatus.TARRING),
+            new TransferItem("pid3", 1, 0, "path", LocalDateTime.now(), TransferItem.TransferStatus.TARRING)
+        );
+        items.get(0).setAipsTar("tar1");
+        items.get(0).setConfirmCheckInProgress(false);
+        items.get(1).setAipsTar("tar2");
+        items.get(1).setConfirmCheckInProgress(false);
+        items.get(2).setAipsTar("tar2");
+        items.get(2).setConfirmCheckInProgress(false);
+
+        Mockito.when(transferItemDao.findAllTarsToBeConfirmed())
+            .thenReturn(items);
+
+        var transferItemService = new TransferItemServiceImpl(transferItemDao);
+        var result = transferItemService.stageAllTarsToBeConfirmed();
+
+        assertEquals(List.of("tar1", "tar2"), result);
+        assertTrue(items.get(0).isConfirmCheckInProgress());
+        assertTrue(items.get(1).isConfirmCheckInProgress());
+        assertTrue(items.get(2).isConfirmCheckInProgress());
+    }
+
+    @Test
+    void updateCheckingProgressResults() {
+        var transferItemService = new TransferItemServiceImpl(transferItemDao);
+        transferItemService.updateCheckingProgressResults("some_id", TransferItem.TransferStatus.OCFLTARCREATED);
+
+        Mockito.verify(transferItemDao, Mockito.times(1))
+            .updateCheckingProgressResults("some_id", TransferItem.TransferStatus.OCFLTARCREATED);
     }
 }

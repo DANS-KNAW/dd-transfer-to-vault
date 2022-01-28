@@ -23,9 +23,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
+import java.io.IOException;
 import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 
 class ArchiveStatusServiceImplTest {
@@ -54,6 +56,25 @@ class ArchiveStatusServiceImplTest {
             assertEquals(ArchiveStatusService.FileStatus.DUAL, result.get("ff99d9fd-53ef-48f2-8672-a40a2c91f1c6.dfmtar/0000/ff99d9fd-53ef-48f2-8672-a40a2c91f1c6.dfmtar.tar"));
             assertEquals(ArchiveStatusService.FileStatus.UNKNOWN, result.get("ff99d9fd-53ef-48f2-8672-a40a2c91f1c6.dfmtar/0000/ff99d9fd-53ef-48f2-8672-a40a2c91f1c6.dfmtar.tar.chksum"));
             assertEquals(ArchiveStatusService.FileStatus.REGULAR, result.get("ff99d9fd-53ef-48f2-8672-a40a2c91f1c6.dfmtar/0000/ff99d9fd-53ef-48f2-8672-a40a2c91f1c6.dfmtar.tar.idx"));
+        }
+        catch (Exception e) {
+            fail(e);
+        }
+    }
+
+    @Test
+    void getFileStatusWithError() {
+        var service = new ArchiveStatusServiceImpl(processRunner, "user@host:");
+
+        try {
+            var output = "command does not exist";
+
+            Mockito.when(processRunner.run((String[]) Mockito.any()))
+                .thenReturn(new ProcessResult(1, output, ""));
+
+            var error = assertThrows(IOException.class, () -> {
+                var result = service.getFileStatus("ff99d9fd-53ef-48f2-8672-a40a2c91f1c6");
+            });
         }
         catch (Exception e) {
             fail(e);

@@ -34,7 +34,6 @@ public class ProcessRunnerImpl implements ProcessRunner {
 
     @Override
     public ProcessResult run(String[] command) throws IOException, InterruptedException {
-
         var processBuilder = new ProcessBuilder(command);
         processBuilder.redirectOutput(ProcessBuilder.Redirect.PIPE);
         processBuilder.redirectErrorStream(true);

@@ -59,8 +59,11 @@ public class CollectTask implements Runnable {
 
     public TransferItem createTransferItem(Path path) throws InvalidTransferItemException {
         var filenameAttributes = metadataReader.getFilenameAttributes(path);
+        log.trace("received filename attributes: {}", filenameAttributes);
         var filesystemAttributes = metadataReader.getFilesystemAttributes(path);
+        log.trace("received filesystem attributes: {}", filesystemAttributes);
         var fileContentAttributes = metadataReader.getFileContentAttributes(path);
+        log.trace("received file content attributes: {}", fileContentAttributes);
 
         return transferItemService.createTransferItem(datastationName,
             filenameAttributes, filesystemAttributes, fileContentAttributes);
