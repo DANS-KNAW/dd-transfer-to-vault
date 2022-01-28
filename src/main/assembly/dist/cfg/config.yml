@@ -1,6 +1,3 @@
-#
-# Module configuration file
-#
 collect:
   inboxes:
     - name: DS_Archaeology

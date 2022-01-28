@@ -1,14 +1,11 @@
-#
-# dd-transfer-to-vault
-#
 collect:
   inboxes:
-    - name: Test inbox 1
+    - name: Inbox 1
       path: data/tmp/transfer-inboxes/inbox1
-    - name: Test_inbox 2
-      path: data/tmp/transfer-inboxes/inbox2
+    - name: Inbox 2
+      path: data/tmp/transfer-inboxes/inbox1
   taskQueue:
-    nameFormat: "add-worker-thread-%d"
+    nameFormat: "collect-worker-%d"
     maxQueueSize: 5000
     # Number of threads will be increased when maxQueueSize is exceeded.
     minThreads: 1
@@ -17,41 +14,28 @@ collect:
     # Threads will die after 60 seconds of idleness
     keepAliveTime: 60 seconds
 
-createOcfl:
-  inbox: data/tmp/ocfl-inbox
-  workDir: data/tmp/ocfl-workdirs
-  taskQueue:
-    nameFormat: "ocf-thread-%d"
-    maxQueueSize: 5000
-    # Number of threads will be increased when maxQueueSize is exceeded.
-    minThreads: 1
-    # No more than maxThreads will be created though
-    maxThreads: 10
-    # Threads will die after 60 seconds of idleness
-    keepAliveTime: 60 seconds
+dataArchive:
+  baseDir: 'danstst0@archive.surfsara.nl:'
 
-createTar:
-  inbox: data/tmp/tar-inbox
-  workDir: data/tmp/tar-workdirs
-  dataArchiveRoot: 'danstst0@archive.surfsara.nl:'
+createOcflTar:
+  inbox: data/tmp/ocfl-tar-inbox
+  workDir: data/tmp/ocfl-tar-workdirs
   inboxThreshold: 2G
   tarCommand: 'dmftar -c -f %s %s' # target, source
   taskQueue:
-    nameFormat: "tar-thread-%d"
+    nameFormat: "ocfl-tar-worker-%d"
     maxQueueSize: 5000
     # Number of threads will be increased when maxQueueSize is exceeded.
     minThreads: 1
     # No more than maxThreads will be created though
     maxThreads: 10
-
     # Threads will die after 60 seconds of idleness
     keepAliveTime: 60 seconds
 
 confirmArchived:
-  dataArchiveRoot: 'danstst0@archive.surfsara.nl:'
-  cron: '' # cron expression for triggering a polling round
+  cron: '0 0 * * * ?' # cron expression for triggering a polling round
   taskQueue:
-    nameFormat: "confirm-thread-%d"
+    nameFormat: "confirm-archived-worker-%d"
     maxQueueSize: 5000
     # Number of threads will be increased when maxQueueSize is exceeded.
     minThreads: 1
