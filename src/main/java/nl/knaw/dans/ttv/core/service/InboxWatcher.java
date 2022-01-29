@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ttv.core;
+package nl.knaw.dans.ttv.core.service;
 
 import io.dropwizard.lifecycle.Managed;
-import org.apache.commons.io.monitor.FileAlterationListener;
+import nl.knaw.dans.ttv.core.InvalidTransferItemException;
 import org.apache.commons.io.monitor.FileAlterationListenerAdaptor;
 import org.apache.commons.io.monitor.FileAlterationMonitor;
 import org.apache.commons.io.monitor.FileAlterationObserver;
@@ -25,40 +25,42 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.FileSystems;
+import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardWatchEventKinds;
-import java.nio.file.WatchKey;
-import java.nio.file.WatchService;
-import java.util.concurrent.ExecutorService;
+import java.util.Objects;
 
-public class InboxWatcher implements Managed {
+public class InboxWatcher extends FileAlterationListenerAdaptor implements Managed {
 
     private static final Logger log = LoggerFactory.getLogger(InboxWatcher.class);
 
-    private final Inbox inbox;
     private FileAlterationMonitor monitor;
 
-    private final ExecutorService executorService;
+    private final Path path;
+    private final Callback callback;
+    private final int interval;
+    private final String datastationName;
 
-    public InboxWatcher(Inbox inbox, ExecutorService executorService) throws IOException {
-        this.inbox = inbox;
-        this.executorService = executorService;
+    public interface Callback {
+        void onFileCreate(File file, String datastationName);
+    }
+
+    public InboxWatcher(Path path, String datastationName, Callback callback, int interval) {
+        this.path = Objects.requireNonNull(path, "InboxWatcher path must not be null");
+        this.datastationName = datastationName;
+        this.callback = Objects.requireNonNull(callback, "InboxWatcher callback must not be null");
+        this.interval = Objects.requireNonNullElse(interval, 500);
+    }
+
+    @Override
+    public void onFileCreate(File file) {
+        this.callback.onFileCreate(file, datastationName);
     }
 
     private void startFileAlterationMonitor() throws Exception {
-        FileAlterationObserver observer = new FileAlterationObserver(inbox.getDatastationInbox().toFile());
-        monitor = new FileAlterationMonitor(500);
-        FileAlterationListener listener = new FileAlterationListenerAdaptor() {
-            @Override
-            public void onFileCreate(File file) {
-                if (file.isFile() && file.getName().endsWith(".zip")) {
-                    Task task = inbox.createTransferItemTask(Path.of(file.getAbsolutePath()));
-                    executorService.execute(task);
-                }
-            }
-        };
-        observer.addListener(listener);
+        FileAlterationObserver observer = new FileAlterationObserver(path.toFile());
+        observer.addListener(this);
+
+        monitor = new FileAlterationMonitor(this.interval);
         monitor.addObserver(observer);
         monitor.start();
     }
@@ -66,11 +68,18 @@ public class InboxWatcher implements Managed {
     @Override
     public void start() throws Exception {
         try {
+            // TODO find out if this is the best place to do this
+            // initial scan
+            scanExistingFiles();
             startFileAlterationMonitor();
         } catch (IOException | InterruptedException e) {
             log.error(e.getMessage(), e);
             throw new InvalidTransferItemException(e.getMessage());
         }
+    }
+
+    private void scanExistingFiles() throws IOException {
+        Files.list(this.path).forEach(f -> onFileCreate(f.toFile()));
     }
 
     @Override

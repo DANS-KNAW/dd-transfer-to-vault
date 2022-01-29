@@ -13,15 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ttv.core;
+package nl.knaw.dans.ttv.core.config.validation;
 
-public class InvalidTransferItemException extends Exception {
+import javax.validation.Constraint;
+import javax.validation.Payload;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-    public InvalidTransferItemException(String msg, Throwable t) {
-        super(msg, t);
-    }
+@Target({ ElementType.FIELD })
+@Retention(RetentionPolicy.RUNTIME)
+@Constraint(validatedBy = UniqueInboxEntryNamesValidator.class)
+public @interface UniqueInboxEntryNames {
 
-    public InvalidTransferItemException(String msg) {
-        this(msg, null);
-    }
+    String message() default "duplicate";
+
+    Class<?>[] groups() default {};
+
+    Class<? extends Payload>[] payload() default {};
 }

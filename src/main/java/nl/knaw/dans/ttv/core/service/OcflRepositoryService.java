@@ -13,15 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ttv.core;
+package nl.knaw.dans.ttv.core.service;
 
-public class InvalidTransferItemException extends Exception {
+import edu.wisc.library.ocfl.api.OcflRepository;
+import nl.knaw.dans.ttv.db.TransferItem;
 
-    public InvalidTransferItemException(String msg, Throwable t) {
-        super(msg, t);
-    }
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.List;
 
-    public InvalidTransferItemException(String msg) {
-        this(msg, null);
-    }
+public interface OcflRepositoryService {
+
+    OcflRepository createRepository(Path path, String id) throws IOException;
+
+    String importTransferItem(OcflRepository ocflRepository, TransferItem transferItem);
+
+    void closeOcflRepository(OcflRepository ocflRepository);
+
+    void cleanupRepository(Path workingDir, String id) throws IOException;
 }

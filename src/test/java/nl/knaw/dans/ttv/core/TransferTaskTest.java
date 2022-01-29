@@ -15,26 +15,16 @@
  */
 package nl.knaw.dans.ttv.core;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.dropwizard.hibernate.UnitOfWorkAwareProxyFactory;
 import io.dropwizard.testing.junit5.DAOTestExtension;
 import io.dropwizard.testing.junit5.DropwizardExtensionsSupport;
+import nl.knaw.dans.ttv.db.TransferItem;
 import nl.knaw.dans.ttv.db.TransferItemDAO;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -49,8 +39,8 @@ class TransferTaskTest {
     private final ExecutorService executorService =
             new ThreadPoolExecutor(1, 5, 60000L, TimeUnit.MILLISECONDS,
                     new LinkedBlockingQueue<>(5));
-    private final Inbox inbox = new UnitOfWorkAwareProxyFactory("UnitOfWorkProxy", daoTestRule.getSessionFactory())
-            .create(Inbox.class, new Class[]{String.class, Path.class}, new Object[]{"DvInstance1", Paths.get("src/test/resources/data/inbox")});
+//    private final Inbox inbox = new UnitOfWorkAwareProxyFactory("UnitOfWorkProxy", daoTestRule.getSessionFactory())
+//            .create(Inbox.class, new Class[]{String.class, Path.class}, new Object[]{"DvInstance1", Paths.get("src/test/resources/data/inbox")});
 
     private TransferItemDAO transferItemDAO;
 

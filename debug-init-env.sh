@@ -19,3 +19,11 @@ echo -n "Pre-creating log..."
 TEMPDIR=data
 touch $TEMPDIR/dd-transfer-to-vault.log
 echo "OK"
+
+echo - n "Pre-creating work directories..."
+mkdir -p $TEMPDIR/tmp/transfer-inboxes/inbox1
+mkdir -p $TEMPDIR/tmp/transfer-inboxes/inbox2
+mkdir -p $TEMPDIR/tmp/ocfl-tar-inbox
+mkdir -p $TEMPDIR/tmp/ocfl-tar-workdirs
+echo "OK"
+

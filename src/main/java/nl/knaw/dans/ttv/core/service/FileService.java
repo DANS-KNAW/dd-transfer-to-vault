@@ -13,15 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ttv.core;
+package nl.knaw.dans.ttv.core.service;
 
-public class InvalidTransferItemException extends Exception {
+import java.io.IOException;
+import java.nio.file.Path;
 
-    public InvalidTransferItemException(String msg, Throwable t) {
-        super(msg, t);
-    }
+public interface FileService {
 
-    public InvalidTransferItemException(String msg) {
-        this(msg, null);
-    }
+    Path moveFile(Path current, Path newPath) throws IOException;
+
+    boolean deleteFile(Path path) throws IOException;
+
+    void deleteDirectory(Path path) throws IOException;
+
+    Object getFilesystemAttribute(Path path, String property) throws IOException;
+
+    String calculateChecksum(Path path) throws IOException;
+
+    long getFileSize(Path path) throws IOException;
+
+    long getPathSize(Path path) throws IOException;
+
+    Path createDirectory(Path path) throws IOException;
 }

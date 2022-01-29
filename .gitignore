@@ -20,3 +20,7 @@
 /.vagrant/
 /.yum-repo
 /.dans.knaw.nl-yum-repo
+
+.classpath
+.settings
+.project

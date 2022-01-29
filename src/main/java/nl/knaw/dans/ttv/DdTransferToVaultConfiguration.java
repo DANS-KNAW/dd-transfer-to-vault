@@ -19,37 +19,39 @@ package nl.knaw.dans.ttv;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.dropwizard.Configuration;
 import io.dropwizard.db.DataSourceFactory;
-import nl.knaw.dans.lib.util.ExecutorServiceFactory;
+import nl.knaw.dans.ttv.core.config.CollectConfiguration;
+import nl.knaw.dans.ttv.core.config.ConfirmArchivedConfiguration;
+import nl.knaw.dans.ttv.core.config.CreateOcflTarConfiguration;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
-import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 
 public class DdTransferToVaultConfiguration extends Configuration {
+
     @Valid
     @NotNull
     private DataSourceFactory database = new DataSourceFactory();
 
     @Valid
     @NotNull
-    private ExecutorServiceFactory taskQueue;
+    private CollectConfiguration collect;
 
+    @Valid
     @NotNull
-    private List<Map<String, String>> inboxes = Collections.emptyList();
+    private CreateOcflTarConfiguration createOcflTar;
 
+    @Valid
     @NotNull
-    private List<Map<String, String>> ocflDirectories = Collections.emptyList();
+    private ConfirmArchivedConfiguration confirmArchived;
 
-    @JsonProperty("taskQueue")
-    public void setTaskQueue(ExecutorServiceFactory taskExecutorThreadPool) {
-        this.taskQueue = taskExecutorThreadPool;
-    }
+    @Valid
+    @NotNull
+    @JsonProperty("dataArchive")
+    private String dataArchiveRoot;
 
-    @JsonProperty("taskQueue")
-    public ExecutorServiceFactory getTaskQueue() {
-        return taskQueue;
+    public CreateOcflTarConfiguration getCreateOcflTar() {
+        return createOcflTar;
     }
 
     @JsonProperty("database")
@@ -62,23 +64,19 @@ public class DdTransferToVaultConfiguration extends Configuration {
         this.database = dataSourceFactory;
     }
 
-    @JsonProperty("inboxes")
-    public List<Map<String, String>> getInboxes() {
-        return inboxes;
+    public CollectConfiguration getCollect() {
+        return collect;
     }
 
-    @JsonProperty("inboxes")
-    public void setInboxes(List<Map<String, String>> inboxes) {
-        this.inboxes = inboxes;
+    public ConfirmArchivedConfiguration getConfirmArchived() {
+        return confirmArchived;
     }
 
-    @JsonProperty("ocflDirectories")
-    public List<Map<String, String>> getOcflDirectories() {
-        return ocflDirectories;
+    public String getDataArchiveRoot() {
+        return dataArchiveRoot;
     }
 
-    @JsonProperty("ocflDirectories")
-    public void setOcflDirectories(List<Map<String, String>> ocflDirectories) {
-        this.ocflDirectories = ocflDirectories;
+    public void setDataArchiveRoot(Map<String, String> dataArchive) {
+        this.dataArchiveRoot = dataArchive.get("baseDir");
     }
 }
