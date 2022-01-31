@@ -32,7 +32,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.zip.ZipFile;
 
 public class TransferItemMetadataReaderImpl implements TransferItemMetadataReader {
     private static final String DOI_PATTERN = "(?<doi>doi-10-[0-9]{4,}-[A-Za-z0-9]{2,}-[A-Za-z0-9]{6})-?";
@@ -82,7 +81,7 @@ public class TransferItemMetadataReaderImpl implements TransferItemMetadataReade
             var creationTime = fileService.getFilesystemAttribute(path, "creationTime");
 
             if (creationTime != null) {
-                result.setCreationTime(LocalDateTime.ofInstant(((FileTime)creationTime).toInstant(), ZoneId.systemDefault()));
+                result.setCreationTime(LocalDateTime.ofInstant(((FileTime) creationTime).toInstant(), ZoneId.systemDefault()));
                 result.setBagChecksum(fileService.calculateChecksum(path));
                 result.setBagSize(fileService.getFileSize(path));
             }
@@ -98,36 +97,52 @@ public class TransferItemMetadataReaderImpl implements TransferItemMetadataReade
     public FileContentAttributes getFileContentAttributes(Path path) throws InvalidTransferItemException {
         var result = new FileContentAttributes();
 
-        // TODO move zip stuff to separate class
         try {
-            ZipFile datasetVersionExport = new ZipFile(path.toFile());
-            String metadataFilePath = Objects.requireNonNull(datasetVersionExport.stream().filter(zipEntry -> zipEntry.getName().endsWith(".jsonld")).findAny().orElse(null),
-                "metadataFilePath can't be null: " + path).getName();
-            String pidMappingFilePath = Objects.requireNonNull(datasetVersionExport.stream().filter(zipEntry -> zipEntry.getName().contains("pid-mapping.txt")).findAny().orElse(null),
-                "pidMappingFilePath can't be null: " + path).getName();
-            byte[] pidMapping = Objects.requireNonNull(IOUtils.toByteArray(datasetVersionExport.getInputStream(datasetVersionExport.getEntry(pidMappingFilePath))),
-                "pidMapping can't be null: " + path);
-            byte[] oaiOre = Objects.requireNonNull(IOUtils.toByteArray(datasetVersionExport.getInputStream(datasetVersionExport.getEntry(metadataFilePath))),
-                "oaiOre can't be null: " + path);
+            var datasetVersionExport = fileService.openZipFile(path);
 
-            JsonNode jsonNode = Objects.requireNonNull(objectMapper.readTree(oaiOre), "jsonld metadata can't be null: " + path);
+            var metadataContent = fileService.openFileFromZip(datasetVersionExport, Path.of("metadata/oai-ore.jsonld"));
+            var pidMappingContent = fileService.openFileFromZip(datasetVersionExport, Path.of("metadata/pid-mapping.txt"));
 
-            String nbn = Objects.requireNonNull(jsonNode.get("ore:describes").get("dansDataVaultMetadata:NBN").asText(), "NBN can't be null: " + path);
-            String dvPidVersion = Objects.requireNonNull(jsonNode.get("ore:describes").get("dansDataVaultMetadata:DV PID Version").asText(), "DV PID Version can't be null: " + path);
-            String bagId = Objects.requireNonNull(jsonNode.get("ore:describes").get("dansDataVaultMetadata:Bag ID").asText(), "Bag ID can't be null: " + path);
+            byte[] oaiOre = IOUtils.toByteArray(metadataContent);
+            byte[] pidMapping = IOUtils.toByteArray(pidMappingContent);
 
-            //TODO Other ID, Other ID Version and SWORD token missing
+            var jsonNode = Objects.requireNonNull(objectMapper.readTree(oaiOre), "jsonld metadata can't be null: " + path);
+            var describesNode = Objects.requireNonNull(jsonNode.get("ore:describes"), "ore:describes node can't be null");
+
+            var nbn = getStringFromNode(describesNode, "dansDataVaultMetadata:NBN");
+            var dvPidVersion = getStringFromNode(describesNode, "dansDataVaultMetadata:DV PID Version");
+            var bagId = getStringFromNode(describesNode, "dansDataVaultMetadata:Bag ID");
+            var otherId = getOptionalStringFromNode(describesNode, "dansDataVaultMetadata:Other ID");
+            var otherIdVersion = getOptionalStringFromNode(describesNode, "dansDataVaultMetadata:Other ID Version");
+            var swordToken = getOptionalStringFromNode(describesNode, "dansDataVaultMetadata:SWORD Token");
+
             result.setPidMapping(pidMapping);
             result.setOaiOre(oaiOre);
             result.setNbn(nbn);
             result.setDatasetVersion(dvPidVersion);
             result.setBagId(bagId);
+            result.setOtherId(otherId);
+            result.setOtherIdVersion(otherIdVersion);
+            result.setSwordToken(swordToken);
         }
         catch (IOException e) {
-            throw new InvalidTransferItemException(String.format("unable to read zip file contents for file %s", path), e);
+            throw new InvalidTransferItemException(String.format("unable to read zip file contents for file '%s'", path), e);
+        }
+        catch (NullPointerException e) {
+            throw new InvalidTransferItemException(String.format("unable to extract metadata from file '%s'", path), e);
         }
 
         return result;
+    }
+
+    private String getStringFromNode(JsonNode node, String path) {
+        return Objects.requireNonNull(node.get(path), String.format("path '%s' not found in JSON node", path)).asText();
+    }
+
+    private String getOptionalStringFromNode(JsonNode node, String path) {
+        return Optional.ofNullable(node.get(path))
+            .map(JsonNode::asText)
+            .orElse(null);
     }
 
     @Override

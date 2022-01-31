@@ -21,9 +21,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
+import java.util.zip.ZipFile;
 
 public class FileServiceImpl implements FileService {
     private static final Logger log = LoggerFactory.getLogger(FileServiceImpl.class);
@@ -89,6 +91,25 @@ public class FileServiceImpl implements FileService {
     public Path createDirectory(Path path) throws IOException {
         Objects.requireNonNull(path, "path cannot be null");
         return Files.createDirectories(path);
+    }
+
+    @Override
+    public ZipFile openZipFile(Path path) throws IOException {
+        return new ZipFile(path.toFile());
+    }
+
+    @Override
+    public InputStream openFileFromZip(ZipFile zipFile, Path path) throws IOException {
+        var entryPath = Objects.requireNonNull(zipFile.stream()
+                .filter(e -> e.getName().endsWith(path.toString()))
+                .findFirst()
+                .orElse(null)
+            , String.format("no entries found for path '%s' in zip file %s", path, zipFile)
+        );
+
+        log.trace("requested entry for path '{}', found match on '{}'", path, entryPath);
+
+        return zipFile.getInputStream(entryPath);
     }
 
 }
