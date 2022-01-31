@@ -20,7 +20,6 @@ import nl.knaw.dans.ttv.db.TransferItem;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.List;
 
 public interface OcflRepositoryService {
 

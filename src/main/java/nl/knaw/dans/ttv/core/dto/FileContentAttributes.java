@@ -15,8 +15,6 @@
  */
 package nl.knaw.dans.ttv.core.dto;
 
-import java.util.Arrays;
-
 public class FileContentAttributes {
 
     private String datasetVersion;
