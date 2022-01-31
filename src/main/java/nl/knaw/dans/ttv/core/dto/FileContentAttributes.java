@@ -22,6 +22,33 @@ public class FileContentAttributes {
     private String nbn;
     private byte[] oaiOre;
     private byte[] pidMapping;
+    private String otherId;
+    private String otherIdVersion;
+    private String swordToken;
+
+    public String getOtherId() {
+        return otherId;
+    }
+
+    public void setOtherId(String otherId) {
+        this.otherId = otherId;
+    }
+
+    public String getOtherIdVersion() {
+        return otherIdVersion;
+    }
+
+    public void setOtherIdVersion(String otherIdVersion) {
+        this.otherIdVersion = otherIdVersion;
+    }
+
+    public String getSwordToken() {
+        return swordToken;
+    }
+
+    public void setSwordToken(String swordToken) {
+        this.swordToken = swordToken;
+    }
 
     public String getDatasetVersion() {
         return datasetVersion;
@@ -69,6 +96,9 @@ public class FileContentAttributes {
             "datasetVersion='" + datasetVersion + '\'' +
             ", bagId='" + bagId + '\'' +
             ", nbn='" + nbn + '\'' +
+            ", otherId='" + otherId + '\'' +
+            ", otherIdVersion='" + otherIdVersion + '\'' +
+            ", swordToken='" + swordToken + '\'' +
             '}';
     }
 }

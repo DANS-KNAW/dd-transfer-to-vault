@@ -16,7 +16,9 @@
 package nl.knaw.dans.ttv.core.service;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Path;
+import java.util.zip.ZipFile;
 
 public interface FileService {
 
@@ -35,4 +37,8 @@ public interface FileService {
     long getPathSize(Path path) throws IOException;
 
     Path createDirectory(Path path) throws IOException;
+
+    ZipFile openZipFile(Path path) throws IOException;
+
+    InputStream openFileFromZip(ZipFile datasetVersionExport, Path of) throws IOException;
 }
