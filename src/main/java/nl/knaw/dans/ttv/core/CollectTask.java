@@ -52,8 +52,8 @@ public class CollectTask implements Runnable {
         try {
             var workDirFile = moveFileToWorkDir(this.filePath, this.workDir);
             var transferItem = createTransferItem(workDirFile);
-            cleanUpXmlFile(this.filePath);
             moveFileToOutbox(transferItem, workDirFile, this.outbox);
+            cleanUpXmlFile(this.filePath);
         }
         catch (IOException | InvalidTransferItemException e) {
             log.error("unable to create TransferItem for path {}", this.filePath, e);
