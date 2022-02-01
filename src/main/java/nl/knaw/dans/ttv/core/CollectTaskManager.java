@@ -36,6 +36,7 @@ import java.util.stream.Collectors;
 public class CollectTaskManager implements Managed {
     private static final Logger log = LoggerFactory.getLogger(CollectTaskManager.class);
     private final List<CollectConfiguration.InboxEntry> inboxes;
+    private final Path workDir;
     private final Path outbox;
     private final long pollingInterval;
     private final ExecutorService executorService;
@@ -45,17 +46,18 @@ public class CollectTaskManager implements Managed {
     private final InboxWatcherFactory inboxWatcherFactory;
     private List<InboxWatcher> inboxWatchers;
 
-    public CollectTaskManager(List<CollectConfiguration.InboxEntry> inboxes, String outbox, long pollingInterval, ExecutorService executorService,
+    public CollectTaskManager(List<CollectConfiguration.InboxEntry> inboxes, Path workDir, Path outbox, long pollingInterval, ExecutorService executorService,
         TransferItemService transferItemService, TransferItemMetadataReader metadataReader, FileService fileService, InboxWatcherFactory inboxWatcherFactory) {
 
         this.inboxes = Objects.requireNonNull(inboxes);
-        this.outbox = Path.of(Objects.requireNonNull(outbox));
+        this.outbox = Objects.requireNonNull(outbox);
         this.pollingInterval = pollingInterval;
         this.executorService = Objects.requireNonNull(executorService);
         this.transferItemService = Objects.requireNonNull(transferItemService);
         this.metadataReader = Objects.requireNonNull(metadataReader);
         this.fileService = Objects.requireNonNull(fileService);
         this.inboxWatcherFactory = Objects.requireNonNull(inboxWatcherFactory);
+        this.workDir = Objects.requireNonNull(workDir);
     }
 
     @Override
@@ -68,7 +70,7 @@ public class CollectTaskManager implements Managed {
 
             try {
                 return inboxWatcherFactory.getInboxWatcher(
-                    Path.of(entry.getPath()), entry.getName(), this::onFileAdded, this.pollingInterval
+                    entry.getPath(), entry.getName(), this::onFileAdded, this.pollingInterval
                 );
             }
             catch (Exception e) {
@@ -87,7 +89,7 @@ public class CollectTaskManager implements Managed {
     public void onFileAdded(File file, String datastationName) {
         if (file.isFile() && file.getName().toLowerCase(Locale.ROOT).endsWith(".zip")) {
             var transferTask = new CollectTask(
-                file.toPath(), outbox, datastationName, transferItemService, metadataReader, fileService
+                file.toPath(), workDir, outbox, datastationName, transferItemService, metadataReader, fileService
             );
 
             executorService.execute(transferTask);

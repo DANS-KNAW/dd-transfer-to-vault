@@ -39,7 +39,6 @@ public class TransferItem {
     private static final Logger log = LoggerFactory.getLogger(TransferItem.class);
 
     public enum TransferStatus {
-        EXTRACT,
         COLLECTED,
         TARRING,
         OCFLTARCREATED,

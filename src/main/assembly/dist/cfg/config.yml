@@ -2,6 +2,7 @@ collect:
   inboxes:
     - name: DS_Archaeology
       path: /var/opt/dans.knaw.nl/tmp/transfer-inboxes/archaeology
+  workDir: /var/opt/dans.knaw.nl/tmp/collect-work-dir
   # polling interval in milliseconds
   pollingInterval: 500
   taskQueue:

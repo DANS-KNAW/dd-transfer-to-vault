@@ -46,12 +46,49 @@ class CollectTaskTest {
     }
 
     @Test
+    void checkAllFilesAreMoved() throws IOException, InvalidTransferItemException {
+        var filePath = Path.of("data/inbox/doi-10-5072-dar-kxteqtv1.0.zip");
+        var outbox = Path.of("data/outbox");
+        var workDir = Path.of("data/workdir");
+        var datastationName = "dsname";
+
+        var task = new CollectTask(filePath, workDir, outbox, datastationName, transferItemService, transferItemMetadataReader, fileService);
+
+        Mockito.when(fileService.moveFile(Mockito.any(), Mockito.any()))
+            .thenReturn(Path.of("data/workdir/doi-10-5072-dar-kxteqtv1.0.zip"))
+            .thenReturn(Path.of("data/outbox/doi-10-5072-dar-kxteqtv1.0.zip"));
+
+        Mockito.when(transferItemMetadataReader.getAssociatedXmlFile(Mockito.any()))
+            .thenReturn(Optional.of(Path.of("data/inbox/doi-10-5072-dar-kxteqt-datacite.v1.0.xml")));
+
+        task.run();
+
+        // check that file was moved from inbox to workdir
+        Mockito.verify(fileService).moveFile(filePath, Path.of("data/workdir/doi-10-5072-dar-kxteqtv1.0.zip"));
+
+        // check that file was moved from workdir to outbox
+        Mockito.verify(fileService).moveFile(Path.of("data/workdir/doi-10-5072-dar-kxteqtv1.0.zip"),
+            Path.of("data/outbox/doi-10-5072-dar-kxteqtv1.0.zip"));
+
+        // check that xml file was removed
+        Mockito.verify(fileService).deleteFile(Path.of("data/inbox/doi-10-5072-dar-kxteqt-datacite.v1.0.xml"));
+
+        Mockito.verify(transferItemService)
+            .createTransferItem(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any());
+
+        Mockito.verify(transferItemService)
+            .moveTransferItem(Mockito.any(), Mockito.eq(TransferItem.TransferStatus.COLLECTED),
+                Mockito.eq(Path.of("data/outbox/doi-10-5072-dar-kxteqtv1.0.zip")));
+    }
+
+    @Test
     void createTransferItem() {
         var filePath = Path.of("data/inbox/doi-10-5072-dar-kxteqtv1.0.zip");
         var outbox = Path.of("data/outbox");
+        var workDir = Path.of("data/workdir");
         var datastationName = "dsname";
 
-        var task = new CollectTask(filePath, outbox, datastationName, transferItemService, transferItemMetadataReader, fileService);
+        var task = new CollectTask(filePath, workDir, outbox, datastationName, transferItemService, transferItemMetadataReader, fileService);
 
         try {
             var filenameAttributes = new FilenameAttributes();
@@ -80,10 +117,11 @@ class CollectTaskTest {
     @Test
     void cleanUpXmlFile() {
         var filePath = Path.of("data/inbox/doi-10-5072-dar-kxteqtv1.0.zip");
+        var workDir = Path.of("data/workdir");
         var outbox = Path.of("data/outbox");
         var datastationName = "dsname";
 
-        var task = new CollectTask(filePath, outbox, datastationName, transferItemService, transferItemMetadataReader, fileService);
+        var task = new CollectTask(filePath, workDir, outbox, datastationName, transferItemService, transferItemMetadataReader, fileService);
         var testPath = Path.of("data/inbox/doi-10-5072-dar-kxteqt-datacite.v1.0.zip");
 
         Mockito.when(transferItemMetadataReader.getAssociatedXmlFile(filePath))
@@ -101,10 +139,11 @@ class CollectTaskTest {
     @Test
     void moveFileToOutbox() {
         var filePath = Path.of("data/inbox/doi-10-5072-dar-kxteqtv1.0.zip");
+        var workDir = Path.of("data/workdir");
         var outbox = Path.of("data/outbox");
         var datastationName = "dsname";
 
-        var task = new CollectTask(filePath, outbox, datastationName, transferItemService, transferItemMetadataReader, fileService);
+        var task = new CollectTask(filePath, workDir, outbox, datastationName, transferItemService, transferItemMetadataReader, fileService);
         var testPath = Path.of("data/inbox/doi-10-5072-dar-kxteqt-datacite.v1.0.zip");
 
         var transferItem = new TransferItem();

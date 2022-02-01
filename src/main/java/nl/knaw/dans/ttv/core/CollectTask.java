@@ -29,15 +29,17 @@ public class CollectTask implements Runnable {
     private static final Logger log = LoggerFactory.getLogger(CollectTask.class);
 
     private final Path filePath;
+    private final Path workDir;
     private final Path outbox;
     private final String datastationName;
     private final TransferItemService transferItemService;
     private final TransferItemMetadataReader metadataReader;
     private final FileService fileService;
 
-    public CollectTask(Path filePath, Path outbox, String datastationName, TransferItemService transferItemService,
+    public CollectTask(Path filePath, Path workDir, Path outbox, String datastationName, TransferItemService transferItemService,
         TransferItemMetadataReader metadataReader, FileService fileService) {
         this.filePath = filePath;
+        this.workDir = workDir;
         this.outbox = outbox;
         this.datastationName = datastationName;
         this.transferItemService = transferItemService;
@@ -48,13 +50,20 @@ public class CollectTask implements Runnable {
     @Override
     public void run() {
         try {
-            var transferItem = createTransferItem(this.filePath);
+            var workDirFile = moveFileToWorkDir(this.filePath, this.workDir);
+            var transferItem = createTransferItem(workDirFile);
             cleanUpXmlFile(this.filePath);
-            moveFileToOutbox(transferItem, this.filePath, this.outbox);
+            moveFileToOutbox(transferItem, workDirFile, this.outbox);
         }
         catch (IOException | InvalidTransferItemException e) {
             log.error("unable to create TransferItem for path {}", this.filePath, e);
         }
+    }
+
+    private Path moveFileToWorkDir(Path filePath, Path workDir) throws IOException {
+        var target = workDir.resolve(filePath.getFileName());
+        log.debug("moving file '{}' to '{}'", filePath, target);
+        return fileService.moveFile(filePath, target);
     }
 
     public TransferItem createTransferItem(Path path) throws InvalidTransferItemException {
@@ -82,12 +91,13 @@ public class CollectTask implements Runnable {
     }
 
     public void moveFileToOutbox(TransferItem transferItem, Path filePath, Path outboxPath) throws IOException {
-        log.trace("filePath is {}, outboxPath is {}", filePath, outboxPath);
+        log.trace("filePath is '{}', outboxPath is '{}'", filePath, outboxPath);
         var newPath = outboxPath.resolve(filePath.getFileName());
+
+        log.trace("updating database state for item {} with new path '{}'", transferItem, newPath);
+        transferItemService.moveTransferItem(transferItem, TransferItem.TransferStatus.COLLECTED, newPath);
+
         log.info("moving file {} to location {}", filePath, newPath);
         fileService.moveFile(filePath, newPath);
-
-        log.trace("updating database state for item {} with new path {}", transferItem, newPath);
-        transferItemService.moveTransferItem(transferItem, TransferItem.TransferStatus.COLLECTED, newPath);
     }
 }

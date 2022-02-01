@@ -24,6 +24,7 @@ import javax.validation.Valid;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+import java.nio.file.Path;
 import java.util.List;
 
 public class CollectConfiguration {
@@ -44,6 +45,18 @@ public class CollectConfiguration {
     @NotNull
     @Min(1)
     private long pollingInterval;
+
+    @Valid
+    @NotNull
+    private Path workDir;
+
+    public Path getWorkDir() {
+        return workDir;
+    }
+
+    public void setWorkDir(Path workDir) {
+        this.workDir = workDir;
+    }
 
     public long getPollingInterval() {
         return pollingInterval;
@@ -71,13 +84,13 @@ public class CollectConfiguration {
 
     public static class InboxEntry {
         private String name;
-        private String path;
+        private Path path;
 
         public InboxEntry() {
 
         }
 
-        public InboxEntry(String name, String path) {
+        public InboxEntry(String name, Path path) {
             this.name = name;
             this.path = path;
         }
@@ -90,11 +103,11 @@ public class CollectConfiguration {
             this.name = name;
         }
 
-        public String getPath() {
+        public Path getPath() {
             return path;
         }
 
-        public void setPath(String path) {
+        public void setPath(Path path) {
             this.path = path;
         }
 

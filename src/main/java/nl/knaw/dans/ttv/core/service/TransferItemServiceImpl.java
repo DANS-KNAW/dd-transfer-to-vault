@@ -55,7 +55,8 @@ public class TransferItemServiceImpl implements TransferItemService {
     public TransferItem createTransferItem(String datastationName, FilenameAttributes filenameAttributes, FilesystemAttributes filesystemAttributes, FileContentAttributes fileContentAttributes)
         throws InvalidTransferItemException {
         var transferItem = new TransferItem();
-        transferItem.setTransferStatus(TransferItem.TransferStatus.EXTRACT);
+
+        transferItem.setTransferStatus(TransferItem.TransferStatus.COLLECTED);
         transferItem.setQueueDate(LocalDateTime.now());
         transferItem.setDatasetDvInstance(datastationName);
 

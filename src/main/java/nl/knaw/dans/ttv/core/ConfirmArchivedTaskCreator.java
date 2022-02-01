@@ -24,6 +24,7 @@ import org.quartz.JobExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.file.Path;
 import java.util.concurrent.ExecutorService;
 
 public class ConfirmArchivedTaskCreator implements Job {
@@ -33,7 +34,7 @@ public class ConfirmArchivedTaskCreator implements Job {
     public void execute(JobExecutionContext context) throws JobExecutionException {
         var dataMap = context.getMergedJobDataMap();
         var transferItemService = (TransferItemService) dataMap.get("transferItemService");
-        var workingDir = (String) dataMap.get("workingDir");
+        var workingDir = (Path) dataMap.get("workingDir");
         var dataArchiveRoot = (String) dataMap.get("dataArchiveRoot");
         var archiveStatusService = (ArchiveStatusService) dataMap.get("archiveStatusService");
         var ocflRepositoryService = (OcflRepositoryService) dataMap.get("ocflRepositoryService");

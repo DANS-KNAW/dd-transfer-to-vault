@@ -81,6 +81,7 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
         // the Collect task, which listens to new files on the network-drive shares
         var collectTaskManager = new CollectTaskManager(
             configuration.getCollect().getInboxes(),
+            configuration.getCollect().getWorkDir(),
             configuration.getCreateOcflTar().getInbox(),
             configuration.getCollect().getPollingInterval(),
             collectExecutorService,

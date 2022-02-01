@@ -56,13 +56,14 @@ class CollectTaskManagerTest {
     private CollectConfiguration.InboxEntry createInboxEntry(String name, String value) {
         var entry = new CollectConfiguration.InboxEntry();
         entry.setName(name);
-        entry.setPath(value);
+        entry.setPath(Path.of(value));
         return entry;
     }
 
     @Test
     void createsInboxWatchersOnStart() {
-        var manager = new CollectTaskManager(inboxes, "data/outbox/", 100, executorService, transferItemService, transferItemMetadataReader, fileService, inboxWatcherFactory);
+        var manager = new CollectTaskManager(inboxes, Path.of("data/collect-workdir"), Path.of("data/outbox/"), 100, executorService, transferItemService, transferItemMetadataReader, fileService,
+            inboxWatcherFactory);
 
         try {
             manager.start();
@@ -86,7 +87,8 @@ class CollectTaskManagerTest {
 
     @Test
     void onZipFileAdded() {
-        var manager = new CollectTaskManager(inboxes, "data/outbox/", 150L, executorService, transferItemService, transferItemMetadataReader, fileService, inboxWatcherFactory);
+        var manager = new CollectTaskManager(inboxes, Path.of("data/collect-workdir"), Path.of("data/outbox/"), 150L, executorService, transferItemService, transferItemMetadataReader, fileService,
+            inboxWatcherFactory);
         var file = Mockito.mock(File.class);
         Mockito.when(file.isFile()).thenReturn(true);
         Mockito.when(file.getName()).thenReturn("some_file.zip");
@@ -98,7 +100,8 @@ class CollectTaskManagerTest {
 
     @Test
     void onNonZipFileAdded() {
-        var manager = new CollectTaskManager(inboxes, "data/outbox/", 100L, executorService, transferItemService, transferItemMetadataReader, fileService, inboxWatcherFactory);
+        var manager = new CollectTaskManager(inboxes, Path.of("data/collect-workdir"), Path.of("data/outbox/"), 100L, executorService, transferItemService, transferItemMetadataReader, fileService,
+            inboxWatcherFactory);
         var file = Mockito.mock(File.class);
         Mockito.when(file.isFile()).thenReturn(true);
         Mockito.when(file.getName()).thenReturn("some_file.exe");

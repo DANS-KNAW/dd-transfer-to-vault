@@ -78,7 +78,7 @@ class TransferItemServiceImplTest {
         try {
             var transferItem = transferItemService.createTransferItem("datastation name", filenameAttributes, filesystemAttributes, fileContentAttributes);
 
-            Assertions.assertEquals(TransferItem.TransferStatus.EXTRACT, transferItem.getTransferStatus());
+            Assertions.assertEquals(TransferItem.TransferStatus.COLLECTED, transferItem.getTransferStatus());
             assertNotNull(transferItem.getQueueDate());
             assertEquals("datastation name", transferItem.getDatasetDvInstance());
 

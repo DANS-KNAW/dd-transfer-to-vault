@@ -22,16 +22,17 @@ import nl.knaw.dans.ttv.core.config.converter.StringByteSizeConverter;
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
+import java.nio.file.Path;
 
 public class CreateOcflTarConfiguration {
 
     @Valid
     @NotNull
-    private String inbox;
+    private Path inbox;
 
     @Valid
     @NotNull
-    private String workDir;
+    private Path workDir;
 
     @Valid
     @NotNull
@@ -58,19 +59,19 @@ public class CreateOcflTarConfiguration {
         this.pollingInterval = pollingInterval;
     }
 
-    public String getInbox() {
+    public Path getInbox() {
         return inbox;
     }
 
-    public void setInbox(String inbox) {
+    public void setInbox(Path inbox) {
         this.inbox = inbox;
     }
 
-    public String getWorkDir() {
+    public Path getWorkDir() {
         return workDir;
     }
 
-    public void setWorkDir(String workDir) {
+    public void setWorkDir(Path workDir) {
         this.workDir = workDir;
     }
 
