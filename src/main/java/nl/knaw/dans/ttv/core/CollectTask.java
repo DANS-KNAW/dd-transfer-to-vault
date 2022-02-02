@@ -48,12 +48,34 @@ public class CollectTask implements Runnable {
     @Override
     public void run() {
         try {
+            awaitValidZipFile(filePath);
+
             var transferItem = createTransferItem(this.filePath);
             cleanUpXmlFile(this.filePath);
             moveFileToOutbox(transferItem, this.filePath, this.outbox);
         }
-        catch (IOException | InvalidTransferItemException e) {
+        catch (IOException | InvalidTransferItemException | InterruptedException e) {
             log.error("unable to create TransferItem for path {}", this.filePath, e);
+        }
+    }
+
+    // This method should be considered a temporary method of detecting if Dataverse
+    // is done writing the zip file. When Dataverse can provide some form of
+    // locking, that should be used instead.
+    public void awaitValidZipFile(Path path) throws InterruptedException {
+        log.info("verifying if zip file is complete on path '{}'", path);
+
+        while (true) {
+            try {
+                var file = fileService.openZipFile(path);
+                log.debug("file '{}' was opened correctly, returning", file);
+                break;
+            }
+            catch (IOException e) {
+                log.debug("file is not a valid zipfile, waiting");
+            }
+
+            Thread.sleep(3000);
         }
     }
 
