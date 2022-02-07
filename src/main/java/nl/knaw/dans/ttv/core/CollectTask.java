@@ -35,8 +35,7 @@ public class CollectTask implements Runnable {
     private final TransferItemMetadataReader metadataReader;
     private final FileService fileService;
 
-    public CollectTask(Path filePath, Path outbox, String datastationName, TransferItemService transferItemService,
-        TransferItemMetadataReader metadataReader, FileService fileService) {
+    public CollectTask(Path filePath, Path outbox, String datastationName, TransferItemService transferItemService, TransferItemMetadataReader metadataReader, FileService fileService) {
         this.filePath = filePath;
         this.outbox = outbox;
         this.datastationName = datastationName;
@@ -53,11 +52,20 @@ public class CollectTask implements Runnable {
         }
         catch (IOException | InvalidTransferItemException e) {
             log.error("unable to create TransferItem for path '{}'", this.filePath, e);
-            // TODO move to deadletter box
+
+            try {
+                moveFileToErrorBox(this.filePath, e);
+            }
+            catch (IOException error) {
+                log.error("tried to move file to deadletter box, but failed", error);
+            }
         }
         catch (InterruptedException e) {
             // in this case
             log.error("interrupted while creating TransferItem for path '{}'", this.filePath, e);
+        }
+        finally {
+            cleanUpXmlFile(this.filePath);
         }
     }
 
@@ -65,12 +73,10 @@ public class CollectTask implements Runnable {
         var transferItem = createOrGetTransferItem(path);
 
         if (transferItem.getTransferStatus() != TransferItem.TransferStatus.CREATED) {
-            throw new InvalidTransferItemException(
-                String.format("TransferItem exists already, but does not have expected status of CREATED: %s", transferItem));
+            throw new InvalidTransferItemException(String.format("TransferItem exists already, but does not have expected status of CREATED: %s", transferItem));
         }
 
         moveFileToOutbox(transferItem, path, this.outbox);
-        cleanUpXmlFile(this.filePath);
     }
 
     // This method should be considered a temporary method of detecting if Dataverse
@@ -119,15 +125,18 @@ public class CollectTask implements Runnable {
         fileService.moveFileAtomically(filePath, newPath);
     }
 
+    void moveFileToErrorBox(Path path, Exception exception) throws IOException {
+        fileService.rejectFile(path, exception);
+    }
+
     public void cleanUpXmlFile(Path path) {
-        metadataReader.getAssociatedXmlFile(path)
-            .ifPresent(p -> {
-                try {
-                    fileService.deleteFile(p);
-                }
-                catch (IOException e) {
-                    log.error("unable to delete XML file associated with file '{}' (filename: '{}')", path, p, e);
-                }
-            });
+        metadataReader.getAssociatedXmlFile(path).ifPresent(p -> {
+            try {
+                fileService.deleteFile(p);
+            }
+            catch (IOException e) {
+                log.error("unable to delete XML file associated with file '{}' (filename: '{}')", path, p, e);
+            }
+        });
     }
 }
