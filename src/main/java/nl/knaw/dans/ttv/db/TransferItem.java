@@ -39,6 +39,7 @@ public class TransferItem {
     private static final Logger log = LoggerFactory.getLogger(TransferItem.class);
 
     public enum TransferStatus {
+        CREATED,
         COLLECTED,
         TARRING,
         OCFLTARCREATED,
@@ -61,7 +62,7 @@ public class TransferItem {
     @Column(name = "version_minor", nullable = false)
     private int versionMinor;
 
-    @Column(name = "creation_time", nullable = false)
+    @Column(name = "creation_time")
     private LocalDateTime creationTime;
 
     @Column(name = "dve_file_path", nullable = false)

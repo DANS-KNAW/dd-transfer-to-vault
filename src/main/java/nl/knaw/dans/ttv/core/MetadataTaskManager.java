@@ -16,7 +16,6 @@
 package nl.knaw.dans.ttv.core;
 
 import io.dropwizard.lifecycle.Managed;
-import nl.knaw.dans.ttv.core.config.CollectConfiguration;
 import nl.knaw.dans.ttv.core.service.FileService;
 import nl.knaw.dans.ttv.core.service.InboxWatcher;
 import nl.knaw.dans.ttv.core.service.InboxWatcherFactory;
@@ -27,15 +26,13 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
-import java.util.stream.Collectors;
 
-public class CollectTaskManager implements Managed {
-    private static final Logger log = LoggerFactory.getLogger(CollectTaskManager.class);
-    private final List<CollectConfiguration.InboxEntry> inboxes;
+public class MetadataTaskManager implements Managed {
+    private static final Logger log = LoggerFactory.getLogger(MetadataTaskManager.class);
+    private final Path inbox;
     private final Path outbox;
     private final long pollingInterval;
     private final ExecutorService executorService;
@@ -43,12 +40,12 @@ public class CollectTaskManager implements Managed {
     private final TransferItemMetadataReader metadataReader;
     private final FileService fileService;
     private final InboxWatcherFactory inboxWatcherFactory;
-    private List<InboxWatcher> inboxWatchers;
+    private InboxWatcher inboxWatcher;
 
-    public CollectTaskManager(List<CollectConfiguration.InboxEntry> inboxes, Path outbox, long pollingInterval, ExecutorService executorService,
+    public MetadataTaskManager(Path inbox, Path outbox, long pollingInterval, ExecutorService executorService,
         TransferItemService transferItemService, TransferItemMetadataReader metadataReader, FileService fileService, InboxWatcherFactory inboxWatcherFactory) {
 
-        this.inboxes = Objects.requireNonNull(inboxes);
+        this.inbox = Objects.requireNonNull(inbox);
         this.outbox = Objects.requireNonNull(outbox);
         this.pollingInterval = pollingInterval;
         this.executorService = Objects.requireNonNull(executorService);
@@ -63,31 +60,14 @@ public class CollectTaskManager implements Managed {
         // scan inboxes
         log.info("creating InboxWatcher's for configured inboxes");
 
-        this.inboxWatchers = inboxes.stream().map(entry -> {
-            log.debug("creating InboxWatcher for {}", entry);
-
-            try {
-                return inboxWatcherFactory.getInboxWatcher(
-                    entry.getPath(), entry.getName(), this::onFileAdded, this.pollingInterval
-                );
-            }
-            catch (Exception e) {
-                log.error("unable to create InboxWatcher", e);
-            }
-            return null;
-        }).collect(Collectors.toList());
-
-        for (var inboxWatcher : this.inboxWatchers) {
-            if (inboxWatcher != null) {
-                inboxWatcher.start();
-            }
-        }
+        this.inboxWatcher = inboxWatcherFactory.getInboxWatcher(inbox, null, this::onFileAdded, pollingInterval);
+        this.inboxWatcher.start();
     }
 
     public void onFileAdded(File file, String datastationName) {
         if (file.isFile() && file.getName().toLowerCase(Locale.ROOT).endsWith(".zip")) {
-            var transferTask = new CollectTask(
-                file.toPath(), outbox, datastationName, transferItemService, metadataReader, fileService
+            var transferTask = new MetadataTask(
+                file.toPath(), outbox, transferItemService, metadataReader, fileService
             );
 
             executorService.execute(transferTask);
@@ -96,10 +76,6 @@ public class CollectTaskManager implements Managed {
 
     @Override
     public void stop() throws Exception {
-        for (var inboxWatcher : this.inboxWatchers) {
-            if (inboxWatcher != null) {
-                inboxWatcher.stop();
-            }
-        }
+        this.inboxWatcher.stop();
     }
 }

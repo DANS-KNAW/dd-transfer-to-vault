@@ -23,6 +23,7 @@ import nl.knaw.dans.ttv.db.TransferItem;
 
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 
 public interface TransferItemService {
 
@@ -31,6 +32,9 @@ public interface TransferItemService {
     List<TransferItem> findByTarId(String id);
 
     TransferItem createTransferItem(String datastationName, FilenameAttributes filenameAttributes, FilesystemAttributes filesystemAttributes, FileContentAttributes fileContentAttributes)
+        throws InvalidTransferItemException;
+
+    TransferItem createTransferItem(String datastationName, FilenameAttributes filenameAttributes)
         throws InvalidTransferItemException;
 
     TransferItem moveTransferItem(TransferItem transferItem, TransferItem.TransferStatus newStatus, Path newPath);
@@ -42,4 +46,8 @@ public interface TransferItemService {
     List<String> stageAllTarsToBeConfirmed();
 
     void updateCheckingProgressResults(String id, TransferItem.TransferStatus status);
+
+    Optional<TransferItem> getTransferItemByFilenameAttributes(FilenameAttributes filenameAttributes);
+
+    TransferItem addMetadataAndMoveFile(TransferItem transferItem, FilesystemAttributes filesystemAttributes, FileContentAttributes fileContentAttributes, TransferItem.TransferStatus status, Path newPath);
 }

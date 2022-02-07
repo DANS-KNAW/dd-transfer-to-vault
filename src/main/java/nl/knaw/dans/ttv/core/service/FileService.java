@@ -41,4 +41,6 @@ public interface FileService {
     ZipFile openZipFile(Path path) throws IOException;
 
     InputStream openFileFromZip(ZipFile datasetVersionExport, Path of) throws IOException;
+
+    Path moveFileAtomically(Path filePath, Path newPath) throws IOException;
 }

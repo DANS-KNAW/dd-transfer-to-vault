@@ -1,12 +1,23 @@
 collect:
-  inboxes:
-    - name: DS_Archaeology
-      path: /var/opt/dans.knaw.nl/tmp/transfer-inboxes/archaeology
-  workDir: /var/opt/dans.knaw.nl/tmp/collect-work-dir
+  inboxes: []
   # polling interval in milliseconds
   pollingInterval: 500
   taskQueue:
-    nameFormat: "add-worker-thread-%d"
+    nameFormat: "collect-worker-%d"
+    maxQueueSize: 5000
+    # Number of threads will be increased when maxQueueSize is exceeded.
+    minThreads: 1
+    # No more than maxThreads will be created though
+    maxThreads: 10
+    # Threads will die after 60 seconds of idleness
+    keepAliveTime: 60 seconds
+
+metadata:
+  inbox: /var/opt/dans.knaw.nl/tmp/metadata-inbox
+  # polling interval in milliseconds
+  pollingInterval: 500
+  taskQueue:
+    nameFormat: "metadata-worker-thread-%d"
     maxQueueSize: 5000
     # Number of threads will be increased when maxQueueSize is exceeded.
     minThreads: 1
@@ -19,14 +30,14 @@ dataArchive:
   baseDir: 'danstst0@archive.surfsara.nl:'
 
 createOcflTar:
-  inbox: /var/opt/dans.knaw.nl/tmp/ocfl-directories/ocfl-storage-root
-  workDir: /var/opt/dans.knaw.nl/tmp/ocfl-directories/ocfl-work-dir
+  inbox: /var/opt/dans.knaw.nl/tmp/ocfl-tar/inbox
+  workDir: /var/opt/dans.knaw.nl/tmp/ocfl-tar/workdirs
   inboxThreshold: 2G
   tarCommand: 'dmftar -c -f %s %s' # target, source
   # polling interval in milliseconds
   pollingInterval: 500
   taskQueue:
-    nameFormat: "ocfl-tar-thread-%d"
+    nameFormat: "ocfl-tar-worker-%d"
     maxQueueSize: 5000
     # Number of threads will be increased when maxQueueSize is exceeded.
     minThreads: 1
@@ -38,7 +49,7 @@ createOcflTar:
 confirmArchived:
   cron: '0 0 * * * ?' # cron expression for triggering a polling round
   taskQueue:
-    nameFormat: "confirm-thread-%d"
+    nameFormat: "confirm-archived-worker-%d"
     maxQueueSize: 5000
     # Number of threads will be increased when maxQueueSize is exceeded.
     minThreads: 1
@@ -50,8 +61,8 @@ confirmArchived:
 database:
   driverClass: org.postgresql.Driver
   url: jdbc:postgresql://localhost:5432/dd_transfer_to_vault
-  user: change_me
-  password: change_me
+  user: changeme
+  password: changeme
   logValidationErrors: true
   properties:
     hibernate.dialect: 'org.hibernate.dialect.PostgreSQL95Dialect'

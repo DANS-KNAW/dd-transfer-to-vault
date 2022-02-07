@@ -62,7 +62,7 @@ class CollectTaskManagerTest {
 
     @Test
     void createsInboxWatchersOnStart() {
-        var manager = new CollectTaskManager(inboxes, Path.of("data/collect-workdir"), Path.of("data/outbox/"), 100, executorService, transferItemService, transferItemMetadataReader, fileService,
+        var manager = new CollectTaskManager(inboxes, Path.of("data/outbox/"), 100, executorService, transferItemService, transferItemMetadataReader, fileService,
             inboxWatcherFactory);
 
         try {
@@ -87,7 +87,7 @@ class CollectTaskManagerTest {
 
     @Test
     void onZipFileAdded() {
-        var manager = new CollectTaskManager(inboxes, Path.of("data/collect-workdir"), Path.of("data/outbox/"), 150L, executorService, transferItemService, transferItemMetadataReader, fileService,
+        var manager = new CollectTaskManager(inboxes, Path.of("data/outbox/"), 150L, executorService, transferItemService, transferItemMetadataReader, fileService,
             inboxWatcherFactory);
         var file = Mockito.mock(File.class);
         Mockito.when(file.isFile()).thenReturn(true);
@@ -100,7 +100,7 @@ class CollectTaskManagerTest {
 
     @Test
     void onNonZipFileAdded() {
-        var manager = new CollectTaskManager(inboxes, Path.of("data/collect-workdir"), Path.of("data/outbox/"), 100L, executorService, transferItemService, transferItemMetadataReader, fileService,
+        var manager = new CollectTaskManager(inboxes, Path.of("data/outbox/"), 100L, executorService, transferItemService, transferItemMetadataReader, fileService,
             inboxWatcherFactory);
         var file = Mockito.mock(File.class);
         Mockito.when(file.isFile()).thenReturn(true);
