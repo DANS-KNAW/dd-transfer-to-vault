@@ -54,7 +54,8 @@ public class CollectTask implements Runnable {
         catch (IOException | InvalidTransferItemException e) {
             log.error("unable to create TransferItem for path '{}'", this.filePath, e);
             // TODO move to deadletter box
-        } catch (InterruptedException e) {
+        }
+        catch (InterruptedException e) {
             // in this case
             log.error("interrupted while creating TransferItem for path '{}'", this.filePath, e);
         }

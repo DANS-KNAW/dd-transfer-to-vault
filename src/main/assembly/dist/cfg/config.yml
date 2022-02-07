@@ -17,7 +17,7 @@ metadata:
   # polling interval in milliseconds
   pollingInterval: 500
   taskQueue:
-    nameFormat: "metadata-worker-thread-%d"
+    nameFormat: "metadata-worker-%d"
     maxQueueSize: 5000
     # Number of threads will be increased when maxQueueSize is exceeded.
     minThreads: 1
