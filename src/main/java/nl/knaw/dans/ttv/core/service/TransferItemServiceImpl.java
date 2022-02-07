@@ -27,6 +27,7 @@ import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class TransferItemServiceImpl implements TransferItemService {
@@ -55,7 +56,8 @@ public class TransferItemServiceImpl implements TransferItemService {
     public TransferItem createTransferItem(String datastationName, FilenameAttributes filenameAttributes, FilesystemAttributes filesystemAttributes, FileContentAttributes fileContentAttributes)
         throws InvalidTransferItemException {
         var transferItem = new TransferItem();
-        transferItem.setTransferStatus(TransferItem.TransferStatus.EXTRACT);
+
+        transferItem.setTransferStatus(TransferItem.TransferStatus.COLLECTED);
         transferItem.setQueueDate(LocalDateTime.now());
         transferItem.setDatasetDvInstance(datastationName);
 
@@ -94,6 +96,43 @@ public class TransferItemServiceImpl implements TransferItemService {
 
     @Override
     @UnitOfWork
+    public TransferItem createTransferItem(String datastationName, FilenameAttributes filenameAttributes) throws InvalidTransferItemException {
+
+        // check if an item with this ID already exists
+        var existing = transferItemDAO.findByDatasetPidAndVersion(
+            filenameAttributes.getDatasetPid(),
+            filenameAttributes.getVersionMajor(),
+            filenameAttributes.getVersionMinor()
+        );
+
+        if (existing.isPresent()) {
+            throw new InvalidTransferItemException(
+                String.format("TransferItem with datasetPid=%s, versionMajor=%s, versionMinor=%s already exists in database",
+                    filenameAttributes.getDatasetPid(),
+                    filenameAttributes.getVersionMajor(),
+                    filenameAttributes.getVersionMinor()
+                )
+            );
+        }
+
+        var transferItem = new TransferItem();
+
+        transferItem.setTransferStatus(TransferItem.TransferStatus.CREATED);
+        transferItem.setQueueDate(LocalDateTime.now());
+        transferItem.setDatasetDvInstance(datastationName);
+
+        // filename attributes
+        transferItem.setDveFilePath(filenameAttributes.getDveFilePath());
+        transferItem.setDatasetPid(filenameAttributes.getDatasetPid());
+        transferItem.setVersionMajor(filenameAttributes.getVersionMajor());
+        transferItem.setVersionMinor(filenameAttributes.getVersionMinor());
+
+        transferItemDAO.save(transferItem);
+        return transferItem;
+    }
+
+    @Override
+    @UnitOfWork
     public TransferItem moveTransferItem(TransferItem transferItem, TransferItem.TransferStatus newStatus, Path newPath) {
         transferItem.setDveFilePath(newPath.toString());
         transferItem.setTransferStatus(newStatus);
@@ -120,7 +159,7 @@ public class TransferItemServiceImpl implements TransferItemService {
     public List<String> stageAllTarsToBeConfirmed() {
         var results = transferItemDAO.findAllTarsToBeConfirmed();
 
-        for (var item: results) {
+        for (var item : results) {
             item.setConfirmCheckInProgress(true);
         }
 
@@ -135,4 +174,36 @@ public class TransferItemServiceImpl implements TransferItemService {
         transferItemDAO.updateCheckingProgressResults(id, status);
     }
 
+    @Override
+    @UnitOfWork
+    public Optional<TransferItem> getTransferItemByFilenameAttributes(FilenameAttributes filenameAttributes) {
+        return transferItemDAO.findByDatasetPidAndVersion(
+            filenameAttributes.getDatasetPid(),
+            filenameAttributes.getVersionMajor(),
+            filenameAttributes.getVersionMinor()
+        );
+    }
+
+    @Override
+    @UnitOfWork
+    public TransferItem addMetadataAndMoveFile(TransferItem transferItem, FilesystemAttributes filesystemAttributes, FileContentAttributes fileContentAttributes, TransferItem.TransferStatus status,
+        Path newPath) {
+
+        transferItem.setTransferStatus(status);
+        transferItem.setDveFilePath(newPath.toString());
+
+        // filesystem attributes
+        transferItem.setCreationTime(filesystemAttributes.getCreationTime());
+        transferItem.setBagChecksum(filesystemAttributes.getBagChecksum());
+        transferItem.setBagSize(filesystemAttributes.getBagSize());
+
+        // file content attributes
+        transferItem.setDatasetVersion(fileContentAttributes.getDatasetVersion());
+        transferItem.setBagId(fileContentAttributes.getBagId());
+        transferItem.setNbn(fileContentAttributes.getNbn());
+        transferItem.setOaiOre(fileContentAttributes.getOaiOre());
+        transferItem.setPidMapping(fileContentAttributes.getPidMapping());
+
+        return transferItemDAO.save(transferItem);
+    }
 }

@@ -22,6 +22,7 @@ import io.dropwizard.db.DataSourceFactory;
 import nl.knaw.dans.ttv.core.config.CollectConfiguration;
 import nl.knaw.dans.ttv.core.config.ConfirmArchivedConfiguration;
 import nl.knaw.dans.ttv.core.config.CreateOcflTarConfiguration;
+import nl.knaw.dans.ttv.core.config.MetadataConfiguration;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -36,6 +37,10 @@ public class DdTransferToVaultConfiguration extends Configuration {
     @Valid
     @NotNull
     private CollectConfiguration collect;
+
+    @Valid
+    @NotNull
+    private MetadataConfiguration metadata;
 
     @Valid
     @NotNull
@@ -78,5 +83,13 @@ public class DdTransferToVaultConfiguration extends Configuration {
 
     public void setDataArchiveRoot(Map<String, String> dataArchive) {
         this.dataArchiveRoot = dataArchive.get("baseDir");
+    }
+
+    public MetadataConfiguration getMetadata() {
+        return metadata;
+    }
+
+    public void setMetadata(MetadataConfiguration metadata) {
+        this.metadata = metadata;
     }
 }

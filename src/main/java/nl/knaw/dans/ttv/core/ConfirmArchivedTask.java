@@ -33,11 +33,11 @@ public class ConfirmArchivedTask implements Runnable {
     private final TransferItemService transferItemService;
     private final ArchiveStatusService archiveStatusService;
     private final OcflRepositoryService ocflRepositoryService;
-    private final String workingDir;
+    private final Path workingDir;
     private final String dataArchiveRoot;
 
     public ConfirmArchivedTask(String tarId, TransferItemService transferItemService, ArchiveStatusService archiveStatusService, OcflRepositoryService ocflRepositoryService,
-        String workingDir, String dataArchiveRoot) {
+        Path workingDir, String dataArchiveRoot) {
         this.transferItemService = transferItemService;
         this.archiveStatusService = archiveStatusService;
         this.ocflRepositoryService = ocflRepositoryService;
@@ -60,7 +60,7 @@ public class ConfirmArchivedTask implements Runnable {
 
                 try {
                     log.info("cleaning workdir files and folders for tar archive '{}'", tarId);
-                    ocflRepositoryService.cleanupRepository(Path.of(workingDir), tarId);
+                    ocflRepositoryService.cleanupRepository(workingDir, tarId);
                 } catch (IOException e) {
                     log.error("unable to cleanup TAR OCFL repository in directory '{}/{}'", workingDir, tarId, e);
                 }

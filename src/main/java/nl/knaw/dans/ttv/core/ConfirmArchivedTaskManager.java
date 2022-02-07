@@ -31,6 +31,7 @@ import org.quartz.impl.StdSchedulerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.file.Path;
 import java.util.concurrent.ExecutorService;
 
 public class ConfirmArchivedTaskManager implements Managed {
@@ -39,14 +40,14 @@ public class ConfirmArchivedTaskManager implements Managed {
     private Scheduler scheduler;
     private final String schedule;
 
-    private final String workingDir;
+    private final Path workingDir;
     private final String dataArchiveRoot;
     private final ExecutorService executorService;
     private final TransferItemService transferItemService;
     private final ArchiveStatusService archiveStatusService;
     private final OcflRepositoryService ocflRepositoryService;
 
-    public ConfirmArchivedTaskManager(String schedule, String workingDir, String dataArchiveRoot,
+    public ConfirmArchivedTaskManager(String schedule, Path workingDir, String dataArchiveRoot,
         ExecutorService executorService, TransferItemService transferItemService, ArchiveStatusService archiveStatusService, OcflRepositoryService ocflRepositoryService) {
 
         this.workingDir = workingDir;

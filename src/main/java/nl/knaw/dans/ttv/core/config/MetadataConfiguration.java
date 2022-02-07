@@ -15,41 +15,28 @@
  */
 package nl.knaw.dans.ttv.core.config;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import nl.knaw.dans.lib.util.ExecutorServiceFactory;
-import nl.knaw.dans.ttv.core.config.converter.StringByteSizeConverter;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import java.nio.file.Path;
 
-public class CreateOcflTarConfiguration {
-
+public class MetadataConfiguration {
     @Valid
     @NotNull
     private Path inbox;
 
     @Valid
     @NotNull
-    private Path workDir;
-
-    @Valid
-    @NotNull
-    @JsonDeserialize(converter = StringByteSizeConverter.class)
-    private long inboxThreshold;
-
-    @Valid
-    @NotNull
-    private String tarCommand;
+    @JsonProperty("taskQueue")
+    private ExecutorServiceFactory taskQueue;
 
     @Valid
     @NotNull
     @Min(1)
     private long pollingInterval;
-    @Valid
-    @NotNull
-    private ExecutorServiceFactory taskQueue;
 
     public long getPollingInterval() {
         return pollingInterval;
@@ -59,43 +46,19 @@ public class CreateOcflTarConfiguration {
         this.pollingInterval = pollingInterval;
     }
 
-    public Path getInbox() {
-        return inbox;
-    }
-
-    public void setInbox(Path inbox) {
-        this.inbox = inbox;
-    }
-
-    public Path getWorkDir() {
-        return workDir;
-    }
-
-    public void setWorkDir(Path workDir) {
-        this.workDir = workDir;
-    }
-
-    public long getInboxThreshold() {
-        return inboxThreshold;
-    }
-
-    public void setInboxThreshold(long inboxThreshold) {
-        this.inboxThreshold = inboxThreshold;
-    }
-
-    public String getTarCommand() {
-        return tarCommand;
-    }
-
-    public void setTarCommand(String tarCommand) {
-        this.tarCommand = tarCommand;
-    }
-
     public ExecutorServiceFactory getTaskQueue() {
         return taskQueue;
     }
 
     public void setTaskQueue(ExecutorServiceFactory taskQueue) {
         this.taskQueue = taskQueue;
+    }
+
+    public Path getInbox() {
+        return inbox;
+    }
+
+    public void setInbox(Path inbox) {
+        this.inbox = inbox;
     }
 }

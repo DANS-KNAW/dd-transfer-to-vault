@@ -37,8 +37,8 @@ public class TarTaskManager implements Managed {
     private static final Logger log = LoggerFactory.getLogger(TarTaskManager.class);
 
     private final ExecutorService executorService;
-    private final String inboxPath;
-    private final String workDir;
+    private final Path inboxPath;
+    private final Path workDir;
     private final long inboxThreshold;
     private final String tarCommand;
     private final String dataArchiveRoot;
@@ -50,7 +50,7 @@ public class TarTaskManager implements Managed {
     private final long pollingInterval;
     private InboxWatcher inboxWatcher;
 
-    public TarTaskManager(String inboxPath, String workDir, long inboxThreshold, String tarCommand, String dataArchiveRoot, long pollingInterval, ExecutorService executorService, InboxWatcherFactory inboxWatcherFactory,
+    public TarTaskManager(Path inboxPath, Path workDir, long inboxThreshold, String tarCommand, String dataArchiveRoot, long pollingInterval, ExecutorService executorService, InboxWatcherFactory inboxWatcherFactory,
         FileService fileService, OcflRepositoryService ocflRepositoryService, TransferItemService transferItemService, TarCommandRunner tarCommandRunner) {
         this.executorService = executorService;
         this.inboxPath = inboxPath;
@@ -71,7 +71,7 @@ public class TarTaskManager implements Managed {
         // start up file watcher
         log.info("starting watch on inbox {}", this.inboxPath);
 
-        this.inboxWatcher = inboxWatcherFactory.getInboxWatcher(Path.of(this.inboxPath), null, (file, ds) -> {
+        this.inboxWatcher = inboxWatcherFactory.getInboxWatcher(this.inboxPath, null, (file, ds) -> {
             log.trace("received InboxWatcher event for file {}", file);
             this.onNewItemInInbox(file);
         }, pollingInterval);
@@ -84,7 +84,7 @@ public class TarTaskManager implements Managed {
         log.info("checking total size of inbox located at {}", inboxPath);
 
         try {
-            var totalSize = fileService.getPathSize(Path.of(inboxPath));
+            var totalSize = fileService.getPathSize(inboxPath);
             var uuid = UUID.randomUUID();
             log.debug("total size of inbox is {}, threshold is {}", totalSize, inboxThreshold);
 
@@ -101,7 +101,7 @@ public class TarTaskManager implements Managed {
     }
 
     private void startTarringTask(UUID uuid) {
-        var repoPath = Path.of(workDir, uuid.toString());
+        var repoPath = Path.of(workDir.toString(), uuid.toString());
         var task = new TarTask(transferItemService, uuid, repoPath, dataArchiveRoot, tarCommand, tarCommandRunner);
 
         executorService.execute(task);
@@ -127,7 +127,7 @@ public class TarTaskManager implements Managed {
     }
 
     public OcflRepository createOcflRepo(UUID uuid) throws IOException {
-        return ocflRepositoryService.createRepository(Path.of(workDir), uuid.toString());
+        return ocflRepositoryService.createRepository(workDir, uuid.toString());
     }
 
     @Override
