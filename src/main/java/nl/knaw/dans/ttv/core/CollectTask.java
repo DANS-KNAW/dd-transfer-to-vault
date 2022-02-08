@@ -48,16 +48,11 @@ public class CollectTask implements Runnable {
     @Override
     public void run() {
         try {
-            awaitValidZipFile(this.filePath);
             processFile(this.filePath);
         }
         catch (IOException | InvalidTransferItemException e) {
             log.error("unable to create TransferItem for path '{}'", this.filePath, e);
             // TODO move to deadletter box
-        }
-        catch (InterruptedException e) {
-            // in this case
-            log.error("interrupted while creating TransferItem for path '{}'", this.filePath, e);
         }
     }
 
@@ -71,26 +66,6 @@ public class CollectTask implements Runnable {
 
         moveFileToOutbox(transferItem, path, this.outbox);
         cleanUpXmlFile(this.filePath);
-    }
-
-    // This method should be considered a temporary method of detecting if Dataverse
-    // is done writing the zip file. When Dataverse can provide some form of
-    // locking, that should be used instead.
-    public void awaitValidZipFile(Path path) throws InterruptedException {
-        log.info("verifying if zip file is complete on path '{}'", path);
-
-        while (true) {
-            try {
-                var file = fileService.openZipFile(path);
-                log.debug("file '{}' was opened correctly, returning", file);
-                break;
-            }
-            catch (IOException e) {
-                log.debug("file is not a valid zipfile, waiting");
-            }
-
-            Thread.sleep(3000);
-        }
     }
 
     public TransferItem createOrGetTransferItem(Path path) throws InvalidTransferItemException {
