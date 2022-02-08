@@ -143,4 +143,25 @@ class CollectTaskTest {
             fail(e);
         }
     }
+
+    @Test
+    void testDuplicateFile() throws IOException {
+        var filePath = Path.of("data/inbox/doi-10-5072-dar-kxteqtv1.0.zip");
+        var outbox = Path.of("data/outbox");
+        var datastationName = "dsname";
+
+        var task = new CollectTask(filePath, outbox, datastationName, transferItemService, transferItemMetadataReader, fileService);
+        var transferItem = new TransferItem("test", 1, 0, "path", LocalDateTime.now(), TransferItem.TransferStatus.TARRING);
+
+        Mockito.when(transferItemService.getTransferItemByFilenameAttributes(Mockito.any()))
+            .thenReturn(Optional.of(transferItem));
+
+        task.run();
+
+        Mockito.verify(fileService, Mockito.times(1)).rejectFile(Mockito.any(), Mockito.any());
+
+        Mockito.verify(fileService, Mockito.times(0)).moveFileAtomically(Mockito.any(), Mockito.any());
+        Mockito.verify(transferItemService, Mockito.times(0)).moveTransferItem(Mockito.any(), Mockito.any(), Mockito.any());
+    }
+
 }
