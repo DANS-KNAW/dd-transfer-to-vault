@@ -15,6 +15,8 @@
  */
 package nl.knaw.dans.ttv.core;
 
+import nl.knaw.dans.ttv.core.dto.ArchiveMetadata;
+import nl.knaw.dans.ttv.core.service.ArchiveMetadataService;
 import nl.knaw.dans.ttv.core.service.TarCommandRunner;
 import nl.knaw.dans.ttv.core.service.TransferItemService;
 import org.slf4j.Logger;
@@ -29,24 +31,26 @@ public class TarTask implements Runnable {
 
     private final TransferItemService transferItemService;
     private final Path inboxPath;
-    private final String dataArchiveRoot;
-    private final String tarCommand;
     private final UUID uuid;
     private final TarCommandRunner tarCommandRunner;
+    private final ArchiveMetadataService archiveMetadataService;
 
-    public TarTask(TransferItemService transferItemService, UUID uuid, Path inboxPath, String dataArchiveRoot, String tarCommand, TarCommandRunner tarCommandRunner) {
+    public TarTask(TransferItemService transferItemService, UUID uuid, Path inboxPath, TarCommandRunner tarCommandRunner, ArchiveMetadataService archiveMetadataService) {
         this.transferItemService = transferItemService;
         this.inboxPath = inboxPath;
-        this.dataArchiveRoot = dataArchiveRoot;
-        this.tarCommand = tarCommand;
         this.uuid = uuid;
         this.tarCommandRunner = tarCommandRunner;
+        this.archiveMetadataService = archiveMetadataService;
     }
 
     @Override
     public void run() {
         try {
             createTarArchive();
+            // TODO catch exceptions where one of these things went wrong:
+            // - tar wasnt uploaded due to IOException (or code is not 0)
+            // - verify step failed
+            // if so, remove remote tar and reset status to TARRING, retry it again
         }
         catch (IOException | InterruptedException e) {
             log.error("error while creating TAR archive", e);
@@ -55,24 +59,44 @@ public class TarTask implements Runnable {
 
     private void createTarArchive() throws IOException, InterruptedException {
         // run dmftar and upload results
-        log.info("tarring directory {} with UUID {}", this.inboxPath, uuid);
+        log.info("Tarring directory '{}' with UUID {}", this.inboxPath, uuid);
         tarDirectory(uuid, this.inboxPath);
 
-        transferItemService.updateToCreatedForTarId(uuid.toString());
+        log.info("Verifying remote TAR with UUID {}", this.uuid);
+        verifyTarArchive(uuid);
+
+        log.info("Extracting metadata from remote TAR with UUID {}", this.uuid);
+        var metadata = extractTarMetadata(uuid);
+
+        log.info("Extracted metadata for remote TAR with uuid {}: {}", this.uuid, metadata);
+        transferItemService.updateTarToCreated(uuid.toString(), metadata);
     }
 
     private void tarDirectory(UUID packageName, Path sourceDirectory) throws IOException, InterruptedException {
-        var targetPackage = dataArchiveRoot + packageName.toString() + ".dmftar";
+        var targetPackage = getTarArchivePath(packageName);
         var result = tarCommandRunner.tarDirectory(sourceDirectory, targetPackage);
-
-        log.debug("tar command return code: {}", result.getStatusCode());
-        log.debug("tar command output: '{}'", result.getStdout());
-        log.debug("tar command errors: '{}'", result.getStderr());
 
         // it failed
         if (result.getStatusCode() != 0) {
             throw new IOException(String.format("unable to tar folder '%s' to location '%s", sourceDirectory, targetPackage));
         }
+    }
+
+    private void verifyTarArchive(UUID packageName) throws IOException, InterruptedException {
+        var targetPackage = getTarArchivePath(packageName);
+        var result = tarCommandRunner.verifyPackage(targetPackage);
+
+        if (result.getStatusCode() != 0) {
+            throw new IOException(String.format("tar folder '%s' cannot be verified: %s", targetPackage, result.getStdout()));
+        }
+    }
+
+    private ArchiveMetadata extractTarMetadata(UUID packageName) throws IOException, InterruptedException {
+        return archiveMetadataService.getArchiveMetadata(packageName.toString());
+    }
+
+    private String getTarArchivePath(UUID uuid) {
+        return uuid.toString() + ".dmftar";
     }
 
 }

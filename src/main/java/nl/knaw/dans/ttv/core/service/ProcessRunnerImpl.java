@@ -23,6 +23,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Arrays;
+import java.util.stream.Collectors;
 
 public class ProcessRunnerImpl implements ProcessRunner {
     private static final Logger log = LoggerFactory.getLogger(ProcessRunnerImpl.class);
@@ -37,18 +38,16 @@ public class ProcessRunnerImpl implements ProcessRunner {
         var processBuilder = new ProcessBuilder(command);
         processBuilder.redirectOutput(ProcessBuilder.Redirect.PIPE);
         processBuilder.redirectErrorStream(true);
-        log.debug("waiting for command {}", Arrays.toString(command));
+        log.debug("waiting for command {}", String.join(" ", command));
 
         try {
             var process = processBuilder.start();
             var output = consumeProcessOutput(process);
-
             var resultCode = process.waitFor();
-            var result = new ProcessResult();
-            result.setStatusCode(resultCode);
-            result.setStdout(output);
 
-            return result;
+            log.trace("command output for '{}' (return code {}):\n{}", String.join(" ", command), resultCode, output);
+
+            return new ProcessResult(resultCode, output);
 
         } catch (IOException | InterruptedException e) {
             log.error("unable to execute command '{}'", command, e);

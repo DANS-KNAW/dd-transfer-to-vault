@@ -68,9 +68,11 @@ public class InboxWatcher extends FileAlterationListenerAdaptor implements Manag
     @Override
     public void start() throws Exception {
         try {
-            // TODO find out if this is the best place to do this
             // initial scan
+            log.info("Scanning path '{}' for first run", this.path);
             scanExistingFiles();
+
+            log.info("Starting file alteration monitor for path '{}'", this.path);
             startFileAlterationMonitor();
         } catch (IOException | InterruptedException e) {
             log.error(e.getMessage(), e);

@@ -94,7 +94,6 @@ class TransferItemMetadataReaderImplTest {
 
             var attributes = service.getFilesystemAttributes(path);
 
-            assertEquals("checksum-test", attributes.getBagChecksum());
             assertEquals(1234L, attributes.getBagSize());
             assertEquals(LocalDateTime.ofInstant(ts, ZoneId.systemDefault()), attributes.getCreationTime());
         }
@@ -139,6 +138,8 @@ class TransferItemMetadataReaderImplTest {
             .thenReturn(new ByteArrayInputStream(fakeJsonld.getBytes(StandardCharsets.UTF_8)));
         Mockito.when(fileService.openFileFromZip(Mockito.any(), Mockito.eq(Path.of("metadata/pid-mapping.txt"))))
             .thenReturn(new ByteArrayInputStream(fakePidmapping.getBytes(StandardCharsets.UTF_8)));
+        Mockito.when(fileService.calculateChecksum(Mockito.any()))
+            .thenReturn("checksum-test");
 
         var service = new TransferItemMetadataReaderImpl(new ObjectMapper(), fileService);
         var result = service.getFileContentAttributes(Path.of("test.zip"));
@@ -151,6 +152,7 @@ class TransferItemMetadataReaderImplTest {
         assertNull(result.getSwordToken());
         assertArrayEquals(fakeJsonld.getBytes(StandardCharsets.UTF_8), result.getOaiOre());
         assertArrayEquals(fakePidmapping.getBytes(StandardCharsets.UTF_8), result.getPidMapping());
+        assertEquals("checksum-test", result.getBagChecksum());
     }
 
     @Test

@@ -18,7 +18,7 @@ package nl.knaw.dans.ttv.core;
 import nl.knaw.dans.ttv.core.service.ArchiveStatusService;
 import nl.knaw.dans.ttv.core.service.OcflRepositoryService;
 import nl.knaw.dans.ttv.core.service.TransferItemService;
-import nl.knaw.dans.ttv.db.TransferItem;
+import nl.knaw.dans.ttv.db.Tar;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,26 +29,26 @@ import java.util.Map;
 public class ConfirmArchivedTask implements Runnable {
     private static final Logger log = LoggerFactory.getLogger(ConfirmArchivedTask.class);
 
-    private final String tarId;
+    private final Tar tar;
     private final TransferItemService transferItemService;
     private final ArchiveStatusService archiveStatusService;
     private final OcflRepositoryService ocflRepositoryService;
     private final Path workingDir;
-    private final String dataArchiveRoot;
 
-    public ConfirmArchivedTask(String tarId, TransferItemService transferItemService, ArchiveStatusService archiveStatusService, OcflRepositoryService ocflRepositoryService,
-        Path workingDir, String dataArchiveRoot) {
+    public ConfirmArchivedTask(Tar tar, TransferItemService transferItemService, ArchiveStatusService archiveStatusService, OcflRepositoryService ocflRepositoryService,
+        Path workingDir) {
         this.transferItemService = transferItemService;
         this.archiveStatusService = archiveStatusService;
         this.ocflRepositoryService = ocflRepositoryService;
         this.workingDir = workingDir;
-        this.dataArchiveRoot = dataArchiveRoot;
-        this.tarId = tarId;
+        this.tar = tar;
     }
 
     @Override
     public void run() {
         log.info("running confirm archive task {}", this);
+
+        var tarId = tar.getTarUuid();
 
         try {
             var fileStatus = archiveStatusService.getFileStatus(tarId);
@@ -56,24 +56,26 @@ public class ConfirmArchivedTask implements Runnable {
 
             if (completelyArchived) {
                 log.info("all files in tar archive '{}' have been archived to tape", tarId);
-                transferItemService.updateCheckingProgressResults(tarId, TransferItem.TransferStatus.CONFIRMEDARCHIVED);
+                transferItemService.updateTarToArchived(tar);
 
                 try {
                     log.info("cleaning workdir files and folders for tar archive '{}'", tarId);
                     ocflRepositoryService.cleanupRepository(workingDir, tarId);
-                } catch (IOException e) {
+                }
+                catch (IOException e) {
                     log.error("unable to cleanup TAR OCFL repository in directory '{}/{}'", workingDir, tarId, e);
                 }
-            } else {
+            }
+            else {
                 log.info("some files in tar archive '{}' have not yet been archived to tape", tarId);
-                transferItemService.updateCheckingProgressResults(tarId, TransferItem.TransferStatus.OCFLTARCREATED);
+                transferItemService.resetTarToArchiving(tar);
             }
         }
         catch (IOException | InterruptedException e) {
             log.error("an error occurred while checking archiving status", e);
 
             // in case it fails to check, still set the transfer status to OCFLTARCREATED and reset the checking flag
-            transferItemService.updateCheckingProgressResults(tarId, TransferItem.TransferStatus.OCFLTARCREATED);
+            transferItemService.resetTarToArchiving(tar);
         }
     }
 
@@ -95,9 +97,8 @@ public class ConfirmArchivedTask implements Runnable {
     @Override
     public String toString() {
         return "ConfirmArchiveTask{" +
-            "tarId='" + tarId + '\'' +
+            "tarId='" + tar.getTarUuid() + '\'' +
             ", workingDir='" + workingDir + '\'' +
-            ", dataArchiveRoot='" + dataArchiveRoot + '\'' +
             '}';
     }
 }

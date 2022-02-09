@@ -25,6 +25,7 @@ public class FileContentAttributes {
     private String otherId;
     private String otherIdVersion;
     private String swordToken;
+    private String bagChecksum;
 
     public String getOtherId() {
         return otherId;
@@ -99,6 +100,15 @@ public class FileContentAttributes {
             ", otherId='" + otherId + '\'' +
             ", otherIdVersion='" + otherIdVersion + '\'' +
             ", swordToken='" + swordToken + '\'' +
+            ", bagChecksum='" + bagChecksum + '\'' +
             '}';
+    }
+
+    public String getBagChecksum() {
+        return bagChecksum;
+    }
+
+    public void setBagChecksum(String bagChecksum) {
+        this.bagChecksum = bagChecksum;
     }
 }

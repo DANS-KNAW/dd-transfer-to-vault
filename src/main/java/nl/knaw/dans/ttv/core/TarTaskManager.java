@@ -17,13 +17,13 @@ package nl.knaw.dans.ttv.core;
 
 import edu.wisc.library.ocfl.api.OcflRepository;
 import io.dropwizard.lifecycle.Managed;
+import nl.knaw.dans.ttv.core.service.ArchiveMetadataService;
 import nl.knaw.dans.ttv.core.service.FileService;
 import nl.knaw.dans.ttv.core.service.InboxWatcher;
 import nl.knaw.dans.ttv.core.service.InboxWatcherFactory;
 import nl.knaw.dans.ttv.core.service.OcflRepositoryService;
 import nl.knaw.dans.ttv.core.service.TarCommandRunner;
 import nl.knaw.dans.ttv.core.service.TransferItemService;
-import nl.knaw.dans.ttv.db.TransferItem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,30 +40,30 @@ public class TarTaskManager implements Managed {
     private final Path inboxPath;
     private final Path workDir;
     private final long inboxThreshold;
-    private final String tarCommand;
-    private final String dataArchiveRoot;
     private final InboxWatcherFactory inboxWatcherFactory;
     private final FileService fileService;
     private final OcflRepositoryService ocflRepositoryService;
     private final TransferItemService transferItemService;
     private final TarCommandRunner tarCommandRunner;
     private final long pollingInterval;
+    private final ArchiveMetadataService archiveMetadataService;
     private InboxWatcher inboxWatcher;
 
-    public TarTaskManager(Path inboxPath, Path workDir, long inboxThreshold, String tarCommand, String dataArchiveRoot, long pollingInterval, ExecutorService executorService, InboxWatcherFactory inboxWatcherFactory,
-        FileService fileService, OcflRepositoryService ocflRepositoryService, TransferItemService transferItemService, TarCommandRunner tarCommandRunner) {
+    public TarTaskManager(Path inboxPath, Path workDir, long inboxThreshold, long pollingInterval, ExecutorService executorService,
+        InboxWatcherFactory inboxWatcherFactory,
+        FileService fileService, OcflRepositoryService ocflRepositoryService, TransferItemService transferItemService, TarCommandRunner tarCommandRunner,
+        ArchiveMetadataService archiveMetadataService) {
         this.executorService = executorService;
         this.inboxPath = inboxPath;
         this.workDir = workDir;
         this.inboxThreshold = inboxThreshold;
-        this.tarCommand = tarCommand;
-        this.dataArchiveRoot = dataArchiveRoot;
         this.inboxWatcherFactory = inboxWatcherFactory;
         this.fileService = fileService;
         this.ocflRepositoryService = ocflRepositoryService;
         this.transferItemService = transferItemService;
         this.tarCommandRunner = tarCommandRunner;
         this.pollingInterval = pollingInterval;
+        this.archiveMetadataService = archiveMetadataService;
     }
 
     @Override
@@ -80,16 +80,16 @@ public class TarTaskManager implements Managed {
     }
 
     public void onNewItemInInbox(File file) {
-        log.info("new item in inbox, filename is {}", file);
-        log.info("checking total size of inbox located at {}", inboxPath);
+        log.info("New item in inbox, filename is {}", file);
+        log.info("Checking total size of inbox located at {}", inboxPath);
 
         try {
             var totalSize = fileService.getPathSize(inboxPath);
             var uuid = UUID.randomUUID();
-            log.debug("total size of inbox is {}, threshold is {}", totalSize, inboxThreshold);
+            log.debug("Total size of inbox is {}, threshold is {}", totalSize, inboxThreshold);
 
             if (totalSize >= inboxThreshold) {
-                log.trace("threshold reached, creating OCFL repo");
+                log.info("Threshold reached, creating OCFL repo; size of inbox is {} bytes, threshold is {} bytes", totalSize, inboxThreshold);
                 var ocflRepo = createOcflRepo(uuid);
                 moveAllInboxFilesToOcflRepo(ocflRepo, uuid);
                 startTarringTask(uuid);
@@ -102,25 +102,23 @@ public class TarTaskManager implements Managed {
 
     private void startTarringTask(UUID uuid) {
         var repoPath = Path.of(workDir.toString(), uuid.toString());
-        var task = new TarTask(transferItemService, uuid, repoPath, dataArchiveRoot, tarCommand, tarCommandRunner);
+        var task = new TarTask(transferItemService, uuid, repoPath, tarCommandRunner, archiveMetadataService);
 
         executorService.execute(task);
     }
 
     public void moveAllInboxFilesToOcflRepo(OcflRepository ocflRepository, UUID uuid) throws IOException {
-        // find all transfer items that we can deal with
-        var transferItems = transferItemService.findByStatus(TransferItem.TransferStatus.COLLECTED);
+        // create a tar record with all COLLECTED TransferItem's in it
+        var tarArchive = transferItemService.createTarArchiveWithAllCollectedTransferItems(uuid);
 
-        for (var transferItem : transferItems) {
+        // import them into the OCFL repo
+        for (var transferItem : tarArchive.getTransferItems()) {
             var objectId = ocflRepositoryService.importTransferItem(ocflRepository, transferItem);
-
-            transferItem.setTransferStatus(TransferItem.TransferStatus.TARRING);
             transferItem.setAipTarEntryName(objectId);
-            transferItem.setAipsTar(uuid.toString());
         }
 
         // persist items
-        transferItemService.saveAll(transferItems);
+        transferItemService.save(tarArchive);
 
         // close repository
         ocflRepositoryService.closeOcflRepository(ocflRepository);

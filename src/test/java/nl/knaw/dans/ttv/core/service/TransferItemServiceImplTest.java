@@ -16,9 +16,12 @@
 package nl.knaw.dans.ttv.core.service;
 
 import nl.knaw.dans.ttv.core.InvalidTransferItemException;
+import nl.knaw.dans.ttv.core.dto.ArchiveMetadata;
 import nl.knaw.dans.ttv.core.dto.FileContentAttributes;
 import nl.knaw.dans.ttv.core.dto.FilenameAttributes;
 import nl.knaw.dans.ttv.core.dto.FilesystemAttributes;
+import nl.knaw.dans.ttv.db.Tar;
+import nl.knaw.dans.ttv.db.TarDAO;
 import nl.knaw.dans.ttv.db.TransferItem;
 import nl.knaw.dans.ttv.db.TransferItemDAO;
 import org.junit.jupiter.api.Assertions;
@@ -30,23 +33,26 @@ import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 class TransferItemServiceImplTest {
 
     TransferItemDAO transferItemDao;
+    TarDAO tarDAO;
     FilenameAttributes filenameAttributes;
     FilesystemAttributes filesystemAttributes;
     FileContentAttributes fileContentAttributes;
+    TransferItemService transferItemService;
 
     @BeforeEach
     void setUp() {
         transferItemDao = Mockito.mock(TransferItemDAO.class);
+        tarDAO = Mockito.mock(TarDAO.class);
 
         filenameAttributes = new FilenameAttributes();
         filenameAttributes.setDveFilePath("some/file.zip");
@@ -56,7 +62,6 @@ class TransferItemServiceImplTest {
 
         filesystemAttributes = new FilesystemAttributes();
         filesystemAttributes.setCreationTime(LocalDateTime.now());
-        filesystemAttributes.setBagChecksum("check");
         filesystemAttributes.setBagSize(1234L);
 
         fileContentAttributes = new FileContentAttributes();
@@ -65,6 +70,7 @@ class TransferItemServiceImplTest {
         fileContentAttributes.setOaiOre(new byte[] { 1, 2 });
         fileContentAttributes.setPidMapping(new byte[] { 3, 4 });
         fileContentAttributes.setDatasetVersion("dv version");
+        fileContentAttributes.setBagChecksum("check");
     }
 
     /**
@@ -73,12 +79,12 @@ class TransferItemServiceImplTest {
     @Test
     void createTransferItem() {
 
-        var transferItemService = new TransferItemServiceImpl(transferItemDao);
+        var transferItemService = new TransferItemServiceImpl(transferItemDao, tarDAO);
 
         try {
             var transferItem = transferItemService.createTransferItem("datastation name", filenameAttributes, filesystemAttributes, fileContentAttributes);
 
-            Assertions.assertEquals(TransferItem.TransferStatus.COLLECTED, transferItem.getTransferStatus());
+            Assertions.assertEquals(TransferItem.TransferStatus.CREATED, transferItem.getTransferStatus());
             assertNotNull(transferItem.getQueueDate());
             assertEquals("datastation name", transferItem.getDatasetDvInstance());
 
@@ -103,15 +109,58 @@ class TransferItemServiceImplTest {
         }
     }
 
+    /**
+     * test that all properties are set correctly
+     */
+    @Test
+    void createTransferItemPartial() {
+
+        var transferItemService = new TransferItemServiceImpl(transferItemDao, tarDAO);
+
+        try {
+            var transferItem = transferItemService.createTransferItem("datastation name", filenameAttributes, filesystemAttributes);
+
+            Assertions.assertEquals(TransferItem.TransferStatus.CREATED, transferItem.getTransferStatus());
+            assertNotNull(transferItem.getQueueDate());
+            assertEquals("datastation name", transferItem.getDatasetDvInstance());
+            assertEquals(filesystemAttributes.getCreationTime(), transferItem.getCreationTime());
+            assertEquals(null, transferItem.getBagChecksum());
+            assertEquals(1234L, transferItem.getBagSize());
+
+            assertEquals(null, transferItem.getDatasetVersion());
+            assertEquals(null, transferItem.getBagId());
+            assertEquals(null, transferItem.getNbn());
+            assertEquals(null, transferItem.getOaiOre());
+            assertEquals(null, transferItem.getPidMapping());
+
+            Mockito.verify(transferItemDao).save(transferItem);
+        }
+        catch (InvalidTransferItemException e) {
+            fail(e);
+        }
+    }
+
     @Test
     void createDuplicateTransferItem() {
         Mockito.when(transferItemDao.findByDatasetPidAndVersion("pid", 5, 3))
             .thenReturn(Optional.of(new TransferItem()));
 
-        var transferItemService = new TransferItemServiceImpl(transferItemDao);
+        var transferItemService = new TransferItemServiceImpl(transferItemDao, tarDAO);
 
         assertThrows(InvalidTransferItemException.class, () -> {
             transferItemService.createTransferItem("datastation name", filenameAttributes, filesystemAttributes, fileContentAttributes);
+        });
+    }
+
+    @Test
+    void createDuplicateTransferItemPartial() {
+        Mockito.when(transferItemDao.findByDatasetPidAndVersion("pid", 5, 3))
+            .thenReturn(Optional.of(new TransferItem()));
+
+        var transferItemService = new TransferItemServiceImpl(transferItemDao, tarDAO);
+
+        assertThrows(InvalidTransferItemException.class, () -> {
+            transferItemService.createTransferItem("datastation name", filenameAttributes, filesystemAttributes);
         });
     }
 
@@ -120,7 +169,7 @@ class TransferItemServiceImplTest {
         var newPath = Path.of("new/path.zip");
         var newStatus = TransferItem.TransferStatus.COLLECTED;
         var transferItem = new TransferItem();
-        var transferItemService = new TransferItemServiceImpl(transferItemDao);
+        var transferItemService = new TransferItemServiceImpl(transferItemDao, tarDAO);
 
         transferItem = transferItemService.moveTransferItem(transferItem, newStatus, newPath);
 
@@ -129,52 +178,39 @@ class TransferItemServiceImplTest {
     }
 
     @Test
-    void findByStatus() {
-        var transferItemService = new TransferItemServiceImpl(transferItemDao);
-        transferItemService.findByStatus(TransferItem.TransferStatus.TARRING);
-
-        Mockito.verify(transferItemDao).findByStatus(TransferItem.TransferStatus.TARRING);
-    }
-
-    @Test
-    void findByNullStatus() {
-        var transferItemService = new TransferItemServiceImpl(transferItemDao);
-        assertThrows(NullPointerException.class, () -> transferItemService.findByStatus(null));
-    }
-
-    @Test
-    void findByTarId() {
-        var transferItemService = new TransferItemServiceImpl(transferItemDao);
-        transferItemService.findByTarId("some_id");
-
-        Mockito.verify(transferItemDao).findAllByTarId("some_id");
-    }
-
-    @Test
-    void findByNullTarId() {
-        var transferItemService = new TransferItemServiceImpl(transferItemDao);
-        assertThrows(NullPointerException.class, () -> transferItemService.findByTarId(null));
-    }
-
-    @Test
     void saveAll() {
-        var transferItemService = new TransferItemServiceImpl(transferItemDao);
+        var transferItemService = new TransferItemServiceImpl(transferItemDao, tarDAO);
         var items = List.of(
             new TransferItem("pid", 1, 0, "path", LocalDateTime.now(), TransferItem.TransferStatus.TARRING),
             new TransferItem("pid2", 1, 0, "path", LocalDateTime.now(), TransferItem.TransferStatus.TARRING)
         );
-        transferItemService.saveAll(items);
+        transferItemService.saveAllTransferItems(items);
 
         Mockito.verify(transferItemDao, Mockito.times(1)).merge(items.get(0));
         Mockito.verify(transferItemDao, Mockito.times(1)).merge(items.get(1));
     }
 
     @Test
-    void updateToCreatedForTarId() {
-        var transferItemService = new TransferItemServiceImpl(transferItemDao);
-        transferItemService.updateToCreatedForTarId("some_id");
+    void updateTarToCreated() {
+        var transferItemService = new TransferItemServiceImpl(transferItemDao, tarDAO);
+        var metadata = new ArchiveMetadata();
+        metadata.setParts(List.of(new ArchiveMetadata.ArchiveMetadataPart("ident", "md5", "check")));
+        var tar = new Tar();
+        var transferItem = new TransferItem();
 
-        Mockito.verify(transferItemDao, Mockito.times(1)).updateStatusByTar("some_id", TransferItem.TransferStatus.OCFLTARCREATED);
+        tar.setTransferItems(List.of(transferItem));
+
+        Mockito.when(tarDAO.findById(Mockito.any()))
+            .thenReturn(Optional.of(tar));
+
+        transferItemService.updateTarToCreated("some_id", metadata);
+
+        assertEquals(Tar.TarStatus.OCFLTARCREATED, tar.getTarStatus());
+        // TODO determine the correct status
+        assertEquals(TransferItem.TransferStatus.OCFLTARCREATED, transferItem.getTransferStatus());
+        assertEquals("ident", tar.getTarParts().get(0).getPartName());
+        assertEquals("md5", tar.getTarParts().get(0).getChecksumAlgorithm());
+        assertEquals("check", tar.getTarParts().get(0).getChecksumValue());
     }
 
     @Test
@@ -184,31 +220,33 @@ class TransferItemServiceImplTest {
             new TransferItem("pid2", 1, 0, "path", LocalDateTime.now(), TransferItem.TransferStatus.TARRING),
             new TransferItem("pid3", 1, 0, "path", LocalDateTime.now(), TransferItem.TransferStatus.TARRING)
         );
-        items.get(0).setAipsTar("tar1");
-        items.get(0).setConfirmCheckInProgress(false);
-        items.get(1).setAipsTar("tar2");
-        items.get(1).setConfirmCheckInProgress(false);
-        items.get(2).setAipsTar("tar2");
-        items.get(2).setConfirmCheckInProgress(false);
 
-        Mockito.when(transferItemDao.findAllTarsToBeConfirmed())
-            .thenReturn(items);
+        var tar1 = new Tar(UUID.randomUUID().toString());
+        var tar2 = new Tar(UUID.randomUUID().toString());
 
-        var transferItemService = new TransferItemServiceImpl(transferItemDao);
+        items.get(0).setAipsTar(tar1);
+        items.get(1).setAipsTar(tar2);
+        items.get(2).setAipsTar(tar2);
+
+        Mockito.when(tarDAO.findAllTarsToBeConfirmed())
+            .thenReturn(List.of(tar1, tar2));
+
+        var transferItemService = new TransferItemServiceImpl(transferItemDao, tarDAO);
         var result = transferItemService.stageAllTarsToBeConfirmed();
 
-        assertEquals(List.of("tar1", "tar2"), result);
-        assertTrue(items.get(0).isConfirmCheckInProgress());
-        assertTrue(items.get(1).isConfirmCheckInProgress());
-        assertTrue(items.get(2).isConfirmCheckInProgress());
+        assertEquals(List.of(tar1, tar2), result);
     }
 
     @Test
     void updateCheckingProgressResults() {
-        var transferItemService = new TransferItemServiceImpl(transferItemDao);
-        transferItemService.updateCheckingProgressResults("some_id", TransferItem.TransferStatus.OCFLTARCREATED);
+        var transferItemService = new TransferItemServiceImpl(transferItemDao, tarDAO);
+        var tar = new Tar(UUID.randomUUID().toString());
+        tar.setTransferItems(List.of());
+        transferItemService.updateConfirmArchivedResult(tar, Tar.TarStatus.OCFLTARCREATED);
 
-        Mockito.verify(transferItemDao, Mockito.times(1))
-            .updateCheckingProgressResults("some_id", TransferItem.TransferStatus.OCFLTARCREATED);
+        Mockito.verify(tarDAO, Mockito.times(1)).save(tar);
+
+        //        Mockito.verify(transferItemDao, Mockito.times(1))
+        //            .updateCheckingProgressResults("some_id", TransferItem.TransferStatus.OCFLTARCREATED);
     }
 }

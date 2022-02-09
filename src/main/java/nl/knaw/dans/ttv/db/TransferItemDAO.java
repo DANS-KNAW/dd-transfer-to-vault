@@ -91,17 +91,17 @@ public class TransferItemDAO extends AbstractDAO<TransferItem> {
 
         return query.getResultStream().findFirst();
     }
-
-    public List<TransferItem> findAllTarsToBeConfirmed() {
-        var query = currentSession().createQuery(
-            "from TransferItem "
-                + "where transferStatus = :status "
-                + "and confirmCheckInProgress = false ", TransferItem.class);
-
-        query.setParameter("status", TransferItem.TransferStatus.OCFLTARCREATED);
-
-        return query.list();
-    }
+//
+//    public List<TransferItem> findAllTarsToBeConfirmed() {
+//        var query = currentSession().createQuery(
+//            "from TransferItem "
+//                + "where transferStatus = :status "
+//                + "and confirmCheckInProgress = false ", TransferItem.class);
+//
+//        query.setParameter("status", TransferItem.TransferStatus.OCFLTARCREATED);
+//
+//        return query.list();
+//    }
 
     public void updateCheckingProgressResults(String id, TransferItem.TransferStatus status) {
         var query = currentSession().createQuery(

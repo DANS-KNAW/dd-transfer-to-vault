@@ -15,16 +15,11 @@
  */
 package nl.knaw.dans.ttv.core.service;
 
-import nl.knaw.dans.ttv.core.dto.ProcessResult;
+import nl.knaw.dans.ttv.core.dto.ArchiveMetadata;
 
 import java.io.IOException;
-import java.nio.file.Path;
 
-public interface TarCommandRunner {
+public interface ArchiveMetadataService {
 
-    ProcessResult tarDirectory(Path path, String target) throws IOException, InterruptedException;
-
-    ProcessResult verifyPackage(String targetPackage) throws IOException, InterruptedException;
-
-    ProcessResult getAllChecksums(String targetPackage) throws IOException, InterruptedException;
+    ArchiveMetadata getArchiveMetadata(String id) throws IOException, InterruptedException;
 }

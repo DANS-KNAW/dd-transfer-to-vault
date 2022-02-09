@@ -21,15 +21,18 @@ import java.util.Map;
 public interface ArchiveStatusService {
 
     /**
-     * File status based on the surfsara docs
-     * A file is stored on tape if the state is either DUAL or OFFLINE
+     * Returns a map of paths with their corresponding file status
      *
-     *     REG: Regular files are user files residing only on disk
-     *     MIG: Migrating files are files which are being copied from disk to tape
-     *     UNM: Unmigrating files are files which are being copied from tape to disk
-     *     Migrated files can be either of the following:
-     *         DUL: Dual-state files whose data resides both online and offline
-     *         OFL: Offline files whose data is no longer on disk
+     * @param id
+     * @return
+     */
+    Map<String, FileStatus> getFileStatus(String id) throws IOException, InterruptedException;
+
+    /**
+     * File status based on the surfsara docs A file is stored on tape if the state is either DUAL or OFFLINE
+     *
+     * REG: Regular files are user files residing only on disk MIG: Migrating files are files which are being copied from disk to tape UNM: Unmigrating files are files which are being copied from tape
+     * to disk Migrated files can be either of the following: DUL: Dual-state files whose data resides both online and offline OFL: Offline files whose data is no longer on disk
      */
     enum FileStatus {
         REGULAR("REG"),
@@ -51,7 +54,7 @@ public interface ArchiveStatusService {
         }
 
         public static FileStatus fromString(String code) {
-            for (var value: FileStatus.values()) {
+            for (var value : FileStatus.values()) {
                 if (value.value.equals(code)) {
                     return value;
                 }
@@ -61,10 +64,4 @@ public interface ArchiveStatusService {
         }
     }
 
-    /**
-     * Returns a map of paths with their corresponding file status
-     * @param id
-     * @return
-     */
-    Map<String, FileStatus> getFileStatus(String id) throws IOException, InterruptedException;
 }

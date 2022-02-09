@@ -19,7 +19,6 @@ import java.time.LocalDateTime;
 
 public class FilesystemAttributes {
     private LocalDateTime creationTime;
-    private String bagChecksum;
     private long bagSize;
 
     public LocalDateTime getCreationTime() {
@@ -28,14 +27,6 @@ public class FilesystemAttributes {
 
     public void setCreationTime(LocalDateTime creationTime) {
         this.creationTime = creationTime;
-    }
-
-    public String getBagChecksum() {
-        return bagChecksum;
-    }
-
-    public void setBagChecksum(String bagChecksum) {
-        this.bagChecksum = bagChecksum;
     }
 
     public long getBagSize() {
@@ -50,7 +41,6 @@ public class FilesystemAttributes {
     public String toString() {
         return "FilesystemAttributes{" +
             "creationTime=" + creationTime +
-            ", bagChecksum='" + bagChecksum + '\'' +
             ", bagSize=" + bagSize +
             '}';
     }

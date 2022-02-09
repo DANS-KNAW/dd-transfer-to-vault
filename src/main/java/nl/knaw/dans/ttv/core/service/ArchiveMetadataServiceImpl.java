@@ -16,59 +16,31 @@
 package nl.knaw.dans.ttv.core.service;
 
 import nl.knaw.dans.ttv.core.config.DataArchiveConfiguration;
-import nl.knaw.dans.ttv.core.dto.ProcessResult;
+import nl.knaw.dans.ttv.core.dto.ArchiveMetadata;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Objects;
+import java.util.regex.Pattern;
 
-public class TarCommandRunnerImpl implements TarCommandRunner {
+public class ArchiveMetadataServiceImpl implements ArchiveMetadataService {
+    private static final Logger log = LoggerFactory.getLogger(ArchiveMetadataServiceImpl.class);
+
     private final ProcessRunner processRunner;
     private final DataArchiveConfiguration dataArchiveConfiguration;
+    private final Pattern linePattern = Pattern.compile(
+        "^.*\\.dmftar/(?<part>\\d+)/.*::: (?<algorithm>[a-zA-Z0-9_]+) (?<checksum>[^ ]+).*");
 
-    public TarCommandRunnerImpl(DataArchiveConfiguration dataArchiveConfiguration, ProcessRunner processRunner) {
+
+    public ArchiveMetadataServiceImpl(DataArchiveConfiguration dataArchiveConfiguration, ProcessRunner processRunner) {
         this.processRunner = processRunner;
         this.dataArchiveConfiguration = dataArchiveConfiguration;
     }
 
     @Override
-    public ProcessResult tarDirectory(Path path, String target) throws IOException, InterruptedException {
-        Objects.requireNonNull(path, "path cannot be null");
-        Objects.requireNonNull(target, "target cannot be null");
-
-        var remotePath = Path.of(dataArchiveConfiguration.getPath(), target);
-        var command = new String[] {
-            "dmftar",
-            "-c",
-            "-f",
-            String.format("%s:%s", getSshHost(), remotePath),
-            path.toString()
-        };
-
-        return processRunner.run(command);
-    }
-
-    @Override
-    public ProcessResult verifyPackage(String path) throws IOException, InterruptedException {
-        Objects.requireNonNull(path, "path cannot be null");
-
-        var remotePath = Path.of(dataArchiveConfiguration.getPath(), path);
-        var command = new String[] {
-            "ssh",
-            getSshHost(),
-            "dmftar",
-            "--verify",
-            "-f",
-            remotePath.toString()
-        };
-
-        return processRunner.run(command);
-    }
-
-    @Override
-    public ProcessResult getAllChecksums(String path) throws IOException, InterruptedException {
-        Objects.requireNonNull(path, "path cannot be null");
-
+    public ArchiveMetadata getArchiveMetadata(String id) throws IOException, InterruptedException {
+        var path = id + ".dmftar";
         var remotePath = Path.of(dataArchiveConfiguration.getPath(), path);
         var command = new String[] {
             "ssh",
@@ -87,7 +59,31 @@ public class TarCommandRunnerImpl implements TarCommandRunner {
             "'echo % ::: $(cat %)'"
         };
 
-        return processRunner.run(command);
+        var output = processRunner.run(command);
+
+        if (output.getStatusCode() != 0) {
+            throw new IOException(String.format(
+                "Unable to get checksum list because process returned status code %s with message: %s",
+                output.getStatusCode(), output.getStdout()));
+        }
+
+        var lines = output.getStdout().trim().split("\n");
+        var result = new ArchiveMetadata();
+
+        for (var line: lines) {
+            var matcher = linePattern.matcher(line);
+
+            if (matcher.matches()) {
+                var part = new ArchiveMetadata.ArchiveMetadataPart();
+                part.setChecksum(matcher.group("checksum"));
+                part.setChecksumAlgorithm(matcher.group("algorithm"));
+                part.setIdentifier(matcher.group("part"));
+
+                result.getParts().add(part);
+            }
+        }
+
+        return result;
     }
 
     private String getSshHost() {

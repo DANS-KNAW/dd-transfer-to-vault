@@ -18,16 +18,14 @@ package nl.knaw.dans.ttv.core.dto;
 public class ProcessResult {
     private int statusCode;
     private String stdout;
-    private String stderr;
 
     public ProcessResult() {
 
     }
 
-    public ProcessResult(int statusCode, String stdout, String stderr) {
+    public ProcessResult(int statusCode, String stdout) {
         this.statusCode = statusCode;
         this.stdout = stdout;
-        this.stderr = stderr;
     }
 
     public int getStatusCode() {
@@ -44,14 +42,6 @@ public class ProcessResult {
 
     public void setStdout(String stdout) {
         this.stdout = stdout;
-    }
-
-    public String getStderr() {
-        return stderr;
-    }
-
-    public void setStderr(String stderr) {
-        this.stderr = stderr;
     }
 
 }

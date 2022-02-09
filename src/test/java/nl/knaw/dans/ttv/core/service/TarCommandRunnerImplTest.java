@@ -15,10 +15,12 @@
  */
 package nl.knaw.dans.ttv.core.service;
 
+import nl.knaw.dans.ttv.core.config.DataArchiveConfiguration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
+import javax.xml.crypto.Data;
 import java.io.IOException;
 import java.nio.file.Path;
 
@@ -27,6 +29,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class TarCommandRunnerImplTest {
 
     private ProcessRunner processRunner;
+    private DataArchiveConfiguration dataArchiveConfiguration = new DataArchiveConfiguration("username", "hostname", "path");
 
     @BeforeEach
     void setUp() {
@@ -35,15 +38,15 @@ class TarCommandRunnerImplTest {
 
     @Test
     void tarDirectory() {
-        var runner = new TarCommandRunnerImpl(processRunner);
+        var runner = new TarCommandRunnerImpl(dataArchiveConfiguration, processRunner);
 
         try {
-            runner.tarDirectory(Path.of("some/path/1"), "user@account.com:path/1");
+            runner.tarDirectory(Path.of("some/path/1"), "abc.dmftar");
             Mockito.verify(processRunner).run(new String[] {
                 "dmftar",
                 "-c",
                 "-f",
-                "user@account.com:path/1",
+                "username@hostname:path/abc.dmftar",
                 "some/path/1"
             });
         }
@@ -54,7 +57,7 @@ class TarCommandRunnerImplTest {
 
     @Test
     void tarDirectoryWithNullArguments() {
-        var runner = new TarCommandRunnerImpl(processRunner);
+        var runner = new TarCommandRunnerImpl(dataArchiveConfiguration, processRunner);
 
         assertThrows(NullPointerException.class, () -> {
             runner.tarDirectory(null, "user@account.com:path/1");

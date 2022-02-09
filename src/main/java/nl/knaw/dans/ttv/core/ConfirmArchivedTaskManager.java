@@ -41,17 +41,15 @@ public class ConfirmArchivedTaskManager implements Managed {
     private final String schedule;
 
     private final Path workingDir;
-    private final String dataArchiveRoot;
     private final ExecutorService executorService;
     private final TransferItemService transferItemService;
     private final ArchiveStatusService archiveStatusService;
     private final OcflRepositoryService ocflRepositoryService;
 
-    public ConfirmArchivedTaskManager(String schedule, Path workingDir, String dataArchiveRoot,
+    public ConfirmArchivedTaskManager(String schedule, Path workingDir,
         ExecutorService executorService, TransferItemService transferItemService, ArchiveStatusService archiveStatusService, OcflRepositoryService ocflRepositoryService) {
 
         this.workingDir = workingDir;
-        this.dataArchiveRoot = dataArchiveRoot;
         this.executorService = executorService;
         this.schedule = schedule;
         this.transferItemService = transferItemService;
@@ -70,7 +68,6 @@ public class ConfirmArchivedTaskManager implements Managed {
 
         jobData.put("transferItemService", transferItemService);
         jobData.put("workingDir", workingDir);
-        jobData.put("dataArchiveRoot", dataArchiveRoot);
         jobData.put("executorService", executorService);
         jobData.put("archiveStatusService", archiveStatusService);
         jobData.put("ocflRepositoryService", ocflRepositoryService);
