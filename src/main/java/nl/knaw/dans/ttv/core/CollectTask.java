@@ -47,22 +47,17 @@ public class CollectTask implements Runnable {
     @Override
     public void run() {
         try {
-            awaitValidZipFile(this.filePath);
             processFile(this.filePath);
         }
         catch (IOException | InvalidTransferItemException e) {
-            log.error("unable to create TransferItem for path '{}'", this.filePath, e);
+            log.error("Unable to create TransferItem for path '{}'", this.filePath, e);
 
             try {
                 moveFileToErrorBox(this.filePath, e);
             }
             catch (IOException error) {
-                log.error("tried to move file to deadletter box, but failed", error);
+                log.error("Tried to move file to dead-letter box, but failed", error);
             }
-        }
-        catch (InterruptedException e) {
-            // in this case
-            log.error("interrupted while creating TransferItem for path '{}'", this.filePath, e);
         }
         finally {
             cleanUpXmlFile(this.filePath);
@@ -79,29 +74,9 @@ public class CollectTask implements Runnable {
         moveFileToOutbox(transferItem, path, this.outbox);
     }
 
-    // This method should be considered a temporary method of detecting if Dataverse
-    // is done writing the zip file. When Dataverse can provide some form of
-    // locking, that should be used instead.
-    public void awaitValidZipFile(Path path) throws InterruptedException {
-        log.info("verifying if zip file is complete on path '{}'", path);
-
-        while (true) {
-            try {
-                var file = fileService.openZipFile(path);
-                log.debug("file '{}' was opened correctly, returning", file);
-                break;
-            }
-            catch (IOException e) {
-                log.debug("file is not a valid zipfile, waiting");
-            }
-
-            Thread.sleep(3000);
-        }
-    }
-
     public TransferItem createOrGetTransferItem(Path path) throws InvalidTransferItemException {
         var filenameAttributes = metadataReader.getFilenameAttributes(path);
-        log.trace("received filename attributes: {}", filenameAttributes);
+        log.trace("Received filename attributes: {}", filenameAttributes);
 
         var transferItem = transferItemService.getTransferItemByFilenameAttributes(filenameAttributes);
         log.trace("TransferItem from database: {}", transferItem);
@@ -110,7 +85,7 @@ public class CollectTask implements Runnable {
             return transferItem.get();
         }
 
-        log.debug("no existing TransferItem found, creating new one with attributes {}", filenameAttributes);
+        log.debug("No existing TransferItem found, creating new one with attributes {}", filenameAttributes);
         return transferItemService.createTransferItem(datastationName, filenameAttributes);
     }
 
@@ -118,10 +93,10 @@ public class CollectTask implements Runnable {
         log.trace("filePath is '{}', outboxPath is '{}'", filePath, outboxPath);
         var newPath = outboxPath.resolve(filePath.getFileName());
 
-        log.trace("updating database state for item {} with new path '{}'", transferItem, newPath);
+        log.trace("Updating database state for item {} with new path '{}'", transferItem, newPath);
         transferItemService.moveTransferItem(transferItem, TransferItem.TransferStatus.CREATED, newPath);
 
-        log.info("moving file '{}' to location '{}'", filePath, newPath);
+        log.info("Moving file '{}' to location '{}'", filePath, newPath);
         fileService.moveFileAtomically(filePath, newPath);
     }
 
@@ -135,7 +110,7 @@ public class CollectTask implements Runnable {
                 fileService.deleteFile(p);
             }
             catch (IOException e) {
-                log.error("unable to delete XML file associated with file '{}' (filename: '{}')", path, p, e);
+                log.error("Unable to delete XML file associated with file '{}' (filename: '{}')", path, p, e);
             }
         });
     }
