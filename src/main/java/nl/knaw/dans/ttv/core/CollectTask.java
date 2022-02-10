@@ -35,8 +35,7 @@ public class CollectTask implements Runnable {
     private final TransferItemMetadataReader metadataReader;
     private final FileService fileService;
 
-    public CollectTask(Path filePath, Path outbox, String datastationName, TransferItemService transferItemService,
-        TransferItemMetadataReader metadataReader, FileService fileService) {
+    public CollectTask(Path filePath, Path outbox, String datastationName, TransferItemService transferItemService, TransferItemMetadataReader metadataReader, FileService fileService) {
         this.filePath = filePath;
         this.outbox = outbox;
         this.datastationName = datastationName;
@@ -51,8 +50,17 @@ public class CollectTask implements Runnable {
             processFile(this.filePath);
         }
         catch (IOException | InvalidTransferItemException e) {
-            log.error("unable to create TransferItem for path '{}'", this.filePath, e);
-            // TODO move to deadletter box
+            log.error("Unable to create TransferItem for path '{}'", this.filePath, e);
+
+            try {
+                moveFileToErrorBox(this.filePath, e);
+            }
+            catch (IOException error) {
+                log.error("Tried to move file to dead-letter box, but failed", error);
+            }
+        }
+        finally {
+            cleanUpXmlFile(this.filePath);
         }
     }
 
@@ -60,17 +68,15 @@ public class CollectTask implements Runnable {
         var transferItem = createOrGetTransferItem(path);
 
         if (transferItem.getTransferStatus() != TransferItem.TransferStatus.CREATED) {
-            throw new InvalidTransferItemException(
-                String.format("TransferItem exists already, but does not have expected status of CREATED: %s", transferItem));
+            throw new InvalidTransferItemException(String.format("TransferItem exists already, but does not have expected status of CREATED: %s", transferItem));
         }
 
         moveFileToOutbox(transferItem, path, this.outbox);
-        cleanUpXmlFile(this.filePath);
     }
 
     public TransferItem createOrGetTransferItem(Path path) throws InvalidTransferItemException {
         var filenameAttributes = metadataReader.getFilenameAttributes(path);
-        log.trace("received filename attributes: {}", filenameAttributes);
+        log.trace("Received filename attributes: {}", filenameAttributes);
 
         var transferItem = transferItemService.getTransferItemByFilenameAttributes(filenameAttributes);
         log.trace("TransferItem from database: {}", transferItem);
@@ -81,7 +87,7 @@ public class CollectTask implements Runnable {
 
         var filesystemAttributes = metadataReader.getFilesystemAttributes(path);
 
-        log.debug("no existing TransferItem found, creating new one with attributes {} and {}",
+        log.debug("No existing TransferItem found, creating new one with attributes {} and {}",
             filenameAttributes, filesystemAttributes);
 
         return transferItemService.createTransferItem(datastationName, filenameAttributes, filesystemAttributes);
@@ -91,22 +97,25 @@ public class CollectTask implements Runnable {
         log.trace("filePath is '{}', outboxPath is '{}'", filePath, outboxPath);
         var newPath = outboxPath.resolve(filePath.getFileName());
 
-        log.trace("updating database state for item {} with new path '{}'", transferItem, newPath);
+        log.trace("Updating database state for item {} with new path '{}'", transferItem, newPath);
         transferItemService.moveTransferItem(transferItem, TransferItem.TransferStatus.CREATED, newPath);
 
-        log.info("moving file '{}' to location '{}'", filePath, newPath);
+        log.info("Moving file '{}' to location '{}'", filePath, newPath);
         fileService.moveFileAtomically(filePath, newPath);
     }
 
+    void moveFileToErrorBox(Path path, Exception exception) throws IOException {
+        fileService.rejectFile(path, exception);
+    }
+
     public void cleanUpXmlFile(Path path) {
-        metadataReader.getAssociatedXmlFile(path)
-            .ifPresent(p -> {
-                try {
-                    fileService.deleteFile(p);
-                }
-                catch (IOException e) {
-                    log.error("unable to delete XML file associated with file '{}' (filename: '{}')", path, p, e);
-                }
-            });
+        metadataReader.getAssociatedXmlFile(path).ifPresent(p -> {
+            try {
+                fileService.deleteFile(p);
+            }
+            catch (IOException e) {
+                log.error("Unable to delete XML file associated with file '{}' (filename: '{}')", path, p, e);
+            }
+        });
     }
 }
