@@ -20,11 +20,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
-import javax.xml.crypto.Data;
 import java.io.IOException;
 import java.nio.file.Path;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class TarCommandRunnerImplTest {
 
@@ -37,22 +36,17 @@ class TarCommandRunnerImplTest {
     }
 
     @Test
-    void tarDirectory() {
+    void tarDirectory() throws IOException, InterruptedException {
         var runner = new TarCommandRunnerImpl(dataArchiveConfiguration, processRunner);
 
-        try {
-            runner.tarDirectory(Path.of("some/path/1"), "abc.dmftar");
-            Mockito.verify(processRunner).run(new String[] {
-                "dmftar",
-                "-c",
-                "-f",
-                "username@hostname:path/abc.dmftar",
-                "some/path/1"
-            });
-        }
-        catch (IOException | InterruptedException e) {
-            fail(e);
-        }
+        runner.tarDirectory(Path.of("some/path/1"), "abc.dmftar");
+        Mockito.verify(processRunner).run(new String[] {
+            "dmftar",
+            "-c",
+            "-f",
+            "username@hostname:path/abc.dmftar",
+            "some/path/1"
+        });
     }
 
     @Test
@@ -67,4 +61,21 @@ class TarCommandRunnerImplTest {
             runner.tarDirectory(Path.of("a"), null);
         });
     }
+
+    @Test
+    void verifyDirectory() throws IOException, InterruptedException {
+        var runner = new TarCommandRunnerImpl(dataArchiveConfiguration, processRunner);
+
+        runner.verifyPackage("abc.dmftar");
+        Mockito.verify(processRunner).run(new String[] {
+            "ssh",
+            "username@hostname",
+            "dmftar",
+            "--verify",
+            "-f",
+            "path/abc.dmftar"
+        });
+
+    }
+
 }

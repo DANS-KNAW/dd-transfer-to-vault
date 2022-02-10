@@ -65,31 +65,6 @@ public class TarCommandRunnerImpl implements TarCommandRunner {
         return processRunner.run(command);
     }
 
-    @Override
-    public ProcessResult getAllChecksums(String path) throws IOException, InterruptedException {
-        Objects.requireNonNull(path, "path cannot be null");
-
-        var remotePath = Path.of(dataArchiveConfiguration.getPath(), path);
-        var command = new String[] {
-            "ssh",
-            getSshHost(),
-            "find",
-            remotePath.toString(),
-            "-name",
-            "*.chksum",
-            "|",
-            "xargs",
-            "-l",
-            "-I",
-            "%",
-            "sh",
-            "-c",
-            "'echo % ::: $(cat %)'"
-        };
-
-        return processRunner.run(command);
-    }
-
     private String getSshHost() {
         return String.format("%s@%s", this.dataArchiveConfiguration.getUser(), this.dataArchiveConfiguration.getHost());
     }

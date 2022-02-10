@@ -38,8 +38,6 @@ public interface TransferItemService {
 
     TransferItem moveTransferItem(TransferItem transferItem, TransferItem.TransferStatus newStatus, Path newPath);
 
-    void saveAllTransferItems(List<TransferItem> transferItems);
-
     void saveAllTars(List<Tar> tars);
 
     void updateTarToCreated(String id, ArchiveMetadata metadata);

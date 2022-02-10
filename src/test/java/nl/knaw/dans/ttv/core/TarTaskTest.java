@@ -52,8 +52,6 @@ class TarTaskTest {
             var result = new ProcessResult(0, "OK");
             Mockito.when(tarCommandRunner.tarDirectory(Mockito.any(), Mockito.any()))
                 .thenReturn(result);
-            Mockito.when(tarCommandRunner.getAllChecksums(Mockito.any()))
-                .thenReturn(result);
             Mockito.when(tarCommandRunner.verifyPackage(Mockito.any()))
                 .thenReturn(result);
 
@@ -80,8 +78,6 @@ class TarTaskTest {
         try {
             var result = new ProcessResult(1, "NOT OK");
             Mockito.when(tarCommandRunner.tarDirectory(Mockito.any(), Mockito.any()))
-                .thenReturn(result);
-            Mockito.when(tarCommandRunner.getAllChecksums(Mockito.any()))
                 .thenReturn(result);
             Mockito.when(tarCommandRunner.verifyPackage(Mockito.any()))
                 .thenReturn(result);

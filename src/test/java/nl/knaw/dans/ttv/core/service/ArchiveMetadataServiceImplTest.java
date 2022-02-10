@@ -69,4 +69,17 @@ class ArchiveMetadataServiceImplTest {
         assertEquals("blake2", result.getParts().get(1).getChecksumAlgorithm());
         assertEquals("abc", result.getParts().get(1).getChecksum());
     }
+
+    @Test
+    void testCommandError() throws IOException, InterruptedException {
+        var output = "dans-vault/0f10d4c8-56a1-46bb-b081-caf34a8d8dc5.dmftar/0000/0f10d4c8-56a1-46bb-b081-caf34a8d8dc5.dmftar.tar.chksum ::: md5 89f2b08d1fd59c2e1e1aed58f7578fb8 0f10d4c8-56a1-46bb-b081-caf34a8d8dc5.dmftar.tar\n";
+        var service = new ArchiveMetadataServiceImpl(dataArchiveConfiguration, processRunner);
+
+        Mockito.when(processRunner.run((String[]) Mockito.any()))
+            .thenReturn(new ProcessResult(1, output));
+
+        assertThrows(IOException.class, () -> {
+            service.getArchiveMetadata("ff99d9fd-53ef-48f2-8672-a40a2c91f1c6");
+        });
+    }
 }

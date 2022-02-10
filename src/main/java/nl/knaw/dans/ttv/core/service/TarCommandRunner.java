@@ -26,5 +26,4 @@ public interface TarCommandRunner {
 
     ProcessResult verifyPackage(String targetPackage) throws IOException, InterruptedException;
 
-    ProcessResult getAllChecksums(String targetPackage) throws IOException, InterruptedException;
 }

@@ -22,6 +22,17 @@ public class FilenameAttributes {
     private int versionMajor;
     private int versionMinor;
 
+    public FilenameAttributes(String dveFilePath, String datasetPid, int versionMajor, int versionMinor) {
+        this.dveFilePath = dveFilePath;
+        this.datasetPid = datasetPid;
+        this.versionMajor = versionMajor;
+        this.versionMinor = versionMinor;
+    }
+
+    public FilenameAttributes() {
+
+    }
+
     public String getDatasetPid() {
         return datasetPid;
     }

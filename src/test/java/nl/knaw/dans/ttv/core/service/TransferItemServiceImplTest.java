@@ -35,8 +35,11 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -47,7 +50,6 @@ class TransferItemServiceImplTest {
     FilenameAttributes filenameAttributes;
     FilesystemAttributes filesystemAttributes;
     FileContentAttributes fileContentAttributes;
-    TransferItemService transferItemService;
 
     @BeforeEach
     void setUp() {
@@ -124,14 +126,14 @@ class TransferItemServiceImplTest {
             assertNotNull(transferItem.getQueueDate());
             assertEquals("datastation name", transferItem.getDatasetDvInstance());
             assertEquals(filesystemAttributes.getCreationTime(), transferItem.getCreationTime());
-            assertEquals(null, transferItem.getBagChecksum());
+            assertNull(transferItem.getBagChecksum());
             assertEquals(1234L, transferItem.getBagSize());
 
-            assertEquals(null, transferItem.getDatasetVersion());
-            assertEquals(null, transferItem.getBagId());
-            assertEquals(null, transferItem.getNbn());
-            assertEquals(null, transferItem.getOaiOre());
-            assertEquals(null, transferItem.getPidMapping());
+            assertNull(transferItem.getDatasetVersion());
+            assertNull(transferItem.getBagId());
+            assertNull(transferItem.getNbn());
+            assertNull(transferItem.getOaiOre());
+            assertNull(transferItem.getPidMapping());
 
             Mockito.verify(transferItemDao).save(transferItem);
         }
@@ -245,8 +247,102 @@ class TransferItemServiceImplTest {
         transferItemService.updateConfirmArchivedResult(tar, Tar.TarStatus.OCFLTARCREATED);
 
         Mockito.verify(tarDAO, Mockito.times(1)).save(tar);
+    }
 
-        //        Mockito.verify(transferItemDao, Mockito.times(1))
-        //            .updateCheckingProgressResults("some_id", TransferItem.TransferStatus.OCFLTARCREATED);
+    @Test
+    void getTransferItemByFilenameAttributes() {
+        var transferItemService = new TransferItemServiceImpl(transferItemDao, tarDAO);
+        var attributes = new FilenameAttributes("path", "pid", 5, 3);
+        transferItemService.getTransferItemByFilenameAttributes(attributes);
+
+        Mockito.verify(transferItemDao).findByDatasetPidAndVersion("pid", 5, 3);
+    }
+
+    @Test
+    void addMetadataAndMoveFile() {
+        var transferItemService = new TransferItemServiceImpl(transferItemDao, tarDAO);
+        var attributes = new FileContentAttributes(
+            "version",
+            "id",
+            "nbn",
+            new byte[] { 1 },
+            new byte[] { 2 },
+            "otherid",
+            "otheridversion",
+            "sword",
+            "checksum"
+        );
+        var transferItem = new TransferItem();
+
+        Mockito.when(transferItemDao.save(transferItem))
+            .thenReturn(transferItem);
+
+        var result = transferItemService.addMetadataAndMoveFile(
+            transferItem,
+            attributes,
+            TransferItem.TransferStatus.TARRING,
+            Path.of("test/path.zip")
+        );
+
+        assertEquals("version", result.getDatasetVersion());
+        assertEquals("id", result.getBagId());
+        assertEquals("nbn", result.getNbn());
+        assertEquals("otherid", result.getOtherId());
+        assertEquals("otheridversion", result.getOtherIdVersion());
+        assertEquals("sword", result.getSwordToken());
+        assertEquals("checksum", result.getBagChecksum());
+        assertArrayEquals(new byte[] { 1 }, result.getOaiOre());
+        assertArrayEquals(new byte[] { 2 }, result.getPidMapping());
+        assertEquals(TransferItem.TransferStatus.TARRING, result.getTransferStatus());
+        assertEquals("test/path.zip", result.getDveFilePath());
+
+    }
+
+    @Test
+    void createTarArchiveWithAllCollectedTransferItems() {
+        var transferItemService = new TransferItemServiceImpl(transferItemDao, tarDAO);
+        var uuid = UUID.randomUUID();
+        var items = List.of(
+            new TransferItem("pid", 1, 0, "path", LocalDateTime.now(), TransferItem.TransferStatus.COLLECTED),
+            new TransferItem("pid2", 1, 0, "path", LocalDateTime.now(), TransferItem.TransferStatus.COLLECTED)
+        );
+
+        Mockito.when(transferItemDao.findByStatus(TransferItem.TransferStatus.COLLECTED))
+            .thenReturn(items);
+
+        Mockito.when(tarDAO.save(Mockito.any()))
+            .then(a -> a.getArguments()[0]);
+
+        var tar = transferItemService.createTarArchiveWithAllCollectedTransferItems(uuid);
+
+        assertEquals(uuid.toString(), tar.getTarUuid());
+        assertEquals(Tar.TarStatus.TARRING, tar.getTarStatus());
+        assertNotNull(tar.getCreated());
+
+        assertEquals(tar, items.get(0).getAipsTar());
+        assertEquals(tar, items.get(1).getAipsTar());
+    }
+
+    @Test
+    void resetTarToArchiving() {
+        var transferItemService = new TransferItemServiceImpl(transferItemDao, tarDAO);
+        var tar = new Tar();
+        tar.setConfirmCheckInProgress(true);
+        transferItemService.resetTarToArchiving(tar);
+
+        assertEquals(Tar.TarStatus.OCFLTARCREATED, tar.getTarStatus());
+        assertFalse(tar.isConfirmCheckInProgress());
+    }
+
+    @Test
+    void updateTarToArchived() {
+        var transferItemService = new TransferItemServiceImpl(transferItemDao, tarDAO);
+        var tar = new Tar();
+        tar.setConfirmCheckInProgress(true);
+        transferItemService.updateTarToArchived(tar);
+
+        assertEquals(Tar.TarStatus.CONFIRMEDARCHIVED, tar.getTarStatus());
+        assertFalse(tar.isConfirmCheckInProgress());
+        assertNotNull(tar.getDatetimeConfirmedArchived());
     }
 }

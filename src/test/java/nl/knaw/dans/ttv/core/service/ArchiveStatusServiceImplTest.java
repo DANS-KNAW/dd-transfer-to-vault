@@ -79,4 +79,23 @@ class ArchiveStatusServiceImplTest {
         }
     }
 
+
+    @Test
+    void unexpectedStatus() {
+        var output = "-r--r--r--  1 danstst0    133120 2022-01-24 16:41 (ABC) ff99d9fd-53ef-48f2-8672-a40a2c91f1c6.dfmtar/0000/ff99d9fd-53ef-48f2-8672-a40a2c91f1c6.dfmtar.tar\n";
+
+        var service = new ArchiveStatusServiceImpl(dataArchiveConfiguration, processRunner);
+
+        try {
+            Mockito.when(processRunner.run((String[]) Mockito.any()))
+                .thenReturn(new ProcessResult(0, output));
+
+            var result = service.getFileStatus("ff99d9fd-53ef-48f2-8672-a40a2c91f1c6");
+
+            assertEquals(ArchiveStatusService.FileStatus.UNKNOWN, result.get("ff99d9fd-53ef-48f2-8672-a40a2c91f1c6.dfmtar/0000/ff99d9fd-53ef-48f2-8672-a40a2c91f1c6.dfmtar.tar"));
+        }
+        catch (Exception e) {
+            fail(e);
+        }
+    }
 }

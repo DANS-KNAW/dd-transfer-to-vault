@@ -27,6 +27,20 @@ public class FileContentAttributes {
     private String swordToken;
     private String bagChecksum;
 
+    public FileContentAttributes(String datasetVersion, String bagId, String nbn, byte[] oaiOre, byte[] pidMapping, String otherId, String otherIdVersion, String swordToken, String bagChecksum) {
+        this.datasetVersion = datasetVersion;
+        this.bagId = bagId;
+        this.nbn = nbn;
+        this.oaiOre = oaiOre;
+        this.pidMapping = pidMapping;
+        this.otherId = otherId;
+        this.otherIdVersion = otherIdVersion;
+        this.swordToken = swordToken;
+        this.bagChecksum = bagChecksum;
+    }
+    public FileContentAttributes() {
+    }
+
     public String getOtherId() {
         return otherId;
     }

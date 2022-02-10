@@ -30,6 +30,7 @@ import nl.knaw.dans.ttv.db.TransferItemDAO;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -135,7 +136,6 @@ public class TransferItemServiceImpl implements TransferItemService {
         return transferItem;
     }
 
-    @Override
     @UnitOfWork
     public void saveAllTransferItems(List<TransferItem> transferItems) {
         for (var transferItem : transferItems) {
@@ -212,6 +212,11 @@ public class TransferItemServiceImpl implements TransferItemService {
     public TransferItem addMetadataAndMoveFile(TransferItem transferItem, FileContentAttributes fileContentAttributes, TransferItem.TransferStatus status,
         Path newPath) {
 
+        Objects.requireNonNull(transferItem, "transferItem cannot be null");
+        Objects.requireNonNull(fileContentAttributes, "fileContentAttributes cannot be null");
+        Objects.requireNonNull(status, "status cannot be null");
+        Objects.requireNonNull(newPath, "newPath cannot be null");
+
         transferItem.setTransferStatus(status);
         transferItem.setDveFilePath(newPath.toString());
 
@@ -222,6 +227,9 @@ public class TransferItemServiceImpl implements TransferItemService {
         transferItem.setOaiOre(fileContentAttributes.getOaiOre());
         transferItem.setPidMapping(fileContentAttributes.getPidMapping());
         transferItem.setBagChecksum(fileContentAttributes.getBagChecksum());
+        transferItem.setOtherId(fileContentAttributes.getOtherId());
+        transferItem.setOtherIdVersion(fileContentAttributes.getOtherIdVersion());
+        transferItem.setSwordToken(fileContentAttributes.getSwordToken());
 
         return transferItemDAO.save(transferItem);
     }
