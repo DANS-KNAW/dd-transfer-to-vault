@@ -17,9 +17,13 @@ package nl.knaw.dans.ttv.core.service;
 
 import io.dropwizard.hibernate.UnitOfWork;
 import nl.knaw.dans.ttv.core.InvalidTransferItemException;
+import nl.knaw.dans.ttv.core.dto.ArchiveMetadata;
 import nl.knaw.dans.ttv.core.dto.FileContentAttributes;
 import nl.knaw.dans.ttv.core.dto.FilenameAttributes;
 import nl.knaw.dans.ttv.core.dto.FilesystemAttributes;
+import nl.knaw.dans.ttv.db.Tar;
+import nl.knaw.dans.ttv.db.TarDAO;
+import nl.knaw.dans.ttv.db.TarPart;
 import nl.knaw.dans.ttv.db.TransferItem;
 import nl.knaw.dans.ttv.db.TransferItemDAO;
 
@@ -28,27 +32,15 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
+import java.util.UUID;
 
 public class TransferItemServiceImpl implements TransferItemService {
     private final TransferItemDAO transferItemDAO;
+    private final TarDAO tarDAO;
 
-    public TransferItemServiceImpl(TransferItemDAO transferItemDAO) {
+    public TransferItemServiceImpl(TransferItemDAO transferItemDAO, TarDAO tarDAO) {
         this.transferItemDAO = transferItemDAO;
-    }
-
-    @Override
-    @UnitOfWork
-    public List<TransferItem> findByStatus(TransferItem.TransferStatus status) {
-        Objects.requireNonNull(status, "status cannot be null");
-        return transferItemDAO.findByStatus(status);
-    }
-
-    @Override
-    @UnitOfWork
-    public List<TransferItem> findByTarId(String id) {
-        Objects.requireNonNull(id, "id cannot be null");
-        return transferItemDAO.findAllByTarId(id);
+        this.tarDAO = tarDAO;
     }
 
     @Override
@@ -57,7 +49,7 @@ public class TransferItemServiceImpl implements TransferItemService {
         throws InvalidTransferItemException {
         var transferItem = new TransferItem();
 
-        transferItem.setTransferStatus(TransferItem.TransferStatus.COLLECTED);
+        transferItem.setTransferStatus(TransferItem.TransferStatus.CREATED);
         transferItem.setQueueDate(LocalDateTime.now());
         transferItem.setDatasetDvInstance(datastationName);
 
@@ -69,7 +61,6 @@ public class TransferItemServiceImpl implements TransferItemService {
 
         // filesystem attributes
         transferItem.setCreationTime(filesystemAttributes.getCreationTime());
-        transferItem.setBagChecksum(filesystemAttributes.getBagChecksum());
         transferItem.setBagSize(filesystemAttributes.getBagSize());
 
         // file content attributes
@@ -78,6 +69,7 @@ public class TransferItemServiceImpl implements TransferItemService {
         transferItem.setNbn(fileContentAttributes.getNbn());
         transferItem.setOaiOre(fileContentAttributes.getOaiOre());
         transferItem.setPidMapping(fileContentAttributes.getPidMapping());
+        transferItem.setBagChecksum(fileContentAttributes.getBagChecksum());
 
         // check if an item with this ID already exists
         var existing = transferItemDAO.findByDatasetPidAndVersion(transferItem.getDatasetPid(), transferItem.getVersionMajor(), transferItem.getVersionMinor());
@@ -96,7 +88,7 @@ public class TransferItemServiceImpl implements TransferItemService {
 
     @Override
     @UnitOfWork
-    public TransferItem createTransferItem(String datastationName, FilenameAttributes filenameAttributes) throws InvalidTransferItemException {
+    public TransferItem createTransferItem(String datastationName, FilenameAttributes filenameAttributes, FilesystemAttributes filesystemAttributes) throws InvalidTransferItemException {
 
         // check if an item with this ID already exists
         var existing = transferItemDAO.findByDatasetPidAndVersion(
@@ -127,6 +119,10 @@ public class TransferItemServiceImpl implements TransferItemService {
         transferItem.setVersionMajor(filenameAttributes.getVersionMajor());
         transferItem.setVersionMinor(filenameAttributes.getVersionMinor());
 
+        // filesystem attributes
+        transferItem.setCreationTime(filesystemAttributes.getCreationTime());
+        transferItem.setBagSize(filesystemAttributes.getBagSize());
+
         transferItemDAO.save(transferItem);
         return transferItem;
     }
@@ -140,9 +136,8 @@ public class TransferItemServiceImpl implements TransferItemService {
         return transferItem;
     }
 
-    @Override
     @UnitOfWork
-    public void saveAll(List<TransferItem> transferItems) {
+    public void saveAllTransferItems(List<TransferItem> transferItems) {
         for (var transferItem : transferItems) {
             transferItemDAO.merge(transferItem);
         }
@@ -150,28 +145,56 @@ public class TransferItemServiceImpl implements TransferItemService {
 
     @Override
     @UnitOfWork
-    public void updateToCreatedForTarId(String id) {
-        transferItemDAO.updateStatusByTar(id, TransferItem.TransferStatus.OCFLTARCREATED);
+    public void saveAllTars(List<Tar> tars) {
+        for (var tar : tars) {
+            tarDAO.save(tar);
+        }
     }
 
     @Override
     @UnitOfWork
-    public List<String> stageAllTarsToBeConfirmed() {
-        var results = transferItemDAO.findAllTarsToBeConfirmed();
+    public void updateTarToCreated(String id, ArchiveMetadata metadata) {
+        tarDAO.findById(id).map(tar -> {
+            tar.setTarStatus(Tar.TarStatus.OCFLTARCREATED);
+
+            for (var transferItem : tar.getTransferItems()) {
+                transferItem.setTransferStatus(TransferItem.TransferStatus.OCFLTARCREATED);
+            }
+
+            for (var part: metadata.getParts()) {
+                var dbPart = new TarPart();
+                dbPart.setTar(tar);
+                dbPart.setPartName(part.getIdentifier());
+                dbPart.setChecksumValue(part.getChecksum());
+                dbPart.setChecksumAlgorithm(part.getChecksumAlgorithm());
+
+                tar.getTarParts().add(dbPart);
+            }
+
+            return tarDAO.save(tar);
+        });
+    }
+
+    @Override
+    @UnitOfWork
+    public List<Tar> stageAllTarsToBeConfirmed() {
+        var results = tarDAO.findAllTarsToBeConfirmed();
 
         for (var item : results) {
             item.setConfirmCheckInProgress(true);
         }
 
-        saveAll(results);
+        saveAllTars(results);
 
-        return results.stream().map(TransferItem::getAipsTar).distinct().collect(Collectors.toList());
+        return results;
     }
 
     @Override
     @UnitOfWork
-    public void updateCheckingProgressResults(String id, TransferItem.TransferStatus status) {
-        transferItemDAO.updateCheckingProgressResults(id, status);
+    public void updateConfirmArchivedResult(Tar tar, Tar.TarStatus status) {
+        tar.setTarStatus(status);
+        tar.setConfirmCheckInProgress(false);
+        save(tar);
     }
 
     @Override
@@ -186,16 +209,16 @@ public class TransferItemServiceImpl implements TransferItemService {
 
     @Override
     @UnitOfWork
-    public TransferItem addMetadataAndMoveFile(TransferItem transferItem, FilesystemAttributes filesystemAttributes, FileContentAttributes fileContentAttributes, TransferItem.TransferStatus status,
+    public TransferItem addMetadataAndMoveFile(TransferItem transferItem, FileContentAttributes fileContentAttributes, TransferItem.TransferStatus status,
         Path newPath) {
+
+        Objects.requireNonNull(transferItem, "transferItem cannot be null");
+        Objects.requireNonNull(fileContentAttributes, "fileContentAttributes cannot be null");
+        Objects.requireNonNull(status, "status cannot be null");
+        Objects.requireNonNull(newPath, "newPath cannot be null");
 
         transferItem.setTransferStatus(status);
         transferItem.setDveFilePath(newPath.toString());
-
-        // filesystem attributes
-        transferItem.setCreationTime(filesystemAttributes.getCreationTime());
-        transferItem.setBagChecksum(filesystemAttributes.getBagChecksum());
-        transferItem.setBagSize(filesystemAttributes.getBagSize());
 
         // file content attributes
         transferItem.setDatasetVersion(fileContentAttributes.getDatasetVersion());
@@ -203,7 +226,57 @@ public class TransferItemServiceImpl implements TransferItemService {
         transferItem.setNbn(fileContentAttributes.getNbn());
         transferItem.setOaiOre(fileContentAttributes.getOaiOre());
         transferItem.setPidMapping(fileContentAttributes.getPidMapping());
+        transferItem.setBagChecksum(fileContentAttributes.getBagChecksum());
+        transferItem.setOtherId(fileContentAttributes.getOtherId());
+        transferItem.setOtherIdVersion(fileContentAttributes.getOtherIdVersion());
+        transferItem.setSwordToken(fileContentAttributes.getSwordToken());
 
         return transferItemDAO.save(transferItem);
+    }
+
+    @Override
+    @UnitOfWork
+    public Tar createTarArchiveWithAllCollectedTransferItems(UUID uuid, String vaultPath) {
+        Objects.requireNonNull(uuid, "uuid cannot be null");
+        Objects.requireNonNull(uuid, "vaultPath cannot be null");
+
+        var tarArchive = new Tar();
+        tarArchive.setTarUuid(uuid.toString());
+        tarArchive.setTarStatus(Tar.TarStatus.TARRING);
+        tarArchive.setCreated(LocalDateTime.now());
+        tarArchive.setVaultPath(vaultPath);
+        // TODO add vault path property
+
+        var transferItems = transferItemDAO.findByStatus(TransferItem.TransferStatus.COLLECTED);
+
+        for (var transferItem : transferItems) {
+            transferItem.setTransferStatus(TransferItem.TransferStatus.TARRING);
+            transferItem.setAipsTar(tarArchive);
+        }
+
+        tarArchive.setTransferItems(transferItems);
+
+        return tarDAO.save(tarArchive);
+    }
+
+    @Override
+    @UnitOfWork
+    public Tar save(Tar tarArchive) {
+        return tarDAO.save(tarArchive);
+    }
+
+    @Override
+    public void resetTarToArchiving(Tar tar) {
+        tar.setTarStatus(Tar.TarStatus.OCFLTARCREATED);
+        tar.setConfirmCheckInProgress(false);
+        save(tar);
+    }
+
+    @Override
+    public void updateTarToArchived(Tar tar) {
+        tar.setTarStatus(Tar.TarStatus.CONFIRMEDARCHIVED);
+        tar.setConfirmCheckInProgress(false);
+        tar.setDatetimeConfirmedArchived(LocalDateTime.now());
+        save(tar);
     }
 }

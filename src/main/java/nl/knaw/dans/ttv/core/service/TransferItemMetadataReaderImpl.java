@@ -82,7 +82,6 @@ public class TransferItemMetadataReaderImpl implements TransferItemMetadataReade
 
             if (creationTime != null) {
                 result.setCreationTime(LocalDateTime.ofInstant(((FileTime) creationTime).toInstant(), ZoneId.systemDefault()));
-                result.setBagChecksum(fileService.calculateChecksum(path));
                 result.setBagSize(fileService.getFileSize(path));
             }
         }
@@ -116,6 +115,7 @@ public class TransferItemMetadataReaderImpl implements TransferItemMetadataReade
             var otherIdVersion = getOptionalStringFromNode(describesNode, "dansDataVaultMetadata:Other ID Version");
             var swordToken = getOptionalStringFromNode(describesNode, "dansDataVaultMetadata:SWORD Token");
 
+            result.setBagChecksum(fileService.calculateChecksum(path));
             result.setPidMapping(pidMapping);
             result.setOaiOre(oaiOre);
             result.setNbn(nbn);

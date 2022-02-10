@@ -16,38 +16,45 @@
 package nl.knaw.dans.ttv.core.service;
 
 import nl.knaw.dans.ttv.core.InvalidTransferItemException;
+import nl.knaw.dans.ttv.core.dto.ArchiveMetadata;
 import nl.knaw.dans.ttv.core.dto.FileContentAttributes;
 import nl.knaw.dans.ttv.core.dto.FilenameAttributes;
 import nl.knaw.dans.ttv.core.dto.FilesystemAttributes;
+import nl.knaw.dans.ttv.db.Tar;
 import nl.knaw.dans.ttv.db.TransferItem;
 
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 public interface TransferItemService {
-
-    List<TransferItem> findByStatus(TransferItem.TransferStatus status);
-
-    List<TransferItem> findByTarId(String id);
 
     TransferItem createTransferItem(String datastationName, FilenameAttributes filenameAttributes, FilesystemAttributes filesystemAttributes, FileContentAttributes fileContentAttributes)
         throws InvalidTransferItemException;
 
-    TransferItem createTransferItem(String datastationName, FilenameAttributes filenameAttributes)
+    TransferItem createTransferItem(String datastationName, FilenameAttributes filenameAttributes, FilesystemAttributes filesystemAttributes)
         throws InvalidTransferItemException;
 
     TransferItem moveTransferItem(TransferItem transferItem, TransferItem.TransferStatus newStatus, Path newPath);
 
-    void saveAll(List<TransferItem> transferItems);
+    void saveAllTars(List<Tar> tars);
 
-    void updateToCreatedForTarId(String id);
+    void updateTarToCreated(String id, ArchiveMetadata metadata);
 
-    List<String> stageAllTarsToBeConfirmed();
+    List<Tar> stageAllTarsToBeConfirmed();
 
-    void updateCheckingProgressResults(String id, TransferItem.TransferStatus status);
+    void updateConfirmArchivedResult(Tar tar, Tar.TarStatus status);
 
     Optional<TransferItem> getTransferItemByFilenameAttributes(FilenameAttributes filenameAttributes);
 
-    TransferItem addMetadataAndMoveFile(TransferItem transferItem, FilesystemAttributes filesystemAttributes, FileContentAttributes fileContentAttributes, TransferItem.TransferStatus status, Path newPath);
+    TransferItem addMetadataAndMoveFile(TransferItem transferItem, FileContentAttributes fileContentAttributes, TransferItem.TransferStatus status, Path newPath);
+
+    Tar createTarArchiveWithAllCollectedTransferItems(UUID uuid, String vaultPath);
+
+    Tar save(Tar tarArchive);
+
+    void resetTarToArchiving(Tar tar);
+
+    void updateTarToArchived(Tar tar);
 }

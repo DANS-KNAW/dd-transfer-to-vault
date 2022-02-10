@@ -15,16 +15,13 @@
  */
 package nl.knaw.dans.ttv.core.service;
 
+import nl.knaw.dans.ttv.core.config.DataArchiveConfiguration;
 import nl.knaw.dans.ttv.core.dto.ProcessResult;
-import nl.knaw.dans.ttv.core.service.ArchiveStatusService;
-import nl.knaw.dans.ttv.core.service.ArchiveStatusServiceImpl;
-import nl.knaw.dans.ttv.core.service.ProcessRunner;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.io.IOException;
-import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -33,6 +30,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 class ArchiveStatusServiceImplTest {
 
     ProcessRunner processRunner;
+    DataArchiveConfiguration dataArchiveConfiguration = new DataArchiveConfiguration("username", "hostname", "");
 
     @BeforeEach
     void setUp() {
@@ -45,11 +43,11 @@ class ArchiveStatusServiceImplTest {
             + "-r--r--r--  1 danstst0        85 2022-01-24 16:41 (N/A) ff99d9fd-53ef-48f2-8672-a40a2c91f1c6.dfmtar/0000/ff99d9fd-53ef-48f2-8672-a40a2c91f1c6.dfmtar.tar.chksum\n"
             + "-r--r--r--  1 danstst0      3011 2022-01-24 16:41 (REG) ff99d9fd-53ef-48f2-8672-a40a2c91f1c6.dfmtar/0000/ff99d9fd-53ef-48f2-8672-a40a2c91f1c6.dfmtar.tar.idx\n";
 
-        var service = new ArchiveStatusServiceImpl(processRunner, "user@host:");
+        var service = new ArchiveStatusServiceImpl(dataArchiveConfiguration, processRunner);
 
         try {
             Mockito.when(processRunner.run((String[]) Mockito.any()))
-                .thenReturn(new ProcessResult(0, output, ""));
+                .thenReturn(new ProcessResult(0, output));
 
             var result = service.getFileStatus("ff99d9fd-53ef-48f2-8672-a40a2c91f1c6");
 
@@ -64,13 +62,13 @@ class ArchiveStatusServiceImplTest {
 
     @Test
     void getFileStatusWithError() {
-        var service = new ArchiveStatusServiceImpl(processRunner, "user@host:");
+        var service = new ArchiveStatusServiceImpl(dataArchiveConfiguration, processRunner);
 
         try {
             var output = "command does not exist";
 
             Mockito.when(processRunner.run((String[]) Mockito.any()))
-                .thenReturn(new ProcessResult(1, output, ""));
+                .thenReturn(new ProcessResult(1, output));
 
             var error = assertThrows(IOException.class, () -> {
                 var result = service.getFileStatus("ff99d9fd-53ef-48f2-8672-a40a2c91f1c6");
@@ -81,52 +79,23 @@ class ArchiveStatusServiceImplTest {
         }
     }
 
-    @Test
-    void getRemotePath() {
-        var service = new ArchiveStatusServiceImpl(processRunner, "");
-        var result = service.getRemotePath("", "someid");
-
-        assertEquals(Path.of("someid.dmftar"), result);
-    }
 
     @Test
-    void getRemotePathWithRootPart() {
-        var service = new ArchiveStatusServiceImpl(processRunner, "");
-        var result = service.getRemotePath("archive/dans/", "someid");
+    void unexpectedStatus() {
+        var output = "-r--r--r--  1 danstst0    133120 2022-01-24 16:41 (ABC) ff99d9fd-53ef-48f2-8672-a40a2c91f1c6.dfmtar/0000/ff99d9fd-53ef-48f2-8672-a40a2c91f1c6.dfmtar.tar\n";
 
-        assertEquals(Path.of("archive/dans/someid.dmftar"), result);
-    }
+        var service = new ArchiveStatusServiceImpl(dataArchiveConfiguration, processRunner);
 
-    @Test
-    void separateHostAndPath() {
-        var service = new ArchiveStatusServiceImpl(processRunner, "");
+        try {
+            Mockito.when(processRunner.run((String[]) Mockito.any()))
+                .thenReturn(new ProcessResult(0, output));
 
-        var result = service.separateHostAndPath("user@host:");
-        assertEquals("user@host", result.getLeft());
-        assertEquals("", result.getRight());
-    }
+            var result = service.getFileStatus("ff99d9fd-53ef-48f2-8672-a40a2c91f1c6");
 
-    @Test
-    void separateHostAndPathWithValue() {
-        var service = new ArchiveStatusServiceImpl(processRunner, "");
-        var result = service.separateHostAndPath("user@host:this/is/a/path");
-        assertEquals("user@host", result.getLeft());
-        assertEquals("this/is/a/path", result.getRight());
-    }
-
-    @Test
-    void separateHostAndPathWithoutPath() {
-        var service = new ArchiveStatusServiceImpl(processRunner, "");
-        var result = service.separateHostAndPath("user@host");
-        assertEquals("user@host", result.getLeft());
-        assertEquals("", result.getRight());
-    }
-
-    @Test
-    void separateHostAndPathMultipleColons() {
-        var service = new ArchiveStatusServiceImpl(processRunner, "");
-        var result = service.separateHostAndPath("user@host:path/:test");
-        assertEquals("user@host", result.getLeft());
-        assertEquals("path/:test", result.getRight());
+            assertEquals(ArchiveStatusService.FileStatus.UNKNOWN, result.get("ff99d9fd-53ef-48f2-8672-a40a2c91f1c6.dfmtar/0000/ff99d9fd-53ef-48f2-8672-a40a2c91f1c6.dfmtar.tar"));
+        }
+        catch (Exception e) {
+            fail(e);
+        }
     }
 }

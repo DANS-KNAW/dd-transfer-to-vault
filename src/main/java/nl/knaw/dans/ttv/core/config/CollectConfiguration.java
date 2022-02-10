@@ -46,18 +46,6 @@ public class CollectConfiguration {
     @Min(1)
     private long pollingInterval;
 
-    @Valid
-    @NotNull
-    private Path workDir;
-
-    public Path getWorkDir() {
-        return workDir;
-    }
-
-    public void setWorkDir(Path workDir) {
-        this.workDir = workDir;
-    }
-
     public long getPollingInterval() {
         return pollingInterval;
     }

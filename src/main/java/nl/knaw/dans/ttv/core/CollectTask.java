@@ -85,8 +85,12 @@ public class CollectTask implements Runnable {
             return transferItem.get();
         }
 
-        log.debug("No existing TransferItem found, creating new one with attributes {}", filenameAttributes);
-        return transferItemService.createTransferItem(datastationName, filenameAttributes);
+        var filesystemAttributes = metadataReader.getFilesystemAttributes(path);
+
+        log.debug("No existing TransferItem found, creating new one with attributes {} and {}",
+            filenameAttributes, filesystemAttributes);
+
+        return transferItemService.createTransferItem(datastationName, filenameAttributes, filesystemAttributes);
     }
 
     public void moveFileToOutbox(TransferItem transferItem, Path filePath, Path outboxPath) throws IOException {

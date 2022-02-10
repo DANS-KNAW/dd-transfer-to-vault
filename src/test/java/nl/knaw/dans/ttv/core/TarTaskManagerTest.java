@@ -15,12 +15,13 @@
  */
 package nl.knaw.dans.ttv.core;
 
+import nl.knaw.dans.ttv.core.service.ArchiveMetadataService;
 import nl.knaw.dans.ttv.core.service.FileService;
 import nl.knaw.dans.ttv.core.service.InboxWatcherFactory;
 import nl.knaw.dans.ttv.core.service.OcflRepositoryService;
 import nl.knaw.dans.ttv.core.service.TarCommandRunner;
-import nl.knaw.dans.ttv.core.service.TransferItemMetadataReader;
 import nl.knaw.dans.ttv.core.service.TransferItemService;
+import nl.knaw.dans.ttv.db.Tar;
 import nl.knaw.dans.ttv.db.TransferItem;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -34,27 +35,26 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.fail;
 
 class TarTaskManagerTest {
     private TransferItemService transferItemService;
-    private TransferItemMetadataReader transferItemMetadataReader;
     private FileService fileService;
     private ExecutorService executorService;
     private InboxWatcherFactory inboxWatcherFactory;
     private OcflRepositoryService ocflRepositoryService;
     private TarCommandRunner tarCommandRunner;
+    private ArchiveMetadataService archiveMetadataService;
 
     @BeforeEach
     void setUp() {
         this.transferItemService = Mockito.mock(TransferItemService.class);
-        this.transferItemMetadataReader = Mockito.mock(TransferItemMetadataReader.class);
         this.fileService = Mockito.mock(FileService.class);
         this.executorService = Mockito.mock(ExecutorService.class);
         this.inboxWatcherFactory = Mockito.mock(InboxWatcherFactory.class);
         this.ocflRepositoryService = Mockito.mock(OcflRepositoryService.class);
         this.tarCommandRunner = Mockito.mock(TarCommandRunner.class);
+        this.archiveMetadataService = Mockito.mock(ArchiveMetadataService.class);
     }
 
     @Test
@@ -67,9 +67,9 @@ class TarTaskManagerTest {
     @Test
     void onNewItemInInbox() {
         var manager = new TarTaskManager(
-            Path.of("data/inbox"), Path.of("data/workdir"), 50, "dmf", "tst@account.com:", 100L,
+            Path.of("data/inbox"), Path.of("data/workdir"), "some-path", 50, 100L,
             executorService, inboxWatcherFactory, fileService, ocflRepositoryService, transferItemService,
-            tarCommandRunner);
+            tarCommandRunner, archiveMetadataService);
 
         try {
             var transferItems = List.of(
@@ -77,11 +77,14 @@ class TarTaskManagerTest {
                 new TransferItem("pid2", 1, 0, "path2", LocalDateTime.now(), TransferItem.TransferStatus.COLLECTED)
             );
 
+            var tar = new Tar();
+            tar.setTransferItems(transferItems);
+
             Mockito.when(fileService.getPathSize(Path.of("data/inbox")))
                 .thenReturn(100L);
 
-            Mockito.when(transferItemService.findByStatus(TransferItem.TransferStatus.COLLECTED))
-                .thenReturn(transferItems);
+            Mockito.when(transferItemService.createTarArchiveWithAllCollectedTransferItems(Mockito.any(), Mockito.eq("some-path")))
+                .thenReturn(tar);
 
             manager.onNewItemInInbox(new File("test.zip"));
 
@@ -95,13 +98,13 @@ class TarTaskManagerTest {
                 Mockito.any(),
                 Mockito.eq(transferItems.get(1))
             );
-            Mockito.verify(transferItemService).saveAll(transferItems);
-            assertEquals(TransferItem.TransferStatus.TARRING, transferItems.get(0).getTransferStatus());
-            assertEquals(TransferItem.TransferStatus.TARRING, transferItems.get(1).getTransferStatus());
+            Mockito.verify(transferItemService).save(Mockito.any());
+            //            assertEquals(TransferItem.TransferStatus.TARRING, transferItems.get(0).getTransferStatus());
+            //            assertEquals(TransferItem.TransferStatus.TARRING, transferItems.get(1).getTransferStatus());
 
-            assertNotNull(transferItems.get(0).getAipsTar());
-            assertNotNull(transferItems.get(1).getAipsTar());
-            assertEquals(transferItems.get(0).getAipsTar(), transferItems.get(1).getAipsTar());
+            //            assertNotNull(transferItems.get(0).getAipsTar());
+            //            assertNotNull(transferItems.get(1).getAipsTar());
+            //            assertEquals(transferItems.get(0).getAipsTar(), transferItems.get(1).getAipsTar());
 
             Mockito.verify(executorService).execute(Mockito.any());
         }
@@ -113,9 +116,9 @@ class TarTaskManagerTest {
     @Test
     void testThresholdIsNotReached() {
         var manager = new TarTaskManager(
-            Path.of("data/inbox"), Path.of("data/workdir"), 50, "dmf", "tst@account.com:", 100L,
+            Path.of("data/inbox"), Path.of("data/workdir"), "some-path", 50, 100L,
             executorService, inboxWatcherFactory, fileService, ocflRepositoryService, transferItemService,
-            tarCommandRunner);
+            tarCommandRunner, archiveMetadataService);
 
         try {
             var transferItems = List.of(

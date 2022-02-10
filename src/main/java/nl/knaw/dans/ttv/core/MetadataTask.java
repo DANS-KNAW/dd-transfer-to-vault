@@ -75,7 +75,6 @@ public class MetadataTask implements Runnable {
 
         transferItemService.addMetadataAndMoveFile(
             transferItem,
-            filesystemAttributes,
             fileContentAttributes,
             TransferItem.TransferStatus.COLLECTED,
             newPath

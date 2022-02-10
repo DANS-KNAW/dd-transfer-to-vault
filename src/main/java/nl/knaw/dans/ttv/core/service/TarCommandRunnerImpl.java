@@ -15,6 +15,7 @@
  */
 package nl.knaw.dans.ttv.core.service;
 
+import nl.knaw.dans.ttv.core.config.DataArchiveConfiguration;
 import nl.knaw.dans.ttv.core.dto.ProcessResult;
 
 import java.io.IOException;
@@ -23,9 +24,11 @@ import java.util.Objects;
 
 public class TarCommandRunnerImpl implements TarCommandRunner {
     private final ProcessRunner processRunner;
+    private final DataArchiveConfiguration dataArchiveConfiguration;
 
-    public TarCommandRunnerImpl(ProcessRunner processRunner) {
+    public TarCommandRunnerImpl(DataArchiveConfiguration dataArchiveConfiguration, ProcessRunner processRunner) {
         this.processRunner = processRunner;
+        this.dataArchiveConfiguration = dataArchiveConfiguration;
     }
 
     @Override
@@ -33,14 +36,36 @@ public class TarCommandRunnerImpl implements TarCommandRunner {
         Objects.requireNonNull(path, "path cannot be null");
         Objects.requireNonNull(target, "target cannot be null");
 
+        var remotePath = Path.of(dataArchiveConfiguration.getPath(), target);
         var command = new String[] {
             "dmftar",
             "-c",
             "-f",
-            target,
+            String.format("%s:%s", getSshHost(), remotePath),
             path.toString()
         };
 
         return processRunner.run(command);
+    }
+
+    @Override
+    public ProcessResult verifyPackage(String path) throws IOException, InterruptedException {
+        Objects.requireNonNull(path, "path cannot be null");
+
+        var remotePath = Path.of(dataArchiveConfiguration.getPath(), path);
+        var command = new String[] {
+            "ssh",
+            getSshHost(),
+            "dmftar",
+            "--verify",
+            "-f",
+            remotePath.toString()
+        };
+
+        return processRunner.run(command);
+    }
+
+    private String getSshHost() {
+        return String.format("%s@%s", this.dataArchiveConfiguration.getUser(), this.dataArchiveConfiguration.getHost());
     }
 }

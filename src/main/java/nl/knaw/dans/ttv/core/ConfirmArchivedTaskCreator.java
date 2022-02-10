@@ -35,15 +35,14 @@ public class ConfirmArchivedTaskCreator implements Job {
         var dataMap = context.getMergedJobDataMap();
         var transferItemService = (TransferItemService) dataMap.get("transferItemService");
         var workingDir = (Path) dataMap.get("workingDir");
-        var dataArchiveRoot = (String) dataMap.get("dataArchiveRoot");
         var archiveStatusService = (ArchiveStatusService) dataMap.get("archiveStatusService");
         var ocflRepositoryService = (OcflRepositoryService) dataMap.get("ocflRepositoryService");
         var executorService = (ExecutorService) dataMap.get("executorService");
 
-        var tarIds = transferItemService.stageAllTarsToBeConfirmed();
+        var tars = transferItemService.stageAllTarsToBeConfirmed();
 
-        for (var tarId: tarIds) {
-            var task = new ConfirmArchivedTask(tarId, transferItemService, archiveStatusService, ocflRepositoryService, workingDir, dataArchiveRoot);
+        for (var tar: tars) {
+            var task = new ConfirmArchivedTask(tar, transferItemService, archiveStatusService, ocflRepositoryService, workingDir);
             log.debug("executing task {}", task);
             executorService.execute(task);
         }

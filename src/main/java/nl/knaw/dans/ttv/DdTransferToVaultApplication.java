@@ -26,6 +26,7 @@ import nl.knaw.dans.ttv.core.CollectTaskManager;
 import nl.knaw.dans.ttv.core.ConfirmArchivedTaskManager;
 import nl.knaw.dans.ttv.core.MetadataTaskManager;
 import nl.knaw.dans.ttv.core.TarTaskManager;
+import nl.knaw.dans.ttv.core.service.ArchiveMetadataServiceImpl;
 import nl.knaw.dans.ttv.core.service.ArchiveStatusService;
 import nl.knaw.dans.ttv.core.service.ArchiveStatusServiceImpl;
 import nl.knaw.dans.ttv.core.service.FileServiceImpl;
@@ -36,6 +37,9 @@ import nl.knaw.dans.ttv.core.service.ProcessRunnerImpl;
 import nl.knaw.dans.ttv.core.service.TarCommandRunnerImpl;
 import nl.knaw.dans.ttv.core.service.TransferItemMetadataReaderImpl;
 import nl.knaw.dans.ttv.core.service.TransferItemServiceImpl;
+import nl.knaw.dans.ttv.db.Tar;
+import nl.knaw.dans.ttv.db.TarDAO;
+import nl.knaw.dans.ttv.db.TarPart;
 import nl.knaw.dans.ttv.db.TransferItem;
 import nl.knaw.dans.ttv.db.TransferItemDAO;
 import org.slf4j.Logger;
@@ -44,7 +48,9 @@ import org.slf4j.LoggerFactory;
 public class DdTransferToVaultApplication extends Application<DdTransferToVaultConfiguration> {
 
     private static final Logger log = LoggerFactory.getLogger(DdTransferToVaultApplication.class);
-    private final HibernateBundle<DdTransferToVaultConfiguration> hibernateBundle = new HibernateBundle<>(TransferItem.class) {
+    private final HibernateBundle<DdTransferToVaultConfiguration> hibernateBundle = new HibernateBundle<>(
+        TransferItem.class, Tar.class, TarPart.class
+    ) {
 
         @Override
         public PooledDataSourceFactory getDataSourceFactory(DdTransferToVaultConfiguration configuration) {
@@ -69,13 +75,18 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
     @Override
     public void run(final DdTransferToVaultConfiguration configuration, final Environment environment) {
         final TransferItemDAO transferItemDAO = new TransferItemDAO(hibernateBundle.getSessionFactory());
+        final TarDAO tarDAO = new TarDAO(hibernateBundle.getSessionFactory());
 
         final var collectExecutorService = configuration.getCollect().getTaskQueue().build(environment);
         final var fileService = new FileServiceImpl();
 
         final var inboxWatcherFactory = new InboxWatcherFactoryImpl();
 
-        final var transferItemService = new UnitOfWorkAwareProxyFactory(hibernateBundle).create(TransferItemServiceImpl.class, TransferItemDAO.class, transferItemDAO);
+        final var transferItemService = new UnitOfWorkAwareProxyFactory(hibernateBundle).create(
+            TransferItemServiceImpl.class,
+            new Class[] { TransferItemDAO.class, TarDAO.class },
+            new Object[] { transferItemDAO, tarDAO }
+        );
 
         final var metadataReader = new TransferItemMetadataReaderImpl(environment.getObjectMapper(), fileService);
 
@@ -113,23 +124,23 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
         final var ocflRepositoryFactory = new OcflRepositoryFactory();
         final var ocflRepositoryService = new OcflRepositoryServiceImpl(fileService, ocflRepositoryFactory);
         final var processRunner = new ProcessRunnerImpl();
-        final var tarCommandRunner = new TarCommandRunnerImpl(processRunner);
-
+        final var tarCommandRunner = new TarCommandRunnerImpl(configuration.getDataArchive(), processRunner);
+        final var archiveMetadataService = new ArchiveMetadataServiceImpl(configuration.getDataArchive(), processRunner);
         final var createTarExecutorService = configuration.getCreateOcflTar().getTaskQueue().build(environment);
 
         final var tarTaskManager = new TarTaskManager(
             configuration.getCreateOcflTar().getInbox(),
             configuration.getCreateOcflTar().getWorkDir(),
+            configuration.getDataArchive().getPath(),
             configuration.getCreateOcflTar().getInboxThreshold(),
-            configuration.getCreateOcflTar().getTarCommand(),
-            configuration.getDataArchiveRoot(),
             configuration.getCreateOcflTar().getPollingInterval(),
             createTarExecutorService,
             inboxWatcherFactory,
             fileService,
             ocflRepositoryService,
             transferItemService,
-            tarCommandRunner
+            tarCommandRunner,
+            archiveMetadataService
         );
 
         environment.lifecycle().manage(tarTaskManager);
@@ -138,9 +149,9 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
         final var confirmArchiveExecutorService = configuration.getConfirmArchived().getTaskQueue().build(environment);
         final var confirmConfig = configuration.getConfirmArchived();
 
-        final ArchiveStatusService archiveStatusService = new ArchiveStatusServiceImpl(processRunner, configuration.getDataArchiveRoot());
+        final ArchiveStatusService archiveStatusService = new ArchiveStatusServiceImpl(configuration.getDataArchive(), processRunner);
 
-        final var confirmArchiveTaskManager = new ConfirmArchivedTaskManager(confirmConfig.getCron(), configuration.getCreateOcflTar().getWorkDir(), configuration.getDataArchiveRoot(),
+        final var confirmArchiveTaskManager = new ConfirmArchivedTaskManager(confirmConfig.getCron(), configuration.getCreateOcflTar().getWorkDir(),
             confirmArchiveExecutorService, transferItemService, archiveStatusService, ocflRepositoryService);
 
         environment.lifecycle().manage(confirmArchiveTaskManager);

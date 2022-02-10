@@ -15,7 +15,7 @@
  */
 package nl.knaw.dans.ttv.core.service;
 
-import org.apache.commons.lang3.tuple.Pair;
+import nl.knaw.dans.ttv.core.config.DataArchiveConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,27 +29,32 @@ public class ArchiveStatusServiceImpl implements ArchiveStatusService {
     private static final Logger log = LoggerFactory.getLogger(ArchiveStatusServiceImpl.class);
 
     private final ProcessRunner processRunner;
-    private final String dataArchiveRoot;
+    private final DataArchiveConfiguration dataArchiveConfiguration;
     private final Pattern linePattern = Pattern.compile(
         "^(?<perms>[a-zA-Z\\-]+) +(?<uid>\\d+) +(?<uname>[a-zA-Z0-9]+) +(?<filesize>\\d+) +(?<timestamp>[0-9\\- :]+\\d) +\\((?<status>[A-Z/]+)\\) +(?<filename>.*)");
 
-    public ArchiveStatusServiceImpl(ProcessRunner processRunner, String dataArchiveRoot) {
-
+    public ArchiveStatusServiceImpl(DataArchiveConfiguration dataArchiveConfiguration, ProcessRunner processRunner) {
         this.processRunner = processRunner;
-        this.dataArchiveRoot = dataArchiveRoot;
+        this.dataArchiveConfiguration = dataArchiveConfiguration;
     }
 
     @Override
     public Map<String, FileStatus> getFileStatus(String id) throws IOException, InterruptedException {
 
-        var hostAndPath = separateHostAndPath(dataArchiveRoot);
-        var path = getRemotePath(hostAndPath.getRight(), id);
-        var param = String.format("find %s -type f | xargs dmls -lg", path);
+        var host = getSshHost();
+        var path = Path.of(dataArchiveConfiguration.getPath(), id + ".dmftar");
 
         var command = new String[] {
             "ssh",
-            hostAndPath.getKey(),
-            param
+            host,
+            "find",
+            path.toString(),
+            "-type",
+            "f",
+            "|",
+            "xargs",
+            "dmls",
+            "-lg"
         };
 
         var statusReport = new HashMap<String, FileStatus>();
@@ -80,19 +85,8 @@ public class ArchiveStatusServiceImpl implements ArchiveStatusService {
         return statusReport;
     }
 
-    public Path getRemotePath(String rootPath, String id) {
-        return Path.of(rootPath, id + ".dmftar");
-    }
-
-    public Pair<String, String> separateHostAndPath(String dataArchiveRoot) {
-        var parts = dataArchiveRoot.split(":", 2);
-
-        if (parts.length == 1) {
-            return Pair.of(parts[0], "");
-        }
-        else {
-            return Pair.of(parts[0], parts[1]);
-        }
+    private String getSshHost() {
+        return String.format("%s@%s", this.dataArchiveConfiguration.getUser(), this.dataArchiveConfiguration.getHost());
     }
 
 }

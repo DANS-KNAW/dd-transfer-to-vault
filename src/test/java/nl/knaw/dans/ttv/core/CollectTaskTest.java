@@ -16,6 +16,7 @@
 package nl.knaw.dans.ttv.core;
 
 import nl.knaw.dans.ttv.core.dto.FilenameAttributes;
+import nl.knaw.dans.ttv.core.dto.FilesystemAttributes;
 import nl.knaw.dans.ttv.core.service.FileService;
 import nl.knaw.dans.ttv.core.service.TransferItemMetadataReader;
 import nl.knaw.dans.ttv.core.service.TransferItemService;
@@ -58,7 +59,7 @@ class CollectTaskTest {
         Mockito.when(transferItemMetadataReader.getAssociatedXmlFile(Mockito.any()))
             .thenReturn(Optional.of(Path.of("data/inbox/doi-10-5072-dar-kxteqt-datacite.v1.0.xml")));
 
-        Mockito.when(transferItemService.createTransferItem(Mockito.any(), Mockito.any()))
+        Mockito.when(transferItemService.createTransferItem(Mockito.any(), Mockito.any(), Mockito.any()))
             .thenReturn(new TransferItem("pid", 1, 0, "path", LocalDateTime.now(), TransferItem.TransferStatus.CREATED));
 
         task.run();
@@ -70,7 +71,7 @@ class CollectTaskTest {
         Mockito.verify(fileService).deleteFile(Path.of("data/inbox/doi-10-5072-dar-kxteqt-datacite.v1.0.xml"));
 
         Mockito.verify(transferItemService)
-            .createTransferItem(Mockito.eq("dsname"), Mockito.any());
+            .createTransferItem(Mockito.eq("dsname"), Mockito.any(), Mockito.any());
 
         Mockito.verify(transferItemService)
             .moveTransferItem(Mockito.any(), Mockito.eq(TransferItem.TransferStatus.CREATED),
@@ -87,13 +88,17 @@ class CollectTaskTest {
 
         try {
             var filenameAttributes = new FilenameAttributes();
+            var filesystemAttributes = new FilesystemAttributes();
 
             Mockito.when(transferItemMetadataReader.getFilenameAttributes(filePath))
                 .thenReturn(filenameAttributes);
 
+            Mockito.when(transferItemMetadataReader.getFilesystemAttributes(filePath))
+                .thenReturn(filesystemAttributes);
+
             task.createOrGetTransferItem(filePath);
 
-            Mockito.verify(transferItemService).createTransferItem("dsname", filenameAttributes);
+            Mockito.verify(transferItemService).createTransferItem("dsname", filenameAttributes, filesystemAttributes);
             Mockito.verify(transferItemMetadataReader).getFilenameAttributes(filePath);
         }
         catch (Exception e) {

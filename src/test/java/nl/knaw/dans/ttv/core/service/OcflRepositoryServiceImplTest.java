@@ -17,7 +17,6 @@ package nl.knaw.dans.ttv.core.service;
 
 import edu.wisc.library.ocfl.api.OcflOption;
 import edu.wisc.library.ocfl.api.OcflRepository;
-import edu.wisc.library.ocfl.api.model.ObjectVersionId;
 import edu.wisc.library.ocfl.api.model.VersionInfo;
 import nl.knaw.dans.ttv.db.TransferItem;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,7 +27,8 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 class OcflRepositoryServiceImplTest {
 

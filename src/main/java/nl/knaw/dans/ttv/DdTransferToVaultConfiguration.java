@@ -22,11 +22,11 @@ import io.dropwizard.db.DataSourceFactory;
 import nl.knaw.dans.ttv.core.config.CollectConfiguration;
 import nl.knaw.dans.ttv.core.config.ConfirmArchivedConfiguration;
 import nl.knaw.dans.ttv.core.config.CreateOcflTarConfiguration;
+import nl.knaw.dans.ttv.core.config.DataArchiveConfiguration;
 import nl.knaw.dans.ttv.core.config.MetadataConfiguration;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
-import java.util.Map;
 
 public class DdTransferToVaultConfiguration extends Configuration {
 
@@ -52,8 +52,15 @@ public class DdTransferToVaultConfiguration extends Configuration {
 
     @Valid
     @NotNull
-    @JsonProperty("dataArchive")
-    private String dataArchiveRoot;
+    private DataArchiveConfiguration dataArchive;
+
+    public DataArchiveConfiguration getDataArchive() {
+        return dataArchive;
+    }
+
+    public void setDataArchive(DataArchiveConfiguration dataArchive) {
+        this.dataArchive = dataArchive;
+    }
 
     public CreateOcflTarConfiguration getCreateOcflTar() {
         return createOcflTar;
@@ -75,14 +82,6 @@ public class DdTransferToVaultConfiguration extends Configuration {
 
     public ConfirmArchivedConfiguration getConfirmArchived() {
         return confirmArchived;
-    }
-
-    public String getDataArchiveRoot() {
-        return dataArchiveRoot;
-    }
-
-    public void setDataArchiveRoot(Map<String, String> dataArchive) {
-        this.dataArchiveRoot = dataArchive.get("baseDir");
     }
 
     public MetadataConfiguration getMetadata() {

@@ -76,7 +76,6 @@ class MetadataTaskTest {
         Mockito.verify(transferItemService).addMetadataAndMoveFile(
             Mockito.eq(transferItem),
             Mockito.any(),
-            Mockito.any(),
             Mockito.eq(TransferItem.TransferStatus.COLLECTED),
             Mockito.eq(Path.of("data/outbox/doi-10-5072-dar-kxteqtv1.0.zip"))
         );
@@ -97,7 +96,6 @@ class MetadataTaskTest {
 
         Mockito.verify(transferItemService).addMetadataAndMoveFile(
             Mockito.eq(transferItem),
-            Mockito.any(),
             Mockito.any(),
             Mockito.eq(TransferItem.TransferStatus.COLLECTED),
             Mockito.eq(Path.of("data/outbox/doi-10-5072-dar-kxteqtv1.0.zip"))

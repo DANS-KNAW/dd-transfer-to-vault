@@ -66,11 +66,11 @@ public class MetadataTaskManager implements Managed {
 
     public void onFileAdded(File file, String datastationName) {
         if (file.isFile() && file.getName().toLowerCase(Locale.ROOT).endsWith(".zip")) {
-            var transferTask = new MetadataTask(
+            var metadataTask = new MetadataTask(
                 file.toPath(), outbox, transferItemService, metadataReader, fileService
             );
 
-            executorService.execute(transferTask);
+            executorService.execute(metadataTask);
         }
     }
 

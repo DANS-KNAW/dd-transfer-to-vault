@@ -16,11 +16,8 @@
 package nl.knaw.dans.ttv.core;
 
 import nl.knaw.dans.ttv.core.dto.ProcessResult;
-import nl.knaw.dans.ttv.core.service.FileService;
-import nl.knaw.dans.ttv.core.service.InboxWatcherFactory;
-import nl.knaw.dans.ttv.core.service.OcflRepositoryService;
+import nl.knaw.dans.ttv.core.service.ArchiveMetadataService;
 import nl.knaw.dans.ttv.core.service.TarCommandRunner;
-import nl.knaw.dans.ttv.core.service.TransferItemMetadataReader;
 import nl.knaw.dans.ttv.core.service.TransferItemService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,50 +26,43 @@ import org.mockito.Mockito;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.UUID;
-import java.util.concurrent.ExecutorService;
 
 import static org.junit.jupiter.api.Assertions.fail;
 
 class TarTaskTest {
 
     private TransferItemService transferItemService;
-    private TransferItemMetadataReader transferItemMetadataReader;
-    private FileService fileService;
-    private ExecutorService executorService;
-    private InboxWatcherFactory inboxWatcherFactory;
-    private OcflRepositoryService ocflRepositoryService;
     private TarCommandRunner tarCommandRunner;
+    private ArchiveMetadataService archiveMetadataService;
 
     @BeforeEach
     void setUp() {
         this.transferItemService = Mockito.mock(TransferItemService.class);
-        this.transferItemMetadataReader = Mockito.mock(TransferItemMetadataReader.class);
-        this.fileService = Mockito.mock(FileService.class);
-        this.executorService = Mockito.mock(ExecutorService.class);
-        this.inboxWatcherFactory = Mockito.mock(InboxWatcherFactory.class);
-        this.ocflRepositoryService = Mockito.mock(OcflRepositoryService.class);
         this.tarCommandRunner = Mockito.mock(TarCommandRunner.class);
+        this.archiveMetadataService = Mockito.mock(ArchiveMetadataService.class);
     }
 
     @Test
     void run() {
         var uuid = UUID.fromString("82fa8591-b7e7-4efc-821e-addacb0cb364");
         var path = Path.of("data/inbox", uuid.toString());
-        var task = new TarTask(transferItemService, uuid, path, "danstst01@surfsara.nl:", "tar", tarCommandRunner);
+        var task = new TarTask(transferItemService, uuid, path, tarCommandRunner, archiveMetadataService);
 
         try {
-            var result = new ProcessResult(0, "OK", null);
+            var result = new ProcessResult(0, "OK");
             Mockito.when(tarCommandRunner.tarDirectory(Mockito.any(), Mockito.any()))
+                .thenReturn(result);
+            Mockito.when(tarCommandRunner.verifyPackage(Mockito.any()))
                 .thenReturn(result);
 
             task.run();
 
             Mockito.verify(tarCommandRunner).tarDirectory(
                 Path.of("data/inbox", uuid.toString()),
-                "danstst01@surfsara.nl:" + uuid.toString() + ".dmftar"
+                uuid + ".dmftar"
             );
 
-            Mockito.verify(transferItemService).updateToCreatedForTarId(uuid.toString());
+            Mockito.verify(transferItemService).updateTarToCreated(Mockito.eq(uuid.toString()), Mockito.any());
         }
         catch (IOException | InterruptedException e) {
             fail(e);
@@ -83,18 +73,20 @@ class TarTaskTest {
     void runWithFailedCommand() {
         var uuid = UUID.fromString("82fa8591-b7e7-4efc-821e-addacb0cb364");
         var path = Path.of("data/inbox", uuid.toString());
-        var task = new TarTask(transferItemService, uuid, path, "danstst01@surfsara.nl:", "tar", tarCommandRunner);
+        var task = new TarTask(transferItemService, uuid, path, tarCommandRunner, archiveMetadataService);
 
         try {
-            var result = new ProcessResult(1, "NOT OK", null);
+            var result = new ProcessResult(1, "NOT OK");
             Mockito.when(tarCommandRunner.tarDirectory(Mockito.any(), Mockito.any()))
+                .thenReturn(result);
+            Mockito.when(tarCommandRunner.verifyPackage(Mockito.any()))
                 .thenReturn(result);
 
             task.run();
 
             Mockito.verify(tarCommandRunner).tarDirectory(
                 Path.of("data/inbox", uuid.toString()),
-                "danstst01@surfsara.nl:" + uuid.toString() + ".dmftar"
+                uuid + ".dmftar"
             );
 
             Mockito.verifyNoInteractions(transferItemService);

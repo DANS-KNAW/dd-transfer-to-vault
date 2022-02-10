@@ -15,7 +15,6 @@
  */
 package nl.knaw.dans.ttv.db;
 
-import org.hibernate.annotations.ColumnDefault;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,6 +25,8 @@ import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 import java.time.LocalDateTime;
@@ -33,94 +34,61 @@ import java.util.Arrays;
 import java.util.Objects;
 
 @Entity
-@Table(name = "transfer_queue", uniqueConstraints={@UniqueConstraint(columnNames = {"dataset_pid" , "version_major", "version_minor"})})
+@Table(name = "transfer_queue", uniqueConstraints = { @UniqueConstraint(columnNames = { "dataset_pid", "version_major", "version_minor" }) })
 public class TransferItem {
 
     private static final Logger log = LoggerFactory.getLogger(TransferItem.class);
-
-    public enum TransferStatus {
-        CREATED,
-        COLLECTED,
-        TARRING,
-        OCFLTARCREATED,
-        CONFIRMEDARCHIVED
-    }
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
-
     @Column(name = "dataset_pid", nullable = false)
     private String datasetPid;
-
     @Column(name = "dataset_version")
     private String datasetVersion;
-
     @Column(name = "version_major", nullable = false)
     private int versionMajor;
-
     @Column(name = "version_minor", nullable = false)
     private int versionMinor;
-
     @Column(name = "creation_time")
     private LocalDateTime creationTime;
-
     @Column(name = "dve_file_path", nullable = false)
     private String dveFilePath;
-
     @Column(name = "bag_id")
     private String bagId;
-
     @Column(name = "nbn")
     private String nbn;
-
     @Column(name = "other_id")
     private String otherId;
-
     @Column(name = "other_id_version")
     private String otherIdVersion;
-
     @Column(name = "sword_token")
     private String swordToken;
-
     @Column(name = "dataset_dv_instance")
     private String datasetDvInstance;
-
     @Column(name = "bag_checksum")
     private String bagChecksum;
-
     @Column(name = "queue_date")
     private LocalDateTime queueDate;
-
     @Column(name = "bag_size")
     private long bagSize;
-
     @Enumerated(EnumType.STRING)
     @Column(name = "transfer_status", nullable = false)
     private TransferStatus transferStatus;
-
     @Column(name = "oai_ore", length = 10000)
-    @org.hibernate.annotations.Type( type="materialized_blob" )
+    @org.hibernate.annotations.Type(type = "materialized_blob")
     private byte[] oaiOre;
-
     @Column(name = "pid_mapping", length = 10000)
-    @org.hibernate.annotations.Type( type="materialized_blob" )
+    @org.hibernate.annotations.Type(type = "materialized_blob")
     private byte[] pidMapping;
-
     @Column(name = "aip_tar_entry_name")
     private String aipTarEntryName;
-
-    @Column(name = "aips_tar")
-    private String aipsTar;
-
+    @ManyToOne
+    @JoinColumn(name = "tar_id")
+    private Tar aipsTar;
     @Column(name = "bag_deposit_date")
     private LocalDateTime bagDepositDate;
 
-    @Column(name = "confirm_check_in_progress")
-    @ColumnDefault("false")
-    private boolean confirmCheckInProgress;
-
-    public TransferItem(){
+    public TransferItem() {
 
     }
 
@@ -293,11 +261,11 @@ public class TransferItem {
         this.aipTarEntryName = aipTarEntryName;
     }
 
-    public String getAipsTar() {
+    public Tar getAipsTar() {
         return aipsTar;
     }
 
-    public void setAipsTar(String aipsTar) {
+    public void setAipsTar(Tar aipsTar) {
         this.aipsTar = aipsTar;
     }
 
@@ -309,45 +277,51 @@ public class TransferItem {
         this.bagDepositDate = bagDepositDate;
     }
 
-    public boolean isConfirmCheckInProgress() {
-        return confirmCheckInProgress;
-    }
-
-    public void setConfirmCheckInProgress(boolean confirmCheckInProgress) {
-        this.confirmCheckInProgress = confirmCheckInProgress;
-    }
-
     @Override
     public String toString() {
         return "TransferItem{" +
-                "id=" + id +
-                ", datasetPid='" + datasetPid + '\'' +
-                ", datasetVersion='" + datasetVersion + '\'' +
-                ", versionMajor=" + versionMajor +
-                ", versionMinor=" + versionMinor +
-                ", creationTime=" + creationTime +
-                ", dveFilePath='" + dveFilePath + '\'' +
-                ", bagId='" + bagId + '\'' +
-                ", nbn='" + nbn + '\'' +
-                ", otherId='" + otherId + '\'' +
-                ", otherIdVersion='" + otherIdVersion + '\'' +
-                ", swordToken='" + swordToken + '\'' +
-                ", datasetDvInstance='" + datasetDvInstance + '\'' +
-                ", bagChecksum='" + bagChecksum + '\'' +
-                ", queueDate=" + queueDate +
-                ", bagSize=" + bagSize +
-                ", transferStatus=" + transferStatus +
-                ", aipTarEntryName='" + aipTarEntryName + '\'' +
-                ", aipsTar='" + aipsTar + '\'' +
-                ", bagDepositDate=" + bagDepositDate +
-                '}';
+            "id=" + id +
+            ", datasetPid='" + datasetPid + '\'' +
+            ", datasetVersion='" + datasetVersion + '\'' +
+            ", versionMajor=" + versionMajor +
+            ", versionMinor=" + versionMinor +
+            ", creationTime=" + creationTime +
+            ", dveFilePath='" + dveFilePath + '\'' +
+            ", bagId='" + bagId + '\'' +
+            ", nbn='" + nbn + '\'' +
+            ", otherId='" + otherId + '\'' +
+            ", otherIdVersion='" + otherIdVersion + '\'' +
+            ", swordToken='" + swordToken + '\'' +
+            ", datasetDvInstance='" + datasetDvInstance + '\'' +
+            ", bagChecksum='" + bagChecksum + '\'' +
+            ", queueDate=" + queueDate +
+            ", bagSize=" + bagSize +
+            ", transferStatus=" + transferStatus +
+            ", aipTarEntryName='" + aipTarEntryName + '\'' +
+            ", aipsTar='" + aipsTar + '\'' +
+            ", bagDepositDate=" + bagDepositDate +
+            '}';
     }
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
         TransferItem that = (TransferItem) o;
-        return versionMajor == that.versionMajor && versionMinor == that.versionMinor && bagSize == that.bagSize && datasetPid.equals(that.datasetPid) && Objects.equals(datasetVersion, that.datasetVersion) && creationTime.equals(that.creationTime) && dveFilePath.equals(that.dveFilePath) && Objects.equals(bagId, that.bagId) && Objects.equals(nbn, that.nbn) && Objects.equals(otherId, that.otherId) && Objects.equals(otherIdVersion, that.otherIdVersion) && Objects.equals(swordToken, that.swordToken) && Objects.equals(datasetDvInstance, that.datasetDvInstance) && Objects.equals(bagChecksum, that.bagChecksum) && Objects.equals(queueDate, that.queueDate) && transferStatus == that.transferStatus && Arrays.equals(oaiOre, that.oaiOre) && Arrays.equals(pidMapping, that.pidMapping) && Objects.equals(aipTarEntryName, that.aipTarEntryName) && Objects.equals(aipsTar, that.aipsTar) && Objects.equals(bagDepositDate, that.bagDepositDate) && confirmCheckInProgress == that.confirmCheckInProgress;
+        return versionMajor == that.versionMajor && versionMinor == that.versionMinor && bagSize == that.bagSize && datasetPid.equals(that.datasetPid) && Objects.equals(datasetVersion,
+            that.datasetVersion) && creationTime.equals(that.creationTime) && dveFilePath.equals(that.dveFilePath) && Objects.equals(bagId, that.bagId) && Objects.equals(nbn, that.nbn)
+            && Objects.equals(otherId, that.otherId) && Objects.equals(otherIdVersion, that.otherIdVersion) && Objects.equals(swordToken, that.swordToken) && Objects.equals(datasetDvInstance,
+            that.datasetDvInstance) && Objects.equals(bagChecksum, that.bagChecksum) && Objects.equals(queueDate, that.queueDate) && transferStatus == that.transferStatus && Arrays.equals(oaiOre,
+            that.oaiOre) && Arrays.equals(pidMapping, that.pidMapping) && Objects.equals(aipTarEntryName, that.aipTarEntryName) && Objects.equals(aipsTar, that.aipsTar) && Objects.equals(
+            bagDepositDate, that.bagDepositDate);
+    }
+
+    public enum TransferStatus {
+        CREATED,
+        COLLECTED,
+        TARRING,
+        OCFLTARCREATED
     }
 }

@@ -54,29 +54,6 @@ public class TransferItemDAO extends AbstractDAO<TransferItem> {
         return query.list();
     }
 
-    public List<TransferItem> findAllByTarId(String id) {
-        var query = currentSession().createQuery("from TransferItem where aipsTar = :id", TransferItem.class);
-        query.setParameter("id", id);
-
-        return query.list();
-    }
-
-    public void updateStatusByTar(String id, TransferItem.TransferStatus status) {
-        var query = currentSession().createQuery(
-            "update TransferItem "
-            + "set transferStatus = :status "
-            + "where aipsTar = :id");
-
-        query.setParameter("id", id);
-        query.setParameter("status", status);
-        query.executeUpdate();
-
-        // have to evict items so they are re-fetched and not pulled from cache
-        for (var item: findAllByTarId(id)) {
-            currentSession().evict(item);
-        }
-    }
-
     public Optional<TransferItem> findByDatasetPidAndVersion(String datasetPid, int versionMajor, int versionMinor) {
         var query = currentSession().createQuery(
             "from TransferItem "
@@ -90,34 +67,5 @@ public class TransferItemDAO extends AbstractDAO<TransferItem> {
         query.setParameter("versionMinor", versionMinor);
 
         return query.getResultStream().findFirst();
-    }
-
-    public List<TransferItem> findAllTarsToBeConfirmed() {
-        var query = currentSession().createQuery(
-            "from TransferItem "
-                + "where transferStatus = :status "
-                + "and confirmCheckInProgress = false ", TransferItem.class);
-
-        query.setParameter("status", TransferItem.TransferStatus.OCFLTARCREATED);
-
-        return query.list();
-    }
-
-    public void updateCheckingProgressResults(String id, TransferItem.TransferStatus status) {
-        var query = currentSession().createQuery(
-            "update TransferItem "
-                + "set transferStatus = :status, "
-                + "    confirmCheckInProgress = false "
-                + "where aipsTar = :id");
-
-        query.setParameter("id", id);
-        query.setParameter("status", status);
-
-        query.executeUpdate();
-
-        // have to evict items so they are re-fetched and not pulled from cache
-        for (var item: findAllByTarId(id)) {
-            currentSession().evict(item);
-        }
     }
 }

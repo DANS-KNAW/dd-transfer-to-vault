@@ -23,4 +23,7 @@ import java.nio.file.Path;
 public interface TarCommandRunner {
 
     ProcessResult tarDirectory(Path path, String target) throws IOException, InterruptedException;
+
+    ProcessResult verifyPackage(String targetPackage) throws IOException, InterruptedException;
+
 }
