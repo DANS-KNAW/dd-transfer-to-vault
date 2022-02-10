@@ -53,6 +53,16 @@ public class InboxWatcher extends FileAlterationListenerAdaptor implements Manag
 
     @Override
     public void onFileCreate(File file) {
+        // see if file is a direct descendant of path
+        // if not, ignore it
+        var expected = Path.of(String.valueOf(this.path), file.getName());
+        log.trace("comparing directories: '{}' vs '{}'", file.toPath(), expected);
+
+        if (!file.toPath().equals(expected)) {
+            log.warn("File found in non-root directory, ignoring");
+            return;
+        }
+
         this.callback.onFileCreate(file, datastationName);
     }
 

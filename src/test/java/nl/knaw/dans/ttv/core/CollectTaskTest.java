@@ -22,6 +22,7 @@ import nl.knaw.dans.ttv.core.service.TransferItemService;
 import nl.knaw.dans.ttv.db.TransferItem;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
 import org.mockito.Mockito;
 
 import java.io.IOException;
@@ -29,6 +30,7 @@ import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.fail;
 
 class CollectTaskTest {
@@ -122,6 +124,24 @@ class CollectTaskTest {
     }
 
     @Test
+    void cleanUpXmlFileDoesNotExist() throws IOException {
+        var filePath = Path.of("data/inbox/doi-10-5072-dar-kxteqtv1.0.zip");
+        var outbox = Path.of("data/outbox");
+        var datastationName = "dsname";
+
+        var task = new CollectTask(filePath, outbox, datastationName, transferItemService, transferItemMetadataReader, fileService);
+        var testPath = Path.of("data/inbox/doi-10-5072-dar-kxteqt-datacite.v1.0.zip");
+
+        Mockito.when(transferItemMetadataReader.getAssociatedXmlFile(filePath))
+            .thenReturn(Optional.of(testPath));
+
+        Mockito.when(fileService.deleteFile(Mockito.any()))
+            .thenThrow(IOException.class);
+
+        assertDoesNotThrow(() -> task.cleanUpXmlFile(filePath));
+    }
+
+    @Test
     void moveFileToOutbox() {
         var filePath = Path.of("data/inbox/doi-10-5072-dar-kxteqtv1.0.zip");
         var workDir = Path.of("data/workdir");
@@ -143,4 +163,44 @@ class CollectTaskTest {
             fail(e);
         }
     }
+
+    @Test
+    void testDuplicateFile() throws IOException {
+        var filePath = Path.of("data/inbox/doi-10-5072-dar-kxteqtv1.0.zip");
+        var outbox = Path.of("data/outbox");
+        var datastationName = "dsname";
+
+        var task = new CollectTask(filePath, outbox, datastationName, transferItemService, transferItemMetadataReader, fileService);
+        var transferItem = new TransferItem("test", 1, 0, "path", LocalDateTime.now(), TransferItem.TransferStatus.TARRING);
+
+        Mockito.when(transferItemService.getTransferItemByFilenameAttributes(Mockito.any()))
+            .thenReturn(Optional.of(transferItem));
+
+        task.run();
+
+        Mockito.verify(fileService, Mockito.times(1)).rejectFile(Mockito.any(), Mockito.any());
+
+        Mockito.verify(fileService, Mockito.times(0)).moveFileAtomically(Mockito.any(), Mockito.any());
+        Mockito.verify(transferItemService, Mockito.times(0)).moveTransferItem(Mockito.any(), Mockito.any(), Mockito.any());
+    }
+
+    @Test
+    void testIOErrorMovingFileDoesntBreakCode() throws IOException {
+        var filePath = Path.of("data/inbox/doi-10-5072-dar-kxteqtv1.0.zip");
+        var outbox = Path.of("data/outbox");
+        var datastationName = "dsname";
+
+        var task = new CollectTask(filePath, outbox, datastationName, transferItemService, transferItemMetadataReader, fileService);
+        var transferItem = new TransferItem("test", 1, 0, "path", LocalDateTime.now(), TransferItem.TransferStatus.TARRING);
+
+        Mockito.doThrow(IOException.class)
+                .when(fileService).rejectFile(Mockito.any(), Mockito.any());
+
+        Mockito.when(transferItemService.getTransferItemByFilenameAttributes(Mockito.any()))
+            .thenReturn(Optional.of(transferItem));
+
+        assertDoesNotThrow(task::run);
+        Mockito.verify(fileService, Mockito.times(1)).rejectFile(Mockito.any(), Mockito.any());
+    }
+
 }

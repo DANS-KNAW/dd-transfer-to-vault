@@ -20,8 +20,10 @@ import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
@@ -47,6 +49,57 @@ public class FileServiceImpl implements FileService {
 
         moveFile(filePath, tempTarget);
         return moveFile(tempTarget, newPath);
+    }
+
+    @Override
+    public void ensureDirectoryExists(Path errorPath) throws IOException {
+        Files.createDirectories(errorPath);
+    }
+
+    /**
+     * Moves a file to the rejected/ subfolder of where it was initially found
+     * If a file already exists, it will append a number to the filename.
+     *
+     * It also writes an error description inside a file which is named
+     * `filename`.error.txt (or `filename`.1.error.txt` if it already exists)
+     *
+     * @param path The path to the file to reject
+     */
+    @Override
+    public void rejectFile(Path path, Exception exception) throws IOException {
+        var rejectedFolder = path.getParent().resolve("rejected");
+        ensureDirectoryExists(rejectedFolder);
+
+        log.debug("moving rejected file to '{}'", rejectedFolder);
+        var index = path.getFileName().toString().lastIndexOf(".");
+        var extension = path.getFileName().toString().substring(index);
+        var fileBaseName = path.getFileName().toString().substring(0, index);
+
+        log.trace("file base name is '{}', extension is '{}'", extension, fileBaseName);
+        var rejectedFileName = fileBaseName + extension;
+        var errorFileName = fileBaseName + ".error.txt";
+
+        var duplicateCounter = 1;
+
+        while (Files.exists(Path.of(rejectedFolder.toString(), rejectedFileName))) {
+            rejectedFileName = fileBaseName + "_" + duplicateCounter + extension;
+            errorFileName = fileBaseName + "_" + duplicateCounter + ".error.txt";
+
+            duplicateCounter += 1;
+        }
+
+        var targetPath =Path.of(rejectedFolder.toString(), rejectedFileName);
+        var targetErrorPath = Path.of(rejectedFolder.toString(), errorFileName);
+
+        log.trace("moving file to '{}', writing error report to '{}'", targetPath, targetErrorPath);
+        Files.move(path, targetPath);
+        writeExceptionToFile(targetErrorPath, exception);
+    }
+
+    void writeExceptionToFile(Path errorReportName, Exception exception) throws FileNotFoundException {
+        var writer = new PrintWriter(errorReportName.toFile());
+        exception.printStackTrace(writer);
+        writer.close();
     }
 
     @Override
