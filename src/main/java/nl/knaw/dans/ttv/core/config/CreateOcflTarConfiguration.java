@@ -41,10 +41,6 @@ public class CreateOcflTarConfiguration {
 
     @Valid
     @NotNull
-    private String tarCommand;
-
-    @Valid
-    @NotNull
     @Min(1)
     private long pollingInterval;
     @Valid
@@ -81,14 +77,6 @@ public class CreateOcflTarConfiguration {
 
     public void setInboxThreshold(long inboxThreshold) {
         this.inboxThreshold = inboxThreshold;
-    }
-
-    public String getTarCommand() {
-        return tarCommand;
-    }
-
-    public void setTarCommand(String tarCommand) {
-        this.tarCommand = tarCommand;
     }
 
     public ExecutorServiceFactory getTaskQueue() {

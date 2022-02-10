@@ -27,13 +27,14 @@ metadata:
     keepAliveTime: 60 seconds
 
 dataArchive:
-  baseDir: 'danstst0@archive.surfsara.nl:'
+  user: 'danstst0'
+  host: 'archive.surfsara.nl'
+  path: 'dans-vault'
 
 createOcflTar:
   inbox: /var/opt/dans.knaw.nl/tmp/ocfl-tar/inbox
   workDir: /var/opt/dans.knaw.nl/tmp/ocfl-tar/workdirs
   inboxThreshold: 2G
-  tarCommand: 'dmftar -c -f %s %s' # target, source
   # polling interval in milliseconds
   pollingInterval: 500
   taskQueue:
