@@ -39,6 +39,7 @@ public class TarTaskManager implements Managed {
     private final ExecutorService executorService;
     private final Path inboxPath;
     private final Path workDir;
+    private final String vaultPath;
     private final long inboxThreshold;
     private final InboxWatcherFactory inboxWatcherFactory;
     private final FileService fileService;
@@ -49,10 +50,11 @@ public class TarTaskManager implements Managed {
     private final ArchiveMetadataService archiveMetadataService;
     private InboxWatcher inboxWatcher;
 
-    public TarTaskManager(Path inboxPath, Path workDir, long inboxThreshold, long pollingInterval, ExecutorService executorService,
+    public TarTaskManager(Path inboxPath, Path workDir, String vaultPath, long inboxThreshold, long pollingInterval, ExecutorService executorService,
         InboxWatcherFactory inboxWatcherFactory,
         FileService fileService, OcflRepositoryService ocflRepositoryService, TransferItemService transferItemService, TarCommandRunner tarCommandRunner,
         ArchiveMetadataService archiveMetadataService) {
+        this.vaultPath = vaultPath;
         this.executorService = executorService;
         this.inboxPath = inboxPath;
         this.workDir = workDir;
@@ -109,7 +111,7 @@ public class TarTaskManager implements Managed {
 
     public void moveAllInboxFilesToOcflRepo(OcflRepository ocflRepository, UUID uuid) throws IOException {
         // create a tar record with all COLLECTED TransferItem's in it
-        var tarArchive = transferItemService.createTarArchiveWithAllCollectedTransferItems(uuid);
+        var tarArchive = transferItemService.createTarArchiveWithAllCollectedTransferItems(uuid, vaultPath);
 
         // import them into the OCFL repo
         for (var transferItem : tarArchive.getTransferItems()) {

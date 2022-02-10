@@ -313,11 +313,12 @@ class TransferItemServiceImplTest {
         Mockito.when(tarDAO.save(Mockito.any()))
             .then(a -> a.getArguments()[0]);
 
-        var tar = transferItemService.createTarArchiveWithAllCollectedTransferItems(uuid);
+        var tar = transferItemService.createTarArchiveWithAllCollectedTransferItems(uuid, "some-path");
 
         assertEquals(uuid.toString(), tar.getTarUuid());
         assertEquals(Tar.TarStatus.TARRING, tar.getTarStatus());
         assertNotNull(tar.getCreated());
+        assertEquals("some-path", tar.getVaultPath());
 
         assertEquals(tar, items.get(0).getAipsTar());
         assertEquals(tar, items.get(1).getAipsTar());

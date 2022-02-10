@@ -35,29 +35,28 @@ public class Tar {
     @Id
     @Column(name = "tar_uuid", nullable = false)
     private String tarUuid;
-
     @Column(name = "vault_path")
     private String vaultPath;
-
     @Column(name = "datetime_created")
     private LocalDateTime created;
-
     @Column(name = "datetime_confirmed_archived")
     private LocalDateTime datetimeConfirmedArchived;
-
     @OneToMany(mappedBy = "aipsTar", cascade = CascadeType.ALL)
     private List<TransferItem> transferItems;
-
     @Column(name = "confirm_check_in_progress")
     @ColumnDefault("false")
     private boolean confirmCheckInProgress;
-
     @Enumerated(EnumType.STRING)
     @Column(name = "tar_status")
     private TarStatus tarStatus;
-
     @OneToMany(mappedBy = "tar", cascade = CascadeType.ALL)
     private List<TarPart> tarParts = new ArrayList<>();
+
+    public Tar(String tarUuid, TarStatus status, boolean confirmCheckInProgress) {
+        this.tarUuid = tarUuid;
+        this.tarStatus = status;
+        this.confirmCheckInProgress = confirmCheckInProgress;
+    }
 
     public Tar() {
 

@@ -236,11 +236,15 @@ public class TransferItemServiceImpl implements TransferItemService {
 
     @Override
     @UnitOfWork
-    public Tar createTarArchiveWithAllCollectedTransferItems(UUID uuid) {
+    public Tar createTarArchiveWithAllCollectedTransferItems(UUID uuid, String vaultPath) {
+        Objects.requireNonNull(uuid, "uuid cannot be null");
+        Objects.requireNonNull(uuid, "vaultPath cannot be null");
+
         var tarArchive = new Tar();
         tarArchive.setTarUuid(uuid.toString());
         tarArchive.setTarStatus(Tar.TarStatus.TARRING);
         tarArchive.setCreated(LocalDateTime.now());
+        tarArchive.setVaultPath(vaultPath);
         // TODO add vault path property
 
         var transferItems = transferItemDAO.findByStatus(TransferItem.TransferStatus.COLLECTED);

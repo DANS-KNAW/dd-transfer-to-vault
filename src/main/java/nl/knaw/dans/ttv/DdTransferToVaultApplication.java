@@ -131,6 +131,7 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
         final var tarTaskManager = new TarTaskManager(
             configuration.getCreateOcflTar().getInbox(),
             configuration.getCreateOcflTar().getWorkDir(),
+            configuration.getDataArchive().getPath(),
             configuration.getCreateOcflTar().getInboxThreshold(),
             configuration.getCreateOcflTar().getPollingInterval(),
             createTarExecutorService,

@@ -67,7 +67,7 @@ class TarTaskManagerTest {
     @Test
     void onNewItemInInbox() {
         var manager = new TarTaskManager(
-            Path.of("data/inbox"), Path.of("data/workdir"), 50, 100L,
+            Path.of("data/inbox"), Path.of("data/workdir"), "some-path", 50, 100L,
             executorService, inboxWatcherFactory, fileService, ocflRepositoryService, transferItemService,
             tarCommandRunner, archiveMetadataService);
 
@@ -83,7 +83,7 @@ class TarTaskManagerTest {
             Mockito.when(fileService.getPathSize(Path.of("data/inbox")))
                 .thenReturn(100L);
 
-            Mockito.when(transferItemService.createTarArchiveWithAllCollectedTransferItems(Mockito.any()))
+            Mockito.when(transferItemService.createTarArchiveWithAllCollectedTransferItems(Mockito.any(), Mockito.eq("some-path")))
                 .thenReturn(tar);
 
             manager.onNewItemInInbox(new File("test.zip"));
@@ -116,7 +116,7 @@ class TarTaskManagerTest {
     @Test
     void testThresholdIsNotReached() {
         var manager = new TarTaskManager(
-            Path.of("data/inbox"), Path.of("data/workdir"), 50, 100L,
+            Path.of("data/inbox"), Path.of("data/workdir"), "some-path", 50, 100L,
             executorService, inboxWatcherFactory, fileService, ocflRepositoryService, transferItemService,
             tarCommandRunner, archiveMetadataService);
 

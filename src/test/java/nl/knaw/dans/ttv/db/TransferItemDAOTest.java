@@ -95,78 +95,6 @@ class TransferItemDAOTest {
     }
 
     @Test
-    void findById() {
-    }
-
-    @Test
-    void save() {
-    }
-
-    @Test
-    void findAllStatusExtract() {
-    }
-
-    @Test
-    void findAllStatusMove() {
-    }
-
-    @Test
-    void findAllStatusTar() {
-    }
-
-    @Test
-    void findAllStatusTarring() {
-    }
-
-    @Test
-    void merge() {
-    }
-
-    @Test
-    void flush() {
-    }
-
-    @Test
-    void findByDvePath() {
-    }
-
-    @Test
-    void findByStatus() {
-    }
-
-    @Test
-    void findAllByTarId() {
-    }
-
-    /*
-    @Test
-    void updateStatusByTar() {
-
-        daoTestRule.inTransaction(() -> {
-            var item1 = new TransferItem("doi:10.5072/FK2/P4PHV7", 1, 0, "src/test/resources/doi-10-5072-fk2-p4phv7v-1-0/metadata/oai-ore.jsonld", LocalDateTime.parse("2007-12-03T10:15:30"),
-                TransferItem.TransferStatus.COLLECTED);
-            item1.setAipsTar("the_tar_id");
-            var item2 = new TransferItem("doi:10.5073/FK2/P4PHV7", 1, 0, "src/test/resources/doi-10-5072-fk2-p4phv7v-1-0/metadata/oai-ore.jsonld", LocalDateTime.parse("2007-12-03T10:15:30"),
-                TransferItem.TransferStatus.COLLECTED);
-            item2.setAipsTar("the_tar_id");
-            var item3 = new TransferItem("doi:10.5074/FK2/P4PHV7", 1, 0, "src/test/resources/doi-10-5072-fk2-p4phv7v-1-0/metadata/oai-ore.jsonld", LocalDateTime.parse("2007-12-03T10:15:30"),
-                TransferItem.TransferStatus.COLLECTED);
-            item3.setAipsTar("different_tar_id");
-            transferItemDAO.save(item1);
-            transferItemDAO.save(item2);
-            transferItemDAO.save(item3);
-
-            transferItemDAO.updateStatusByTar("the_tar_id", TransferItem.TransferStatus.OCFLTARCREATED);
-        });
-
-        var transferItems = transferItemDAO.findByStatus(TransferItem.TransferStatus.OCFLTARCREATED);
-        assertThat(transferItems).extracting("datasetPid")
-            .containsOnly("doi:10.5072/FK2/P4PHV7", "doi:10.5073/FK2/P4PHV7");
-        assertThat(transferItems).extracting("transferStatus")
-            .containsOnly(TransferItem.TransferStatus.OCFLTARCREATED);
-    }*/
-
-    @Test
     void findByDatasetPidAndVersion() {
         daoTestRule.inTransaction(() -> {
             transferItemDAO.save(new TransferItem("doi:10.5072/FK2/P4PHV7", 1, 0, "src/test/resources/doi-10-5072-fk2-p4phv7v-1-0/metadata/oai-ore.jsonld", LocalDateTime.parse("2007-12-03T10:15:30"),
@@ -185,68 +113,22 @@ class TransferItemDAOTest {
         var noMatch = transferItemDAO.findByDatasetPidAndVersion("doi:10.5072/FK2/JOY8UU", 3, 0);
         assertThat(noMatch.isPresent()).isEqualTo(false);
     }
-/*
+
     @Test
-    void findAllTarsToBeConfirmed() {
+    void findByStatus() {
         daoTestRule.inTransaction(() -> {
-            var item1 = new TransferItem("doi:10.5072/FK2/P4PHV7", 1, 0, "src/test/resources/doi-10-5072-fk2-p4phv7v-1-0/metadata/oai-ore.jsonld", LocalDateTime.parse("2007-12-03T10:15:30"),
-                TransferItem.TransferStatus.OCFLTARCREATED);
-            var item2 = new TransferItem("doi:10.5073/FK2/P4PHV7", 1, 0, "src/test/resources/doi-10-5072-fk2-p4phv7v-1-0/metadata/oai-ore.jsonld", LocalDateTime.parse("2007-12-03T10:15:30"),
-                TransferItem.TransferStatus.OCFLTARCREATED);
-            item2.setConfirmCheckInProgress(true);
-            var item3 = new TransferItem("doi:10.5074/FK2/P4PHV7", 1, 0, "src/test/resources/doi-10-5072-fk2-p4phv7v-1-0/metadata/oai-ore.jsonld", LocalDateTime.parse("2007-12-03T10:15:30"),
-                TransferItem.TransferStatus.COLLECTED);
-            transferItemDAO.save(item1);
-            transferItemDAO.save(item2);
-            transferItemDAO.save(item3);
+            transferItemDAO.save(new TransferItem("doi:10.5072/FK2/P4PHV7", 1, 0, "src/test/resources/doi-10-5072-fk2-p4phv7v-1-0/metadata/oai-ore.jsonld", LocalDateTime.parse("2007-12-03T10:15:30"),
+                TransferItem.TransferStatus.COLLECTED));
+            transferItemDAO.save(new TransferItem("doi:10.5072/FK2/JOY8UU", 2, 0, "src/test/resources/doi-10-5072-fk2-joy8uuv-2-0/metadata/oai-ore.jsonld", LocalDateTime.parse("2008-12-03T11:30:00"),
+                TransferItem.TransferStatus.CREATED));
+            transferItemDAO.save(new TransferItem("doi:10.5072/FK2/QZ0LJQ", 1, 2, "src/test/resources/doi-10-5072-fk2-qz0ljqv-1-2/metadata/oai-ore.jsonld", LocalDateTime.parse("2020-08-03T00:15:22"),
+                TransferItem.TransferStatus.TARRING));
         });
 
-        final List<TransferItem> transferItems = transferItemDAO.findAllTarsToBeConfirmed();
-        assertThat(transferItems).extracting("datasetPid")
+        var items = transferItemDAO.findByStatus(TransferItem.TransferStatus.COLLECTED);
+
+        assertThat(items).extracting("datasetPid")
             .containsOnly("doi:10.5072/FK2/P4PHV7");
-        assertThat(transferItems).extracting("confirmCheckInProgress")
-            .containsOnly(false);
-
-    }
-*/
-
-    /*
-    @Test
-    void updateCheckingProgressResults() {
-        daoTestRule.inTransaction(() -> {
-            var item1 = new TransferItem("doi:10.5072/FK2/P4PHV7", 1, 0, "src/test/resources/doi-10-5072-fk2-p4phv7v-1-0/metadata/oai-ore.jsonld", LocalDateTime.parse("2007-12-03T10:15:30"),
-                TransferItem.TransferStatus.COLLECTED);
-            item1.setConfirmCheckInProgress(true);
-            item1.setAipsTar("the_tar_id");
-            var item2 = new TransferItem("doi:10.5073/FK2/P4PHV7", 1, 0, "src/test/resources/doi-10-5072-fk2-p4phv7v-1-0/metadata/oai-ore.jsonld", LocalDateTime.parse("2007-12-03T10:15:30"),
-                TransferItem.TransferStatus.COLLECTED);
-            item2.setConfirmCheckInProgress(true);
-            item2.setAipsTar("the_tar_id");
-            var item3 = new TransferItem("doi:10.5074/FK2/P4PHV7", 1, 0, "src/test/resources/doi-10-5072-fk2-p4phv7v-1-0/metadata/oai-ore.jsonld", LocalDateTime.parse("2007-12-03T10:15:30"),
-                TransferItem.TransferStatus.COLLECTED);
-            item3.setConfirmCheckInProgress(true);
-            item3.setAipsTar("different_tar_id");
-            transferItemDAO.save(item1);
-            transferItemDAO.save(item2);
-            transferItemDAO.save(item3);
-
-            transferItemDAO.updateCheckingProgressResults("the_tar_id", TransferItem.TransferStatus.OCFLTARCREATED);
-        });
-
-        // this one should be unmodified
-        var collected = transferItemDAO.findByStatus(TransferItem.TransferStatus.COLLECTED);
-        assertThat(collected).extracting("datasetPid")
-            .containsOnly("doi:10.5074/FK2/P4PHV7");
-        assertThat(collected).extracting("confirmCheckInProgress")
-            .containsOnly(true);
-
-        // these should be modified
-        var created = transferItemDAO.findByStatus(TransferItem.TransferStatus.OCFLTARCREATED);
-        assertThat(created).extracting("datasetPid")
-            .containsOnly("doi:10.5073/FK2/P4PHV7", "doi:10.5072/FK2/P4PHV7");
-        assertThat(created).extracting("confirmCheckInProgress")
-            .containsOnly(false);
     }
 
-     */
 }
