@@ -17,10 +17,7 @@ package nl.knaw.dans.ttv.core.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import nl.knaw.dans.ttv.core.InvalidTransferItemException;
-import nl.knaw.dans.ttv.core.service.FileService;
-import nl.knaw.dans.ttv.core.service.TransferItemMetadataReaderImpl;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
 import org.mockito.Mockito;
 
 import java.io.ByteArrayInputStream;

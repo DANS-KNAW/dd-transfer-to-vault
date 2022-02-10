@@ -22,8 +22,6 @@ import org.slf4j.LoggerFactory;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.Arrays;
-import java.util.stream.Collectors;
 
 public class ProcessRunnerImpl implements ProcessRunner {
     private static final Logger log = LoggerFactory.getLogger(ProcessRunnerImpl.class);
