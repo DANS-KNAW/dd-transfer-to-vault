@@ -49,8 +49,14 @@ public class MetadataTask implements Runnable {
             processFile(this.filePath);
         }
         catch (IOException | InvalidTransferItemException e) {
-            log.error("unable to create TransferItem for path '{}'", this.filePath, e);
-            // TODO move to deadletter box
+            log.error("Unable to create TransferItem for path '{}'", this.filePath, e);
+
+            try {
+                fileService.rejectFile(this.filePath, e);
+            }
+            catch (IOException ex) {
+                log.error("Unable to reject file", ex);
+            }
         }
     }
 

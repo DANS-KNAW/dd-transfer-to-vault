@@ -70,18 +70,55 @@ public class TarTaskManager implements Managed {
 
     @Override
     public void start() throws Exception {
+        // verify inbox first
+        log.info("Verifying inbox '{}'", this.inboxPath);
+        verifyInbox();
+
         // start up file watcher
-        log.info("starting watch on inbox {}", this.inboxPath);
+        log.info("Starting watch on inbox '{}'", this.inboxPath);
 
         this.inboxWatcher = inboxWatcherFactory.getInboxWatcher(this.inboxPath, null, (file, ds) -> {
-            log.trace("received InboxWatcher event for file {}", file);
+            log.trace("Received InboxWatcher event for file '{}'", file);
             this.onNewItemInInbox(file);
         }, pollingInterval);
 
         this.inboxWatcher.start();
     }
 
-    public void onNewItemInInbox(File file) {
+    @Override
+    public void stop() throws Exception {
+        this.inboxWatcher.stop();
+    }
+
+    void verifyInbox() {
+        var tars = transferItemService.findTarsByStatusTarring();
+
+        for (var tar : tars) {
+            log.trace("Checking status for TAR {}", tar);
+            var ocflRepository = ocflRepositoryService.openRepository(workDir, tar.getTarUuid());
+
+            for (var transferItem : tar.getTransferItems()) {
+                var objectId = ocflRepositoryService.getObjectIdForTransferItem(transferItem);
+                log.trace("Checking status for objectId {}", objectId);
+
+                // object not in repository yet, just import it
+                if (!ocflRepository.containsObject(objectId)) {
+                    log.warn("Object id {} has not yet been imported in the OCFL repository yet, doing so now", objectId);
+                    ocflRepositoryService.importTransferItem(ocflRepository, transferItem);
+                }
+
+                transferItem.setAipTarEntryName(objectId);
+            }
+
+            log.trace("Saving TAR {}", tar);
+            transferItemService.save(tar);
+
+            log.info("Starting TarTask for TAR {}", tar.getTarUuid());
+            startTarringTask(UUID.fromString(tar.getTarUuid()));
+        }
+    }
+
+    void onNewItemInInbox(File file) {
         log.info("New item in inbox, filename is {}", file);
         log.info("Checking total size of inbox located at {}", inboxPath);
 
@@ -102,14 +139,14 @@ public class TarTaskManager implements Managed {
         }
     }
 
-    private void startTarringTask(UUID uuid) {
+    void startTarringTask(UUID uuid) {
         var repoPath = Path.of(workDir.toString(), uuid.toString());
         var task = new TarTask(transferItemService, uuid, repoPath, tarCommandRunner, archiveMetadataService);
 
         executorService.execute(task);
     }
 
-    public void moveAllInboxFilesToOcflRepo(OcflRepository ocflRepository, UUID uuid) throws IOException {
+    void moveAllInboxFilesToOcflRepo(OcflRepository ocflRepository, UUID uuid) throws IOException {
         // create a tar record with all COLLECTED TransferItem's in it
         var tarArchive = transferItemService.createTarArchiveWithAllCollectedTransferItems(uuid, vaultPath);
 
@@ -126,12 +163,8 @@ public class TarTaskManager implements Managed {
         ocflRepositoryService.closeOcflRepository(ocflRepository);
     }
 
-    public OcflRepository createOcflRepo(UUID uuid) throws IOException {
+    OcflRepository createOcflRepo(UUID uuid) throws IOException {
         return ocflRepositoryService.createRepository(workDir, uuid.toString());
     }
 
-    @Override
-    public void stop() throws Exception {
-        this.inboxWatcher.stop();
-    }
 }

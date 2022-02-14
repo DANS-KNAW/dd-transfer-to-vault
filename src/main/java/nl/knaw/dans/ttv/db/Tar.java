@@ -15,6 +15,7 @@
  */
 package nl.knaw.dans.ttv.db;
 
+import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.ColumnDefault;
 
 import javax.persistence.CascadeType;
@@ -22,6 +23,7 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
+import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
@@ -49,7 +51,7 @@ public class Tar {
     @Enumerated(EnumType.STRING)
     @Column(name = "tar_status")
     private TarStatus tarStatus;
-    @OneToMany(mappedBy = "tar", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "tar", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TarPart> tarParts = new ArrayList<>();
 
     public Tar(String tarUuid, TarStatus status, boolean confirmCheckInProgress) {
@@ -133,6 +135,19 @@ public class Tar {
     public enum TarStatus {
         TARRING,
         OCFLTARCREATED,
-        CONFIRMEDARCHIVED
+        OCFLTARFAILED,
+        CONFIRMEDARCHIVED,
+    }
+
+    @Override
+    public String toString() {
+        return "Tar{" +
+            "tarUuid='" + tarUuid + '\'' +
+            ", vaultPath='" + vaultPath + '\'' +
+            ", created=" + created +
+            ", datetimeConfirmedArchived=" + datetimeConfirmedArchived +
+            ", confirmCheckInProgress=" + confirmCheckInProgress +
+            ", tarStatus=" + tarStatus +
+            '}';
     }
 }

@@ -65,6 +65,21 @@ public class TarCommandRunnerImpl implements TarCommandRunner {
         return processRunner.run(command);
     }
 
+    @Override
+    public ProcessResult deletePackage(String path) throws IOException, InterruptedException {
+        var remotePath = Path.of(dataArchiveConfiguration.getPath(), path);
+        var command = new String[] {
+            "ssh",
+            getSshHost(),
+            "dmftar",
+            "--delete-archive",
+            "-f",
+            remotePath.toString()
+        };
+
+        return processRunner.run(command);
+    }
+
     private String getSshHost() {
         return String.format("%s@%s", this.dataArchiveConfiguration.getUser(), this.dataArchiveConfiguration.getHost());
     }

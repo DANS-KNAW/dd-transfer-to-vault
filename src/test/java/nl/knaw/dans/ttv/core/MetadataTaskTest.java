@@ -104,7 +104,7 @@ class MetadataTaskTest {
 
     @ParameterizedTest
     @EnumSource(value = TransferItem.TransferStatus.class, mode = EnumSource.Mode.EXCLUDE, names = { "COLLECTED", "CREATED" })
-    void testInvalidStates(TransferItem.TransferStatus status) {
+    void testInvalidStates(TransferItem.TransferStatus status) throws IOException {
         var filePath = Path.of("data/inbox/doi-10-5072-dar-kxteqtv1.0.zip");
         var outbox = Path.of("data/outbox");
 
@@ -117,5 +117,22 @@ class MetadataTaskTest {
         assertThrows(InvalidTransferItemException.class, () -> {
             task.processFile(filePath);
         });
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = TransferItem.TransferStatus.class, mode = EnumSource.Mode.EXCLUDE, names = { "COLLECTED", "CREATED" })
+    void testInvalidStatesOnRun(TransferItem.TransferStatus status) throws IOException {
+        var filePath = Path.of("data/inbox/doi-10-5072-dar-kxteqtv1.0.zip");
+        var outbox = Path.of("data/outbox");
+
+        var task = new MetadataTask(filePath, outbox, transferItemService, transferItemMetadataReader, fileService);
+        var transferItem = new TransferItem("pid", 1, 0, "path", LocalDateTime.now(), status);
+
+        Mockito.when(transferItemService.getTransferItemByFilenameAttributes(Mockito.any()))
+            .thenReturn(Optional.of(transferItem));
+
+        task.run();
+
+        Mockito.verify(fileService).rejectFile(Mockito.any(), Mockito.any());
     }
 }

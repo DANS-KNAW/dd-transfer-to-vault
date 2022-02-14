@@ -59,12 +59,15 @@ public class ConfirmArchivedTaskManager implements Managed {
 
     @Override
     public void start() throws Exception {
+        log.info("Verifying archive status");
+        verifyArchives();
+
         SchedulerFactory sf = new StdSchedulerFactory();
         this.scheduler = sf.getScheduler();
 
         var jobData = new JobDataMap();
 
-        log.info("configuring JobDataMap for cron-based tasks");
+        log.info("Configuring JobDataMap for cron-based tasks");
 
         jobData.put("transferItemService", transferItemService);
         jobData.put("workingDir", workingDir);
@@ -82,18 +85,28 @@ public class ConfirmArchivedTaskManager implements Managed {
             .withSchedule(CronScheduleBuilder.cronSchedule(this.schedule))
             .build();
 
-        log.info("scheduling ConfirmArchivedTaskCreator for schedule '{}'", this.schedule);
+        log.info("Scheduling ConfirmArchivedTaskCreator with schedule '{}'", this.schedule);
 
         this.scheduler.scheduleJob(job, trigger);
         this.scheduler.start();
 
-        log.info("trigger ConfirmArchivedTaskCreator task immediately after startup");
+        log.info("Trigger ConfirmArchivedTaskCreator task immediately after startup");
         this.scheduler.triggerJob(job.getKey(), jobData);
     }
 
     @Override
     public void stop() throws Exception {
-        log.info("stopping scheduler");
+        log.info("Stopping scheduler");
         this.scheduler.shutdown();
+    }
+
+    void verifyArchives() {
+        var inProgress = transferItemService.findTarsByConfirmInProgress();
+
+        for (var tar: inProgress) {
+            log.warn("Found TAR with confirmCheckInProgress, either the application was interrupted during a check or there is an error: {}", tar);
+            log.info("Resetting tar status for TAR {}", tar);
+            transferItemService.resetTarToArchiving(tar);
+        }
     }
 }

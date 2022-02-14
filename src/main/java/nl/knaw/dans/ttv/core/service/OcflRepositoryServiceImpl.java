@@ -43,20 +43,48 @@ public class OcflRepositoryServiceImpl implements OcflRepositoryService {
         var newPath = fileService.createDirectory(Path.of(path.toString(), id));
         var newPathWorkdir = fileService.createDirectory(Path.of(path.toString(), id + "-wd"));
 
-        log.trace("creating OCFL repository on location '{}' and working dir '{}'", newPath, newPathWorkdir);
+        log.trace("Creating OCFL repository on location '{}' and working dir '{}'", newPath, newPathWorkdir);
+        return ocflRepositoryFactory.createRepository(newPath, newPathWorkdir);
+    }
+
+    @Override
+    public OcflRepository openRepository(Path path, String id) {
+        var newPath = Path.of(path.toString(), id);
+        var newPathWorkdir = Path.of(path.toString(), id + "-wd");
+
+        try {
+            fileService.createDirectory(newPath);
+        }
+        catch (IOException e) {
+            log.debug("Creating directory failed because repository already exists");
+        }
+
+        try {
+            fileService.createDirectory(newPathWorkdir);
+        }
+        catch (IOException e) {
+            log.debug("Creating directory failed because repository already exists");
+        }
+
+        log.trace("Opening OCFL repository on location '{}' and working dir '{}'", newPath, newPathWorkdir);
         return ocflRepositoryFactory.createRepository(newPath, newPathWorkdir);
     }
 
     @Override
     public String importTransferItem(OcflRepository ocflRepository, TransferItem transferItem) {
-        String bagId = Objects.requireNonNull(transferItem.getBagId(), "Bag ID can't be null: " + transferItem.getDveFilePath());
-        String objectId = bagId.substring(0, 9) + bagId.substring(9, 11) + "/" + bagId.substring(11, 13) + "/" + bagId.substring(13, 15) + "/" + bagId.substring(15);
-        Path source = Objects.requireNonNull(Path.of(transferItem.getDveFilePath()), "dveFilePath can't be null: " + transferItem.getDveFilePath());
+        var objectId = getObjectIdForTransferItem(transferItem);
+        var source = Objects.requireNonNull(Path.of(transferItem.getDveFilePath()), "dveFilePath can't be null: " + transferItem.getDveFilePath());
 
-        log.debug("importing file '{}' with objectId '{}' into OCFL repository", source, objectId);
+        log.debug("Importing file '{}' with objectId '{}' into OCFL repository", source, objectId);
         ocflRepository.putObject(ObjectVersionId.head(objectId), source, new VersionInfo().setMessage("initial commit"), OcflOption.MOVE_SOURCE);
 
         return objectId;
+    }
+
+    @Override
+    public String getObjectIdForTransferItem(TransferItem transferItem) {
+        var bagId = Objects.requireNonNull(transferItem.getBagId(), "Bag ID can't be null: " + transferItem.getDveFilePath());
+        return bagId.substring(0, 9) + bagId.substring(9, 11) + "/" + bagId.substring(11, 13) + "/" + bagId.substring(13, 15) + "/" + bagId.substring(15);
     }
 
     @Override
@@ -70,10 +98,10 @@ public class OcflRepositoryServiceImpl implements OcflRepositoryService {
         var newPath = Path.of(path.toString(), id);
         var newPathWorkdir = Path.of(path.toString(), id + "-wd");
 
-        log.debug("deleting OCFL repository '{}'", newPath);
+        log.debug("Deleting OCFL repository '{}'", newPath);
         fileService.deleteDirectory(newPath);
 
-        log.debug("deleting OCFL repository workdir '{}'", newPathWorkdir);
+        log.debug("Deleting OCFL repository workdir '{}'", newPathWorkdir);
         fileService.deleteDirectory(newPathWorkdir);
     }
 }
