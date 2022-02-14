@@ -62,8 +62,8 @@ public class ConfirmArchivedTaskManager implements Managed {
         log.info("Verifying archive status");
         verifyArchives();
 
-        SchedulerFactory sf = new StdSchedulerFactory();
-        this.scheduler = sf.getScheduler();
+        var schedulerFactory = new StdSchedulerFactory();
+        this.scheduler = schedulerFactory.getScheduler();
 
         var jobData = new JobDataMap();
 
@@ -75,12 +75,12 @@ public class ConfirmArchivedTaskManager implements Managed {
         jobData.put("archiveStatusService", archiveStatusService);
         jobData.put("ocflRepositoryService", ocflRepositoryService);
 
-        JobDetail job = JobBuilder.newJob(ConfirmArchivedTaskCreator.class)
+        var job = JobBuilder.newJob(ConfirmArchivedTaskCreator.class)
             .withIdentity("job", "group")
             .setJobData(jobData)
             .build();
 
-        CronTrigger trigger = TriggerBuilder.newTrigger()
+        var trigger = TriggerBuilder.newTrigger()
             .withIdentity("trigger", "group")
             .withSchedule(CronScheduleBuilder.cronSchedule(this.schedule))
             .build();
