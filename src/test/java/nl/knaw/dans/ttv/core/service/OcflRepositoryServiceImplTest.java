@@ -61,7 +61,7 @@ class OcflRepositoryServiceImplTest {
     @Test
     void importTransferItem() {
         var repository = Mockito.mock(OcflRepository.class);
-        var transferItem = new TransferItem("pid", 1, 0, "path/to/dir", LocalDateTime.now(), TransferItem.TransferStatus.COLLECTED);
+        var transferItem = new TransferItem("pid", 1, 0, "path/to/dir", LocalDateTime.now(), TransferItem.TransferStatus.METADATA_EXTRACTED);
         transferItem.setBagId("urn:uuid:a175c497-9a42-4832-9e71-626db678ed1b");
         var service = new OcflRepositoryServiceImpl(fileService, ocflRepositoryFactory);
 

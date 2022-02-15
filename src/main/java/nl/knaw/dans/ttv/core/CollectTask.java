@@ -67,8 +67,10 @@ public class CollectTask implements Runnable {
     void processFile(Path path) throws IOException, InvalidTransferItemException {
         var transferItem = createOrGetTransferItem(path);
 
-        if (transferItem.getTransferStatus() != TransferItem.TransferStatus.CREATED) {
-            throw new InvalidTransferItemException(String.format("TransferItem exists already, but does not have expected status of CREATED: %s", transferItem));
+        if (transferItem.getTransferStatus() != TransferItem.TransferStatus.COLLECTED) {
+            throw new InvalidTransferItemException(
+                String.format("TransferItem exists already, but does not have expected status of COLLECTED: %s", transferItem)
+            );
         }
 
         moveFileToOutbox(transferItem, path, this.outbox);
@@ -98,7 +100,7 @@ public class CollectTask implements Runnable {
         var newPath = outboxPath.resolve(filePath.getFileName());
 
         log.trace("Updating database state for item {} with new path '{}'", transferItem, newPath);
-        transferItemService.moveTransferItem(transferItem, TransferItem.TransferStatus.CREATED, newPath);
+        transferItemService.moveTransferItem(transferItem, TransferItem.TransferStatus.COLLECTED, newPath);
 
         log.info("Moving file '{}' to location '{}'", filePath, newPath);
         fileService.moveFileAtomically(filePath, newPath);
