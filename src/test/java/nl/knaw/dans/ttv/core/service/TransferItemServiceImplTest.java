@@ -300,7 +300,7 @@ class TransferItemServiceImplTest {
     @Test
     void createTarArchiveWithAllCollectedTransferItems() {
         var transferItemService = new TransferItemServiceImpl(transferItemDao, tarDAO);
-        var uuid = UUID.randomUUID();
+        var uuid = UUID.randomUUID().toString();
         var items = List.of(
             new TransferItem("pid", 1, 0, "path", LocalDateTime.now(), TransferItem.TransferStatus.COLLECTED),
             new TransferItem("pid2", 1, 0, "path", LocalDateTime.now(), TransferItem.TransferStatus.COLLECTED)
@@ -314,7 +314,7 @@ class TransferItemServiceImplTest {
 
         var tar = transferItemService.createTarArchiveWithAllCollectedTransferItems(uuid, "some-path");
 
-        assertEquals(uuid.toString(), tar.getTarUuid());
+        assertEquals(uuid, tar.getTarUuid());
         assertEquals(Tar.TarStatus.TARRING, tar.getTarStatus());
         assertNotNull(tar.getCreated());
         assertEquals("some-path", tar.getVaultPath());

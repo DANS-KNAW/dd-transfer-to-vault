@@ -101,5 +101,7 @@ public class CollectTaskManager implements Managed {
                 inboxWatcher.stop();
             }
         }
+
+        this.executorService.shutdownNow();
     }
 }

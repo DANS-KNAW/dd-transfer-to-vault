@@ -20,12 +20,9 @@ import nl.knaw.dans.ttv.core.service.ArchiveStatusService;
 import nl.knaw.dans.ttv.core.service.OcflRepositoryService;
 import nl.knaw.dans.ttv.core.service.TransferItemService;
 import org.quartz.CronScheduleBuilder;
-import org.quartz.CronTrigger;
 import org.quartz.JobBuilder;
 import org.quartz.JobDataMap;
-import org.quartz.JobDetail;
 import org.quartz.Scheduler;
-import org.quartz.SchedulerFactory;
 import org.quartz.TriggerBuilder;
 import org.quartz.impl.StdSchedulerFactory;
 import org.slf4j.Logger;
@@ -36,15 +33,13 @@ import java.util.concurrent.ExecutorService;
 
 public class ConfirmArchivedTaskManager implements Managed {
     private static final Logger log = LoggerFactory.getLogger(ConfirmArchivedTaskManager.class);
-
-    private Scheduler scheduler;
     private final String schedule;
-
     private final Path workingDir;
     private final ExecutorService executorService;
     private final TransferItemService transferItemService;
     private final ArchiveStatusService archiveStatusService;
     private final OcflRepositoryService ocflRepositoryService;
+    private Scheduler scheduler;
 
     public ConfirmArchivedTaskManager(String schedule, Path workingDir,
         ExecutorService executorService, TransferItemService transferItemService, ArchiveStatusService archiveStatusService, OcflRepositoryService ocflRepositoryService) {
@@ -98,12 +93,13 @@ public class ConfirmArchivedTaskManager implements Managed {
     public void stop() throws Exception {
         log.info("Stopping scheduler");
         this.scheduler.shutdown();
+        this.executorService.shutdownNow();
     }
 
     void verifyArchives() {
         var inProgress = transferItemService.findTarsByConfirmInProgress();
 
-        for (var tar: inProgress) {
+        for (var tar : inProgress) {
             log.warn("Found TAR with confirmCheckInProgress, either the application was interrupted during a check or there is an error: {}", tar);
             log.info("Resetting tar status for TAR {}", tar);
             transferItemService.resetTarToArchiving(tar);

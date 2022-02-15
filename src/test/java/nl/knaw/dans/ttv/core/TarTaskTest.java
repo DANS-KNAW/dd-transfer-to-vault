@@ -42,8 +42,8 @@ class TarTaskTest {
 
     @Test
     void run() throws IOException, InterruptedException {
-        var uuid = UUID.fromString("82fa8591-b7e7-4efc-821e-addacb0cb364");
-        var path = Path.of("data/inbox", uuid.toString());
+        var uuid = UUID.fromString("82fa8591-b7e7-4efc-821e-addacb0cb364").toString();
+        var path = Path.of("data/inbox", uuid);
         var task = new TarTask(transferItemService, uuid, path, tarCommandRunner, archiveMetadataService);
 
         var result = new ProcessResult(0, "OK");
@@ -58,18 +58,18 @@ class TarTaskTest {
         task.run();
 
         Mockito.verify(tarCommandRunner).tarDirectory(
-            Path.of("data/inbox", uuid.toString()),
+            Path.of("data/inbox", uuid),
             uuid + ".dmftar"
         );
 
-        Mockito.verify(transferItemService).updateTarToCreated(Mockito.eq(uuid.toString()), Mockito.any());
+        Mockito.verify(transferItemService).updateTarToCreated(Mockito.eq(uuid), Mockito.any());
 
     }
 
     @Test
     void runWithExistingValidRemoteArchive() throws IOException, InterruptedException {
-        var uuid = UUID.fromString("82fa8591-b7e7-4efc-821e-addacb0cb364");
-        var path = Path.of("data/inbox", uuid.toString());
+        var uuid = UUID.fromString("82fa8591-b7e7-4efc-821e-addacb0cb364").toString();
+        var path = Path.of("data/inbox", uuid);
         var task = new TarTask(transferItemService, uuid, path, tarCommandRunner, archiveMetadataService);
 
         var result = new ProcessResult(0, "OK");
@@ -84,14 +84,14 @@ class TarTaskTest {
 
         Mockito.verify(tarCommandRunner, Mockito.times(0)).tarDirectory(Mockito.any(), Mockito.any());
         Mockito.verify(tarCommandRunner, Mockito.times(0)).deletePackage(Mockito.any());
-        Mockito.verify(transferItemService).updateTarToCreated(Mockito.eq(uuid.toString()), Mockito.any());
+        Mockito.verify(transferItemService).updateTarToCreated(Mockito.eq(uuid), Mockito.any());
 
     }
 
     @Test
     void runWithExistingInvalidRemoteArchive() throws IOException, InterruptedException {
-        var uuid = UUID.fromString("82fa8591-b7e7-4efc-821e-addacb0cb364");
-        var path = Path.of("data/inbox", uuid.toString());
+        var uuid = UUID.fromString("82fa8591-b7e7-4efc-821e-addacb0cb364").toString();
+        var path = Path.of("data/inbox", uuid);
         var task = new TarTask(transferItemService, uuid, path, tarCommandRunner, archiveMetadataService);
 
         var result = new ProcessResult(0, "OK");
@@ -107,14 +107,14 @@ class TarTaskTest {
 
         Mockito.verify(tarCommandRunner, Mockito.times(1)).tarDirectory(Mockito.any(), Mockito.any());
         Mockito.verify(tarCommandRunner, Mockito.times(1)).deletePackage(Mockito.any());
-        Mockito.verify(transferItemService).updateTarToCreated(Mockito.eq(uuid.toString()), Mockito.any());
+        Mockito.verify(transferItemService).updateTarToCreated(Mockito.eq(uuid), Mockito.any());
 
     }
 
     @Test
     void runWithFailedCommand() throws IOException, InterruptedException {
-        var uuid = UUID.fromString("82fa8591-b7e7-4efc-821e-addacb0cb364");
-        var path = Path.of("data/inbox", uuid.toString());
+        var uuid = UUID.fromString("82fa8591-b7e7-4efc-821e-addacb0cb364").toString();
+        var path = Path.of("data/inbox", uuid);
         var task = new TarTask(transferItemService, uuid, path, tarCommandRunner, archiveMetadataService);
 
         var result = new ProcessResult(1, "NOT OK");
@@ -127,11 +127,10 @@ class TarTaskTest {
         task.run();
 
         Mockito.verify(tarCommandRunner).tarDirectory(
-            Path.of("data/inbox", uuid.toString()),
+            Path.of("data/inbox", uuid),
             uuid + ".dmftar"
         );
 
-        Mockito.verifyNoInteractions(transferItemService);
-
+        Mockito.verify(transferItemService).resetTarToTarring(Mockito.any(), Mockito.eq(true));
     }
 }

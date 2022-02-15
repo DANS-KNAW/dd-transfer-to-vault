@@ -77,5 +77,6 @@ public class MetadataTaskManager implements Managed {
     @Override
     public void stop() throws Exception {
         this.inboxWatcher.stop();
+        this.executorService.shutdownNow();
     }
 }

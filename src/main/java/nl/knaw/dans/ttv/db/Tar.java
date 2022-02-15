@@ -15,7 +15,6 @@
  */
 package nl.knaw.dans.ttv.db;
 
-import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.ColumnDefault;
 
 import javax.persistence.CascadeType;
@@ -23,7 +22,6 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
-import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
@@ -45,6 +43,9 @@ public class Tar {
     private LocalDateTime datetimeConfirmedArchived;
     @OneToMany(mappedBy = "aipsTar", cascade = CascadeType.ALL)
     private List<TransferItem> transferItems;
+    @Column(name = "archive_in_progress")
+    @ColumnDefault("false")
+    private boolean archiveInProgress;
     @Column(name = "confirm_check_in_progress")
     @ColumnDefault("false")
     private boolean confirmCheckInProgress;
@@ -53,19 +54,36 @@ public class Tar {
     private TarStatus tarStatus;
     @OneToMany(mappedBy = "tar", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TarPart> tarParts = new ArrayList<>();
-
+    @Column(name = "transfer_attempt")
+    @ColumnDefault("0")
+    private int transferAttempt;
     public Tar(String tarUuid, TarStatus status, boolean confirmCheckInProgress) {
         this.tarUuid = tarUuid;
         this.tarStatus = status;
         this.confirmCheckInProgress = confirmCheckInProgress;
     }
-
     public Tar() {
 
     }
 
     public Tar(String uuid) {
         this.setTarUuid(uuid);
+    }
+
+    public boolean isArchiveInProgress() {
+        return archiveInProgress;
+    }
+
+    public void setArchiveInProgress(boolean archiveInProgress) {
+        this.archiveInProgress = archiveInProgress;
+    }
+
+    public int getTransferAttempt() {
+        return transferAttempt;
+    }
+
+    public void setTransferAttempt(int transferAttempt) {
+        this.transferAttempt = transferAttempt;
     }
 
     public String getTarUuid() {
@@ -132,13 +150,6 @@ public class Tar {
         this.datetimeConfirmedArchived = datetimeConfirmedArchived;
     }
 
-    public enum TarStatus {
-        TARRING,
-        OCFLTARCREATED,
-        OCFLTARFAILED,
-        CONFIRMEDARCHIVED,
-    }
-
     @Override
     public String toString() {
         return "Tar{" +
@@ -146,8 +157,17 @@ public class Tar {
             ", vaultPath='" + vaultPath + '\'' +
             ", created=" + created +
             ", datetimeConfirmedArchived=" + datetimeConfirmedArchived +
+            ", archiveInProgress=" + archiveInProgress +
             ", confirmCheckInProgress=" + confirmCheckInProgress +
             ", tarStatus=" + tarStatus +
+            ", transferAttempt=" + transferAttempt +
             '}';
+    }
+
+    public enum TarStatus {
+        TARRING,
+        OCFLTARCREATED,
+        OCFLTARFAILED,
+        CONFIRMEDARCHIVED,
     }
 }

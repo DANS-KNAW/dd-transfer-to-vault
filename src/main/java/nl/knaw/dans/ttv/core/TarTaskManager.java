@@ -24,6 +24,14 @@ import nl.knaw.dans.ttv.core.service.InboxWatcherFactory;
 import nl.knaw.dans.ttv.core.service.OcflRepositoryService;
 import nl.knaw.dans.ttv.core.service.TarCommandRunner;
 import nl.knaw.dans.ttv.core.service.TransferItemService;
+import org.quartz.CronScheduleBuilder;
+import org.quartz.JobBuilder;
+import org.quartz.JobDataMap;
+import org.quartz.Scheduler;
+import org.quartz.SchedulerException;
+import org.quartz.SimpleScheduleBuilder;
+import org.quartz.TriggerBuilder;
+import org.quartz.impl.StdSchedulerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,6 +57,7 @@ public class TarTaskManager implements Managed {
     private final long pollingInterval;
     private final ArchiveMetadataService archiveMetadataService;
     private InboxWatcher inboxWatcher;
+    private Scheduler retryScheduler;
 
     public TarTaskManager(Path inboxPath, Path workDir, String vaultPath, long inboxThreshold, long pollingInterval, ExecutorService executorService,
         InboxWatcherFactory inboxWatcherFactory,
@@ -74,6 +83,9 @@ public class TarTaskManager implements Managed {
         log.info("Verifying inbox '{}'", this.inboxPath);
         verifyInbox();
 
+        log.info("Starting up retry-scheduler for failed archives");
+        startRetryScheduler();
+
         // start up file watcher
         log.info("Starting watch on inbox '{}'", this.inboxPath);
 
@@ -85,9 +97,11 @@ public class TarTaskManager implements Managed {
         this.inboxWatcher.start();
     }
 
+
     @Override
     public void stop() throws Exception {
         this.inboxWatcher.stop();
+        this.executorService.shutdownNow();
     }
 
     void verifyInbox() {
@@ -110,12 +124,42 @@ public class TarTaskManager implements Managed {
                 transferItem.setAipTarEntryName(objectId);
             }
 
+            tar.setArchiveInProgress(false);
+
             log.trace("Saving TAR {}", tar);
             transferItemService.save(tar);
-
-            log.info("Starting TarTask for TAR {}", tar.getTarUuid());
-            startTarringTask(UUID.fromString(tar.getTarUuid()));
         }
+    }
+
+    void startRetryScheduler() throws SchedulerException {
+        var schedulerFactory = new StdSchedulerFactory();
+        this.retryScheduler = schedulerFactory.getScheduler();
+
+        var jobData = new JobDataMap();
+
+        log.info("Configuring JobDataMap for cron-based tasks");
+        jobData.put("transferItemService", transferItemService);
+        jobData.put("workDir", workDir);
+        jobData.put("tarCommandRunner", tarCommandRunner);
+        jobData.put("archiveMetadataService", archiveMetadataService);
+        jobData.put("executorService", executorService);
+
+        var job = JobBuilder.newJob(TarRetryTaskCreator.class)
+            .withIdentity("tarRetryTask", "createocfltar")
+            .setJobData(jobData)
+            .build();
+
+        var trigger = TriggerBuilder.newTrigger()
+            .withIdentity("tarRetryTaskTrigger", "createocfltar")
+            .withSchedule(SimpleScheduleBuilder.simpleSchedule()
+                .withIntervalInMinutes(1)
+                .repeatForever())
+            .build();
+
+        log.info("Scheduling TarRetryTaskCreator every 5 minutes");
+
+        this.retryScheduler.scheduleJob(job, trigger);
+        this.retryScheduler.start();
     }
 
     void onNewItemInInbox(File file) {
@@ -124,7 +168,7 @@ public class TarTaskManager implements Managed {
 
         try {
             var totalSize = fileService.getPathSize(inboxPath);
-            var uuid = UUID.randomUUID();
+            var uuid = UUID.randomUUID().toString();
             log.debug("Total size of inbox is {}, threshold is {}", totalSize, inboxThreshold);
 
             if (totalSize >= inboxThreshold) {
@@ -135,18 +179,19 @@ public class TarTaskManager implements Managed {
             }
         }
         catch (IOException e) {
-            log.error("error calculating file size", e);
+            log.error("Error calculating file size for path '{}'", inboxPath, e);
         }
     }
 
-    void startTarringTask(UUID uuid) {
-        var repoPath = Path.of(workDir.toString(), uuid.toString());
+    void startTarringTask(String uuid) {
+        var repoPath = Path.of(workDir.toString(), uuid);
         var task = new TarTask(transferItemService, uuid, repoPath, tarCommandRunner, archiveMetadataService);
 
+        log.info("Starting TarTask {}", task);
         executorService.execute(task);
     }
 
-    void moveAllInboxFilesToOcflRepo(OcflRepository ocflRepository, UUID uuid) throws IOException {
+    void moveAllInboxFilesToOcflRepo(OcflRepository ocflRepository, String uuid) throws IOException {
         // create a tar record with all COLLECTED TransferItem's in it
         var tarArchive = transferItemService.createTarArchiveWithAllCollectedTransferItems(uuid, vaultPath);
 
@@ -163,8 +208,8 @@ public class TarTaskManager implements Managed {
         ocflRepositoryService.closeOcflRepository(ocflRepository);
     }
 
-    OcflRepository createOcflRepo(UUID uuid) throws IOException {
-        return ocflRepositoryService.createRepository(workDir, uuid.toString());
+    OcflRepository createOcflRepo(String uuid) throws IOException {
+        return ocflRepositoryService.createRepository(workDir, uuid);
     }
 
 }

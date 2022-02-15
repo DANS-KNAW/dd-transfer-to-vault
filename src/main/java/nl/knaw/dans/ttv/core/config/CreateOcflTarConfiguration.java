@@ -43,9 +43,23 @@ public class CreateOcflTarConfiguration {
     @NotNull
     @Min(1)
     private long pollingInterval;
+
+    @Valid
+    @NotNull
+    @Min(1)
+    private int maxRetries;
+
     @Valid
     @NotNull
     private ExecutorServiceFactory taskQueue;
+
+    public int getMaxRetries() {
+        return maxRetries;
+    }
+
+    public void setMaxRetries(int maxRetries) {
+        this.maxRetries = maxRetries;
+    }
 
     public long getPollingInterval() {
         return pollingInterval;
