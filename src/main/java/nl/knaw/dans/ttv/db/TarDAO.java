@@ -16,6 +16,7 @@
 package nl.knaw.dans.ttv.db;
 
 import io.dropwizard.hibernate.AbstractDAO;
+import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
 
 import java.util.List;
@@ -29,6 +30,13 @@ public class TarDAO extends AbstractDAO<Tar> {
 
     public Optional<Tar> findById(String id) {
         return Optional.ofNullable(get(id));
+    }
+
+    public List<TarPart> findAllParts() {
+        var query = currentSession().createQuery(
+            "from TarPart", TarPart.class);
+
+        return query.list();
     }
 
     public List<Tar> findAllTarsToBeConfirmed() {
@@ -46,4 +54,31 @@ public class TarDAO extends AbstractDAO<Tar> {
         return persist(tar);
     }
 
+    public List<Tar> findByStatus(Tar.TarStatus status) {
+        var query = currentSession().createQuery(
+            "from Tar where tarStatus = :status", Tar.class);
+
+        query.setParameter("status", status);
+
+        return query.list();
+    }
+
+    public Tar saveWithParts(Tar tar, List<TarPart> parts) {
+        Hibernate.initialize(tar.getTarParts());
+        tar.getTarParts().clear();
+        tar.getTarParts().addAll(parts);
+
+        return save(tar);
+    }
+
+    public void evict(Tar tar) {
+        currentSession().evict(tar);
+    }
+
+    public List<Tar> findTarsByConfirmInProgress() {
+        var query = currentSession().createQuery(
+            "from Tar where confirmCheckInProgress = true", Tar.class);
+
+        return query.list();
+    }
 }

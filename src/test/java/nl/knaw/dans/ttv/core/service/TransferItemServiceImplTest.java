@@ -210,9 +210,8 @@ class TransferItemServiceImplTest {
         assertEquals(Tar.TarStatus.OCFLTARCREATED, tar.getTarStatus());
         // TODO determine the correct status
         assertEquals(TransferItem.TransferStatus.OCFLTARCREATED, transferItem.getTransferStatus());
-        assertEquals("ident", tar.getTarParts().get(0).getPartName());
-        assertEquals("md5", tar.getTarParts().get(0).getChecksumAlgorithm());
-        assertEquals("check", tar.getTarParts().get(0).getChecksumValue());
+
+        Mockito.verify(tarDAO).saveWithParts(Mockito.any(), Mockito.any());
     }
 
     @Test

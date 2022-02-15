@@ -31,7 +31,7 @@ public class ConfirmArchivedTaskCreator implements Job {
     private static final Logger log = LoggerFactory.getLogger(ConfirmArchivedTaskCreator.class);
 
     @Override
-    public void execute(JobExecutionContext context) throws JobExecutionException {
+    public void execute(JobExecutionContext context) {
         var dataMap = context.getMergedJobDataMap();
         var transferItemService = (TransferItemService) dataMap.get("transferItemService");
         var workingDir = (Path) dataMap.get("workingDir");
@@ -43,7 +43,7 @@ public class ConfirmArchivedTaskCreator implements Job {
 
         for (var tar: tars) {
             var task = new ConfirmArchivedTask(tar, transferItemService, archiveStatusService, ocflRepositoryService, workingDir);
-            log.debug("executing task {}", task);
+            log.debug("Executing task {}", task);
             executorService.execute(task);
         }
     }

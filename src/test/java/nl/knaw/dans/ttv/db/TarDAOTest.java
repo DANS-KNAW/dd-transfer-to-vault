@@ -17,19 +17,16 @@ package nl.knaw.dans.ttv.db;
 
 import io.dropwizard.testing.junit5.DAOTestExtension;
 import io.dropwizard.testing.junit5.DropwizardExtensionsSupport;
-import org.hibernate.exception.ConstraintViolationException;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 @ExtendWith(DropwizardExtensionsSupport.class)
 class TarDAOTest {
@@ -61,4 +58,45 @@ class TarDAOTest {
         assertThat(items).extracting("tarUuid").containsOnly("uuid1", "uuid4");
     }
 
+    @Test
+    void testNoDuplicateTarParts() {
+        daoTestRule.inTransaction(() -> {
+            var tar = new Tar("uuid1", Tar.TarStatus.OCFLTARCREATED, false);
+
+            var parts = List.of(
+                new TarPart("0000", "md5", "checksum", tar),
+                new TarPart("0001", "md5", "checksum2", tar)
+            );
+
+            tar.setTarParts(parts);
+            tarDAO.save(tar);
+            tarDAO.evict(tar);
+        });
+
+        daoTestRule.inTransaction(() -> {
+            var tar = tarDAO.findById("uuid1").get();
+            var parts = List.of(
+                new TarPart("0000", "md5", "checksum3", tar)
+            );
+            tarDAO.saveWithParts(tar, parts);
+        });
+
+        var parts = tarDAO.findAllParts();
+        Assertions.assertEquals(1, parts.size());
+    }
+
+    @Test
+    void findByStatus() {
+        daoTestRule.inTransaction(() -> {
+            tarDAO.save(new Tar("uuid1", Tar.TarStatus.OCFLTARCREATED, false));
+            tarDAO.save(new Tar("uuid2", Tar.TarStatus.CONFIRMEDARCHIVED, true));
+            tarDAO.save(new Tar("uuid3", Tar.TarStatus.TARRING, false));
+            tarDAO.save(new Tar("uuid4", Tar.TarStatus.OCFLTARFAILED, false));
+        });
+
+        assertThat(tarDAO.findByStatus(Tar.TarStatus.OCFLTARCREATED)).extracting("tarUuid").containsOnly("uuid1");
+        assertThat(tarDAO.findByStatus(Tar.TarStatus.CONFIRMEDARCHIVED)).extracting("tarUuid").containsOnly("uuid2");
+        assertThat(tarDAO.findByStatus(Tar.TarStatus.TARRING)).extracting("tarUuid").containsOnly("uuid3");
+        assertThat(tarDAO.findByStatus(Tar.TarStatus.OCFLTARFAILED)).extracting("tarUuid").containsOnly("uuid4");
+    }
 }

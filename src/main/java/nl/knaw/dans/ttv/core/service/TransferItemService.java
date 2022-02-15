@@ -57,4 +57,9 @@ public interface TransferItemService {
     void resetTarToArchiving(Tar tar);
 
     void updateTarToArchived(Tar tar);
+
+    List<Tar> findTarsByStatusTarring();
+
+    List<Tar> findTarsByConfirmInProgress();
+
 }

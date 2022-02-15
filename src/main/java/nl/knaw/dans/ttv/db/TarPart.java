@@ -41,6 +41,17 @@ public class TarPart {
     @JoinColumn(name = "tar_id")
     private Tar tar;
 
+    public TarPart(String partName, String checksumAlgorithm, String checksumValue, Tar tar) {
+        this.partName = partName;
+        this.checksumAlgorithm = checksumAlgorithm;
+        this.checksumValue = checksumValue;
+        this.tar = tar;
+    }
+
+    public TarPart() {
+
+    }
+
     public long getId() {
         return id;
     }

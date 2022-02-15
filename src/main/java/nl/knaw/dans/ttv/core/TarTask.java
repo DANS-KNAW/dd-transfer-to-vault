@@ -46,7 +46,7 @@ public class TarTask implements Runnable {
     @Override
     public void run() {
         try {
-            createTarArchive();
+            createTarArchiveIfNeeded();
             // TODO catch exceptions where one of these things went wrong:
             // - tar wasnt uploaded due to IOException (or code is not 0)
             // - verify step failed
@@ -57,10 +57,36 @@ public class TarTask implements Runnable {
         }
     }
 
-    private void createTarArchive() throws IOException, InterruptedException {
-        // run dmftar and upload results
-        log.info("Tarring directory '{}' with UUID {}", this.inboxPath, uuid);
-        tarDirectory(uuid, this.inboxPath);
+    /**
+     * Will check if the tar on the remote location exists and is valid before triggering the tar creation process
+     */
+    void createTarArchiveIfNeeded() throws IOException, InterruptedException {
+        var remoteArchiveIsValid = false;
+
+        try {
+            verifyTarArchive(uuid);
+            remoteArchiveIsValid = true;
+        }
+        catch (IOException | InterruptedException e) {
+            log.info("No archive exists with uuid {}, or archive is invalid", uuid);
+            log.info("Deleting remote archive with uuid {} if exists", uuid);
+
+            try {
+                deleteTarArchive(uuid);
+            }
+            catch (IOException ex) {
+                log.debug("Remote archive does not exist, which is expected; not doing anything");
+            }
+        }
+
+        if (!remoteArchiveIsValid) {
+            // run dmftar and upload results
+            log.info("Tarring directory '{}' with UUID {}", this.inboxPath, uuid);
+            tarDirectory(uuid, this.inboxPath);
+        }
+        else {
+            log.info("Not tarring directory '{}' with UUID {}, because a valid version was found on the remote archive", this.inboxPath, uuid);
+        }
 
         log.info("Verifying remote TAR with UUID {}", this.uuid);
         verifyTarArchive(uuid);
@@ -97,6 +123,15 @@ public class TarTask implements Runnable {
 
     private String getTarArchivePath(UUID uuid) {
         return uuid.toString() + ".dmftar";
+    }
+
+    private void deleteTarArchive(UUID packageName) throws IOException, InterruptedException {
+        var targetPackage = getTarArchivePath(packageName);
+        var result = tarCommandRunner.deletePackage(targetPackage);
+
+        if (result.getStatusCode() != 0) {
+            throw new IOException(String.format("tar folder '%s' cannot be verified: %s", targetPackage, result.getStdout()));
+        }
     }
 
 }

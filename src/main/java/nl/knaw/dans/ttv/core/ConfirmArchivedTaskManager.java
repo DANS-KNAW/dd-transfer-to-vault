@@ -59,12 +59,15 @@ public class ConfirmArchivedTaskManager implements Managed {
 
     @Override
     public void start() throws Exception {
-        SchedulerFactory sf = new StdSchedulerFactory();
-        this.scheduler = sf.getScheduler();
+        log.info("Verifying archive status");
+        verifyArchives();
+
+        var schedulerFactory = new StdSchedulerFactory();
+        this.scheduler = schedulerFactory.getScheduler();
 
         var jobData = new JobDataMap();
 
-        log.info("configuring JobDataMap for cron-based tasks");
+        log.info("Configuring JobDataMap for cron-based tasks");
 
         jobData.put("transferItemService", transferItemService);
         jobData.put("workingDir", workingDir);
@@ -72,28 +75,38 @@ public class ConfirmArchivedTaskManager implements Managed {
         jobData.put("archiveStatusService", archiveStatusService);
         jobData.put("ocflRepositoryService", ocflRepositoryService);
 
-        JobDetail job = JobBuilder.newJob(ConfirmArchivedTaskCreator.class)
+        var job = JobBuilder.newJob(ConfirmArchivedTaskCreator.class)
             .withIdentity("job", "group")
             .setJobData(jobData)
             .build();
 
-        CronTrigger trigger = TriggerBuilder.newTrigger()
+        var trigger = TriggerBuilder.newTrigger()
             .withIdentity("trigger", "group")
             .withSchedule(CronScheduleBuilder.cronSchedule(this.schedule))
             .build();
 
-        log.info("scheduling ConfirmArchivedTaskCreator for schedule '{}'", this.schedule);
+        log.info("Scheduling ConfirmArchivedTaskCreator with schedule '{}'", this.schedule);
 
         this.scheduler.scheduleJob(job, trigger);
         this.scheduler.start();
 
-        log.info("trigger ConfirmArchivedTaskCreator task immediately after startup");
+        log.info("Trigger ConfirmArchivedTaskCreator task immediately after startup");
         this.scheduler.triggerJob(job.getKey(), jobData);
     }
 
     @Override
     public void stop() throws Exception {
-        log.info("stopping scheduler");
+        log.info("Stopping scheduler");
         this.scheduler.shutdown();
+    }
+
+    void verifyArchives() {
+        var inProgress = transferItemService.findTarsByConfirmInProgress();
+
+        for (var tar: inProgress) {
+            log.warn("Found TAR with confirmCheckInProgress, either the application was interrupted during a check or there is an error: {}", tar);
+            log.info("Resetting tar status for TAR {}", tar);
+            transferItemService.resetTarToArchiving(tar);
+        }
     }
 }

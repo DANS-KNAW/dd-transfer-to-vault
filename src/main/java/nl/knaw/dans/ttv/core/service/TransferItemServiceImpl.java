@@ -26,6 +26,7 @@ import nl.knaw.dans.ttv.db.TarDAO;
 import nl.knaw.dans.ttv.db.TarPart;
 import nl.knaw.dans.ttv.db.TransferItem;
 import nl.knaw.dans.ttv.db.TransferItemDAO;
+import org.hibernate.Hibernate;
 
 import java.nio.file.Path;
 import java.time.LocalDateTime;
@@ -33,6 +34,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 public class TransferItemServiceImpl implements TransferItemService {
     private final TransferItemDAO transferItemDAO;
@@ -161,17 +163,17 @@ public class TransferItemServiceImpl implements TransferItemService {
                 transferItem.setTransferStatus(TransferItem.TransferStatus.OCFLTARCREATED);
             }
 
-            for (var part: metadata.getParts()) {
+            var parts = metadata.getParts().stream().map(part -> {
                 var dbPart = new TarPart();
                 dbPart.setTar(tar);
                 dbPart.setPartName(part.getIdentifier());
                 dbPart.setChecksumValue(part.getChecksum());
                 dbPart.setChecksumAlgorithm(part.getChecksumAlgorithm());
 
-                tar.getTarParts().add(dbPart);
-            }
+                return dbPart;
+            }).collect(Collectors.toList());
 
-            return tarDAO.save(tar);
+            return tarDAO.saveWithParts(tar, parts);
         });
     }
 
@@ -245,7 +247,6 @@ public class TransferItemServiceImpl implements TransferItemService {
         tarArchive.setTarStatus(Tar.TarStatus.TARRING);
         tarArchive.setCreated(LocalDateTime.now());
         tarArchive.setVaultPath(vaultPath);
-        // TODO add vault path property
 
         var transferItems = transferItemDAO.findByStatus(TransferItem.TransferStatus.COLLECTED);
 
@@ -278,5 +279,23 @@ public class TransferItemServiceImpl implements TransferItemService {
         tar.setConfirmCheckInProgress(false);
         tar.setDatetimeConfirmedArchived(LocalDateTime.now());
         save(tar);
+    }
+
+    @Override
+    @UnitOfWork
+    public List<Tar> findTarsByStatusTarring() {
+        var tars = tarDAO.findByStatus(Tar.TarStatus.TARRING);
+
+        for (var tar: tars) {
+            Hibernate.initialize(tar.getTransferItems());
+        }
+
+        return tars;
+    }
+
+    @Override
+    @UnitOfWork
+    public List<Tar> findTarsByConfirmInProgress() {
+        return tarDAO.findTarsByConfirmInProgress();
     }
 }

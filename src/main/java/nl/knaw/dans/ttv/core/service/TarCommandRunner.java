@@ -26,4 +26,5 @@ public interface TarCommandRunner {
 
     ProcessResult verifyPackage(String targetPackage) throws IOException, InterruptedException;
 
+    ProcessResult deletePackage(String targetPackage) throws IOException, InterruptedException;
 }
