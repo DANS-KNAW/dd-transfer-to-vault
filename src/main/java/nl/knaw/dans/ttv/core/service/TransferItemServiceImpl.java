@@ -51,7 +51,7 @@ public class TransferItemServiceImpl implements TransferItemService {
         throws InvalidTransferItemException {
         var transferItem = new TransferItem();
 
-        transferItem.setTransferStatus(TransferItem.TransferStatus.CREATED);
+        transferItem.setTransferStatus(TransferItem.TransferStatus.COLLECTED);
         transferItem.setQueueDate(LocalDateTime.now());
         transferItem.setDatasetDvInstance(datastationName);
 
@@ -111,7 +111,7 @@ public class TransferItemServiceImpl implements TransferItemService {
 
         var transferItem = new TransferItem();
 
-        transferItem.setTransferStatus(TransferItem.TransferStatus.CREATED);
+        transferItem.setTransferStatus(TransferItem.TransferStatus.COLLECTED);
         transferItem.setQueueDate(LocalDateTime.now());
         transferItem.setDatasetDvInstance(datastationName);
 
@@ -238,7 +238,7 @@ public class TransferItemServiceImpl implements TransferItemService {
 
     @Override
     @UnitOfWork
-    public Tar createTarArchiveWithAllCollectedTransferItems(UUID uuid, String vaultPath) {
+    public Tar createTarArchiveWithAllMetadataExtractedTransferItems(UUID uuid, String vaultPath) {
         Objects.requireNonNull(uuid, "uuid cannot be null");
         Objects.requireNonNull(uuid, "vaultPath cannot be null");
 
@@ -248,7 +248,7 @@ public class TransferItemServiceImpl implements TransferItemService {
         tarArchive.setCreated(LocalDateTime.now());
         tarArchive.setVaultPath(vaultPath);
 
-        var transferItems = transferItemDAO.findByStatus(TransferItem.TransferStatus.COLLECTED);
+        var transferItems = transferItemDAO.findByStatus(TransferItem.TransferStatus.METADATA_EXTRACTED);
 
         for (var transferItem : transferItems) {
             transferItem.setTransferStatus(TransferItem.TransferStatus.TARRING);

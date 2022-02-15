@@ -319,8 +319,8 @@ public class TransferItem {
     }
 
     public enum TransferStatus {
-        CREATED,
         COLLECTED,
+        METADATA_EXTRACTED,
         TARRING,
         OCFLTARCREATED
     }

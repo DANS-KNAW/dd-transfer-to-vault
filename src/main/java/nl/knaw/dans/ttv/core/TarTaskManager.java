@@ -125,18 +125,14 @@ public class TarTaskManager implements Managed {
 
         try {
             var totalSize = fileService.getPathSize(inboxPath);
-            var tarUuid = UUID.randomUUID();
+            var uuid = UUID.randomUUID();
             log.debug("Total size of inbox is {}, threshold is {}", totalSize, inboxThreshold);
 
             if (totalSize >= inboxThreshold) {
                 log.info("Threshold reached, creating OCFL repo; size of inbox is {} bytes, threshold is {} bytes", totalSize, inboxThreshold);
-                var ocflRepo = createOcflRepo(tarUuid);
-
-                /*
-                 * The creation of the Ocfl repo should be off-loaded to the worker thread, not just the tarring.
-                 */
-                moveAllInboxFilesToOcflRepo(ocflRepo, tarUuid);
-                startTarringTask(tarUuid);
+                var ocflRepo = createOcflRepo(uuid);
+                moveAllInboxFilesToOcflRepo(ocflRepo, uuid);
+                startTarringTask(uuid);
             }
         }
         catch (IOException e) {
@@ -151,10 +147,9 @@ public class TarTaskManager implements Managed {
         executorService.execute(task);
     }
 
-    void moveAllInboxFilesToOcflRepo(OcflRepository ocflRepository, UUID tarUuid) throws IOException {
+    void moveAllInboxFilesToOcflRepo(OcflRepository ocflRepository, UUID uuid) throws IOException {
         // create a tar record with all COLLECTED TransferItem's in it
-        // TODO: rename Collected -> MetadataExtracted
-        var tarArchive = transferItemService.createTarArchiveWithAllCollectedTransferItems(tarUuid, vaultPath);
+        var tarArchive = transferItemService.createTarArchiveWithAllCollectedTransferItems(uuid, vaultPath);
 
         // import them into the OCFL repo
         for (var transferItem : tarArchive.getTransferItems()) {

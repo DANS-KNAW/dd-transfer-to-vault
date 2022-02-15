@@ -86,7 +86,7 @@ class TransferItemServiceImplTest {
         try {
             var transferItem = transferItemService.createTransferItem("datastation name", filenameAttributes, filesystemAttributes, fileContentAttributes);
 
-            Assertions.assertEquals(TransferItem.TransferStatus.CREATED, transferItem.getTransferStatus());
+            Assertions.assertEquals(TransferItem.TransferStatus.COLLECTED, transferItem.getTransferStatus());
             assertNotNull(transferItem.getQueueDate());
             assertEquals("datastation name", transferItem.getDatasetDvInstance());
 
@@ -122,7 +122,7 @@ class TransferItemServiceImplTest {
         try {
             var transferItem = transferItemService.createTransferItem("datastation name", filenameAttributes, filesystemAttributes);
 
-            Assertions.assertEquals(TransferItem.TransferStatus.CREATED, transferItem.getTransferStatus());
+            Assertions.assertEquals(TransferItem.TransferStatus.COLLECTED, transferItem.getTransferStatus());
             assertNotNull(transferItem.getQueueDate());
             assertEquals("datastation name", transferItem.getDatasetDvInstance());
             assertEquals(filesystemAttributes.getCreationTime(), transferItem.getCreationTime());
@@ -169,14 +169,14 @@ class TransferItemServiceImplTest {
     @Test
     void moveTransferItem() {
         var newPath = Path.of("new/path.zip");
-        var newStatus = TransferItem.TransferStatus.COLLECTED;
+        var newStatus = TransferItem.TransferStatus.METADATA_EXTRACTED;
         var transferItem = new TransferItem();
         var transferItemService = new TransferItemServiceImpl(transferItemDao, tarDAO);
 
         transferItem = transferItemService.moveTransferItem(transferItem, newStatus, newPath);
 
         assertEquals("new/path.zip", transferItem.getDveFilePath());
-        assertEquals(TransferItem.TransferStatus.COLLECTED, transferItem.getTransferStatus());
+        assertEquals(TransferItem.TransferStatus.METADATA_EXTRACTED, transferItem.getTransferStatus());
     }
 
     @Test
@@ -298,21 +298,21 @@ class TransferItemServiceImplTest {
     }
 
     @Test
-    void createTarArchiveWithAllCollectedTransferItems() {
+    void createTarArchiveWithAllMetadataExtractedTransferItems() {
         var transferItemService = new TransferItemServiceImpl(transferItemDao, tarDAO);
         var uuid = UUID.randomUUID();
         var items = List.of(
-            new TransferItem("pid", 1, 0, "path", LocalDateTime.now(), TransferItem.TransferStatus.COLLECTED),
-            new TransferItem("pid2", 1, 0, "path", LocalDateTime.now(), TransferItem.TransferStatus.COLLECTED)
+            new TransferItem("pid", 1, 0, "path", LocalDateTime.now(), TransferItem.TransferStatus.METADATA_EXTRACTED),
+            new TransferItem("pid2", 1, 0, "path", LocalDateTime.now(), TransferItem.TransferStatus.METADATA_EXTRACTED)
         );
 
-        Mockito.when(transferItemDao.findByStatus(TransferItem.TransferStatus.COLLECTED))
+        Mockito.when(transferItemDao.findByStatus(TransferItem.TransferStatus.METADATA_EXTRACTED))
             .thenReturn(items);
 
         Mockito.when(tarDAO.save(Mockito.any()))
             .then(a -> a.getArguments()[0]);
 
-        var tar = transferItemService.createTarArchiveWithAllCollectedTransferItems(uuid, "some-path");
+        var tar = transferItemService.createTarArchiveWithAllMetadataExtractedTransferItems(uuid, "some-path");
 
         assertEquals(uuid.toString(), tar.getTarUuid());
         assertEquals(Tar.TarStatus.TARRING, tar.getTarStatus());

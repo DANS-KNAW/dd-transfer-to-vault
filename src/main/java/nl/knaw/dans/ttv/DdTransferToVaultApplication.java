@@ -74,6 +74,7 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
 
     @Override
     public void run(final DdTransferToVaultConfiguration configuration, final Environment environment) {
+        log.info("Creating required objects");
         final TransferItemDAO transferItemDAO = new TransferItemDAO(hibernateBundle.getSessionFactory());
         final TarDAO tarDAO = new TarDAO(hibernateBundle.getSessionFactory());
 
@@ -91,6 +92,7 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
         final var metadataReader = new TransferItemMetadataReaderImpl(environment.getObjectMapper(), fileService);
 
         // the Collect task, which listens to new files on the network-drive shares
+        log.info("Creating CollectTaskManager");
         final var collectTaskManager = new CollectTaskManager(
             configuration.getCollect().getInboxes(),
             configuration.getMetadata().getInbox(),
@@ -106,6 +108,7 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
 
         // the Metadata task, which analyses the zip files and stores this information in the database
         // and then moves it to the tar inbox
+        log.info("Creating MetadataTaskManager");
         final var metadataExecutorService = configuration.getMetadata().getTaskQueue().build(environment);
         final var metadataTaskManager = new MetadataTaskManager(
             configuration.getMetadata().getInbox(),
@@ -128,6 +131,7 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
         final var archiveMetadataService = new ArchiveMetadataServiceImpl(configuration.getDataArchive(), processRunner);
         final var createTarExecutorService = configuration.getCreateOcflTar().getTaskQueue().build(environment);
 
+        log.info("Creating TarTaskManager");
         final var tarTaskManager = new TarTaskManager(
             configuration.getCreateOcflTar().getInbox(),
             configuration.getCreateOcflTar().getWorkDir(),
@@ -146,13 +150,14 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
         environment.lifecycle().manage(tarTaskManager);
 
         // the process that checks the archiving service for status
-        final var confirmArchiveExecutorService = configuration.getConfirmArchived().getTaskQueue().build(environment);
+        final var confirmArchivedExecutorService = configuration.getConfirmArchived().getTaskQueue().build(environment);
         final var confirmConfig = configuration.getConfirmArchived();
 
         final ArchiveStatusService archiveStatusService = new ArchiveStatusServiceImpl(configuration.getDataArchive(), processRunner);
 
+        log.info("Creating ConfirmArchivedTaskManager");
         final var confirmArchivedTaskManager = new ConfirmArchivedTaskManager(confirmConfig.getCron(), configuration.getCreateOcflTar().getWorkDir(),
-            confirmArchiveExecutorService, transferItemService, archiveStatusService, ocflRepositoryService);
+            confirmArchivedExecutorService, transferItemService, archiveStatusService, ocflRepositoryService);
 
         environment.lifecycle().manage(confirmArchivedTaskManager);
     }

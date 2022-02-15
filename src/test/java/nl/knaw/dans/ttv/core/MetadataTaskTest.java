@@ -53,7 +53,7 @@ class MetadataTaskTest {
         var task = new MetadataTask(filePath, outbox, transferItemService, transferItemMetadataReader, fileService);
 
         Mockito.when(transferItemService.getTransferItemByFilenameAttributes(Mockito.any()))
-            .thenReturn(Optional.of(new TransferItem("pid", 1, 0, "path", LocalDateTime.now(), TransferItem.TransferStatus.CREATED)));
+            .thenReturn(Optional.of(new TransferItem("pid", 1, 0, "path", LocalDateTime.now(), TransferItem.TransferStatus.COLLECTED)));
 
         task.run();
 
@@ -62,27 +62,6 @@ class MetadataTaskTest {
 
     @Test
     void testMetadataIsUpdated() {
-        var filePath = Path.of("data/inbox/doi-10-5072-dar-kxteqtv1.0.zip");
-        var outbox = Path.of("data/outbox");
-
-        var task = new MetadataTask(filePath, outbox, transferItemService, transferItemMetadataReader, fileService);
-        var transferItem = new TransferItem("pid", 1, 0, "path", LocalDateTime.now(), TransferItem.TransferStatus.CREATED);
-
-        Mockito.when(transferItemService.getTransferItemByFilenameAttributes(Mockito.any()))
-            .thenReturn(Optional.of(transferItem));
-
-        task.run();
-
-        Mockito.verify(transferItemService).addMetadataAndMoveFile(
-            Mockito.eq(transferItem),
-            Mockito.any(),
-            Mockito.eq(TransferItem.TransferStatus.COLLECTED),
-            Mockito.eq(Path.of("data/outbox/doi-10-5072-dar-kxteqtv1.0.zip"))
-        );
-    }
-
-    @Test
-    void testCollectedStatusIsAlsoHandled() {
         var filePath = Path.of("data/inbox/doi-10-5072-dar-kxteqtv1.0.zip");
         var outbox = Path.of("data/outbox");
 
@@ -97,13 +76,34 @@ class MetadataTaskTest {
         Mockito.verify(transferItemService).addMetadataAndMoveFile(
             Mockito.eq(transferItem),
             Mockito.any(),
-            Mockito.eq(TransferItem.TransferStatus.COLLECTED),
+            Mockito.eq(TransferItem.TransferStatus.METADATA_EXTRACTED),
+            Mockito.eq(Path.of("data/outbox/doi-10-5072-dar-kxteqtv1.0.zip"))
+        );
+    }
+
+    @Test
+    void testMetadataExtractedStatusIsAlsoHandled() {
+        var filePath = Path.of("data/inbox/doi-10-5072-dar-kxteqtv1.0.zip");
+        var outbox = Path.of("data/outbox");
+
+        var task = new MetadataTask(filePath, outbox, transferItemService, transferItemMetadataReader, fileService);
+        var transferItem = new TransferItem("pid", 1, 0, "path", LocalDateTime.now(), TransferItem.TransferStatus.METADATA_EXTRACTED);
+
+        Mockito.when(transferItemService.getTransferItemByFilenameAttributes(Mockito.any()))
+            .thenReturn(Optional.of(transferItem));
+
+        task.run();
+
+        Mockito.verify(transferItemService).addMetadataAndMoveFile(
+            Mockito.eq(transferItem),
+            Mockito.any(),
+            Mockito.eq(TransferItem.TransferStatus.METADATA_EXTRACTED),
             Mockito.eq(Path.of("data/outbox/doi-10-5072-dar-kxteqtv1.0.zip"))
         );
     }
 
     @ParameterizedTest
-    @EnumSource(value = TransferItem.TransferStatus.class, mode = EnumSource.Mode.EXCLUDE, names = { "COLLECTED", "CREATED" })
+    @EnumSource(value = TransferItem.TransferStatus.class, mode = EnumSource.Mode.EXCLUDE, names = { "METADATA_EXTRACTED", "COLLECTED" })
     void testInvalidStates(TransferItem.TransferStatus status) throws IOException {
         var filePath = Path.of("data/inbox/doi-10-5072-dar-kxteqtv1.0.zip");
         var outbox = Path.of("data/outbox");
@@ -120,7 +120,7 @@ class MetadataTaskTest {
     }
 
     @ParameterizedTest
-    @EnumSource(value = TransferItem.TransferStatus.class, mode = EnumSource.Mode.EXCLUDE, names = { "COLLECTED", "CREATED" })
+    @EnumSource(value = TransferItem.TransferStatus.class, mode = EnumSource.Mode.EXCLUDE, names = { "METADATA_EXTRACTED", "COLLECTED" })
     void testInvalidStatesOnRun(TransferItem.TransferStatus status) throws IOException {
         var filePath = Path.of("data/inbox/doi-10-5072-dar-kxteqtv1.0.zip");
         var outbox = Path.of("data/outbox");

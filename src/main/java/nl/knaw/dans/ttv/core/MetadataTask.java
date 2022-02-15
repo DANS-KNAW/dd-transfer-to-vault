@@ -64,17 +64,14 @@ public class MetadataTask implements Runnable {
         var transferItem = getTransferItem(path);
 
         if (
-            // TODO: Rename CREATED -> COLLECTED and COLLECTED -> METADATA_EXTRACTED
-            transferItem.getTransferStatus() != TransferItem.TransferStatus.COLLECTED
-                && transferItem.getTransferStatus() != TransferItem.TransferStatus.CREATED
+            transferItem.getTransferStatus() != TransferItem.TransferStatus.METADATA_EXTRACTED
+                && transferItem.getTransferStatus() != TransferItem.TransferStatus.COLLECTED
         ) {
             throw new InvalidTransferItemException(String.format("TransferItem already exists but with an unexpected status: %s", transferItem));
         }
 
-        // we only expect items with status CREATED, but if they are already COLLECTED we
+        // we only expect items with status COLLECTED, but if they are already METADATA_EXTRACTED we
         // can just read the metadata again and update the TransferItem before moving
-        var filesystemAttributes = metadataReader.getFilesystemAttributes(path); // TODO: why read again here?
-        log.trace("received filesystem attributes: {}", filesystemAttributes);
         var fileContentAttributes = metadataReader.getFileContentAttributes(path);
         log.trace("received file content attributes: {}", fileContentAttributes);
 
@@ -83,7 +80,7 @@ public class MetadataTask implements Runnable {
         transferItemService.addMetadataAndMoveFile(
             transferItem,
             fileContentAttributes,
-            TransferItem.TransferStatus.COLLECTED,
+            TransferItem.TransferStatus.METADATA_EXTRACTED,
             newPath
         );
 
