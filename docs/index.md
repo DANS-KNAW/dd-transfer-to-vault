@@ -1,7 +1,7 @@
 dd-transfer-to-vault
-===========
+====================
 
-<!-- Remove this comment and extend the descriptions below -->
+Transfers Dataverse dataset version exports to the DANS data vault.
 
 
 SYNOPSIS
@@ -12,8 +12,11 @@ SYNOPSIS
 
 DESCRIPTION
 -----------
+This service is responsible for taking RDA-compliant zipped bags, exported from Dataverse by it `PostPublishDataset`
+workflow, and transferring them to Data Vault storage, which is implemented as tape storage. Metadata is extracted 
+from each export and added to the Vault Catalog.
 
-Transfer AIPs to the Vault
+
 
 
 ARGUMENTS

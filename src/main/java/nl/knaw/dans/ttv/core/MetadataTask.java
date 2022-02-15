@@ -64,6 +64,7 @@ public class MetadataTask implements Runnable {
         var transferItem = getTransferItem(path);
 
         if (
+            // TODO: Rename CREATED -> COLLECTED and COLLECTED -> METADATA_EXTRACTED
             transferItem.getTransferStatus() != TransferItem.TransferStatus.COLLECTED
                 && transferItem.getTransferStatus() != TransferItem.TransferStatus.CREATED
         ) {
@@ -72,7 +73,7 @@ public class MetadataTask implements Runnable {
 
         // we only expect items with status CREATED, but if they are already COLLECTED we
         // can just read the metadata again and update the TransferItem before moving
-        var filesystemAttributes = metadataReader.getFilesystemAttributes(path);
+        var filesystemAttributes = metadataReader.getFilesystemAttributes(path); // TODO: why read again here?
         log.trace("received filesystem attributes: {}", filesystemAttributes);
         var fileContentAttributes = metadataReader.getFileContentAttributes(path);
         log.trace("received file content attributes: {}", fileContentAttributes);

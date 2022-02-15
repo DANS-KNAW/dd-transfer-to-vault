@@ -151,10 +151,10 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
 
         final ArchiveStatusService archiveStatusService = new ArchiveStatusServiceImpl(configuration.getDataArchive(), processRunner);
 
-        final var confirmArchiveTaskManager = new ConfirmArchivedTaskManager(confirmConfig.getCron(), configuration.getCreateOcflTar().getWorkDir(),
+        final var confirmArchivedTaskManager = new ConfirmArchivedTaskManager(confirmConfig.getCron(), configuration.getCreateOcflTar().getWorkDir(),
             confirmArchiveExecutorService, transferItemService, archiveStatusService, ocflRepositoryService);
 
-        environment.lifecycle().manage(confirmArchiveTaskManager);
+        environment.lifecycle().manage(confirmArchivedTaskManager);
     }
 
 }
