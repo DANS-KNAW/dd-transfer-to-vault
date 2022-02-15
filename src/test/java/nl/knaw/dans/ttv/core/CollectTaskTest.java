@@ -23,7 +23,6 @@ import nl.knaw.dans.ttv.core.service.TransferItemService;
 import nl.knaw.dans.ttv.db.TransferItem;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
 import org.mockito.Mockito;
 
 import java.io.IOException;
@@ -60,7 +59,7 @@ class CollectTaskTest {
             .thenReturn(Optional.of(Path.of("data/inbox/doi-10-5072-dar-kxteqt-datacite.v1.0.xml")));
 
         Mockito.when(transferItemService.createTransferItem(Mockito.any(), Mockito.any(), Mockito.any()))
-            .thenReturn(new TransferItem("pid", 1, 0, "path", LocalDateTime.now(), TransferItem.TransferStatus.CREATED));
+            .thenReturn(new TransferItem("pid", 1, 0, "path", LocalDateTime.now(), TransferItem.TransferStatus.COLLECTED));
 
         task.run();
 
@@ -74,7 +73,7 @@ class CollectTaskTest {
             .createTransferItem(Mockito.eq("dsname"), Mockito.any(), Mockito.any());
 
         Mockito.verify(transferItemService)
-            .moveTransferItem(Mockito.any(), Mockito.eq(TransferItem.TransferStatus.CREATED),
+            .moveTransferItem(Mockito.any(), Mockito.eq(TransferItem.TransferStatus.COLLECTED),
                 Mockito.eq(Path.of("data/outbox/doi-10-5072-dar-kxteqtv1.0.zip")));
     }
 
@@ -162,7 +161,7 @@ class CollectTaskTest {
             var targetFile = Path.of("data/outbox/doi-10-5072-dar-kxteqtv1.0.zip");
             task.moveFileToOutbox(transferItem, filePath, outbox);
             Mockito.verify(fileService).moveFileAtomically(filePath, targetFile);
-            Mockito.verify(transferItemService).moveTransferItem(transferItem, TransferItem.TransferStatus.CREATED, targetFile);
+            Mockito.verify(transferItemService).moveTransferItem(transferItem, TransferItem.TransferStatus.COLLECTED, targetFile);
         }
         catch (IOException e) {
             fail(e);

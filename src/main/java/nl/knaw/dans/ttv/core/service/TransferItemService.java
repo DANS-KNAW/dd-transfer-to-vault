@@ -50,7 +50,7 @@ public interface TransferItemService {
 
     TransferItem addMetadataAndMoveFile(TransferItem transferItem, FileContentAttributes fileContentAttributes, TransferItem.TransferStatus status, Path newPath);
 
-    Tar createTarArchiveWithAllCollectedTransferItems(UUID uuid, String vaultPath);
+    Tar createTarArchiveWithAllMetadataExtractedTransferItems(UUID uuid, String vaultPath);
 
     Tar save(Tar tarArchive);
 
