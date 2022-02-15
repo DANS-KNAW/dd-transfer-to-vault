@@ -193,7 +193,7 @@ public class TarTaskManager implements Managed {
 
     void moveAllInboxFilesToOcflRepo(OcflRepository ocflRepository, String uuid) throws IOException {
         // create a tar record with all COLLECTED TransferItem's in it
-        var tarArchive = transferItemService.createTarArchiveWithAllCollectedTransferItems(uuid, vaultPath);
+        var tarArchive = transferItemService.createTarArchiveWithAllMetadataExtractedTransferItems(uuid, vaultPath);
 
         // import them into the OCFL repo
         for (var transferItem : tarArchive.getTransferItems()) {

@@ -76,8 +76,8 @@ class TarTaskManagerTest {
 
         try {
             var transferItems = List.of(
-                new TransferItem("pid1", 1, 0, "path1", LocalDateTime.now(), TransferItem.TransferStatus.COLLECTED),
-                new TransferItem("pid2", 1, 0, "path2", LocalDateTime.now(), TransferItem.TransferStatus.COLLECTED)
+                new TransferItem("pid1", 1, 0, "path1", LocalDateTime.now(), TransferItem.TransferStatus.METADATA_EXTRACTED),
+                new TransferItem("pid2", 1, 0, "path2", LocalDateTime.now(), TransferItem.TransferStatus.METADATA_EXTRACTED)
             );
 
             var tar = new Tar();
@@ -86,7 +86,7 @@ class TarTaskManagerTest {
             Mockito.when(fileService.getPathSize(Path.of("data/inbox")))
                 .thenReturn(100L);
 
-            Mockito.when(transferItemService.createTarArchiveWithAllCollectedTransferItems(Mockito.any(), Mockito.eq("some-path")))
+            Mockito.when(transferItemService.createTarArchiveWithAllMetadataExtractedTransferItems(Mockito.any(), Mockito.eq("some-path")))
                 .thenReturn(tar);
 
             manager.onNewItemInInbox(new File("test.zip"));
@@ -124,8 +124,8 @@ class TarTaskManagerTest {
             tarCommandRunner, archiveMetadataService);
 
         var transferItems = List.of(
-            new TransferItem("pid1", 1, 0, "path1", LocalDateTime.now(), TransferItem.TransferStatus.COLLECTED),
-            new TransferItem("pid2", 1, 0, "path2", LocalDateTime.now(), TransferItem.TransferStatus.COLLECTED)
+            new TransferItem("pid1", 1, 0, "path1", LocalDateTime.now(), TransferItem.TransferStatus.METADATA_EXTRACTED),
+            new TransferItem("pid2", 1, 0, "path2", LocalDateTime.now(), TransferItem.TransferStatus.METADATA_EXTRACTED)
         );
 
         Mockito.when(fileService.getPathSize(Path.of("data/inbox")))
@@ -135,9 +135,8 @@ class TarTaskManagerTest {
 
         Mockito.verifyNoInteractions(ocflRepositoryService);
         Mockito.verifyNoInteractions(transferItemService);
-        assertEquals(TransferItem.TransferStatus.COLLECTED, transferItems.get(0).getTransferStatus());
-        assertEquals(TransferItem.TransferStatus.COLLECTED, transferItems.get(1).getTransferStatus());
-
+        assertEquals(TransferItem.TransferStatus.METADATA_EXTRACTED, transferItems.get(0).getTransferStatus());
+        assertEquals(TransferItem.TransferStatus.METADATA_EXTRACTED, transferItems.get(1).getTransferStatus());
     }
 
     @Test

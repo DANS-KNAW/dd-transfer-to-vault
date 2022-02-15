@@ -86,11 +86,11 @@ public class CollectTaskManager implements Managed {
 
     public void onFileAdded(File file, String datastationName) {
         if (file.isFile() && file.getName().toLowerCase(Locale.ROOT).endsWith(".zip")) {
-            var transferTask = new CollectTask(
+            var collectTask = new CollectTask(
                 file.toPath(), outbox, datastationName, transferItemService, metadataReader, fileService
             );
 
-            executorService.execute(transferTask);
+            executorService.execute(collectTask);
         }
     }
 
