@@ -12,12 +12,12 @@ collect:
     # Threads will die after 60 seconds of idleness
     keepAliveTime: 60 seconds
 
-metadata:
+extractMetadata:
   inbox: /var/opt/dans.knaw.nl/tmp/metadata-inbox
   # polling interval in milliseconds
   pollingInterval: 500
   taskQueue:
-    nameFormat: "metadata-worker-%d"
+    nameFormat: "extract-metadata-worker-%d"
     maxQueueSize: 5000
     # Number of threads will be increased when maxQueueSize is exceeded.
     minThreads: 1

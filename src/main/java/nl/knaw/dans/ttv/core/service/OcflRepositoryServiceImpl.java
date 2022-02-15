@@ -40,6 +40,7 @@ public class OcflRepositoryServiceImpl implements OcflRepositoryService {
 
     @Override
     public OcflRepository createRepository(Path path, String id) throws IOException {
+        // TODO: use sub-directories dve and ocfl-repo
         var newPath = fileService.createDirectory(Path.of(path.toString(), id));
         var newPathWorkdir = fileService.createDirectory(Path.of(path.toString(), id + "-wd"));
 

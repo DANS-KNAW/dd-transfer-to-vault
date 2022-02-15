@@ -23,6 +23,7 @@ import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import java.nio.file.Path;
 
+// TODO: rename to ExtractMetadataConfiguration
 public class MetadataConfiguration {
     @Valid
     @NotNull

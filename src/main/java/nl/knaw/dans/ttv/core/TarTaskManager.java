@@ -33,6 +33,7 @@ import java.nio.file.Path;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 
+// TODO: Rename to OcflTarTaskManager
 public class TarTaskManager implements Managed {
     private static final Logger log = LoggerFactory.getLogger(TarTaskManager.class);
 
@@ -124,14 +125,18 @@ public class TarTaskManager implements Managed {
 
         try {
             var totalSize = fileService.getPathSize(inboxPath);
-            var uuid = UUID.randomUUID();
+            var tarUuid = UUID.randomUUID();
             log.debug("Total size of inbox is {}, threshold is {}", totalSize, inboxThreshold);
 
             if (totalSize >= inboxThreshold) {
                 log.info("Threshold reached, creating OCFL repo; size of inbox is {} bytes, threshold is {} bytes", totalSize, inboxThreshold);
-                var ocflRepo = createOcflRepo(uuid);
-                moveAllInboxFilesToOcflRepo(ocflRepo, uuid);
-                startTarringTask(uuid);
+                var ocflRepo = createOcflRepo(tarUuid);
+
+                /*
+                 * The creation of the Ocfl repo should be off-loaded to the worker thread, not just the tarring.
+                 */
+                moveAllInboxFilesToOcflRepo(ocflRepo, tarUuid);
+                startTarringTask(tarUuid);
             }
         }
         catch (IOException e) {
@@ -146,9 +151,10 @@ public class TarTaskManager implements Managed {
         executorService.execute(task);
     }
 
-    void moveAllInboxFilesToOcflRepo(OcflRepository ocflRepository, UUID uuid) throws IOException {
+    void moveAllInboxFilesToOcflRepo(OcflRepository ocflRepository, UUID tarUuid) throws IOException {
         // create a tar record with all COLLECTED TransferItem's in it
-        var tarArchive = transferItemService.createTarArchiveWithAllCollectedTransferItems(uuid, vaultPath);
+        // TODO: rename Collected -> MetadataExtracted
+        var tarArchive = transferItemService.createTarArchiveWithAllCollectedTransferItems(tarUuid, vaultPath);
 
         // import them into the OCFL repo
         for (var transferItem : tarArchive.getTransferItems()) {
