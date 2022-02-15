@@ -130,6 +130,8 @@ public class TarTaskManager implements Managed {
 
             if (totalSize >= inboxThreshold) {
                 log.info("Threshold reached, creating OCFL repo; size of inbox is {} bytes, threshold is {} bytes", totalSize, inboxThreshold);
+
+                // TODO: Off-load this to worker thread
                 var ocflRepo = createOcflRepo(uuid);
                 moveAllInboxFilesToOcflRepo(ocflRepo, uuid);
                 startTarringTask(uuid);
