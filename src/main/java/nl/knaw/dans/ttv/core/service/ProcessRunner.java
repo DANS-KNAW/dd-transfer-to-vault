@@ -21,8 +21,7 @@ import java.io.IOException;
 
 public interface ProcessRunner {
     /**
-     * Executes a command; the command is split on spaces.
-     * If the command has spaces in the parameters itself, this should not be used
+     * Executes a command; the command is split on spaces. If the command has spaces in the parameters itself, this should not be used
      *
      * @param command
      * @return ProcessResult

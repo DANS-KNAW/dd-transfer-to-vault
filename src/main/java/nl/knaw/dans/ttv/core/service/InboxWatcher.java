@@ -94,10 +94,6 @@ public class InboxWatcher extends FileAlterationListenerAdaptor implements Manag
         monitor.stop();
     }
 
-    public interface Callback {
-        void onFileCreate(File file, String datastationName);
-    }
-
     @Override
     public String toString() {
         return "InboxWatcher{" +
@@ -105,5 +101,9 @@ public class InboxWatcher extends FileAlterationListenerAdaptor implements Manag
             ", interval=" + interval +
             ", datastationName='" + datastationName + '\'' +
             '}';
+    }
+
+    public interface Callback {
+        void onFileCreate(File file, String datastationName);
     }
 }

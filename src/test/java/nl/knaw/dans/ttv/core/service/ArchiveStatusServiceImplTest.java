@@ -29,8 +29,8 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 class ArchiveStatusServiceImplTest {
 
-    ProcessRunner processRunner;
     final DataArchiveConfiguration dataArchiveConfiguration = new DataArchiveConfiguration("username", "hostname", "");
+    ProcessRunner processRunner;
 
     @BeforeEach
     void setUp() {
@@ -78,7 +78,6 @@ class ArchiveStatusServiceImplTest {
             fail(e);
         }
     }
-
 
     @Test
     void unexpectedStatus() {

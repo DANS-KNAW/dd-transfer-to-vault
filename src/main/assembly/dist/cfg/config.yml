@@ -1,5 +1,5 @@
 collect:
-  inboxes: []
+  inboxes: [ ]
   # polling interval in milliseconds
   pollingInterval: 500
   taskQueue:

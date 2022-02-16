@@ -198,7 +198,7 @@ class CollectTaskTest {
         var transferItem = new TransferItem("test", 1, 0, "path", LocalDateTime.now(), TransferItem.TransferStatus.TARRING);
 
         Mockito.doThrow(IOException.class)
-                .when(fileService).rejectFile(Mockito.any(), Mockito.any());
+            .when(fileService).rejectFile(Mockito.any(), Mockito.any());
 
         Mockito.when(transferItemService.getTransferItemByFilenameAttributes(Mockito.any()))
             .thenReturn(Optional.of(transferItem));

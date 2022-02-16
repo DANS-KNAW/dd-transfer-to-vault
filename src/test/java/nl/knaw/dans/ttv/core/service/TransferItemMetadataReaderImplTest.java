@@ -213,18 +213,20 @@ class TransferItemMetadataReaderImplTest {
 
     /**
      * test that IOExceptions are propagated
+     *
      * @throws IOException
      */
     @Test
     void getFileContentAttributesWithIOException() throws IOException {
         var fileService = Mockito.mock(FileService.class);
         Mockito.when(fileService.openZipFile(Mockito.any()))
-                .thenThrow(IOException.class);
+            .thenThrow(IOException.class);
 
         var service = new TransferItemMetadataReaderImpl(new ObjectMapper(), fileService);
 
         assertThrows(InvalidTransferItemException.class, () -> service.getFileContentAttributes(Path.of("test.zip")));
     }
+
     @Test
     void getAssociatedXmlFile() {
         var fileService = Mockito.mock(FileService.class);

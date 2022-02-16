@@ -9,12 +9,11 @@ SYNOPSIS
 
     dd-transfer-to-vault { server | check }
 
-
 DESCRIPTION
 -----------
 This service is responsible for taking RDA-compliant zipped bags, exported from Dataverse by it `PostPublishDataset`
-workflow, and transferring them to Data Vault storage, which is implemented as tape storage. Metadata is extracted
-from each export and added to the Vault Catalog.
+workflow, and transferring them to Data Vault storage, which is implemented as tape storage. Metadata is extracted from each export and added to the Vault
+Catalog.
 
 
 
@@ -63,9 +62,8 @@ Steps:
     cd dd-transfer-to-vault 
     mvn clean install
 
-If the `rpm` executable is found at `/usr/local/bin/rpm`, the build profile that includes the RPM
-packaging will be activated. If `rpm` is available, but at a different path, then activate it by using
-Maven's `-P` switch: `mvn -Pprm install`.
+If the `rpm` executable is found at `/usr/local/bin/rpm`, the build profile that includes the RPM packaging will be activated. If `rpm` is available, but at a
+different path, then activate it by using Maven's `-P` switch: `mvn -Pprm install`.
 
 Alternatively, to build the tarball execute:
 

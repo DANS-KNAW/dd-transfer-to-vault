@@ -28,8 +28,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class ArchiveMetadataServiceImplTest {
 
-    ProcessRunner processRunner;
     final DataArchiveConfiguration dataArchiveConfiguration = new DataArchiveConfiguration("username", "hostname", "");
+    ProcessRunner processRunner;
 
     @BeforeEach
     void setUp() {
@@ -54,8 +54,9 @@ class ArchiveMetadataServiceImplTest {
 
     @Test
     void testMultipleFiles() throws IOException, InterruptedException {
-        var output = "dans-vault/0f10d4c8-56a1-46bb-b081-caf34a8d8dc5.dmftar/0000/0f10d4c8-56a1-46bb-b081-caf34a8d8dc5.dmftar.tar.chksum ::: md5 89f2b08d1fd59c2e1e1aed58f7578fb8 0f10d4c8-56a1-46bb-b081-caf34a8d8dc5.dmftar.tar\n"
-            + "dans-vault/0f10d4c8-56a1-46bb-b081-caf34a8d8dc5.dmftar/0001/0f10d4c8-56a1-46bb-b081-caf34a8d8dc5.dmftar.tar.chksum ::: blake2 abc 0f10d4c8-56a1-46bb-b081-caf34a8d8dc5.dmftar.tar\n";
+        var output =
+            "dans-vault/0f10d4c8-56a1-46bb-b081-caf34a8d8dc5.dmftar/0000/0f10d4c8-56a1-46bb-b081-caf34a8d8dc5.dmftar.tar.chksum ::: md5 89f2b08d1fd59c2e1e1aed58f7578fb8 0f10d4c8-56a1-46bb-b081-caf34a8d8dc5.dmftar.tar\n"
+                + "dans-vault/0f10d4c8-56a1-46bb-b081-caf34a8d8dc5.dmftar/0001/0f10d4c8-56a1-46bb-b081-caf34a8d8dc5.dmftar.tar.chksum ::: blake2 abc 0f10d4c8-56a1-46bb-b081-caf34a8d8dc5.dmftar.tar\n";
         var service = new ArchiveMetadataServiceImpl(dataArchiveConfiguration, processRunner);
 
         Mockito.when(processRunner.run((String[]) Mockito.any()))

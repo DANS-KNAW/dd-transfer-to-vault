@@ -27,8 +27,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class TarCommandRunnerImplTest {
 
-    private ProcessRunner processRunner;
     private final DataArchiveConfiguration dataArchiveConfiguration = new DataArchiveConfiguration("username", "hostname", "path");
+    private ProcessRunner processRunner;
 
     @BeforeEach
     void setUp() {
