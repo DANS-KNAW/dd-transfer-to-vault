@@ -24,7 +24,6 @@ import nl.knaw.dans.ttv.core.service.InboxWatcherFactory;
 import nl.knaw.dans.ttv.core.service.OcflRepositoryService;
 import nl.knaw.dans.ttv.core.service.TarCommandRunner;
 import nl.knaw.dans.ttv.core.service.TransferItemService;
-import org.quartz.CronScheduleBuilder;
 import org.quartz.JobBuilder;
 import org.quartz.JobDataMap;
 import org.quartz.Scheduler;
@@ -38,6 +37,9 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.time.Duration;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 
@@ -55,15 +57,19 @@ public class TarTaskManager implements Managed {
     private final TransferItemService transferItemService;
     private final TarCommandRunner tarCommandRunner;
     private final long pollingInterval;
+    private final int maxRetries;
+    private final Duration retryInterval;
+    private final List<Duration> retrySchedule;
     private final ArchiveMetadataService archiveMetadataService;
     private InboxWatcher inboxWatcher;
     private Scheduler retryScheduler;
 
-    public TarTaskManager(Path inboxPath, Path workDir, String vaultPath, long inboxThreshold, long pollingInterval, ExecutorService executorService,
-        InboxWatcherFactory inboxWatcherFactory,
-        FileService fileService, OcflRepositoryService ocflRepositoryService, TransferItemService transferItemService, TarCommandRunner tarCommandRunner,
+    public TarTaskManager(Path inboxPath, Path workDir, String vaultPath, long inboxThreshold, long pollingInterval, int maxRetries, Duration retryInterval, List<Duration> retrySchedule,
+        ExecutorService executorService,
+        InboxWatcherFactory inboxWatcherFactory, FileService fileService, OcflRepositoryService ocflRepositoryService, TransferItemService transferItemService, TarCommandRunner tarCommandRunner,
         ArchiveMetadataService archiveMetadataService) {
         this.vaultPath = vaultPath;
+        this.retryInterval = retryInterval;
         this.executorService = executorService;
         this.inboxPath = inboxPath;
         this.workDir = workDir;
@@ -75,6 +81,8 @@ public class TarTaskManager implements Managed {
         this.tarCommandRunner = tarCommandRunner;
         this.pollingInterval = pollingInterval;
         this.archiveMetadataService = archiveMetadataService;
+        this.maxRetries = maxRetries;
+        this.retrySchedule = retrySchedule;
     }
 
     @Override
@@ -97,11 +105,11 @@ public class TarTaskManager implements Managed {
         this.inboxWatcher.start();
     }
 
-
     @Override
     public void stop() throws Exception {
         this.inboxWatcher.stop();
         this.executorService.shutdownNow();
+        this.retryScheduler.shutdown();
     }
 
     void verifyInbox() {
@@ -132,31 +140,29 @@ public class TarTaskManager implements Managed {
     }
 
     void startRetryScheduler() throws SchedulerException {
-        var schedulerFactory = new StdSchedulerFactory();
-        this.retryScheduler = schedulerFactory.getScheduler();
-
-        var jobData = new JobDataMap();
+        this.retryScheduler = createScheduler();
 
         log.info("Configuring JobDataMap for cron-based tasks");
-        jobData.put("transferItemService", transferItemService);
-        jobData.put("workDir", workDir);
-        jobData.put("tarCommandRunner", tarCommandRunner);
-        jobData.put("archiveMetadataService", archiveMetadataService);
-        jobData.put("executorService", executorService);
+        var jobParams = new TarRetryTaskCreator.TaskRetryTaskCreatorParameters(
+            transferItemService, workDir, tarCommandRunner, archiveMetadataService, executorService, maxRetries, retrySchedule
+        );
+        var jobData = new JobDataMap(Map.of("params", jobParams));
 
         var job = JobBuilder.newJob(TarRetryTaskCreator.class)
             .withIdentity("tarRetryTask", "createocfltar")
             .setJobData(jobData)
             .build();
 
+        var schedule = SimpleScheduleBuilder.simpleSchedule()
+            .withIntervalInSeconds((int) retryInterval.getSeconds())
+            .repeatForever();
+
         var trigger = TriggerBuilder.newTrigger()
             .withIdentity("tarRetryTaskTrigger", "createocfltar")
-            .withSchedule(SimpleScheduleBuilder.simpleSchedule()
-                .withIntervalInMinutes(1)
-                .repeatForever())
+            .withSchedule(schedule)
             .build();
 
-        log.info("Scheduling TarRetryTaskCreator every 5 minutes");
+        log.info("Scheduling TarRetryTaskCreator with interval {}", retryInterval);
 
         this.retryScheduler.scheduleJob(job, trigger);
         this.retryScheduler.start();
@@ -185,13 +191,13 @@ public class TarTaskManager implements Managed {
 
     void startTarringTask(String uuid) {
         var repoPath = Path.of(workDir.toString(), uuid);
-        var task = new TarTask(transferItemService, uuid, repoPath, tarCommandRunner, archiveMetadataService);
+        var task = new TarTask(transferItemService, uuid, repoPath, tarCommandRunner, archiveMetadataService, maxRetries);
 
         log.info("Starting TarTask {}", task);
         executorService.execute(task);
     }
 
-    void moveAllInboxFilesToOcflRepo(OcflRepository ocflRepository, String uuid) throws IOException {
+    void moveAllInboxFilesToOcflRepo(OcflRepository ocflRepository, String uuid) {
         // create a tar record with all COLLECTED TransferItem's in it
         var tarArchive = transferItemService.createTarArchiveWithAllMetadataExtractedTransferItems(uuid, vaultPath);
 
@@ -210,6 +216,10 @@ public class TarTaskManager implements Managed {
 
     OcflRepository createOcflRepo(String uuid) throws IOException {
         return ocflRepositoryService.createRepository(workDir, uuid);
+    }
+
+    Scheduler createScheduler() throws SchedulerException {
+        return new StdSchedulerFactory().getScheduler();
     }
 
 }

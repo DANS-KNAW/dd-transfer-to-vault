@@ -57,11 +57,9 @@ public class FileServiceImpl implements FileService {
     }
 
     /**
-     * Moves a file to the rejected/ subfolder of where it was initially found
-     * If a file already exists, it will append a number to the filename.
+     * Moves a file to the rejected/ subfolder of where it was initially found If a file already exists, it will append a number to the filename.
      *
-     * It also writes an error description inside a file which is named
-     * `filename`.error.txt (or `filename`.1.error.txt` if it already exists)
+     * It also writes an error description inside a file which is named `filename`.error.txt (or `filename`.1.error.txt` if it already exists)
      *
      * @param path The path to the file to reject
      */
@@ -88,7 +86,7 @@ public class FileServiceImpl implements FileService {
             duplicateCounter += 1;
         }
 
-        var targetPath =Path.of(rejectedFolder.toString(), rejectedFileName);
+        var targetPath = Path.of(rejectedFolder.toString(), rejectedFileName);
         var targetErrorPath = Path.of(rejectedFolder.toString(), errorFileName);
 
         log.trace("moving file to '{}', writing error report to '{}'", targetPath, targetErrorPath);

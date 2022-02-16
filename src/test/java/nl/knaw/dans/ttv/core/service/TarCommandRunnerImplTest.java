@@ -28,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 class TarCommandRunnerImplTest {
 
     private ProcessRunner processRunner;
-    private DataArchiveConfiguration dataArchiveConfiguration = new DataArchiveConfiguration("username", "hostname", "path");
+    private final DataArchiveConfiguration dataArchiveConfiguration = new DataArchiveConfiguration("username", "hostname", "path");
 
     @BeforeEach
     void setUp() {
@@ -53,13 +53,9 @@ class TarCommandRunnerImplTest {
     void tarDirectoryWithNullArguments() {
         var runner = new TarCommandRunnerImpl(dataArchiveConfiguration, processRunner);
 
-        assertThrows(NullPointerException.class, () -> {
-            runner.tarDirectory(null, "user@account.com:path/1");
-        });
+        assertThrows(NullPointerException.class, () -> runner.tarDirectory(null, "user@account.com:path/1"));
 
-        assertThrows(NullPointerException.class, () -> {
-            runner.tarDirectory(Path.of("a"), null);
-        });
+        assertThrows(NullPointerException.class, () -> runner.tarDirectory(Path.of("a"), null));
     }
 
     @Test

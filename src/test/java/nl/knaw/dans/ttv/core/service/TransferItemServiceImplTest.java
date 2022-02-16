@@ -149,9 +149,7 @@ class TransferItemServiceImplTest {
 
         var transferItemService = new TransferItemServiceImpl(transferItemDao, tarDAO);
 
-        assertThrows(InvalidTransferItemException.class, () -> {
-            transferItemService.createTransferItem("datastation name", filenameAttributes, filesystemAttributes, fileContentAttributes);
-        });
+        assertThrows(InvalidTransferItemException.class, () -> transferItemService.createTransferItem("name", filenameAttributes, filesystemAttributes, fileContentAttributes));
     }
 
     @Test
@@ -161,9 +159,7 @@ class TransferItemServiceImplTest {
 
         var transferItemService = new TransferItemServiceImpl(transferItemDao, tarDAO);
 
-        assertThrows(InvalidTransferItemException.class, () -> {
-            transferItemService.createTransferItem("datastation name", filenameAttributes, filesystemAttributes);
-        });
+        assertThrows(InvalidTransferItemException.class, () -> transferItemService.createTransferItem("name", filenameAttributes, filesystemAttributes));
     }
 
     @Test
@@ -344,5 +340,60 @@ class TransferItemServiceImplTest {
         assertEquals(Tar.TarStatus.CONFIRMEDARCHIVED, tar.getTarStatus());
         assertFalse(tar.isConfirmCheckInProgress());
         assertNotNull(tar.getDatetimeConfirmedArchived());
+    }
+
+    @Test
+    void setArchiveAttemptFailed() {
+        var tar = new Tar();
+        tar.setTransferAttempt(0);
+
+        Mockito.when(tarDAO.findById(Mockito.any())).thenReturn(Optional.of(tar));
+
+        var transferItemService = new TransferItemServiceImpl(transferItemDao, tarDAO);
+        transferItemService.setArchiveAttemptFailed("id", true, 2);
+
+        Mockito.verify(tarDAO).save(tar);
+
+        assertEquals(1, tar.getTransferAttempt());
+        assertEquals(Tar.TarStatus.TARRING, tar.getTarStatus());
+    }
+
+    @Test
+    void setArchiveAttemptFailedWithMaxRetries() {
+        var tar = new Tar();
+        tar.setTransferAttempt(0);
+
+        Mockito.when(tarDAO.findById(Mockito.any())).thenReturn(Optional.of(tar));
+
+        var transferItemService = new TransferItemServiceImpl(transferItemDao, tarDAO);
+
+        // this is called after the initial attempt
+        transferItemService.setArchiveAttemptFailed("id", true, 2);
+        assertEquals(1, tar.getTransferAttempt());
+        assertEquals(Tar.TarStatus.TARRING, tar.getTarStatus());
+
+        // this is called after the first retry
+        transferItemService.setArchiveAttemptFailed("id", true, 2);
+        assertEquals(2, tar.getTransferAttempt());
+        assertEquals(Tar.TarStatus.TARRING, tar.getTarStatus());
+
+        // this is called after the second retry, and because maxRetries equals 2, there will not be a third retry
+        transferItemService.setArchiveAttemptFailed("id", true, 2);
+        assertEquals(3, tar.getTransferAttempt());
+        assertEquals(Tar.TarStatus.OCFLTARFAILED, tar.getTarStatus());
+    }
+
+    @Test
+    void setArchiveAttemptFailedWithoutCount() {
+        var tar = new Tar();
+        tar.setTransferAttempt(0);
+
+        Mockito.when(tarDAO.findById(Mockito.any())).thenReturn(Optional.of(tar));
+
+        var transferItemService = new TransferItemServiceImpl(transferItemDao, tarDAO);
+        transferItemService.setArchiveAttemptFailed("id", false, 2);
+        assertEquals(0, tar.getTransferAttempt());
+        assertEquals(Tar.TarStatus.TARRING, tar.getTarStatus());
+
     }
 }

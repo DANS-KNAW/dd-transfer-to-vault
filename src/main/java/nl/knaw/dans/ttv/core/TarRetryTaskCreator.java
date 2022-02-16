@@ -28,36 +28,35 @@ import org.slf4j.LoggerFactory;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 
 public class TarRetryTaskCreator implements Job {
     private static final Logger log = LoggerFactory.getLogger(TarRetryTaskCreator.class);
 
-    private final Duration[] RETRY_DELAYS = new Duration[] {
-        Duration.of(1, ChronoUnit.MINUTES),
-        Duration.of(1, ChronoUnit.HOURS),
-        Duration.of(8, ChronoUnit.HOURS),
-        Duration.of(24, ChronoUnit.HOURS),
-        Duration.of(48, ChronoUnit.HOURS),
-        Duration.of(72, ChronoUnit.HOURS),
-    };
-
     @Override
-    public void execute(JobExecutionContext context) throws JobExecutionException {
+    public void execute(JobExecutionContext context) {
         var dataMap = context.getMergedJobDataMap();
-        var transferItemService = (TransferItemService) dataMap.get("transferItemService");
-        var workDir = (Path) dataMap.get("workDir");
-        var tarCommandRunner = (TarCommandRunner) dataMap.get("tarCommandRunner");
-        var archiveMetadataService = (ArchiveMetadataService) dataMap.get("archiveMetadataService");
-        var executorService = (ExecutorService) dataMap.get("executorService");
+        var params = (TaskRetryTaskCreatorParameters) dataMap.get("params");
+
+        run(params);
+    }
+
+    void run(TaskRetryTaskCreatorParameters params) {
+        var transferItemService = params.getTransferItemService();
+        var workDir = params.getWorkDir();
+        var tarCommandRunner = params.getTarCommandRunner();
+        var archiveMetadataService = params.getArchiveMetadataService();
+        var executorService = params.getExecutorService();
+        var maxRetries = params.getMaxRetries();
+        var retryIntervals = params.getRetryIntervals();
 
         // get a list of Tars that need to be retried
         var tars = transferItemService.findTarsToBeRetried();
 
         log.debug("Checking TAR's to retry, found {} candidates", tars.size());
         for (var tar : tars) {
-            if (!shouldRetry(tar)) {
+            if (!shouldRetry(tar, retryIntervals)) {
                 log.debug("Tar {} is not ready for retry yet", tar);
                 continue;
             }
@@ -67,16 +66,16 @@ public class TarRetryTaskCreator implements Job {
 
             // check if tar should be retried again
             var task = new TarTask(transferItemService, tar.getTarUuid(),
-                workDir, tarCommandRunner, archiveMetadataService);
+                workDir, tarCommandRunner, archiveMetadataService, maxRetries);
 
             log.info("Starting TarTask {}", task);
             executorService.execute(task);
         }
     }
 
-    boolean shouldRetry(Tar tar) {
+    boolean shouldRetry(Tar tar, List<Duration> retryIntervals) {
         var attempt = tar.getTransferAttempt();
-        var threshold = calculateThreshold(attempt, RETRY_DELAYS);
+        var threshold = calculateThreshold(attempt, retryIntervals);
         var now = LocalDateTime.now();
 
         log.trace("Comparing date {} and {}", tar.getCreated(), now);
@@ -87,9 +86,86 @@ public class TarRetryTaskCreator implements Job {
         return result;
     }
 
-    Duration calculateThreshold(int attempt, Duration[] retryDelays) {
-        return attempt >= retryDelays.length
-            ? retryDelays[retryDelays.length - 1].multipliedBy((attempt + 2) - retryDelays.length)
-            : retryDelays[attempt];
+    Duration calculateThreshold(int attempt, List<Duration> retryDelays) {
+        return attempt >= retryDelays.size()
+            ? retryDelays.get(retryDelays.size() - 1).multipliedBy((attempt + 2) - retryDelays.size())
+            : retryDelays.get(attempt);
+    }
+
+    public static class TaskRetryTaskCreatorParameters {
+        private TransferItemService transferItemService;
+        private Path workDir;
+        private TarCommandRunner tarCommandRunner;
+        private ArchiveMetadataService archiveMetadataService;
+        private ExecutorService executorService;
+        private int maxRetries;
+        private List<Duration> retryIntervals;
+
+        public TaskRetryTaskCreatorParameters(TransferItemService transferItemService, Path workDir, TarCommandRunner tarCommandRunner,
+            ArchiveMetadataService archiveMetadataService, ExecutorService executorService, int maxRetries, List<Duration> retryIntervals) {
+            this.transferItemService = transferItemService;
+            this.workDir = workDir;
+            this.tarCommandRunner = tarCommandRunner;
+            this.archiveMetadataService = archiveMetadataService;
+            this.executorService = executorService;
+            this.maxRetries = maxRetries;
+            this.retryIntervals = retryIntervals;
+        }
+
+        public TransferItemService getTransferItemService() {
+            return transferItemService;
+        }
+
+        public void setTransferItemService(TransferItemService transferItemService) {
+            this.transferItemService = transferItemService;
+        }
+
+        public Path getWorkDir() {
+            return workDir;
+        }
+
+        public void setWorkDir(Path workDir) {
+            this.workDir = workDir;
+        }
+
+        public TarCommandRunner getTarCommandRunner() {
+            return tarCommandRunner;
+        }
+
+        public void setTarCommandRunner(TarCommandRunner tarCommandRunner) {
+            this.tarCommandRunner = tarCommandRunner;
+        }
+
+        public ArchiveMetadataService getArchiveMetadataService() {
+            return archiveMetadataService;
+        }
+
+        public void setArchiveMetadataService(ArchiveMetadataService archiveMetadataService) {
+            this.archiveMetadataService = archiveMetadataService;
+        }
+
+        public ExecutorService getExecutorService() {
+            return executorService;
+        }
+
+        public void setExecutorService(ExecutorService executorService) {
+            this.executorService = executorService;
+        }
+
+        public int getMaxRetries() {
+            return maxRetries;
+        }
+
+        public void setMaxRetries(int maxRetries) {
+            this.maxRetries = maxRetries;
+        }
+
+        public List<Duration> getRetryIntervals() {
+            return retryIntervals;
+        }
+
+        public void setRetryIntervals(List<Duration> retryIntervals) {
+            this.retryIntervals = retryIntervals;
+        }
     }
 }

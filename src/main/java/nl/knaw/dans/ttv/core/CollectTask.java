@@ -76,7 +76,7 @@ public class CollectTask implements Runnable {
         moveFileToOutbox(transferItem, path, this.outbox);
     }
 
-    public TransferItem createOrGetTransferItem(Path path) throws InvalidTransferItemException {
+    TransferItem createOrGetTransferItem(Path path) throws InvalidTransferItemException {
         var filenameAttributes = metadataReader.getFilenameAttributes(path);
         log.trace("Received filename attributes: {}", filenameAttributes);
 
@@ -95,7 +95,7 @@ public class CollectTask implements Runnable {
         return transferItemService.createTransferItem(datastationName, filenameAttributes, filesystemAttributes);
     }
 
-    public void moveFileToOutbox(TransferItem transferItem, Path filePath, Path outboxPath) throws IOException {
+    void moveFileToOutbox(TransferItem transferItem, Path filePath, Path outboxPath) throws IOException {
         log.trace("filePath is '{}', outboxPath is '{}'", filePath, outboxPath);
         var newPath = outboxPath.resolve(filePath.getFileName());
 
@@ -110,7 +110,7 @@ public class CollectTask implements Runnable {
         fileService.rejectFile(path, exception);
     }
 
-    public void cleanUpXmlFile(Path path) {
+    void cleanUpXmlFile(Path path) {
         metadataReader.getAssociatedXmlFile(path).ifPresent(p -> {
             try {
                 fileService.deleteFile(p);

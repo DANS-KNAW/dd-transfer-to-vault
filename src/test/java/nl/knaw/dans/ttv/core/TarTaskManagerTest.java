@@ -28,17 +28,19 @@ import nl.knaw.dans.ttv.db.TransferItem;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.quartz.Scheduler;
+import org.quartz.SchedulerException;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.fail;
 
 class TarTaskManagerTest {
     private TransferItemService transferItemService;
@@ -60,73 +62,65 @@ class TarTaskManagerTest {
         this.archiveMetadataService = Mockito.mock(ArchiveMetadataService.class);
     }
 
-    @Test
-    void start() {
-    }
-
     /**
      * Test that the size of the inbox is greater than the threshold, and all required actions are executed, plus a task has been started to handle it
      */
     @Test
-    void onNewItemInInbox() {
-        var manager = new TarTaskManager(
-            Path.of("data/inbox"), Path.of("data/workdir"), "some-path", 50, 100L,
+    void onNewItemInInbox() throws SchedulerException, IOException {
+        var manager = Mockito.spy(new TarTaskManager(
+            Path.of("data/inbox"), Path.of("data/workdir"), "some-path", 50, 100L, 10, Duration.ofMinutes(1), List.of(),
             executorService, inboxWatcherFactory, fileService, ocflRepositoryService, transferItemService,
-            tarCommandRunner, archiveMetadataService);
-
-        try {
-            var transferItems = List.of(
-                new TransferItem("pid1", 1, 0, "path1", LocalDateTime.now(), TransferItem.TransferStatus.METADATA_EXTRACTED),
-                new TransferItem("pid2", 1, 0, "path2", LocalDateTime.now(), TransferItem.TransferStatus.METADATA_EXTRACTED)
-            );
-
-            var tar = new Tar();
-            tar.setTransferItems(transferItems);
-
-            Mockito.when(fileService.getPathSize(Path.of("data/inbox")))
-                .thenReturn(100L);
-
-            Mockito.when(transferItemService.createTarArchiveWithAllMetadataExtractedTransferItems(Mockito.any(), Mockito.eq("some-path")))
-                .thenReturn(tar);
-
-            manager.onNewItemInInbox(new File("test.zip"));
-
-            Mockito.verify(fileService).getPathSize(Path.of("data/inbox"));
-            Mockito.verify(ocflRepositoryService).createRepository(Mockito.eq(Path.of("data/workdir")), Mockito.any());
-            Mockito.verify(ocflRepositoryService).importTransferItem(
-                Mockito.any(),
-                Mockito.eq(transferItems.get(0))
-            );
-            Mockito.verify(ocflRepositoryService).importTransferItem(
-                Mockito.any(),
-                Mockito.eq(transferItems.get(1))
-            );
-            Mockito.verify(transferItemService).save(Mockito.any());
-            //            assertEquals(TransferItem.TransferStatus.TARRING, transferItems.get(0).getTransferStatus());
-            //            assertEquals(TransferItem.TransferStatus.TARRING, transferItems.get(1).getTransferStatus());
-
-            //            assertNotNull(transferItems.get(0).getAipsTar());
-            //            assertNotNull(transferItems.get(1).getAipsTar());
-            //            assertEquals(transferItems.get(0).getAipsTar(), transferItems.get(1).getAipsTar());
-
-            Mockito.verify(executorService).execute(Mockito.any());
-        }
-        catch (IOException e) {
-            fail(e);
-        }
-    }
-
-    @Test
-    void testThresholdIsNotReached() throws IOException {
-        var manager = new TarTaskManager(
-            Path.of("data/inbox"), Path.of("data/workdir"), "some-path", 50, 100L,
-            executorService, inboxWatcherFactory, fileService, ocflRepositoryService, transferItemService,
-            tarCommandRunner, archiveMetadataService);
+            tarCommandRunner, archiveMetadataService));
 
         var transferItems = List.of(
             new TransferItem("pid1", 1, 0, "path1", LocalDateTime.now(), TransferItem.TransferStatus.METADATA_EXTRACTED),
             new TransferItem("pid2", 1, 0, "path2", LocalDateTime.now(), TransferItem.TransferStatus.METADATA_EXTRACTED)
         );
+
+        var tar = new Tar();
+        tar.setTransferItems(transferItems);
+
+        var scheduler = Mockito.mock(Scheduler.class);
+        Mockito.when(manager.createScheduler()).thenReturn(scheduler);
+
+        Mockito.when(fileService.getPathSize(Path.of("data/inbox")))
+            .thenReturn(100L);
+
+        Mockito.when(transferItemService.createTarArchiveWithAllMetadataExtractedTransferItems(Mockito.any(), Mockito.eq("some-path")))
+            .thenReturn(tar);
+
+        manager.onNewItemInInbox(new File("test.zip"));
+
+        Mockito.verify(fileService).getPathSize(Path.of("data/inbox"));
+        Mockito.verify(ocflRepositoryService).createRepository(Mockito.eq(Path.of("data/workdir")), Mockito.any());
+        Mockito.verify(ocflRepositoryService).importTransferItem(
+            Mockito.any(),
+            Mockito.eq(transferItems.get(0))
+        );
+        Mockito.verify(ocflRepositoryService).importTransferItem(
+            Mockito.any(),
+            Mockito.eq(transferItems.get(1))
+        );
+        Mockito.verify(transferItemService).save(Mockito.any());
+
+        Mockito.verify(executorService).execute(Mockito.any());
+
+    }
+
+    @Test
+    void testThresholdIsNotReached() throws IOException, SchedulerException {
+        var manager = Mockito.spy(new TarTaskManager(
+            Path.of("data/inbox"), Path.of("data/workdir"), "some-path", 50, 100L, 10, Duration.ofMinutes(1), List.of(),
+            executorService, inboxWatcherFactory, fileService, ocflRepositoryService, transferItemService,
+            tarCommandRunner, archiveMetadataService));
+
+        var transferItems = List.of(
+            new TransferItem("pid1", 1, 0, "path1", LocalDateTime.now(), TransferItem.TransferStatus.METADATA_EXTRACTED),
+            new TransferItem("pid2", 1, 0, "path2", LocalDateTime.now(), TransferItem.TransferStatus.METADATA_EXTRACTED)
+        );
+
+        var scheduler = Mockito.mock(Scheduler.class);
+        Mockito.when(manager.createScheduler()).thenReturn(scheduler);
 
         Mockito.when(fileService.getPathSize(Path.of("data/inbox")))
             .thenReturn(25L);
@@ -140,11 +134,14 @@ class TarTaskManagerTest {
     }
 
     @Test
-    void verifyInbox() {
-        var manager = new TarTaskManager(
-            Path.of("data/inbox"), Path.of("data/workdir"), "some-path", 50, 100L,
+    void verifyInbox() throws SchedulerException {
+        var manager = Mockito.spy(new TarTaskManager(
+            Path.of("data/inbox"), Path.of("data/workdir"), "some-path", 50, 100L, 10, Duration.ofMinutes(1), List.of(),
             executorService, inboxWatcherFactory, fileService, ocflRepositoryService, transferItemService,
-            tarCommandRunner, archiveMetadataService);
+            tarCommandRunner, archiveMetadataService));
+
+        var scheduler = Mockito.mock(Scheduler.class);
+        Mockito.when(manager.createScheduler()).thenReturn(scheduler);
 
         var transferItems = List.of(
             new TransferItem("pid1", 1, 0, "path", LocalDateTime.now(), TransferItem.TransferStatus.TARRING),
@@ -179,21 +176,23 @@ class TarTaskManagerTest {
 
     @Test
     void testVerificationAndInboxWatchersAreStarted() throws Exception {
-        var manager = new TarTaskManager(
-            Path.of("data/inbox"), Path.of("data/workdir"), "some-path", 50, 100L,
+        var manager = Mockito.spy(new TarTaskManager(
+            Path.of("data/inbox"), Path.of("data/workdir"), "some-path", 50, 100L, 10, Duration.ofMinutes(1), List.of(),
             executorService, inboxWatcherFactory, fileService, ocflRepositoryService, transferItemService,
-            tarCommandRunner, archiveMetadataService);
+            tarCommandRunner, archiveMetadataService));
 
-        var manager1 = Mockito.spy(manager);
-        Mockito.doNothing().when(manager1).verifyInbox();
+        var scheduler = Mockito.mock(Scheduler.class);
+        Mockito.when(manager.createScheduler()).thenReturn(scheduler);
+
+        Mockito.doNothing().when(manager).verifyInbox();
 
         var inboxWatcher = Mockito.mock(InboxWatcher.class);
         Mockito.when(inboxWatcherFactory.getInboxWatcher(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.anyLong()))
             .thenReturn(inboxWatcher);
 
-        manager1.start();
+        manager.start();
 
-        Mockito.verify(manager1).verifyInbox();
+        Mockito.verify(manager).verifyInbox();
         Mockito.verify(inboxWatcher).start();
     }
 }

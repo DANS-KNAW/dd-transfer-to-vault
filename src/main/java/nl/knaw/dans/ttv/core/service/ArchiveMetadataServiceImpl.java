@@ -32,7 +32,6 @@ public class ArchiveMetadataServiceImpl implements ArchiveMetadataService {
     private final Pattern linePattern = Pattern.compile(
         "^.*\\.dmftar/(?<part>\\d+)/.*::: (?<algorithm>[a-zA-Z0-9_]+) (?<checksum>[^ ]+).*");
 
-
     public ArchiveMetadataServiceImpl(DataArchiveConfiguration dataArchiveConfiguration, ProcessRunner processRunner) {
         this.processRunner = processRunner;
         this.dataArchiveConfiguration = dataArchiveConfiguration;
@@ -70,7 +69,7 @@ public class ArchiveMetadataServiceImpl implements ArchiveMetadataService {
         var lines = output.getStdout().trim().split("\n");
         var result = new ArchiveMetadata();
 
-        for (var line: lines) {
+        for (var line : lines) {
             var matcher = linePattern.matcher(line);
 
             if (matcher.matches()) {

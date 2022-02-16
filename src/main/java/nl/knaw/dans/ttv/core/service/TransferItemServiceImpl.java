@@ -47,7 +47,8 @@ public class TransferItemServiceImpl implements TransferItemService {
 
     @Override
     @UnitOfWork
-    public TransferItem createTransferItem(String datastationName, FilenameAttributes filenameAttributes, FilesystemAttributes filesystemAttributes, FileContentAttributes fileContentAttributes)
+    public TransferItem createTransferItem(String datastationName, FilenameAttributes filenameAttributes, FilesystemAttributes filesystemAttributes,
+        FileContentAttributes fileContentAttributes)
         throws InvalidTransferItemException {
         var transferItem = new TransferItem();
 
@@ -90,7 +91,8 @@ public class TransferItemServiceImpl implements TransferItemService {
 
     @Override
     @UnitOfWork
-    public TransferItem createTransferItem(String datastationName, FilenameAttributes filenameAttributes, FilesystemAttributes filesystemAttributes) throws InvalidTransferItemException {
+    public TransferItem createTransferItem(String datastationName, FilenameAttributes filenameAttributes, FilesystemAttributes filesystemAttributes)
+        throws InvalidTransferItemException {
 
         // check if an item with this ID already exists
         var existing = transferItemDAO.findByDatasetPidAndVersion(
@@ -155,13 +157,20 @@ public class TransferItemServiceImpl implements TransferItemService {
 
     @Override
     @UnitOfWork
-    public void resetTarToTarring(String id, boolean increaseAttemptCount) {
+    public void setArchiveAttemptFailed(String id, boolean increaseAttemptCount, int maxRetries) {
         tarDAO.findById(id).map(tar -> {
             tar.setTarStatus(Tar.TarStatus.TARRING);
             tar.setArchiveInProgress(false);
 
             if (increaseAttemptCount) {
                 tar.setTransferAttempt(tar.getTransferAttempt() + 1);
+            }
+
+            // for example, if maxRetries = 2 and the task just failed for the first time,
+            // the transferAttempt would be set to 1. We still want to attempt it 2 more times
+            // hence the > and not >=
+            if (tar.getTransferAttempt() > maxRetries) {
+                tar.setTarStatus(Tar.TarStatus.OCFLTARFAILED);
             }
 
             return tarDAO.save(tar);

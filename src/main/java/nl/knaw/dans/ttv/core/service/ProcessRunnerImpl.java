@@ -47,7 +47,8 @@ public class ProcessRunnerImpl implements ProcessRunner {
 
             return new ProcessResult(resultCode, output);
 
-        } catch (IOException | InterruptedException e) {
+        }
+        catch (IOException | InterruptedException e) {
             log.error("unable to execute command '{}'", command, e);
             throw e;
         }

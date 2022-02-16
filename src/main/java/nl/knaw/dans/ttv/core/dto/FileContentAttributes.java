@@ -38,6 +38,7 @@ public class FileContentAttributes {
         this.swordToken = swordToken;
         this.bagChecksum = bagChecksum;
     }
+
     public FileContentAttributes() {
     }
 

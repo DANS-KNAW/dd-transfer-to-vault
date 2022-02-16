@@ -57,11 +57,13 @@ public class Tar {
     @Column(name = "transfer_attempt")
     @ColumnDefault("0")
     private int transferAttempt;
+
     public Tar(String tarUuid, TarStatus status, boolean confirmCheckInProgress) {
         this.tarUuid = tarUuid;
         this.tarStatus = status;
         this.confirmCheckInProgress = confirmCheckInProgress;
     }
+
     public Tar() {
 
     }

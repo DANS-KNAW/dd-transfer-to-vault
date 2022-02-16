@@ -44,6 +44,15 @@ createOcflTar:
   inboxThreshold: 100k
   # polling interval in milliseconds
   pollingInterval: 500
+  maxRetries: 6
+  # retry interval according to ISO-8601 standard
+  retryInterval: PT5M
+  # retry schedule durations according to ISO-8601 standard
+  retrySchedule:
+    - PT5M
+    - PT1H
+    - PT8H
+    - PT24H
   taskQueue:
     nameFormat: "tar-thread-%d"
     maxQueueSize: 5000

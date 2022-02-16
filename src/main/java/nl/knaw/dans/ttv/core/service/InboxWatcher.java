@@ -32,17 +32,11 @@ import java.util.Objects;
 public class InboxWatcher extends FileAlterationListenerAdaptor implements Managed {
 
     private static final Logger log = LoggerFactory.getLogger(InboxWatcher.class);
-
-    private FileAlterationMonitor monitor;
-
     private final Path path;
     private final Callback callback;
     private final int interval;
     private final String datastationName;
-
-    public interface Callback {
-        void onFileCreate(File file, String datastationName);
-    }
+    private FileAlterationMonitor monitor;
 
     public InboxWatcher(Path path, String datastationName, Callback callback, int interval) {
         this.path = Objects.requireNonNull(path, "InboxWatcher path must not be null");
@@ -84,7 +78,8 @@ public class InboxWatcher extends FileAlterationListenerAdaptor implements Manag
 
             log.info("Starting file alteration monitor for path '{}'", this.path);
             startFileAlterationMonitor();
-        } catch (IOException | InterruptedException e) {
+        }
+        catch (IOException | InterruptedException e) {
             log.error(e.getMessage(), e);
             throw new InvalidTransferItemException(e.getMessage());
         }
@@ -97,5 +92,9 @@ public class InboxWatcher extends FileAlterationListenerAdaptor implements Manag
     @Override
     public void stop() throws Exception {
         monitor.stop();
+    }
+
+    public interface Callback {
+        void onFileCreate(File file, String datastationName);
     }
 }

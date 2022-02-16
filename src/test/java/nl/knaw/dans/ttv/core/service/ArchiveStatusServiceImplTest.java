@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 class ArchiveStatusServiceImplTest {
 
     ProcessRunner processRunner;
-    DataArchiveConfiguration dataArchiveConfiguration = new DataArchiveConfiguration("username", "hostname", "");
+    final DataArchiveConfiguration dataArchiveConfiguration = new DataArchiveConfiguration("username", "hostname", "");
 
     @BeforeEach
     void setUp() {

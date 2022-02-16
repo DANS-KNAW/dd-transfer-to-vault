@@ -29,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 class ArchiveMetadataServiceImplTest {
 
     ProcessRunner processRunner;
-    DataArchiveConfiguration dataArchiveConfiguration = new DataArchiveConfiguration("username", "hostname", "");
+    final DataArchiveConfiguration dataArchiveConfiguration = new DataArchiveConfiguration("username", "hostname", "");
 
     @BeforeEach
     void setUp() {
@@ -80,8 +80,6 @@ class ArchiveMetadataServiceImplTest {
         Mockito.when(processRunner.run((String[]) Mockito.any()))
             .thenReturn(new ProcessResult(1, output));
 
-        assertThrows(IOException.class, () -> {
-            service.getArchiveMetadata("ff99d9fd-53ef-48f2-8672-a40a2c91f1c6");
-        });
+        assertThrows(IOException.class, () -> service.getArchiveMetadata("ff99d9fd-53ef-48f2-8672-a40a2c91f1c6"));
     }
 }

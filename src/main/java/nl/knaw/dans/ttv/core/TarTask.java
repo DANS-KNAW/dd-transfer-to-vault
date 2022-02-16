@@ -33,13 +33,15 @@ public class TarTask implements Runnable {
     private final String uuid;
     private final TarCommandRunner tarCommandRunner;
     private final ArchiveMetadataService archiveMetadataService;
+    private final int maxRetries;
 
-    public TarTask(TransferItemService transferItemService, String uuid, Path inboxPath, TarCommandRunner tarCommandRunner, ArchiveMetadataService archiveMetadataService) {
+    public TarTask(TransferItemService transferItemService, String uuid, Path inboxPath, TarCommandRunner tarCommandRunner, ArchiveMetadataService archiveMetadataService, int maxRetries) {
         this.transferItemService = transferItemService;
         this.inboxPath = inboxPath;
         this.uuid = uuid;
         this.tarCommandRunner = tarCommandRunner;
         this.archiveMetadataService = archiveMetadataService;
+        this.maxRetries = maxRetries;
     }
 
     @Override
@@ -66,7 +68,7 @@ public class TarTask implements Runnable {
                 transferArchive(uuid);
             }
 
-            // if the statements above do not throw, it was archived correctly and we can extract the metadata
+            // if the statements above do not throw, it was archived correctly, and we can extract the metadata
             log.info("Extracting metadata from remote TAR with UUID {}", uuid);
             var metadata = extractTarMetadata(uuid);
 
@@ -75,11 +77,11 @@ public class TarTask implements Runnable {
         }
         catch (IOException e) {
             log.error("Unable to transfer archive, marking for retry", e);
-            transferItemService.resetTarToTarring(uuid, true);
+            transferItemService.setArchiveAttemptFailed(uuid, true, maxRetries);
         }
         catch (InterruptedException e) {
             log.error("Unable to transfer archive due to InterruptedException", e);
-            transferItemService.resetTarToTarring(uuid, false);
+            transferItemService.setArchiveAttemptFailed(uuid, false, maxRetries);
         }
     }
 

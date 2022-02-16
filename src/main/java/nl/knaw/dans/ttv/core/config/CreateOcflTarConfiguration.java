@@ -23,6 +23,8 @@ import javax.validation.Valid;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import java.nio.file.Path;
+import java.time.Duration;
+import java.util.List;
 
 public class CreateOcflTarConfiguration {
 
@@ -51,7 +53,31 @@ public class CreateOcflTarConfiguration {
 
     @Valid
     @NotNull
+    private Duration retryInterval;
+
+    @Valid
+    @NotNull
+    private List<Duration> retrySchedule;
+
+    @Valid
+    @NotNull
     private ExecutorServiceFactory taskQueue;
+
+    public Duration getRetryInterval() {
+        return retryInterval;
+    }
+
+    public void setRetryInterval(Duration retryInterval) {
+        this.retryInterval = retryInterval;
+    }
+
+    public List<Duration> getRetrySchedule() {
+        return retrySchedule;
+    }
+
+    public void setRetrySchedule(List<Duration> retrySchedule) {
+        this.retrySchedule = retrySchedule;
+    }
 
     public int getMaxRetries() {
         return maxRetries;

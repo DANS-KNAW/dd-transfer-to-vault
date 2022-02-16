@@ -23,12 +23,14 @@ import org.quartz.CronScheduleBuilder;
 import org.quartz.JobBuilder;
 import org.quartz.JobDataMap;
 import org.quartz.Scheduler;
+import org.quartz.SchedulerException;
 import org.quartz.TriggerBuilder;
 import org.quartz.impl.StdSchedulerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.file.Path;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 
 public class ConfirmArchivedTaskManager implements Managed {
@@ -57,18 +59,13 @@ public class ConfirmArchivedTaskManager implements Managed {
         log.info("Verifying archive status");
         verifyArchives();
 
-        var schedulerFactory = new StdSchedulerFactory();
-        this.scheduler = schedulerFactory.getScheduler();
-
-        var jobData = new JobDataMap();
+        this.scheduler = createScheduler();
 
         log.info("Configuring JobDataMap for cron-based tasks");
-
-        jobData.put("transferItemService", transferItemService);
-        jobData.put("workingDir", workingDir);
-        jobData.put("executorService", executorService);
-        jobData.put("archiveStatusService", archiveStatusService);
-        jobData.put("ocflRepositoryService", ocflRepositoryService);
+        var params = new ConfirmArchivedTaskCreator.ConfirmArchivedTaskCreatorParameters(
+            transferItemService, workingDir, archiveStatusService, ocflRepositoryService, executorService
+        );
+        var jobData = new JobDataMap(Map.of("params", params));
 
         var job = JobBuilder.newJob(ConfirmArchivedTaskCreator.class)
             .withIdentity("job", "group")
@@ -104,5 +101,9 @@ public class ConfirmArchivedTaskManager implements Managed {
             log.info("Resetting tar status for TAR {}", tar);
             transferItemService.resetTarToArchiving(tar);
         }
+    }
+
+    Scheduler createScheduler() throws SchedulerException {
+        return new StdSchedulerFactory().getScheduler();
     }
 }

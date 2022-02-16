@@ -39,7 +39,7 @@ public interface TransferItemService {
 
     void saveAllTars(List<Tar> tars);
 
-    void resetTarToTarring(String id, boolean increaseAttemptCount);
+    void setArchiveAttemptFailed(String id, boolean increaseAttemptCount, int maxRetries);
 
     void updateTarToCreated(String id, ArchiveMetadata metadata);
 

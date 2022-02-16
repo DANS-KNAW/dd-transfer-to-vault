@@ -208,9 +208,7 @@ class TransferItemMetadataReaderImplTest {
 
         var service = new TransferItemMetadataReaderImpl(new ObjectMapper(), fileService);
 
-        assertThrows(InvalidTransferItemException.class, () -> {
-            service.getFileContentAttributes(Path.of("test.zip"));
-        });
+        assertThrows(InvalidTransferItemException.class, () -> service.getFileContentAttributes(Path.of("test.zip")));
     }
 
     /**
@@ -225,9 +223,7 @@ class TransferItemMetadataReaderImplTest {
 
         var service = new TransferItemMetadataReaderImpl(new ObjectMapper(), fileService);
 
-        assertThrows(InvalidTransferItemException.class, () -> {
-            service.getFileContentAttributes(Path.of("test.zip"));
-        });
+        assertThrows(InvalidTransferItemException.class, () -> service.getFileContentAttributes(Path.of("test.zip")));
     }
     @Test
     void getAssociatedXmlFile() {
