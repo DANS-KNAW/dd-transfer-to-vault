@@ -46,7 +46,7 @@ public class ConfirmArchivedTask implements Runnable {
 
     @Override
     public void run() {
-        log.info("running confirm archive task {}", this);
+        log.info("Running confirm archive task {}", this);
 
         var tarId = tar.getTarUuid();
 
@@ -55,24 +55,24 @@ public class ConfirmArchivedTask implements Runnable {
             var completelyArchived = isCompletelyArchived(fileStatus);
 
             if (completelyArchived) {
-                log.info("all files in tar archive '{}' have been archived to tape", tarId);
+                log.info("All files in tar archive '{}' have been archived to tape", tarId);
                 transferItemService.updateTarToArchived(tar);
 
                 try {
-                    log.info("cleaning workdir files and folders for tar archive '{}'", tarId);
+                    log.info("Cleaning workdir files and folders for tar archive '{}'", tarId);
                     ocflRepositoryService.cleanupRepository(workingDir, tarId);
                 }
                 catch (IOException e) {
-                    log.error("unable to cleanup TAR OCFL repository in directory '{}/{}'", workingDir, tarId, e);
+                    log.error("Unable to cleanup TAR OCFL repository in directory '{}/{}'", workingDir, tarId, e);
                 }
             }
             else {
-                log.info("some files in tar archive '{}' have not yet been archived to tape", tarId);
+                log.info("Some files in tar archive '{}' have not yet been archived to tape", tarId);
                 transferItemService.resetTarToArchiving(tar);
             }
         }
         catch (IOException | InterruptedException e) {
-            log.error("an error occurred while checking archiving status", e);
+            log.error("An error occurred while checking archiving status", e);
 
             // in case it fails to check, still set the transfer status to OCFLTARCREATED and reset the checking flag
             transferItemService.resetTarToArchiving(tar);
@@ -81,7 +81,7 @@ public class ConfirmArchivedTask implements Runnable {
 
     public boolean isCompletelyArchived(Map<String, ArchiveStatusService.FileStatus> statusMap) {
         for (var entry : statusMap.entrySet()) {
-            log.debug("file entry '{}' has status {}", entry.getKey(), entry.getValue());
+            log.debug("File entry '{}' has status {}", entry.getKey(), entry.getValue());
 
             var archived = entry.getValue().equals(ArchiveStatusService.FileStatus.OFFLINE)
                 || entry.getValue().equals(ArchiveStatusService.FileStatus.DUAL);

@@ -62,6 +62,7 @@ public class MetadataTask implements Runnable {
 
     void processFile(Path path) throws IOException, InvalidTransferItemException {
         var transferItem = getTransferItem(path);
+        log.info("Processing file '{}' with TransferItem {}", path, transferItem);
 
         if (
             transferItem.getTransferStatus() != TransferItem.TransferStatus.METADATA_EXTRACTED
@@ -73,7 +74,7 @@ public class MetadataTask implements Runnable {
         // we only expect items with status COLLECTED, but if they are already METADATA_EXTRACTED we
         // can just read the metadata again and update the TransferItem before moving
         var fileContentAttributes = metadataReader.getFileContentAttributes(path);
-        log.trace("received file content attributes: {}", fileContentAttributes);
+        log.trace("Received file content attributes: {}", fileContentAttributes);
 
         var newPath = outbox.resolve(filePath.getFileName());
 
@@ -84,15 +85,23 @@ public class MetadataTask implements Runnable {
             newPath
         );
 
+        log.info("Updated file metadata, moving file '{}' to '{}'", path, newPath);
         fileService.moveFile(path, newPath);
     }
 
     public TransferItem getTransferItem(Path path) throws InvalidTransferItemException {
         var filenameAttributes = metadataReader.getFilenameAttributes(path);
-        log.trace("received filename attributes: {}", filenameAttributes);
+        log.trace("Received filename attributes: {}", filenameAttributes);
 
         return transferItemService.getTransferItemByFilenameAttributes(filenameAttributes)
             .orElseThrow(() -> new InvalidTransferItemException(String.format("no TransferItem found for filename attributes %s", filenameAttributes)));
     }
 
+    @Override
+    public String toString() {
+        return "MetadataTask{" +
+            "filePath=" + filePath +
+            ", outbox=" + outbox +
+            '}';
+    }
 }

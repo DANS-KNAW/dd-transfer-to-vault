@@ -44,7 +44,7 @@ public interface FileService {
 
     Path moveFileAtomically(Path filePath, Path newPath) throws IOException;
 
-    void ensureDirectoryExists(Path errorPath) throws IOException;
+    void ensureDirectoryExists(Path path) throws IOException;
 
     void rejectFile(Path path, Exception exception) throws IOException;
 

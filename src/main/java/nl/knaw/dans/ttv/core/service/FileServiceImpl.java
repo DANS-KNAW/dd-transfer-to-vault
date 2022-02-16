@@ -42,7 +42,10 @@ public class FileServiceImpl implements FileService {
 
     @Override
     public Path moveFileAtomically(Path filePath, Path newPath) throws IOException {
-        var tempTarget = Path.of(newPath.toString() + ".part");
+        Objects.requireNonNull(filePath, "filePath cannot be null");
+        Objects.requireNonNull(newPath, "newPath cannot be null");
+
+        var tempTarget = Path.of(newPath + ".part");
 
         // there could be leftovers from a previous attempt, remove them
         Files.deleteIfExists(tempTarget);
@@ -52,8 +55,9 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
-    public void ensureDirectoryExists(Path errorPath) throws IOException {
-        Files.createDirectories(errorPath);
+    public void ensureDirectoryExists(Path path) throws IOException {
+        Objects.requireNonNull(path, "path cannot be null");
+        Files.createDirectories(path);
     }
 
     /**
@@ -65,31 +69,36 @@ public class FileServiceImpl implements FileService {
      */
     @Override
     public void rejectFile(Path path, Exception exception) throws IOException {
+        Objects.requireNonNull(path, "path cannot be null");
+        Objects.requireNonNull(exception, "exception cannot be null");
+
         var rejectedFolder = path.getParent().resolve("rejected");
         ensureDirectoryExists(rejectedFolder);
 
-        log.debug("moving rejected file to '{}'", rejectedFolder);
+        log.debug("Moving rejected file to '{}'", rejectedFolder);
         var index = path.getFileName().toString().lastIndexOf(".");
         var extension = path.getFileName().toString().substring(index);
         var fileBaseName = path.getFileName().toString().substring(0, index);
 
-        log.trace("file base name is '{}', extension is '{}'", extension, fileBaseName);
+        log.trace("File base name is '{}', extension is '{}'", extension, fileBaseName);
         var rejectedFileName = fileBaseName + extension;
         var errorFileName = fileBaseName + ".error.txt";
 
         var duplicateCounter = 1;
 
         while (Files.exists(Path.of(rejectedFolder.toString(), rejectedFileName))) {
+            log.trace("File '{}' already exists, generating a new filename", Path.of(rejectedFolder.toString(), rejectedFileName));
             rejectedFileName = fileBaseName + "_" + duplicateCounter + extension;
             errorFileName = fileBaseName + "_" + duplicateCounter + ".error.txt";
 
             duplicateCounter += 1;
         }
 
+        log.trace("Settled on '{}' for filename", rejectedFileName);
         var targetPath = Path.of(rejectedFolder.toString(), rejectedFileName);
         var targetErrorPath = Path.of(rejectedFolder.toString(), errorFileName);
 
-        log.trace("moving file to '{}', writing error report to '{}'", targetPath, targetErrorPath);
+        log.trace("Moving file to '{}', writing error report to '{}'", targetPath, targetErrorPath);
         Files.move(path, targetPath);
         writeExceptionToFile(targetErrorPath, exception);
     }
@@ -103,13 +112,14 @@ public class FileServiceImpl implements FileService {
     @Override
     public boolean deleteFile(Path path) throws IOException {
         Objects.requireNonNull(path, "path cannot be null");
-        log.trace("deleting file {}", path);
+        log.trace("Deleting file {}", path);
         return Files.deleteIfExists(path);
     }
 
     @Override
     public void deleteDirectory(Path path) throws IOException {
         Objects.requireNonNull(path, "path cannot be null");
+        log.trace("Deleting directory '{}'", path);
         FileUtils.deleteDirectory(path.toFile());
     }
 
@@ -117,20 +127,21 @@ public class FileServiceImpl implements FileService {
     public Object getFilesystemAttribute(Path path, String property) throws IOException {
         Objects.requireNonNull(path, "path cannot be null");
         Objects.requireNonNull(property, "property cannot be null");
+        log.trace("Getting attribute {} for path '{}'", property, path);
         return Files.getAttribute(path, property);
     }
 
     @Override
     public String calculateChecksum(Path path) throws IOException {
         Objects.requireNonNull(path, "path cannot be null");
-        log.trace("calculating checksum for {}", path);
+        log.trace("Calculating checksum for '{}'", path);
         return new DigestUtils("SHA-256").digestAsHex(Files.readAllBytes(path));
     }
 
     @Override
     public long getFileSize(Path path) throws IOException {
         Objects.requireNonNull(path, "path cannot be null");
-        log.trace("getting file size for path {}", path);
+        log.trace("Getting file size for path '{}'", path);
         return Files.size(path);
     }
 
@@ -140,7 +151,7 @@ public class FileServiceImpl implements FileService {
         return Files.walk(path).filter(Files::isRegularFile).map(p -> {
             try {
                 var size = getFileSize(p);
-                log.trace("file size for file {} is {} bytes", p, size);
+                log.trace("File size for file '{}' is {} bytes", p, size);
                 return size;
             }
             catch (IOException e) {
@@ -152,16 +163,22 @@ public class FileServiceImpl implements FileService {
     @Override
     public Path createDirectory(Path path) throws IOException {
         Objects.requireNonNull(path, "path cannot be null");
+        log.trace("Creating directories '{}'", path);
         return Files.createDirectories(path);
     }
 
     @Override
     public ZipFile openZipFile(Path path) throws IOException {
+        Objects.requireNonNull(path, "path cannot be null");
+        log.trace("Opening zip file '{}'", path);
         return new ZipFile(path.toFile());
     }
 
     @Override
     public InputStream openFileFromZip(ZipFile zipFile, Path path) throws IOException {
+        Objects.requireNonNull(zipFile, "zipFile cannot be null");
+        Objects.requireNonNull(path, "path cannot be null");
+
         var entryPath = Objects.requireNonNull(zipFile.stream()
                 .filter(e -> e.getName().endsWith(path.toString()))
                 .findFirst()
@@ -169,7 +186,7 @@ public class FileServiceImpl implements FileService {
             , String.format("no entries found for path '%s' in zip file %s", path, zipFile)
         );
 
-        log.trace("requested entry for path '{}', found match on '{}'", path, entryPath);
+        log.trace("Requested entry for path '{}', found match on '{}'", path, entryPath);
 
         return zipFile.getInputStream(entryPath);
     }

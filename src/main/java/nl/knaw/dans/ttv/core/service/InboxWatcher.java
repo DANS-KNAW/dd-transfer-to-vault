@@ -50,7 +50,7 @@ public class InboxWatcher extends FileAlterationListenerAdaptor implements Manag
         // see if file is a direct descendant of path
         // if not, ignore it
         var expected = Path.of(String.valueOf(this.path), file.getName());
-        log.trace("comparing directories: '{}' vs '{}'", file.toPath(), expected);
+        log.debug("Comparing directories: '{}' vs '{}'", file.toPath(), expected);
 
         if (!file.toPath().equals(expected)) {
             log.warn("File found in non-root directory, ignoring");
@@ -96,5 +96,14 @@ public class InboxWatcher extends FileAlterationListenerAdaptor implements Manag
 
     public interface Callback {
         void onFileCreate(File file, String datastationName);
+    }
+
+    @Override
+    public String toString() {
+        return "InboxWatcher{" +
+            "path=" + path +
+            ", interval=" + interval +
+            ", datastationName='" + datastationName + '\'' +
+            '}';
     }
 }

@@ -61,7 +61,7 @@ public class ConfirmArchivedTaskManager implements Managed {
 
         this.scheduler = createScheduler();
 
-        log.info("Configuring JobDataMap for cron-based tasks");
+        log.debug("Configuring JobDataMap for cron-based tasks");
         var params = new ConfirmArchivedTaskCreator.ConfirmArchivedTaskCreatorParameters(
             transferItemService, workingDir, archiveStatusService, ocflRepositoryService, executorService
         );

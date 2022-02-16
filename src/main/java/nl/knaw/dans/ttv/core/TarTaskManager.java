@@ -98,7 +98,7 @@ public class TarTaskManager implements Managed {
         log.info("Starting watch on inbox '{}'", this.inboxPath);
 
         this.inboxWatcher = inboxWatcherFactory.getInboxWatcher(this.inboxPath, null, (file, ds) -> {
-            log.trace("Received InboxWatcher event for file '{}'", file);
+            log.debug("Received InboxWatcher event for file '{}'", file);
             this.onNewItemInInbox(file);
         }, pollingInterval);
 
@@ -116,12 +116,12 @@ public class TarTaskManager implements Managed {
         var tars = transferItemService.findTarsByStatusTarring();
 
         for (var tar : tars) {
-            log.trace("Checking status for TAR {}", tar);
+            log.debug("Checking status for TAR {}", tar);
             var ocflRepository = ocflRepositoryService.openRepository(workDir, tar.getTarUuid());
 
             for (var transferItem : tar.getTransferItems()) {
                 var objectId = ocflRepositoryService.getObjectIdForTransferItem(transferItem);
-                log.trace("Checking status for objectId {}", objectId);
+                log.debug("Checking status for objectId {}", objectId);
 
                 // object not in repository yet, just import it
                 if (!ocflRepository.containsObject(objectId)) {
@@ -204,6 +204,7 @@ public class TarTaskManager implements Managed {
         // import them into the OCFL repo
         for (var transferItem : tarArchive.getTransferItems()) {
             var objectId = ocflRepositoryService.importTransferItem(ocflRepository, transferItem);
+            log.debug("TransferItem {} added, objectId is {}", transferItem, objectId);
             transferItem.setAipTarEntryName(objectId);
         }
 

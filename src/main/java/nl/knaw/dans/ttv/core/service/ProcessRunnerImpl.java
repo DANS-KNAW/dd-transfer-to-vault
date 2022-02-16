@@ -36,14 +36,14 @@ public class ProcessRunnerImpl implements ProcessRunner {
         var processBuilder = new ProcessBuilder(command);
         processBuilder.redirectOutput(ProcessBuilder.Redirect.PIPE);
         processBuilder.redirectErrorStream(true);
-        log.debug("waiting for command {}", String.join(" ", command));
+        log.trace("Waiting for command {}", String.join(" ", command));
 
         try {
             var process = processBuilder.start();
             var output = consumeProcessOutput(process);
             var resultCode = process.waitFor();
 
-            log.trace("command output for '{}' (return code {}):\n{}", String.join(" ", command), resultCode, output);
+            log.trace("Command output for '{}' (return code {}):\n{}", String.join(" ", command), resultCode, output);
 
             return new ProcessResult(resultCode, output);
 
@@ -60,6 +60,7 @@ public class ProcessRunnerImpl implements ProcessRunner {
 
         String line;
         while ((line = output.readLine()) != null) {
+            log.trace("Process output: {}", line);
             outputString.append(line);
             outputString.append("\n");
         }
