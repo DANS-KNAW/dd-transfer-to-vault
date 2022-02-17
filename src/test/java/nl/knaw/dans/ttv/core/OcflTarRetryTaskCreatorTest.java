@@ -34,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class TarRetryTaskCreatorTest {
+class OcflTarRetryTaskCreatorTest {
     private TransferItemService transferItemService;
     private ExecutorService executorService;
     private TarCommandRunner tarCommandRunner;
@@ -57,7 +57,7 @@ class TarRetryTaskCreatorTest {
             Duration.of(8, ChronoUnit.HOURS),
             Duration.of(24, ChronoUnit.HOURS)
         );
-        var params = new TarRetryTaskCreator.TaskRetryTaskCreatorParameters(
+        var params = new OcflTarRetryTaskCreator.TaskRetryTaskCreatorParameters(
             transferItemService, workDir, tarCommandRunner, archiveMetadataService, executorService, 5, intervals
         );
 
@@ -67,7 +67,7 @@ class TarRetryTaskCreatorTest {
 
         Mockito.when(transferItemService.findTarsToBeRetried()).thenReturn(List.of(tar));
 
-        var creator = new TarRetryTaskCreator();
+        var creator = new OcflTarRetryTaskCreator();
         creator.run(params);
 
         // it should have started up a task because the Tar is within range
@@ -81,7 +81,7 @@ class TarRetryTaskCreatorTest {
             Duration.of(8, ChronoUnit.HOURS),
             Duration.of(24, ChronoUnit.HOURS)
         );
-        var params = new TarRetryTaskCreator.TaskRetryTaskCreatorParameters(
+        var params = new OcflTarRetryTaskCreator.TaskRetryTaskCreatorParameters(
             transferItemService, workDir, tarCommandRunner, archiveMetadataService, executorService, 5, intervals
         );
 
@@ -91,7 +91,7 @@ class TarRetryTaskCreatorTest {
 
         Mockito.when(transferItemService.findTarsToBeRetried()).thenReturn(List.of(tar));
 
-        var creator = new TarRetryTaskCreator();
+        var creator = new OcflTarRetryTaskCreator();
         creator.run(params);
 
         // it should have started up a task because the Tar is within range
@@ -100,7 +100,7 @@ class TarRetryTaskCreatorTest {
 
     @Test
     void shouldRetry() {
-        var creator = new TarRetryTaskCreator();
+        var creator = new OcflTarRetryTaskCreator();
         var intervals = List.of(
             Duration.of(1, ChronoUnit.HOURS),
             Duration.of(8, ChronoUnit.HOURS),
@@ -124,7 +124,7 @@ class TarRetryTaskCreatorTest {
 
     @Test
     void calculateThreshold() {
-        var creator = new TarRetryTaskCreator();
+        var creator = new OcflTarRetryTaskCreator();
         var intervals = List.of(
             Duration.of(1, ChronoUnit.HOURS),
             Duration.of(8, ChronoUnit.HOURS),

@@ -43,8 +43,8 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 
-public class TarTaskManager implements Managed {
-    private static final Logger log = LoggerFactory.getLogger(TarTaskManager.class);
+public class OcflTarTaskManager implements Managed {
+    private static final Logger log = LoggerFactory.getLogger(OcflTarTaskManager.class);
 
     private final ExecutorService executorService;
     private final Path inboxPath;
@@ -64,7 +64,7 @@ public class TarTaskManager implements Managed {
     private InboxWatcher inboxWatcher;
     private Scheduler retryScheduler;
 
-    public TarTaskManager(Path inboxPath, Path workDir, String vaultPath, long inboxThreshold, long pollingInterval, int maxRetries, Duration retryInterval, List<Duration> retrySchedule,
+    public OcflTarTaskManager(Path inboxPath, Path workDir, String vaultPath, long inboxThreshold, long pollingInterval, int maxRetries, Duration retryInterval, List<Duration> retrySchedule,
         ExecutorService executorService,
         InboxWatcherFactory inboxWatcherFactory, FileService fileService, OcflRepositoryService ocflRepositoryService, TransferItemService transferItemService, TarCommandRunner tarCommandRunner,
         ArchiveMetadataService archiveMetadataService) {
@@ -143,12 +143,12 @@ public class TarTaskManager implements Managed {
         this.retryScheduler = createScheduler();
 
         log.info("Configuring JobDataMap for cron-based tasks");
-        var jobParams = new TarRetryTaskCreator.TaskRetryTaskCreatorParameters(
+        var jobParams = new OcflTarRetryTaskCreator.TaskRetryTaskCreatorParameters(
             transferItemService, workDir, tarCommandRunner, archiveMetadataService, executorService, maxRetries, retrySchedule
         );
         var jobData = new JobDataMap(Map.of("params", jobParams));
 
-        var job = JobBuilder.newJob(TarRetryTaskCreator.class)
+        var job = JobBuilder.newJob(OcflTarRetryTaskCreator.class)
             .withIdentity("tarRetryTask", "createocfltar")
             .setJobData(jobData)
             .build();
@@ -191,9 +191,9 @@ public class TarTaskManager implements Managed {
 
     void startTarringTask(String uuid) {
         var repoPath = Path.of(workDir.toString(), uuid);
-        var task = new TarTask(transferItemService, uuid, repoPath, tarCommandRunner, archiveMetadataService, maxRetries);
+        var task = new OcflTarTask(transferItemService, uuid, repoPath, tarCommandRunner, archiveMetadataService, maxRetries);
 
-        log.info("Starting TarTask {}", task);
+        log.info("Starting OcflTarTask {}", task);
         executorService.execute(task);
     }
 
