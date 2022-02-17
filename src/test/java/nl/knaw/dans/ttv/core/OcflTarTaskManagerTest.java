@@ -42,7 +42,7 @@ import java.util.concurrent.ExecutorService;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class TarTaskManagerTest {
+class OcflTarTaskManagerTest {
     private TransferItemService transferItemService;
     private FileService fileService;
     private ExecutorService executorService;
@@ -67,7 +67,7 @@ class TarTaskManagerTest {
      */
     @Test
     void onNewItemInInbox() throws SchedulerException, IOException {
-        var manager = Mockito.spy(new TarTaskManager(
+        var manager = Mockito.spy(new OcflTarTaskManager(
             Path.of("data/inbox"), Path.of("data/workdir"), "some-path", 50, 100L, 10, Duration.ofMinutes(1), List.of(),
             executorService, inboxWatcherFactory, fileService, ocflRepositoryService, transferItemService,
             tarCommandRunner, archiveMetadataService));
@@ -109,7 +109,7 @@ class TarTaskManagerTest {
 
     @Test
     void testThresholdIsNotReached() throws IOException, SchedulerException {
-        var manager = Mockito.spy(new TarTaskManager(
+        var manager = Mockito.spy(new OcflTarTaskManager(
             Path.of("data/inbox"), Path.of("data/workdir"), "some-path", 50, 100L, 10, Duration.ofMinutes(1), List.of(),
             executorService, inboxWatcherFactory, fileService, ocflRepositoryService, transferItemService,
             tarCommandRunner, archiveMetadataService));
@@ -135,7 +135,7 @@ class TarTaskManagerTest {
 
     @Test
     void verifyInbox() throws SchedulerException {
-        var manager = Mockito.spy(new TarTaskManager(
+        var manager = Mockito.spy(new OcflTarTaskManager(
             Path.of("data/inbox"), Path.of("data/workdir"), "some-path", 50, 100L, 10, Duration.ofMinutes(1), List.of(),
             executorService, inboxWatcherFactory, fileService, ocflRepositoryService, transferItemService,
             tarCommandRunner, archiveMetadataService));
@@ -176,7 +176,7 @@ class TarTaskManagerTest {
 
     @Test
     void testVerificationAndInboxWatchersAreStarted() throws Exception {
-        var manager = Mockito.spy(new TarTaskManager(
+        var manager = Mockito.spy(new OcflTarTaskManager(
             Path.of("data/inbox"), Path.of("data/workdir"), "some-path", 50, 100L, 10, Duration.ofMinutes(1), List.of(),
             executorService, inboxWatcherFactory, fileService, ocflRepositoryService, transferItemService,
             tarCommandRunner, archiveMetadataService));

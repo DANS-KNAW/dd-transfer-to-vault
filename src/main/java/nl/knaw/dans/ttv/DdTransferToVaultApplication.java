@@ -25,7 +25,7 @@ import io.dropwizard.setup.Environment;
 import nl.knaw.dans.ttv.core.CollectTaskManager;
 import nl.knaw.dans.ttv.core.ConfirmArchivedTaskManager;
 import nl.knaw.dans.ttv.core.MetadataTaskManager;
-import nl.knaw.dans.ttv.core.TarTaskManager;
+import nl.knaw.dans.ttv.core.OcflTarTaskManager;
 import nl.knaw.dans.ttv.core.service.ArchiveMetadataServiceImpl;
 import nl.knaw.dans.ttv.core.service.ArchiveStatusService;
 import nl.knaw.dans.ttv.core.service.ArchiveStatusServiceImpl;
@@ -95,7 +95,7 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
         log.info("Creating CollectTaskManager");
         final var collectTaskManager = new CollectTaskManager(
             configuration.getCollect().getInboxes(),
-            configuration.getMetadata().getInbox(),
+            configuration.getExtractMetadata().getInbox(),
             configuration.getCollect().getPollingInterval(),
             collectExecutorService,
             transferItemService,
@@ -109,11 +109,11 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
         // the Metadata task, which analyses the zip files and stores this information in the database
         // and then moves it to the tar inbox
         log.info("Creating MetadataTaskManager");
-        final var metadataExecutorService = configuration.getMetadata().getTaskQueue().build(environment);
+        final var metadataExecutorService = configuration.getExtractMetadata().getTaskQueue().build(environment);
         final var metadataTaskManager = new MetadataTaskManager(
-            configuration.getMetadata().getInbox(),
+            configuration.getExtractMetadata().getInbox(),
             configuration.getCreateOcflTar().getInbox(),
-            configuration.getMetadata().getPollingInterval(),
+            configuration.getExtractMetadata().getPollingInterval(),
             metadataExecutorService,
             transferItemService,
             metadataReader,
@@ -132,7 +132,7 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
         final var createTarExecutorService = configuration.getCreateOcflTar().getTaskQueue().build(environment);
 
         log.info("Creating TarTaskManager");
-        final var tarTaskManager = new TarTaskManager(
+        final var tarTaskManager = new OcflTarTaskManager(
             configuration.getCreateOcflTar().getInbox(),
             configuration.getCreateOcflTar().getWorkDir(),
             configuration.getDataArchive().getPath(),

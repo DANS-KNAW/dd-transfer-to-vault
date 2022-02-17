@@ -23,7 +23,7 @@ import nl.knaw.dans.ttv.core.config.CollectConfiguration;
 import nl.knaw.dans.ttv.core.config.ConfirmArchivedConfiguration;
 import nl.knaw.dans.ttv.core.config.CreateOcflTarConfiguration;
 import nl.knaw.dans.ttv.core.config.DataArchiveConfiguration;
-import nl.knaw.dans.ttv.core.config.MetadataConfiguration;
+import nl.knaw.dans.ttv.core.config.ExtractMetadataConfiguration;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -40,7 +40,7 @@ public class DdTransferToVaultConfiguration extends Configuration {
 
     @Valid
     @NotNull
-    private MetadataConfiguration metadata;
+    private ExtractMetadataConfiguration extractMetadata;
 
     @Valid
     @NotNull
@@ -84,11 +84,11 @@ public class DdTransferToVaultConfiguration extends Configuration {
         return confirmArchived;
     }
 
-    public MetadataConfiguration getMetadata() {
-        return metadata;
+    public ExtractMetadataConfiguration getExtractMetadata() {
+        return extractMetadata;
     }
 
-    public void setMetadata(MetadataConfiguration metadata) {
-        this.metadata = metadata;
+    public void setExtractMetadata(ExtractMetadataConfiguration extractMetadata) {
+        this.extractMetadata = extractMetadata;
     }
 }

@@ -23,7 +23,7 @@ import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import java.nio.file.Path;
 
-public class MetadataConfiguration {
+public class ExtractMetadataConfiguration {
     @Valid
     @NotNull
     private Path inbox;

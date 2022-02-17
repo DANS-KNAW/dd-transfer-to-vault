@@ -30,8 +30,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 
-public class TarRetryTaskCreator implements Job {
-    private static final Logger log = LoggerFactory.getLogger(TarRetryTaskCreator.class);
+public class OcflTarRetryTaskCreator implements Job {
+    private static final Logger log = LoggerFactory.getLogger(OcflTarRetryTaskCreator.class);
 
     @Override
     public void execute(JobExecutionContext context) {
@@ -64,7 +64,7 @@ public class TarRetryTaskCreator implements Job {
             transferItemService.setArchivingInProgress(tar.getTarUuid());
 
             // check if tar should be retried again
-            var task = new TarTask(transferItemService, tar.getTarUuid(),
+            var task = new OcflTarTask(transferItemService, tar.getTarUuid(),
                 workDir, tarCommandRunner, archiveMetadataService, maxRetries);
 
             log.info("Starting TarTask {}", task);

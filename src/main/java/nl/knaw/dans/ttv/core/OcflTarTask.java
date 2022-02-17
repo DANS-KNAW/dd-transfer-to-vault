@@ -25,8 +25,8 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.nio.file.Path;
 
-public class TarTask implements Runnable {
-    private static final Logger log = LoggerFactory.getLogger(TarTask.class);
+public class OcflTarTask implements Runnable {
+    private static final Logger log = LoggerFactory.getLogger(OcflTarTask.class);
 
     private final TransferItemService transferItemService;
     private final Path inboxPath;
@@ -35,7 +35,7 @@ public class TarTask implements Runnable {
     private final ArchiveMetadataService archiveMetadataService;
     private final int maxRetries;
 
-    public TarTask(TransferItemService transferItemService, String uuid, Path inboxPath, TarCommandRunner tarCommandRunner, ArchiveMetadataService archiveMetadataService, int maxRetries) {
+    public OcflTarTask(TransferItemService transferItemService, String uuid, Path inboxPath, TarCommandRunner tarCommandRunner, ArchiveMetadataService archiveMetadataService, int maxRetries) {
         this.transferItemService = transferItemService;
         this.inboxPath = inboxPath;
         this.uuid = uuid;
@@ -158,7 +158,7 @@ public class TarTask implements Runnable {
 
     @Override
     public String toString() {
-        return "TarTask{" +
+        return "OcflTarTask{" +
             "inboxPath=" + inboxPath +
             ", uuid='" + uuid + '\'' +
             '}';

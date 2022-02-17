@@ -27,7 +27,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.UUID;
 
-class TarTaskTest {
+class OcflTarTaskTest {
 
     private TransferItemService transferItemService;
     private TarCommandRunner tarCommandRunner;
@@ -44,7 +44,7 @@ class TarTaskTest {
     void run() throws IOException, InterruptedException {
         var uuid = UUID.fromString("82fa8591-b7e7-4efc-821e-addacb0cb364").toString();
         var path = Path.of("data/inbox", uuid);
-        var task = new TarTask(transferItemService, uuid, path, tarCommandRunner, archiveMetadataService, 1);
+        var task = new OcflTarTask(transferItemService, uuid, path, tarCommandRunner, archiveMetadataService, 1);
 
         var result = new ProcessResult(0, "OK");
         Mockito.when(tarCommandRunner.tarDirectory(Mockito.any(), Mockito.any()))
@@ -70,7 +70,7 @@ class TarTaskTest {
     void runWithExistingValidRemoteArchive() throws IOException, InterruptedException {
         var uuid = UUID.fromString("82fa8591-b7e7-4efc-821e-addacb0cb364").toString();
         var path = Path.of("data/inbox", uuid);
-        var task = new TarTask(transferItemService, uuid, path, tarCommandRunner, archiveMetadataService, 1);
+        var task = new OcflTarTask(transferItemService, uuid, path, tarCommandRunner, archiveMetadataService, 1);
 
         var result = new ProcessResult(0, "OK");
         Mockito.when(tarCommandRunner.tarDirectory(Mockito.any(), Mockito.any()))
@@ -92,7 +92,7 @@ class TarTaskTest {
     void runWithExistingInvalidRemoteArchive() throws IOException, InterruptedException {
         var uuid = UUID.fromString("82fa8591-b7e7-4efc-821e-addacb0cb364").toString();
         var path = Path.of("data/inbox", uuid);
-        var task = new TarTask(transferItemService, uuid, path, tarCommandRunner, archiveMetadataService, 1);
+        var task = new OcflTarTask(transferItemService, uuid, path, tarCommandRunner, archiveMetadataService, 1);
 
         var result = new ProcessResult(0, "OK");
         Mockito.when(tarCommandRunner.tarDirectory(Mockito.any(), Mockito.any()))
@@ -115,7 +115,7 @@ class TarTaskTest {
     void runWithFailedCommand() throws IOException, InterruptedException {
         var uuid = UUID.fromString("82fa8591-b7e7-4efc-821e-addacb0cb364").toString();
         var path = Path.of("data/inbox", uuid);
-        var task = new TarTask(transferItemService, uuid, path, tarCommandRunner, archiveMetadataService, 1);
+        var task = new OcflTarTask(transferItemService, uuid, path, tarCommandRunner, archiveMetadataService, 1);
 
         var result = new ProcessResult(1, "NOT OK");
         Mockito.when(tarCommandRunner.tarDirectory(Mockito.any(), Mockito.any()))
