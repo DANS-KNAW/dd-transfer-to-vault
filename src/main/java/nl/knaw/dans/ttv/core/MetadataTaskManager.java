@@ -65,17 +65,22 @@ public class MetadataTaskManager implements Managed {
     }
 
     public void onFileAdded(File file, String datastationName) {
+        log.debug("Received file creation event for file '{}'", file);
         if (file.isFile() && file.getName().toLowerCase(Locale.ROOT).endsWith(".zip")) {
             var metadataTask = new MetadataTask(
                 file.toPath(), outbox, transferItemService, metadataReader, fileService
             );
 
+            log.debug("Executing task {}", metadataTask);
             executorService.execute(metadataTask);
         }
     }
 
     @Override
     public void stop() throws Exception {
+        log.debug("Shutting down MetadataTaskManager");
+
         this.inboxWatcher.stop();
+        this.executorService.shutdownNow();
     }
 }

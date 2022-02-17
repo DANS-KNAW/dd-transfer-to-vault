@@ -24,82 +24,95 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.UUID;
 
 public class TarTask implements Runnable {
     private static final Logger log = LoggerFactory.getLogger(TarTask.class);
 
     private final TransferItemService transferItemService;
     private final Path inboxPath;
-    private final UUID uuid;
+    private final String uuid;
     private final TarCommandRunner tarCommandRunner;
     private final ArchiveMetadataService archiveMetadataService;
+    private final int maxRetries;
 
-    public TarTask(TransferItemService transferItemService, UUID uuid, Path inboxPath, TarCommandRunner tarCommandRunner, ArchiveMetadataService archiveMetadataService) {
+    public TarTask(TransferItemService transferItemService, String uuid, Path inboxPath, TarCommandRunner tarCommandRunner, ArchiveMetadataService archiveMetadataService, int maxRetries) {
         this.transferItemService = transferItemService;
         this.inboxPath = inboxPath;
         this.uuid = uuid;
         this.tarCommandRunner = tarCommandRunner;
         this.archiveMetadataService = archiveMetadataService;
+        this.maxRetries = maxRetries;
     }
 
     @Override
     public void run() {
+        createArchive();
+    }
+
+    /**
+     * Verifies the remote archive, and attempts to transfer it if it does not exist or is invalid. Only after everything is correctly transferred, it will extract metadata (checksums) from the remote
+     * archive.
+     *
+     * Note that InterruptedException will not increase the attempt count, because interrupts
+     */
+    void createArchive() {
         try {
-            createTarArchiveIfNeeded();
-            // TODO catch exceptions where one of these things went wrong:
-            // - tar wasnt uploaded due to IOException (or code is not 0)
-            // - verify step failed
-            // if so, remove remote tar and reset status to TARRING, retry it again
+            // The first step is validating the remote archive. It might not even exist,
+            // in which case we upload it.
+            try {
+                log.info("Verifying remote TAR with UUID {}", uuid);
+                verifyArchive(uuid);
+            }
+            catch (IOException e) {
+                log.info("Remote archive does not exist yet, or is not valid; transferring the archive again");
+                transferArchive(uuid);
+            }
+
+            // if the statements above do not throw, it was archived correctly, and we can extract the metadata
+            log.info("Extracting metadata from remote TAR with UUID {}", uuid);
+            var metadata = extractTarMetadata(uuid);
+
+            log.info("Extracted metadata for remote TAR with uuid {}: {}", uuid, metadata);
+            transferItemService.updateTarToCreated(uuid, metadata);
         }
-        catch (IOException | InterruptedException e) {
-            log.error("error while creating TAR archive", e);
+        catch (IOException e) {
+            log.error("Unable to transfer archive, marking for retry", e);
+            transferItemService.setArchiveAttemptFailed(uuid, true, maxRetries);
+        }
+        catch (InterruptedException e) {
+            log.error("Unable to transfer archive due to InterruptedException", e);
+            transferItemService.setArchiveAttemptFailed(uuid, false, maxRetries);
         }
     }
 
     /**
-     * Will check if the tar on the remote location exists and is valid before triggering the tar creation process
+     * Transfers the archive to the remote location. First it deletes existing archives with the same name if they exist. After the transfer it verifies the contents have been correctly transferred.
+     * If not, it deletes the remote archive again.
+     *
+     * @param uuid
+     * @throws InterruptedException
+     * @throws IOException
      */
-    void createTarArchiveIfNeeded() throws IOException, InterruptedException {
-        var remoteArchiveIsValid = false;
-
+    void transferArchive(String uuid) throws InterruptedException, IOException {
         try {
-            verifyTarArchive(uuid);
-            remoteArchiveIsValid = true;
-        }
-        catch (IOException | InterruptedException e) {
-            log.info("No archive exists with uuid {}, or archive is invalid", uuid);
-            log.info("Deleting remote archive with uuid {} if exists", uuid);
+            log.info("Remote archive does not exist, or is not valid");
+            deleteArchiveSilent(uuid);
 
-            try {
-                deleteTarArchive(uuid);
-            }
-            catch (IOException ex) {
-                log.debug("Remote archive does not exist, which is expected; not doing anything");
-            }
-        }
-
-        if (!remoteArchiveIsValid) {
-            // run dmftar and upload results
             log.info("Tarring directory '{}' with UUID {}", this.inboxPath, uuid);
             tarDirectory(uuid, this.inboxPath);
+
+            log.info("Extracting metadata from remote TAR with UUID {}", uuid);
+            verifyArchive(uuid);
         }
-        else {
-            log.info("Not tarring directory '{}' with UUID {}, because a valid version was found on the remote archive", this.inboxPath, uuid);
+        catch (IOException e) {
+            log.error("Error transfering TAR to remote archive, cleaning up", e);
+            deleteArchiveSilent(uuid);
+            throw e;
         }
-
-        log.info("Verifying remote TAR with UUID {}", this.uuid);
-        verifyTarArchive(uuid);
-
-        log.info("Extracting metadata from remote TAR with UUID {}", this.uuid);
-        var metadata = extractTarMetadata(uuid);
-
-        log.info("Extracted metadata for remote TAR with uuid {}: {}", this.uuid, metadata);
-        transferItemService.updateTarToCreated(uuid.toString(), metadata);
     }
 
-    private void tarDirectory(UUID packageName, Path sourceDirectory) throws IOException, InterruptedException {
-        var targetPackage = getTarArchivePath(packageName);
+    void tarDirectory(String packageName, Path sourceDirectory) throws IOException, InterruptedException {
+        var targetPackage = getArchivePath(packageName);
         var result = tarCommandRunner.tarDirectory(sourceDirectory, targetPackage);
 
         // it failed
@@ -108,8 +121,8 @@ public class TarTask implements Runnable {
         }
     }
 
-    private void verifyTarArchive(UUID packageName) throws IOException, InterruptedException {
-        var targetPackage = getTarArchivePath(packageName);
+    void verifyArchive(String packageName) throws IOException, InterruptedException {
+        var targetPackage = getArchivePath(packageName);
         var result = tarCommandRunner.verifyPackage(targetPackage);
 
         if (result.getStatusCode() != 0) {
@@ -117,16 +130,25 @@ public class TarTask implements Runnable {
         }
     }
 
-    private ArchiveMetadata extractTarMetadata(UUID packageName) throws IOException, InterruptedException {
-        return archiveMetadataService.getArchiveMetadata(packageName.toString());
+    ArchiveMetadata extractTarMetadata(String packageName) throws IOException, InterruptedException {
+        return archiveMetadataService.getArchiveMetadata(packageName);
     }
 
-    private String getTarArchivePath(UUID uuid) {
-        return uuid.toString() + ".dmftar";
+    String getArchivePath(String uuid) {
+        return uuid + ".dmftar";
     }
 
-    private void deleteTarArchive(UUID packageName) throws IOException, InterruptedException {
-        var targetPackage = getTarArchivePath(packageName);
+    void deleteArchiveSilent(String packageName) throws InterruptedException {
+        try {
+            deleteArchive(packageName);
+        }
+        catch (IOException e) {
+            log.debug("Error deleting archive, but this is expected");
+        }
+    }
+
+    void deleteArchive(String packageName) throws IOException, InterruptedException {
+        var targetPackage = getArchivePath(packageName);
         var result = tarCommandRunner.deletePackage(targetPackage);
 
         if (result.getStatusCode() != 0) {
@@ -134,5 +156,12 @@ public class TarTask implements Runnable {
         }
     }
 
+    @Override
+    public String toString() {
+        return "TarTask{" +
+            "inboxPath=" + inboxPath +
+            ", uuid='" + uuid + '\'' +
+            '}';
+    }
 }
 

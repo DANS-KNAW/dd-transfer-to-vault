@@ -47,7 +47,7 @@ public interface ArchiveStatusService {
         UNKNOWN("N/A"),
         ;
 
-        private String value;
+        private final String value;
 
         FileStatus(String value) {
             this.value = value;

@@ -20,31 +20,28 @@ import nl.knaw.dans.ttv.core.service.ArchiveStatusService;
 import nl.knaw.dans.ttv.core.service.OcflRepositoryService;
 import nl.knaw.dans.ttv.core.service.TransferItemService;
 import org.quartz.CronScheduleBuilder;
-import org.quartz.CronTrigger;
 import org.quartz.JobBuilder;
 import org.quartz.JobDataMap;
-import org.quartz.JobDetail;
 import org.quartz.Scheduler;
-import org.quartz.SchedulerFactory;
+import org.quartz.SchedulerException;
 import org.quartz.TriggerBuilder;
 import org.quartz.impl.StdSchedulerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.file.Path;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 
 public class ConfirmArchivedTaskManager implements Managed {
     private static final Logger log = LoggerFactory.getLogger(ConfirmArchivedTaskManager.class);
-
-    private Scheduler scheduler;
     private final String schedule;
-
     private final Path workingDir;
     private final ExecutorService executorService;
     private final TransferItemService transferItemService;
     private final ArchiveStatusService archiveStatusService;
     private final OcflRepositoryService ocflRepositoryService;
+    private Scheduler scheduler;
 
     public ConfirmArchivedTaskManager(String schedule, Path workingDir,
         ExecutorService executorService, TransferItemService transferItemService, ArchiveStatusService archiveStatusService, OcflRepositoryService ocflRepositoryService) {
@@ -62,18 +59,13 @@ public class ConfirmArchivedTaskManager implements Managed {
         log.info("Verifying archive status");
         verifyArchives();
 
-        var schedulerFactory = new StdSchedulerFactory();
-        this.scheduler = schedulerFactory.getScheduler();
+        this.scheduler = createScheduler();
 
-        var jobData = new JobDataMap();
-
-        log.info("Configuring JobDataMap for cron-based tasks");
-
-        jobData.put("transferItemService", transferItemService);
-        jobData.put("workingDir", workingDir);
-        jobData.put("executorService", executorService);
-        jobData.put("archiveStatusService", archiveStatusService);
-        jobData.put("ocflRepositoryService", ocflRepositoryService);
+        log.debug("Configuring JobDataMap for cron-based tasks");
+        var params = new ConfirmArchivedTaskCreator.ConfirmArchivedTaskCreatorParameters(
+            transferItemService, workingDir, archiveStatusService, ocflRepositoryService, executorService
+        );
+        var jobData = new JobDataMap(Map.of("params", params));
 
         var job = JobBuilder.newJob(ConfirmArchivedTaskCreator.class)
             .withIdentity("job", "group")
@@ -98,15 +90,20 @@ public class ConfirmArchivedTaskManager implements Managed {
     public void stop() throws Exception {
         log.info("Stopping scheduler");
         this.scheduler.shutdown();
+        this.executorService.shutdownNow();
     }
 
     void verifyArchives() {
         var inProgress = transferItemService.findTarsByConfirmInProgress();
 
-        for (var tar: inProgress) {
+        for (var tar : inProgress) {
             log.warn("Found TAR with confirmCheckInProgress, either the application was interrupted during a check or there is an error: {}", tar);
             log.info("Resetting tar status for TAR {}", tar);
             transferItemService.resetTarToArchiving(tar);
         }
+    }
+
+    Scheduler createScheduler() throws SchedulerException {
+        return new StdSchedulerFactory().getScheduler();
     }
 }

@@ -32,17 +32,11 @@ import java.util.Objects;
 public class InboxWatcher extends FileAlterationListenerAdaptor implements Managed {
 
     private static final Logger log = LoggerFactory.getLogger(InboxWatcher.class);
-
-    private FileAlterationMonitor monitor;
-
     private final Path path;
     private final Callback callback;
     private final int interval;
     private final String datastationName;
-
-    public interface Callback {
-        void onFileCreate(File file, String datastationName);
-    }
+    private FileAlterationMonitor monitor;
 
     public InboxWatcher(Path path, String datastationName, Callback callback, int interval) {
         this.path = Objects.requireNonNull(path, "InboxWatcher path must not be null");
@@ -56,7 +50,7 @@ public class InboxWatcher extends FileAlterationListenerAdaptor implements Manag
         // see if file is a direct descendant of path
         // if not, ignore it
         var expected = Path.of(String.valueOf(this.path), file.getName());
-        log.trace("comparing directories: '{}' vs '{}'", file.toPath(), expected);
+        log.debug("Comparing directories: '{}' vs '{}'", file.toPath(), expected);
 
         if (!file.toPath().equals(expected)) {
             log.warn("File found in non-root directory, ignoring");
@@ -84,7 +78,8 @@ public class InboxWatcher extends FileAlterationListenerAdaptor implements Manag
 
             log.info("Starting file alteration monitor for path '{}'", this.path);
             startFileAlterationMonitor();
-        } catch (IOException | InterruptedException e) {
+        }
+        catch (IOException | InterruptedException e) {
             log.error(e.getMessage(), e);
             throw new InvalidTransferItemException(e.getMessage());
         }
@@ -97,5 +92,18 @@ public class InboxWatcher extends FileAlterationListenerAdaptor implements Manag
     @Override
     public void stop() throws Exception {
         monitor.stop();
+    }
+
+    @Override
+    public String toString() {
+        return "InboxWatcher{" +
+            "path=" + path +
+            ", interval=" + interval +
+            ", datastationName='" + datastationName + '\'' +
+            '}';
+    }
+
+    public interface Callback {
+        void onFileCreate(File file, String datastationName);
     }
 }

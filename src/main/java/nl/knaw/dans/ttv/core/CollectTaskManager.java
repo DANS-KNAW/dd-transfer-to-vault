@@ -61,10 +61,10 @@ public class CollectTaskManager implements Managed {
     @Override
     public void start() throws Exception {
         // scan inboxes
-        log.info("creating InboxWatcher's for configured inboxes");
+        log.info("Creating InboxWatcher's for configured inboxes");
 
         this.inboxWatchers = inboxes.stream().map(entry -> {
-            log.debug("creating InboxWatcher for {}", entry);
+            log.info("Creating InboxWatcher for {}", entry);
 
             try {
                 return inboxWatcherFactory.getInboxWatcher(
@@ -72,34 +72,42 @@ public class CollectTaskManager implements Managed {
                 );
             }
             catch (Exception e) {
-                log.error("unable to create InboxWatcher", e);
+                log.error("Unable to create InboxWatcher", e);
             }
             return null;
         }).collect(Collectors.toList());
 
         for (var inboxWatcher : this.inboxWatchers) {
             if (inboxWatcher != null) {
+                log.info("Starting InboxWatcher {}", inboxWatcher);
                 inboxWatcher.start();
             }
         }
     }
 
     public void onFileAdded(File file, String datastationName) {
+        log.debug("Received file creation event for file '{}' and datastation name '{}'", file, datastationName);
         if (file.isFile() && file.getName().toLowerCase(Locale.ROOT).endsWith(".zip")) {
             var collectTask = new CollectTask(
                 file.toPath(), outbox, datastationName, transferItemService, metadataReader, fileService
             );
 
+            log.debug("Executing task {}", collectTask);
             executorService.execute(collectTask);
         }
     }
 
     @Override
     public void stop() throws Exception {
+        log.debug("Shutting down CollectTaskManager");
+
         for (var inboxWatcher : this.inboxWatchers) {
             if (inboxWatcher != null) {
+                log.trace("Stopping InboxWatcher {}", inboxWatcher);
                 inboxWatcher.stop();
             }
         }
+
+        this.executorService.shutdownNow();
     }
 }

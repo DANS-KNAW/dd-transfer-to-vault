@@ -27,13 +27,13 @@ import nl.knaw.dans.ttv.db.TarPart;
 import nl.knaw.dans.ttv.db.TransferItem;
 import nl.knaw.dans.ttv.db.TransferItemDAO;
 import org.hibernate.Hibernate;
+import org.hibernate.ObjectNotFoundException;
 
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class TransferItemServiceImpl implements TransferItemService {
@@ -47,7 +47,8 @@ public class TransferItemServiceImpl implements TransferItemService {
 
     @Override
     @UnitOfWork
-    public TransferItem createTransferItem(String datastationName, FilenameAttributes filenameAttributes, FilesystemAttributes filesystemAttributes, FileContentAttributes fileContentAttributes)
+    public TransferItem createTransferItem(String datastationName, FilenameAttributes filenameAttributes, FilesystemAttributes filesystemAttributes,
+        FileContentAttributes fileContentAttributes)
         throws InvalidTransferItemException {
         var transferItem = new TransferItem();
 
@@ -90,7 +91,8 @@ public class TransferItemServiceImpl implements TransferItemService {
 
     @Override
     @UnitOfWork
-    public TransferItem createTransferItem(String datastationName, FilenameAttributes filenameAttributes, FilesystemAttributes filesystemAttributes) throws InvalidTransferItemException {
+    public TransferItem createTransferItem(String datastationName, FilenameAttributes filenameAttributes, FilesystemAttributes filesystemAttributes)
+        throws InvalidTransferItemException {
 
         // check if an item with this ID already exists
         var existing = transferItemDAO.findByDatasetPidAndVersion(
@@ -155,9 +157,32 @@ public class TransferItemServiceImpl implements TransferItemService {
 
     @Override
     @UnitOfWork
+    public void setArchiveAttemptFailed(String id, boolean increaseAttemptCount, int maxRetries) {
+        tarDAO.findById(id).map(tar -> {
+            tar.setTarStatus(Tar.TarStatus.TARRING);
+            tar.setArchiveInProgress(false);
+
+            if (increaseAttemptCount) {
+                tar.setTransferAttempt(tar.getTransferAttempt() + 1);
+            }
+
+            // for example, if maxRetries = 2 and the task just failed for the first time,
+            // the transferAttempt would be set to 1. We still want to attempt it 2 more times
+            // hence the > and not >=
+            if (tar.getTransferAttempt() > maxRetries) {
+                tar.setTarStatus(Tar.TarStatus.OCFLTARFAILED);
+            }
+
+            return tarDAO.save(tar);
+        });
+    }
+
+    @Override
+    @UnitOfWork
     public void updateTarToCreated(String id, ArchiveMetadata metadata) {
         tarDAO.findById(id).map(tar -> {
             tar.setTarStatus(Tar.TarStatus.OCFLTARCREATED);
+            tar.setArchiveInProgress(false);
 
             for (var transferItem : tar.getTransferItems()) {
                 transferItem.setTransferStatus(TransferItem.TransferStatus.OCFLTARCREATED);
@@ -175,6 +200,18 @@ public class TransferItemServiceImpl implements TransferItemService {
 
             return tarDAO.saveWithParts(tar, parts);
         });
+    }
+
+    @Override
+    @UnitOfWork
+    public void setArchivingInProgress(String id) {
+        tarDAO.findById(id).
+            map(tar -> {
+                tar.setTarStatus(Tar.TarStatus.TARRING);
+                tar.setArchiveInProgress(true);
+
+                return tarDAO.save(tar);
+            }).orElseThrow(() -> new ObjectNotFoundException(id, "Tar"));
     }
 
     @Override
@@ -238,15 +275,16 @@ public class TransferItemServiceImpl implements TransferItemService {
 
     @Override
     @UnitOfWork
-    public Tar createTarArchiveWithAllMetadataExtractedTransferItems(UUID uuid, String vaultPath) {
-        Objects.requireNonNull(uuid, "uuid cannot be null");
-        Objects.requireNonNull(uuid, "vaultPath cannot be null");
+    public Tar createTarArchiveWithAllMetadataExtractedTransferItems(String id, String vaultPath) {
+        Objects.requireNonNull(id, "id cannot be null");
+        Objects.requireNonNull(vaultPath, "vaultPath cannot be null");
 
         var tarArchive = new Tar();
-        tarArchive.setTarUuid(uuid.toString());
+        tarArchive.setTarUuid(id);
         tarArchive.setTarStatus(Tar.TarStatus.TARRING);
         tarArchive.setCreated(LocalDateTime.now());
         tarArchive.setVaultPath(vaultPath);
+        tarArchive.setArchiveInProgress(true);
 
         var transferItems = transferItemDAO.findByStatus(TransferItem.TransferStatus.METADATA_EXTRACTED);
 
@@ -286,7 +324,7 @@ public class TransferItemServiceImpl implements TransferItemService {
     public List<Tar> findTarsByStatusTarring() {
         var tars = tarDAO.findByStatus(Tar.TarStatus.TARRING);
 
-        for (var tar: tars) {
+        for (var tar : tars) {
             Hibernate.initialize(tar.getTransferItems());
         }
 
@@ -297,5 +335,11 @@ public class TransferItemServiceImpl implements TransferItemService {
     @UnitOfWork
     public List<Tar> findTarsByConfirmInProgress() {
         return tarDAO.findTarsByConfirmInProgress();
+    }
+
+    @Override
+    @UnitOfWork
+    public List<Tar> findTarsToBeRetried() {
+        return tarDAO.findTarsToBeRetried();
     }
 }

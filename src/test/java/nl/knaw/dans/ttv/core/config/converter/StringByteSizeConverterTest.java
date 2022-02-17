@@ -54,22 +54,16 @@ class StringByteSizeConverterTest {
 
     @Test
     void testInvalidSuffix() {
-        assertThrows(IllegalArgumentException.class, () -> {
-            new StringByteSizeConverter().convert("1024X");
-        });
+        assertThrows(IllegalArgumentException.class, () -> new StringByteSizeConverter().convert("1024X"));
     }
 
     @Test
     void testMultipleSuffix() {
-        assertThrows(IllegalArgumentException.class, () -> {
-            new StringByteSizeConverter().convert("1024GGGG");
-        });
+        assertThrows(IllegalArgumentException.class, () -> new StringByteSizeConverter().convert("1024GGGG"));
     }
 
     @Test
     void testInvalidNumber() {
-        assertThrows(NumberFormatException.class, () -> {
-            new StringByteSizeConverter().convert("ABC");
-        });
+        assertThrows(NumberFormatException.class, () -> new StringByteSizeConverter().convert("ABC"));
     }
 }

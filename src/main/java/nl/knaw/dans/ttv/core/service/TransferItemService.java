@@ -26,7 +26,6 @@ import nl.knaw.dans.ttv.db.TransferItem;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 public interface TransferItemService {
 
@@ -40,7 +39,11 @@ public interface TransferItemService {
 
     void saveAllTars(List<Tar> tars);
 
+    void setArchiveAttemptFailed(String id, boolean increaseAttemptCount, int maxRetries);
+
     void updateTarToCreated(String id, ArchiveMetadata metadata);
+
+    void setArchivingInProgress(String id);
 
     List<Tar> stageAllTarsToBeConfirmed();
 
@@ -50,7 +53,7 @@ public interface TransferItemService {
 
     TransferItem addMetadataAndMoveFile(TransferItem transferItem, FileContentAttributes fileContentAttributes, TransferItem.TransferStatus status, Path newPath);
 
-    Tar createTarArchiveWithAllMetadataExtractedTransferItems(UUID uuid, String vaultPath);
+    Tar createTarArchiveWithAllMetadataExtractedTransferItems(String id, String vaultPath);
 
     Tar save(Tar tarArchive);
 
@@ -61,5 +64,7 @@ public interface TransferItemService {
     List<Tar> findTarsByStatusTarring();
 
     List<Tar> findTarsByConfirmInProgress();
+
+    List<Tar> findTarsToBeRetried();
 
 }

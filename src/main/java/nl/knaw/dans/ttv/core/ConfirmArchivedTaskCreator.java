@@ -20,7 +20,6 @@ import nl.knaw.dans.ttv.core.service.OcflRepositoryService;
 import nl.knaw.dans.ttv.core.service.TransferItemService;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
-import org.quartz.JobExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,18 +32,62 @@ public class ConfirmArchivedTaskCreator implements Job {
     @Override
     public void execute(JobExecutionContext context) {
         var dataMap = context.getMergedJobDataMap();
-        var transferItemService = (TransferItemService) dataMap.get("transferItemService");
-        var workingDir = (Path) dataMap.get("workingDir");
-        var archiveStatusService = (ArchiveStatusService) dataMap.get("archiveStatusService");
-        var ocflRepositoryService = (OcflRepositoryService) dataMap.get("ocflRepositoryService");
-        var executorService = (ExecutorService) dataMap.get("executorService");
+        var params = (ConfirmArchivedTaskCreatorParameters) dataMap.get("params");
+
+        run(params);
+    }
+
+    void run(ConfirmArchivedTaskCreatorParameters params) {
+        var transferItemService = params.getTransferItemService();
+        var workingDir = params.getWorkingDir();
+        var archiveStatusService = params.getArchiveStatusService();
+        var ocflRepositoryService = params.getOcflRepositoryService();
+        var executorService = params.getExecutorService();
 
         var tars = transferItemService.stageAllTarsToBeConfirmed();
 
-        for (var tar: tars) {
+        for (var tar : tars) {
             var task = new ConfirmArchivedTask(tar, transferItemService, archiveStatusService, ocflRepositoryService, workingDir);
             log.debug("Executing task {}", task);
             executorService.execute(task);
         }
+    }
+
+    public static class ConfirmArchivedTaskCreatorParameters {
+        private final TransferItemService transferItemService;
+        private final Path workingDir;
+        private final ArchiveStatusService archiveStatusService;
+        private final OcflRepositoryService ocflRepositoryService;
+        private final ExecutorService executorService;
+
+        public ConfirmArchivedTaskCreatorParameters(TransferItemService transferItemService, Path workingDir, ArchiveStatusService archiveStatusService,
+            OcflRepositoryService ocflRepositoryService, ExecutorService executorService) {
+            this.transferItemService = transferItemService;
+            this.workingDir = workingDir;
+            this.archiveStatusService = archiveStatusService;
+            this.ocflRepositoryService = ocflRepositoryService;
+            this.executorService = executorService;
+        }
+
+        public TransferItemService getTransferItemService() {
+            return transferItemService;
+        }
+
+        public Path getWorkingDir() {
+            return workingDir;
+        }
+
+        public ArchiveStatusService getArchiveStatusService() {
+            return archiveStatusService;
+        }
+
+        public OcflRepositoryService getOcflRepositoryService() {
+            return ocflRepositoryService;
+        }
+
+        public ExecutorService getExecutorService() {
+            return executorService;
+        }
+
     }
 }

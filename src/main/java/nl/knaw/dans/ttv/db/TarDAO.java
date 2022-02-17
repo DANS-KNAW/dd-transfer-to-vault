@@ -81,4 +81,16 @@ public class TarDAO extends AbstractDAO<Tar> {
 
         return query.list();
     }
+
+    public List<Tar> findTarsToBeRetried() {
+        var query = currentSession().createQuery(
+            "from Tar "
+                + "where archiveInProgress = false "
+                + "and tarStatus = :status", Tar.class);
+
+        query.setParameter("status", Tar.TarStatus.TARRING);
+
+        return query.list();
+
+    }
 }

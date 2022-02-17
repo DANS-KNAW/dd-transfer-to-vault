@@ -60,12 +60,14 @@ public class CollectTask implements Runnable {
             }
         }
         finally {
+            log.info("Cleaning up XML file associated with '{}'", this.filePath);
             cleanUpXmlFile(this.filePath);
         }
     }
 
     void processFile(Path path) throws IOException, InvalidTransferItemException {
         var transferItem = createOrGetTransferItem(path);
+        log.info("Processing file '{}' with TransferItem {}", path, transferItem);
 
         if (transferItem.getTransferStatus() != TransferItem.TransferStatus.COLLECTED) {
             throw new InvalidTransferItemException(
@@ -73,10 +75,11 @@ public class CollectTask implements Runnable {
             );
         }
 
+        log.info("Moving file '{}' to outbox '{}'", path, this.outbox);
         moveFileToOutbox(transferItem, path, this.outbox);
     }
 
-    public TransferItem createOrGetTransferItem(Path path) throws InvalidTransferItemException {
+    TransferItem createOrGetTransferItem(Path path) throws InvalidTransferItemException {
         var filenameAttributes = metadataReader.getFilenameAttributes(path);
         log.trace("Received filename attributes: {}", filenameAttributes);
 
@@ -84,6 +87,7 @@ public class CollectTask implements Runnable {
         log.trace("TransferItem from database: {}", transferItem);
 
         if (transferItem.isPresent()) {
+            log.debug("Existing TransferItem found: {}", transferItem.get());
             return transferItem.get();
         }
 
@@ -95,7 +99,7 @@ public class CollectTask implements Runnable {
         return transferItemService.createTransferItem(datastationName, filenameAttributes, filesystemAttributes);
     }
 
-    public void moveFileToOutbox(TransferItem transferItem, Path filePath, Path outboxPath) throws IOException {
+    void moveFileToOutbox(TransferItem transferItem, Path filePath, Path outboxPath) throws IOException {
         log.trace("filePath is '{}', outboxPath is '{}'", filePath, outboxPath);
         var newPath = outboxPath.resolve(filePath.getFileName());
 
@@ -110,8 +114,9 @@ public class CollectTask implements Runnable {
         fileService.rejectFile(path, exception);
     }
 
-    public void cleanUpXmlFile(Path path) {
+    void cleanUpXmlFile(Path path) {
         metadataReader.getAssociatedXmlFile(path).ifPresent(p -> {
+            log.debug("Deleting file '{}'", p);
             try {
                 fileService.deleteFile(p);
             }
@@ -119,5 +124,14 @@ public class CollectTask implements Runnable {
                 log.error("Unable to delete XML file associated with file '{}' (filename: '{}')", path, p, e);
             }
         });
+    }
+
+    @Override
+    public String toString() {
+        return "CollectTask{" +
+            "filePath=" + filePath +
+            ", outbox=" + outbox +
+            ", datastationName='" + datastationName + '\'' +
+            '}';
     }
 }

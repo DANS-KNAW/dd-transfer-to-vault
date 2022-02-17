@@ -15,7 +15,6 @@
  */
 package nl.knaw.dans.ttv.core.service;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
@@ -45,7 +44,7 @@ public interface FileService {
 
     Path moveFileAtomically(Path filePath, Path newPath) throws IOException;
 
-    void ensureDirectoryExists(Path errorPath) throws IOException;
+    void ensureDirectoryExists(Path path) throws IOException;
 
     void rejectFile(Path path, Exception exception) throws IOException;
 

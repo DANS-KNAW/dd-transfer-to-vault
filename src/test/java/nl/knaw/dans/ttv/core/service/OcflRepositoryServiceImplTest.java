@@ -28,7 +28,6 @@ import java.nio.file.Path;
 import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.fail;
 
 class OcflRepositoryServiceImplTest {
 
@@ -42,20 +41,16 @@ class OcflRepositoryServiceImplTest {
     }
 
     @Test
-    void createRepository() {
+    void createRepository() throws IOException {
         var service = new OcflRepositoryServiceImpl(fileService, ocflRepositoryFactory);
 
-        try {
-            Mockito.when(fileService.createDirectory(Mockito.any()))
-                .thenReturn(Path.of("primary-dir"))
-                .thenReturn(Path.of("working-dir"));
+        Mockito.when(fileService.createDirectory(Mockito.any()))
+            .thenReturn(Path.of("primary-dir"))
+            .thenReturn(Path.of("working-dir"));
 
-            service.createRepository(Path.of("some/path"), "uuid");
-            Mockito.verify(ocflRepositoryFactory).createRepository(Path.of("primary-dir"), Path.of("working-dir"));
-        }
-        catch (IOException e) {
-            fail(e);
-        }
+        service.createRepository(Path.of("some/path"), "uuid");
+        Mockito.verify(ocflRepositoryFactory).createRepository(Path.of("primary-dir"), Path.of("working-dir"));
+
     }
 
     @Test
@@ -86,21 +81,16 @@ class OcflRepositoryServiceImplTest {
     }
 
     @Test
-    void cleanupRepository() {
+    void cleanupRepository() throws IOException {
         var service = new OcflRepositoryServiceImpl(fileService, ocflRepositoryFactory);
 
-        try {
-            service.cleanupRepository(Path.of("some/path/123"), "123");
+        service.cleanupRepository(Path.of("some/path/123"), "123");
 
-            Mockito.verify(fileService, Mockito.times(1))
-                .deleteDirectory(Path.of("some/path/123/123"));
+        Mockito.verify(fileService, Mockito.times(1))
+            .deleteDirectory(Path.of("some/path/123/123"));
 
-            Mockito.verify(fileService, Mockito.times(1))
-                .deleteDirectory(Path.of("some/path/123/123-wd"));
-        }
-        catch (IOException e) {
-            fail(e);
-        };
+        Mockito.verify(fileService, Mockito.times(1))
+            .deleteDirectory(Path.of("some/path/123/123-wd"));
 
     }
 }
