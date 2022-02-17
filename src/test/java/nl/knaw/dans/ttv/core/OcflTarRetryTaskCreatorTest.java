@@ -16,6 +16,7 @@
 package nl.knaw.dans.ttv.core;
 
 import nl.knaw.dans.ttv.core.service.ArchiveMetadataService;
+import nl.knaw.dans.ttv.core.service.OcflRepositoryService;
 import nl.knaw.dans.ttv.core.service.TarCommandRunner;
 import nl.knaw.dans.ttv.core.service.TransferItemService;
 import nl.knaw.dans.ttv.db.Tar;
@@ -39,6 +40,7 @@ class OcflTarRetryTaskCreatorTest {
     private ExecutorService executorService;
     private TarCommandRunner tarCommandRunner;
     private ArchiveMetadataService archiveMetadataService;
+    private OcflRepositoryService ocflRepositoryService;
     private Path workDir;
 
     @BeforeEach
@@ -48,6 +50,7 @@ class OcflTarRetryTaskCreatorTest {
         this.tarCommandRunner = Mockito.mock(TarCommandRunner.class);
         this.archiveMetadataService = Mockito.mock(ArchiveMetadataService.class);
         this.workDir = Path.of("workdir");
+        this.ocflRepositoryService = Mockito.mock(OcflRepositoryService.class);
     }
 
     @Test
@@ -58,12 +61,13 @@ class OcflTarRetryTaskCreatorTest {
             Duration.of(24, ChronoUnit.HOURS)
         );
         var params = new OcflTarRetryTaskCreator.TaskRetryTaskCreatorParameters(
-            transferItemService, workDir, tarCommandRunner, archiveMetadataService, executorService, 5, intervals
+            transferItemService, workDir, tarCommandRunner, archiveMetadataService, executorService, 5, intervals, ocflRepositoryService
         );
 
         var tar = new Tar();
         tar.setCreated(LocalDateTime.now().minus(20, ChronoUnit.HOURS));
         tar.setTransferAttempt(0);
+        tar.setTarUuid("test1");
 
         Mockito.when(transferItemService.findTarsToBeRetried()).thenReturn(List.of(tar));
 
@@ -82,12 +86,13 @@ class OcflTarRetryTaskCreatorTest {
             Duration.of(24, ChronoUnit.HOURS)
         );
         var params = new OcflTarRetryTaskCreator.TaskRetryTaskCreatorParameters(
-            transferItemService, workDir, tarCommandRunner, archiveMetadataService, executorService, 5, intervals
+            transferItemService, workDir, tarCommandRunner, archiveMetadataService, executorService, 5, intervals, ocflRepositoryService
         );
 
         var tar = new Tar();
         tar.setCreated(LocalDateTime.now().minus(20, ChronoUnit.HOURS));
         tar.setTransferAttempt(2);
+        tar.setTarUuid("test1");
 
         Mockito.when(transferItemService.findTarsToBeRetried()).thenReturn(List.of(tar));
 
@@ -110,6 +115,8 @@ class OcflTarRetryTaskCreatorTest {
         var tar = new Tar();
         tar.setCreated(LocalDateTime.now().minus(20, ChronoUnit.HOURS));
         tar.setTransferAttempt(0);
+        tar.setTarUuid("test1");
+
         assertTrue(creator.shouldRetry(tar, intervals));
 
         tar.setTransferAttempt(1);

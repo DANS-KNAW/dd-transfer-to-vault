@@ -24,7 +24,7 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import nl.knaw.dans.ttv.core.CollectTaskManager;
 import nl.knaw.dans.ttv.core.ConfirmArchivedTaskManager;
-import nl.knaw.dans.ttv.core.MetadataTaskManager;
+import nl.knaw.dans.ttv.core.ExtractMetadataTaskManager;
 import nl.knaw.dans.ttv.core.OcflTarTaskManager;
 import nl.knaw.dans.ttv.core.service.ArchiveMetadataServiceImpl;
 import nl.knaw.dans.ttv.core.service.ArchiveStatusService;
@@ -108,19 +108,19 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
 
         // the Metadata task, which analyses the zip files and stores this information in the database
         // and then moves it to the tar inbox
-        log.info("Creating MetadataTaskManager");
-        final var metadataExecutorService = configuration.getExtractMetadata().getTaskQueue().build(environment);
-        final var metadataTaskManager = new MetadataTaskManager(
+        log.info("Creating ExtractMetadataTaskManager");
+        final var extractMetadataExecutorService = configuration.getExtractMetadata().getTaskQueue().build(environment);
+        final var extractMetadataTaskManager = new ExtractMetadataTaskManager(
             configuration.getExtractMetadata().getInbox(),
             configuration.getCreateOcflTar().getInbox(),
             configuration.getExtractMetadata().getPollingInterval(),
-            metadataExecutorService,
+            extractMetadataExecutorService,
             transferItemService,
             metadataReader,
             fileService,
             inboxWatcherFactory
         );
-        environment.lifecycle().manage(metadataTaskManager);
+        environment.lifecycle().manage(extractMetadataTaskManager);
 
         // the process that looks for new files in the tar-inbox, and when reaching a certain combined size, tars them
         // and sends it to the archiving service
@@ -132,7 +132,7 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
         final var createTarExecutorService = configuration.getCreateOcflTar().getTaskQueue().build(environment);
 
         log.info("Creating TarTaskManager");
-        final var tarTaskManager = new OcflTarTaskManager(
+        final var ocflTarTaskManager = new OcflTarTaskManager(
             configuration.getCreateOcflTar().getInbox(),
             configuration.getCreateOcflTar().getWorkDir(),
             configuration.getDataArchive().getPath(),
@@ -150,7 +150,7 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
             archiveMetadataService
         );
 
-        environment.lifecycle().manage(tarTaskManager);
+        environment.lifecycle().manage(ocflTarTaskManager);
 
         // the process that checks the archiving service for status
         final var confirmArchivedExecutorService = configuration.getConfirmArchived().getTaskQueue().build(environment);
@@ -160,7 +160,7 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
 
         log.info("Creating ConfirmArchivedTaskManager");
         final var confirmArchivedTaskManager = new ConfirmArchivedTaskManager(confirmConfig.getCron(), configuration.getCreateOcflTar().getWorkDir(),
-            confirmArchivedExecutorService, transferItemService, archiveStatusService, ocflRepositoryService);
+            confirmArchivedExecutorService, transferItemService, archiveStatusService, fileService);
 
         environment.lifecycle().manage(confirmArchivedTaskManager);
     }

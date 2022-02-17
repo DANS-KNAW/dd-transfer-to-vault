@@ -15,16 +15,23 @@
  */
 package nl.knaw.dans.ttv.core;
 
+import edu.wisc.library.ocfl.api.OcflRepository;
 import nl.knaw.dans.ttv.core.dto.ProcessResult;
 import nl.knaw.dans.ttv.core.service.ArchiveMetadataService;
+import nl.knaw.dans.ttv.core.service.OcflRepositoryService;
 import nl.knaw.dans.ttv.core.service.TarCommandRunner;
 import nl.knaw.dans.ttv.core.service.TransferItemService;
+import nl.knaw.dans.ttv.db.Tar;
+import nl.knaw.dans.ttv.db.TransferItem;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 class OcflTarTaskTest {
@@ -32,21 +39,27 @@ class OcflTarTaskTest {
     private TransferItemService transferItemService;
     private TarCommandRunner tarCommandRunner;
     private ArchiveMetadataService archiveMetadataService;
+    private OcflRepositoryService ocflRepositoryService;
 
     @BeforeEach
     void setUp() {
         this.transferItemService = Mockito.mock(TransferItemService.class);
         this.tarCommandRunner = Mockito.mock(TarCommandRunner.class);
         this.archiveMetadataService = Mockito.mock(ArchiveMetadataService.class);
+        this.ocflRepositoryService = Mockito.mock(OcflRepositoryService.class);
+
     }
 
     @Test
     void run() throws IOException, InterruptedException {
         var uuid = UUID.fromString("82fa8591-b7e7-4efc-821e-addacb0cb364").toString();
         var path = Path.of("data/inbox", uuid);
-        var task = new OcflTarTask(transferItemService, uuid, path, tarCommandRunner, archiveMetadataService, 1);
-
+        var task = new OcflTarTask(transferItemService, uuid, path, tarCommandRunner, archiveMetadataService, ocflRepositoryService, 1);
         var result = new ProcessResult(0, "OK");
+        var tar = new Tar();
+        Mockito.when(transferItemService.getTarById(Mockito.any()))
+            .thenReturn(Optional.of(tar));
+
         Mockito.when(tarCommandRunner.tarDirectory(Mockito.any(), Mockito.any()))
             .thenReturn(result);
         Mockito.when(tarCommandRunner.verifyPackage(Mockito.any()))
@@ -58,7 +71,7 @@ class OcflTarTaskTest {
         task.run();
 
         Mockito.verify(tarCommandRunner).tarDirectory(
-            Path.of("data/inbox", uuid),
+            Path.of("data/inbox", uuid, "ocfl-repo"),
             uuid + ".dmftar"
         );
 
@@ -70,7 +83,10 @@ class OcflTarTaskTest {
     void runWithExistingValidRemoteArchive() throws IOException, InterruptedException {
         var uuid = UUID.fromString("82fa8591-b7e7-4efc-821e-addacb0cb364").toString();
         var path = Path.of("data/inbox", uuid);
-        var task = new OcflTarTask(transferItemService, uuid, path, tarCommandRunner, archiveMetadataService, 1);
+        var task = new OcflTarTask(transferItemService, uuid, path, tarCommandRunner, archiveMetadataService, ocflRepositoryService, 1);
+        var tar = new Tar();
+        Mockito.when(transferItemService.getTarById(Mockito.any()))
+            .thenReturn(Optional.of(tar));
 
         var result = new ProcessResult(0, "OK");
         Mockito.when(tarCommandRunner.tarDirectory(Mockito.any(), Mockito.any()))
@@ -92,7 +108,10 @@ class OcflTarTaskTest {
     void runWithExistingInvalidRemoteArchive() throws IOException, InterruptedException {
         var uuid = UUID.fromString("82fa8591-b7e7-4efc-821e-addacb0cb364").toString();
         var path = Path.of("data/inbox", uuid);
-        var task = new OcflTarTask(transferItemService, uuid, path, tarCommandRunner, archiveMetadataService, 1);
+        var task = new OcflTarTask(transferItemService, uuid, path, tarCommandRunner, archiveMetadataService, ocflRepositoryService, 1);
+        var tar = new Tar();
+        Mockito.when(transferItemService.getTarById(Mockito.any()))
+            .thenReturn(Optional.of(tar));
 
         var result = new ProcessResult(0, "OK");
         Mockito.when(tarCommandRunner.tarDirectory(Mockito.any(), Mockito.any()))
@@ -115,7 +134,10 @@ class OcflTarTaskTest {
     void runWithFailedCommand() throws IOException, InterruptedException {
         var uuid = UUID.fromString("82fa8591-b7e7-4efc-821e-addacb0cb364").toString();
         var path = Path.of("data/inbox", uuid);
-        var task = new OcflTarTask(transferItemService, uuid, path, tarCommandRunner, archiveMetadataService, 1);
+        var task = new OcflTarTask(transferItemService, uuid, path, tarCommandRunner, archiveMetadataService, ocflRepositoryService, 1);
+        var tar = new Tar();
+        Mockito.when(transferItemService.getTarById(Mockito.any()))
+            .thenReturn(Optional.of(tar));
 
         var result = new ProcessResult(1, "NOT OK");
         Mockito.when(tarCommandRunner.tarDirectory(Mockito.any(), Mockito.any()))
@@ -127,10 +149,39 @@ class OcflTarTaskTest {
         task.run();
 
         Mockito.verify(tarCommandRunner).tarDirectory(
-            Path.of("data/inbox", uuid),
+            Path.of("data/inbox", uuid, "ocfl-repo"),
             uuid + ".dmftar"
         );
 
         Mockito.verify(transferItemService).setArchiveAttemptFailed(Mockito.any(), Mockito.eq(true), Mockito.anyInt());
     }
+
+    /**
+     * Tests if the OcflTarTask::importTransferItemsIntoRepository method imports items into the repo, and only
+     * those that are not yet imported.
+     * @throws IOException
+     * @throws InterruptedException
+     */
+    @Test
+    void doesInitialImport() throws IOException, InterruptedException {
+        var uuid = UUID.fromString("82fa8591-b7e7-4efc-821e-addacb0cb364").toString();
+        var path = Path.of("data/inbox", uuid);
+        var task = new OcflTarTask(transferItemService, uuid, path, tarCommandRunner, archiveMetadataService, ocflRepositoryService, 1);
+        var tar = new Tar();
+
+        var ocflRepository = Mockito.mock(OcflRepository.class);
+        var transferItems = List.of(
+            new TransferItem("1", 1, 0, "path/to1.zip", LocalDateTime.now(), TransferItem.TransferStatus.TARRING),
+            new TransferItem("2", 1, 0, "path/to2.zip", LocalDateTime.now(), TransferItem.TransferStatus.TARRING)
+        );
+
+        Mockito.when(ocflRepositoryService.openRepository(Mockito.any())).thenReturn(ocflRepository);
+        tar.setTransferItems(transferItems);
+
+        task.importTransferItemsIntoRepository(tar);
+
+        Mockito.verify(ocflRepositoryService).importTransferItem(ocflRepository, transferItems.get(0));
+
+    }
+
 }

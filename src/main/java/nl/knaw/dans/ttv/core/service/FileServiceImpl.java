@@ -161,13 +161,6 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
-    public Path createDirectory(Path path) throws IOException {
-        Objects.requireNonNull(path, "path cannot be null");
-        log.trace("Creating directories '{}'", path);
-        return Files.createDirectories(path);
-    }
-
-    @Override
     public ZipFile openZipFile(Path path) throws IOException {
         Objects.requireNonNull(path, "path cannot be null");
         log.trace("Opening zip file '{}'", path);

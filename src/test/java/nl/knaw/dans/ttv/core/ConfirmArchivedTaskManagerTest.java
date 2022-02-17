@@ -16,7 +16,7 @@
 package nl.knaw.dans.ttv.core;
 
 import nl.knaw.dans.ttv.core.service.ArchiveStatusService;
-import nl.knaw.dans.ttv.core.service.OcflRepositoryService;
+import nl.knaw.dans.ttv.core.service.FileService;
 import nl.knaw.dans.ttv.core.service.TransferItemService;
 import nl.knaw.dans.ttv.db.Tar;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,14 +31,14 @@ import java.util.concurrent.ExecutorService;
 class ConfirmArchivedTaskManagerTest {
     private TransferItemService transferItemService;
     private ExecutorService executorService;
-    private OcflRepositoryService ocflRepositoryService;
+    private FileService fileService;
     private ArchiveStatusService archiveStatusService;
 
     @BeforeEach
     void setUp() {
         this.transferItemService = Mockito.mock(TransferItemService.class);
         this.executorService = Mockito.mock(ExecutorService.class);
-        this.ocflRepositoryService = Mockito.mock(OcflRepositoryService.class);
+        this.fileService = Mockito.mock(FileService.class);
         this.archiveStatusService = Mockito.mock(ArchiveStatusService.class);
     }
 
@@ -50,7 +50,7 @@ class ConfirmArchivedTaskManagerTest {
             executorService,
             transferItemService,
             archiveStatusService,
-            ocflRepositoryService
+            fileService
         ));
 
         var scheduler = Mockito.mock(Scheduler.class);
@@ -71,7 +71,7 @@ class ConfirmArchivedTaskManagerTest {
             executorService,
             transferItemService,
             archiveStatusService,
-            ocflRepositoryService
+            fileService
         ));
 
         var tar = new Tar();

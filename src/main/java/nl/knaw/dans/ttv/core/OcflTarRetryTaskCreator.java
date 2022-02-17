@@ -16,6 +16,7 @@
 package nl.knaw.dans.ttv.core;
 
 import nl.knaw.dans.ttv.core.service.ArchiveMetadataService;
+import nl.knaw.dans.ttv.core.service.OcflRepositoryService;
 import nl.knaw.dans.ttv.core.service.TarCommandRunner;
 import nl.knaw.dans.ttv.core.service.TransferItemService;
 import nl.knaw.dans.ttv.db.Tar;
@@ -49,6 +50,7 @@ public class OcflTarRetryTaskCreator implements Job {
         var executorService = params.getExecutorService();
         var maxRetries = params.getMaxRetries();
         var retryIntervals = params.getRetryIntervals();
+        var ocflRepositoryService = params.getOcflRepositoryService();
 
         // get a list of Tars that need to be retried
         var tars = transferItemService.findTarsToBeRetried();
@@ -63,9 +65,11 @@ public class OcflTarRetryTaskCreator implements Job {
             log.info("Setting TAR {} to archiving in progress", tar);
             transferItemService.setArchivingInProgress(tar.getTarUuid());
 
+            var repoPath = workDir.resolve(tar.getTarUuid());
+
             // check if tar should be retried again
             var task = new OcflTarTask(transferItemService, tar.getTarUuid(),
-                workDir, tarCommandRunner, archiveMetadataService, maxRetries);
+                repoPath, tarCommandRunner, archiveMetadataService, ocflRepositoryService, maxRetries);
 
             log.info("Starting TarTask {}", task);
             executorService.execute(task);
@@ -97,11 +101,11 @@ public class OcflTarRetryTaskCreator implements Job {
         private TarCommandRunner tarCommandRunner;
         private ArchiveMetadataService archiveMetadataService;
         private ExecutorService executorService;
+        private OcflRepositoryService ocflRepositoryService;
         private int maxRetries;
         private List<Duration> retryIntervals;
-
         public TaskRetryTaskCreatorParameters(TransferItemService transferItemService, Path workDir, TarCommandRunner tarCommandRunner,
-            ArchiveMetadataService archiveMetadataService, ExecutorService executorService, int maxRetries, List<Duration> retryIntervals) {
+            ArchiveMetadataService archiveMetadataService, ExecutorService executorService, int maxRetries, List<Duration> retryIntervals, OcflRepositoryService ocflRepositoryService) {
             this.transferItemService = transferItemService;
             this.workDir = workDir;
             this.tarCommandRunner = tarCommandRunner;
@@ -109,6 +113,15 @@ public class OcflTarRetryTaskCreator implements Job {
             this.executorService = executorService;
             this.maxRetries = maxRetries;
             this.retryIntervals = retryIntervals;
+            this.ocflRepositoryService = ocflRepositoryService;
+        }
+
+        public OcflRepositoryService getOcflRepositoryService() {
+            return ocflRepositoryService;
+        }
+
+        public void setOcflRepositoryService(OcflRepositoryService ocflRepositoryService) {
+            this.ocflRepositoryService = ocflRepositoryService;
         }
 
         public TransferItemService getTransferItemService() {

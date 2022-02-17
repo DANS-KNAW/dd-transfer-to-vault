@@ -15,7 +15,6 @@
  */
 package nl.knaw.dans.ttv.core;
 
-import edu.wisc.library.ocfl.api.OcflRepository;
 import nl.knaw.dans.ttv.core.service.ArchiveMetadataService;
 import nl.knaw.dans.ttv.core.service.FileService;
 import nl.knaw.dans.ttv.core.service.InboxWatcher;
@@ -37,7 +36,6 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -77,7 +75,7 @@ class OcflTarTaskManagerTest {
             new TransferItem("pid2", 1, 0, "path2", LocalDateTime.now(), TransferItem.TransferStatus.METADATA_EXTRACTED)
         );
 
-        var tar = new Tar();
+        var tar = new Tar("tarid", Tar.TarStatus.TARRING, false);
         tar.setTransferItems(transferItems);
 
         var scheduler = Mockito.mock(Scheduler.class);
@@ -92,16 +90,16 @@ class OcflTarTaskManagerTest {
         manager.onNewItemInInbox(new File("test.zip"));
 
         Mockito.verify(fileService).getPathSize(Path.of("data/inbox"));
-        Mockito.verify(ocflRepositoryService).createRepository(Mockito.eq(Path.of("data/workdir")), Mockito.any());
-        Mockito.verify(ocflRepositoryService).importTransferItem(
-            Mockito.any(),
-            Mockito.eq(transferItems.get(0))
-        );
-        Mockito.verify(ocflRepositoryService).importTransferItem(
-            Mockito.any(),
-            Mockito.eq(transferItems.get(1))
-        );
-        Mockito.verify(transferItemService).save(Mockito.any());
+//        Mockito.verify(ocflRepositoryService).createRepository(Mockito.eq(Path.of("data/workdir")), Mockito.any());
+//        Mockito.verify(ocflRepositoryService).importTransferItem(
+//            Mockito.any(),
+//            Mockito.eq(transferItems.get(0))
+//        );
+//        Mockito.verify(ocflRepositoryService).importTransferItem(
+//            Mockito.any(),
+//            Mockito.eq(transferItems.get(1))
+//        );
+//        Mockito.verify(transferItemService).save(Mockito.any());
 
         Mockito.verify(executorService).execute(Mockito.any());
 
@@ -134,7 +132,7 @@ class OcflTarTaskManagerTest {
     }
 
     @Test
-    void verifyInbox() throws SchedulerException {
+    void verifyInbox() throws SchedulerException, IOException {
         var manager = Mockito.spy(new OcflTarTaskManager(
             Path.of("data/inbox"), Path.of("data/workdir"), "some-path", 50, 100L, 10, Duration.ofMinutes(1), List.of(),
             executorService, inboxWatcherFactory, fileService, ocflRepositoryService, transferItemService,
@@ -144,34 +142,26 @@ class OcflTarTaskManagerTest {
         Mockito.when(manager.createScheduler()).thenReturn(scheduler);
 
         var transferItems = List.of(
-            new TransferItem("pid1", 1, 0, "path", LocalDateTime.now(), TransferItem.TransferStatus.TARRING),
-            new TransferItem("pid2", 1, 0, "path", LocalDateTime.now(), TransferItem.TransferStatus.TARRING)
+            new TransferItem("pid1", 1, 0, "data/inbox/1.zip", LocalDateTime.now(), TransferItem.TransferStatus.TARRING),
+            new TransferItem("pid2", 1, 0, "data/workdir/tarid/dve/2.zip", LocalDateTime.now(), TransferItem.TransferStatus.TARRING)
         );
-        var tar = new Tar(UUID.randomUUID().toString(), Tar.TarStatus.TARRING, false);
+        var tar = new Tar("tarid", Tar.TarStatus.TARRING, false);
         tar.setTransferItems(transferItems);
         var tars = List.of(tar);
 
-        var ocflRepo = Mockito.mock(OcflRepository.class);
-        Mockito.when(ocflRepo.containsObject(Mockito.any()))
-            .thenReturn(true, false);
-
-        Mockito.when(ocflRepositoryService.getObjectIdForTransferItem(Mockito.any()))
-            .thenReturn("id1", "id2");
-
-        Mockito.when(ocflRepositoryService.openRepository(Mockito.any(), Mockito.any())).thenReturn(ocflRepo);
         Mockito.when(transferItemService.findTarsByStatusTarring()).thenReturn(tars);
+
+        Mockito.when(fileService.moveFile(Mockito.any(), Mockito.any()))
+                .thenReturn(Path.of("data/workdir/tarid/dve/1.zip"));
 
         manager.verifyInbox();
 
-        // assert the entry names are set correctly
-        assertEquals("id1", transferItems.get(0).getAipTarEntryName());
-        assertEquals("id2", transferItems.get(1).getAipTarEntryName());
+        Mockito.verify(fileService).ensureDirectoryExists(Mockito.eq(Path.of("data/workdir/tarid/dve")));
+        Mockito.verify(fileService).moveFile(Mockito.eq(Path.of("data/inbox/1.zip")), Mockito.eq(Path.of("data/workdir/tarid/dve/1.zip")));
+        Mockito.verifyNoMoreInteractions(fileService);
 
-        // assert the missing entry has been imported
-        Mockito.verify(ocflRepositoryService).importTransferItem(ocflRepo, transferItems.get(1));
+        Mockito.verify(transferItemService).moveTransferItem(transferItems.get(0), TransferItem.TransferStatus.TARRING, Path.of("data/workdir/tarid/dve/1.zip"));
 
-        // assert the tar has been persisted to the database
-        Mockito.verify(transferItemService).save(tar);
     }
 
     @Test

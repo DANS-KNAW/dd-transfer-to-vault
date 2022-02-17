@@ -36,8 +36,6 @@ public interface FileService {
 
     long getPathSize(Path path) throws IOException;
 
-    Path createDirectory(Path path) throws IOException;
-
     ZipFile openZipFile(Path path) throws IOException;
 
     InputStream openFileFromZip(ZipFile datasetVersionExport, Path of) throws IOException;

@@ -204,7 +204,6 @@ class TransferItemServiceImplTest {
         transferItemService.updateTarToCreated("some_id", metadata);
 
         assertEquals(Tar.TarStatus.OCFLTARCREATED, tar.getTarStatus());
-        // TODO determine the correct status
         assertEquals(TransferItem.TransferStatus.OCFLTARCREATED, transferItem.getTransferStatus());
 
         Mockito.verify(tarDAO).saveWithParts(Mockito.any(), Mockito.any());
@@ -232,16 +231,6 @@ class TransferItemServiceImplTest {
         var result = transferItemService.stageAllTarsToBeConfirmed();
 
         assertEquals(List.of(tar1, tar2), result);
-    }
-
-    @Test
-    void updateCheckingProgressResults() {
-        var transferItemService = new TransferItemServiceImpl(transferItemDao, tarDAO);
-        var tar = new Tar(UUID.randomUUID().toString());
-        tar.setTransferItems(List.of());
-        transferItemService.updateConfirmArchivedResult(tar, Tar.TarStatus.OCFLTARCREATED);
-
-        Mockito.verify(tarDAO, Mockito.times(1)).save(tar);
     }
 
     @Test

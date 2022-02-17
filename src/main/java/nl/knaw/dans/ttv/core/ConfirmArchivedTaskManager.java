@@ -17,7 +17,7 @@ package nl.knaw.dans.ttv.core;
 
 import io.dropwizard.lifecycle.Managed;
 import nl.knaw.dans.ttv.core.service.ArchiveStatusService;
-import nl.knaw.dans.ttv.core.service.OcflRepositoryService;
+import nl.knaw.dans.ttv.core.service.FileService;
 import nl.knaw.dans.ttv.core.service.TransferItemService;
 import org.quartz.CronScheduleBuilder;
 import org.quartz.JobBuilder;
@@ -40,18 +40,18 @@ public class ConfirmArchivedTaskManager implements Managed {
     private final ExecutorService executorService;
     private final TransferItemService transferItemService;
     private final ArchiveStatusService archiveStatusService;
-    private final OcflRepositoryService ocflRepositoryService;
+    private final FileService fileService;
     private Scheduler scheduler;
 
     public ConfirmArchivedTaskManager(String schedule, Path workingDir,
-        ExecutorService executorService, TransferItemService transferItemService, ArchiveStatusService archiveStatusService, OcflRepositoryService ocflRepositoryService) {
+        ExecutorService executorService, TransferItemService transferItemService, ArchiveStatusService archiveStatusService, FileService fileService) {
 
         this.workingDir = workingDir;
         this.executorService = executorService;
         this.schedule = schedule;
         this.transferItemService = transferItemService;
         this.archiveStatusService = archiveStatusService;
-        this.ocflRepositoryService = ocflRepositoryService;
+        this.fileService = fileService;
     }
 
     @Override
@@ -63,7 +63,7 @@ public class ConfirmArchivedTaskManager implements Managed {
 
         log.debug("Configuring JobDataMap for cron-based tasks");
         var params = new ConfirmArchivedTaskCreator.ConfirmArchivedTaskCreatorParameters(
-            transferItemService, workingDir, archiveStatusService, ocflRepositoryService, executorService
+            transferItemService, workingDir, archiveStatusService, fileService, executorService
         );
         var jobData = new JobDataMap(Map.of("params", params));
 

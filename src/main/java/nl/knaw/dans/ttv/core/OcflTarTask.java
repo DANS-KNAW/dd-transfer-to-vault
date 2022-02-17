@@ -17,8 +17,10 @@ package nl.knaw.dans.ttv.core;
 
 import nl.knaw.dans.ttv.core.dto.ArchiveMetadata;
 import nl.knaw.dans.ttv.core.service.ArchiveMetadataService;
+import nl.knaw.dans.ttv.core.service.OcflRepositoryService;
 import nl.knaw.dans.ttv.core.service.TarCommandRunner;
 import nl.knaw.dans.ttv.core.service.TransferItemService;
+import nl.knaw.dans.ttv.db.Tar;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,20 +35,64 @@ public class OcflTarTask implements Runnable {
     private final String uuid;
     private final TarCommandRunner tarCommandRunner;
     private final ArchiveMetadataService archiveMetadataService;
+    private final OcflRepositoryService ocflRepositoryService;
     private final int maxRetries;
 
-    public OcflTarTask(TransferItemService transferItemService, String uuid, Path inboxPath, TarCommandRunner tarCommandRunner, ArchiveMetadataService archiveMetadataService, int maxRetries) {
+    public OcflTarTask(TransferItemService transferItemService, String uuid, Path inboxPath, TarCommandRunner tarCommandRunner, ArchiveMetadataService archiveMetadataService,
+        OcflRepositoryService ocflRepositoryService, int maxRetries) {
         this.transferItemService = transferItemService;
         this.inboxPath = inboxPath;
         this.uuid = uuid;
         this.tarCommandRunner = tarCommandRunner;
         this.archiveMetadataService = archiveMetadataService;
+        this.ocflRepositoryService = ocflRepositoryService;
         this.maxRetries = maxRetries;
     }
 
     @Override
     public void run() {
-        createArchive();
+        try {
+            createArchive();
+        }
+        catch (InvalidTarException e) {
+            log.error("Unable to create archive", e);
+        }
+    }
+
+    Path getOcflRepositoryPath() {
+        return inboxPath.resolve("ocfl-repo");
+    }
+
+    /**
+     * Verifies the local repository to confirm all the entries are imported already. There are 2 scenarios that this method has to deal with. First, it is a brand new repo and it should create the
+     * repository first. Second, something went wrong in a previous attempt to create the repository and import the items, so it should do it again.
+     *
+     * The way this is implemented should not make a distinction between the two cases, except for checking if the file has already been imported into the repo. The repo itself is created or opened,
+     * depending on whether the repo directory exists.
+     */
+    void importTransferItemsIntoRepository(Tar tar) throws IOException {
+        var ocflRepository = ocflRepositoryService.openRepository(getOcflRepositoryPath());
+
+        for (var transferItem : tar.getTransferItems()) {
+            // if file is already in repo, just update the metadata
+            // if file is not in repo, import it first
+            var objectId = ocflRepositoryService.getObjectIdForTransferItem(transferItem);
+            log.trace("Checking repository status for {}", transferItem);
+            log.trace("Expected objectId is {}", objectId);
+
+            if (!ocflRepository.containsObject(objectId)) {
+                log.info("Importing {} into OCFL repository, objectId is {}", transferItem, objectId);
+                ocflRepositoryService.importTransferItem(ocflRepository, transferItem);
+            }
+
+            transferItem.setAipTarEntryName(objectId);
+        }
+
+        log.debug("Saving TAR {}", tar);
+        transferItemService.save(tar);
+
+        log.debug("Closing ocfl repository at path '{}'", getOcflRepositoryPath());
+        ocflRepositoryService.closeOcflRepository(ocflRepository, getOcflRepositoryPath());
     }
 
     /**
@@ -55,8 +101,13 @@ public class OcflTarTask implements Runnable {
      *
      * Note that InterruptedException will not increase the attempt count, because interrupts
      */
-    void createArchive() {
+    void createArchive() throws InvalidTarException {
+        var tar = transferItemService.getTarById(uuid)
+            .orElseThrow(() -> new InvalidTarException(String.format("Tar with id %s cannot be found", uuid)));
+
         try {
+            importTransferItemsIntoRepository(tar);
+
             // The first step is validating the remote archive. It might not even exist,
             // in which case we upload it.
             try {
@@ -94,12 +145,14 @@ public class OcflTarTask implements Runnable {
      * @throws IOException
      */
     void transferArchive(String uuid) throws InterruptedException, IOException {
+        var path = getOcflRepositoryPath();
+
         try {
             log.info("Remote archive does not exist, or is not valid");
             deleteArchiveSilent(uuid);
 
-            log.info("Tarring directory '{}' with UUID {}", this.inboxPath, uuid);
-            tarDirectory(uuid, this.inboxPath);
+            log.info("Tarring directory '{}' with UUID {}", path, uuid);
+            tarDirectory(uuid, path);
 
             log.info("Extracting metadata from remote TAR with UUID {}", uuid);
             verifyArchive(uuid);

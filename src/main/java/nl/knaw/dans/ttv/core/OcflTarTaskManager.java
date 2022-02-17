@@ -15,7 +15,6 @@
  */
 package nl.knaw.dans.ttv.core;
 
-import edu.wisc.library.ocfl.api.OcflRepository;
 import io.dropwizard.lifecycle.Managed;
 import nl.knaw.dans.ttv.core.service.ArchiveMetadataService;
 import nl.knaw.dans.ttv.core.service.FileService;
@@ -24,6 +23,8 @@ import nl.knaw.dans.ttv.core.service.InboxWatcherFactory;
 import nl.knaw.dans.ttv.core.service.OcflRepositoryService;
 import nl.knaw.dans.ttv.core.service.TarCommandRunner;
 import nl.knaw.dans.ttv.core.service.TransferItemService;
+import nl.knaw.dans.ttv.db.Tar;
+import nl.knaw.dans.ttv.db.TransferItem;
 import org.quartz.JobBuilder;
 import org.quartz.JobDataMap;
 import org.quartz.Scheduler;
@@ -112,30 +113,12 @@ public class OcflTarTaskManager implements Managed {
         this.retryScheduler.shutdown();
     }
 
-    void verifyInbox() {
+    void verifyInbox() throws IOException {
         var tars = transferItemService.findTarsByStatusTarring();
 
         for (var tar : tars) {
-            log.debug("Checking status for TAR {}", tar);
-            var ocflRepository = ocflRepositoryService.openRepository(workDir, tar.getTarUuid());
-
-            for (var transferItem : tar.getTransferItems()) {
-                var objectId = ocflRepositoryService.getObjectIdForTransferItem(transferItem);
-                log.debug("Checking status for objectId {}", objectId);
-
-                // object not in repository yet, just import it
-                if (!ocflRepository.containsObject(objectId)) {
-                    log.warn("Object id {} has not yet been imported in the OCFL repository yet, doing so now", objectId);
-                    ocflRepositoryService.importTransferItem(ocflRepository, transferItem);
-                }
-
-                transferItem.setAipTarEntryName(objectId);
-            }
-
-            tar.setArchiveInProgress(false);
-
-            log.trace("Saving TAR {}", tar);
-            transferItemService.save(tar);
+            log.info("Resetting status for TAR {}", tar);
+            moveInboxFilesToWorkdir(tar);
         }
     }
 
@@ -144,7 +127,7 @@ public class OcflTarTaskManager implements Managed {
 
         log.info("Configuring JobDataMap for cron-based tasks");
         var jobParams = new OcflTarRetryTaskCreator.TaskRetryTaskCreatorParameters(
-            transferItemService, workDir, tarCommandRunner, archiveMetadataService, executorService, maxRetries, retrySchedule
+            transferItemService, workDir, tarCommandRunner, archiveMetadataService, executorService, maxRetries, retrySchedule, ocflRepositoryService
         );
         var jobData = new JobDataMap(Map.of("params", jobParams));
 
@@ -178,9 +161,8 @@ public class OcflTarTaskManager implements Managed {
             log.debug("Total size of inbox is {}, threshold is {}", totalSize, inboxThreshold);
 
             if (totalSize >= inboxThreshold) {
-                log.info("Threshold reached, creating OCFL repo; size of inbox is {} bytes, threshold is {} bytes", totalSize, inboxThreshold);
-                var ocflRepo = createOcflRepo(uuid);
-                moveAllInboxFilesToOcflRepo(ocflRepo, uuid);
+                log.info("Threshold reached, moving files to workdir; size of inbox is {} bytes, threshold is {} bytes", totalSize, inboxThreshold);
+                createTarArchive(uuid);
                 startTarringTask(uuid);
             }
         }
@@ -191,36 +173,40 @@ public class OcflTarTaskManager implements Managed {
 
     void startTarringTask(String uuid) {
         var repoPath = Path.of(workDir.toString(), uuid);
-        var task = new OcflTarTask(transferItemService, uuid, repoPath, tarCommandRunner, archiveMetadataService, maxRetries);
+        var task = new OcflTarTask(transferItemService, uuid, repoPath, tarCommandRunner, archiveMetadataService, ocflRepositoryService, maxRetries);
 
         log.info("Starting OcflTarTask {}", task);
         executorService.execute(task);
     }
 
-    void moveAllInboxFilesToOcflRepo(OcflRepository ocflRepository, String uuid) {
+    void createTarArchive(String uuid) throws IOException {
         // create a tar record with all COLLECTED TransferItem's in it
         var tarArchive = transferItemService.createTarArchiveWithAllMetadataExtractedTransferItems(uuid, vaultPath);
 
-        // import them into the OCFL repo
-        for (var transferItem : tarArchive.getTransferItems()) {
-            var objectId = ocflRepositoryService.importTransferItem(ocflRepository, transferItem);
-            log.debug("TransferItem {} added, objectId is {}", transferItem, objectId);
-            transferItem.setAipTarEntryName(objectId);
-        }
-
-        // persist items
-        transferItemService.save(tarArchive);
-
-        // close repository
-        ocflRepositoryService.closeOcflRepository(ocflRepository);
+        moveInboxFilesToWorkdir(tarArchive);
     }
 
-    OcflRepository createOcflRepo(String uuid) throws IOException {
-        return ocflRepositoryService.createRepository(workDir, uuid);
+    void moveInboxFilesToWorkdir(Tar tarArchive) throws IOException {
+        // move to workdir
+        var targetDirBase = workDir.resolve(tarArchive.getTarUuid());
+        var targetDirDve = targetDirBase.resolve("dve");
+
+        fileService.ensureDirectoryExists(targetDirDve);
+
+        for (var transferItem : tarArchive.getTransferItems()) {
+            var currentPath = Path.of(transferItem.getDveFilePath());
+            var targetPath = targetDirDve.resolve(currentPath.getFileName());
+
+            if (!currentPath.equals(targetPath)) {
+                log.info("Moving DVE file '{}' to workdir location '{}'", currentPath, tarArchive);
+
+                var newPath = fileService.moveFile(currentPath, targetPath);
+                transferItemService.moveTransferItem(transferItem, TransferItem.TransferStatus.TARRING, newPath);
+            }
+        }
     }
 
     Scheduler createScheduler() throws SchedulerException {
         return new StdSchedulerFactory().getScheduler();
     }
-
 }

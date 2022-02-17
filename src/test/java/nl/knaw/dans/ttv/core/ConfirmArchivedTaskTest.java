@@ -16,7 +16,7 @@
 package nl.knaw.dans.ttv.core;
 
 import nl.knaw.dans.ttv.core.service.ArchiveStatusService;
-import nl.knaw.dans.ttv.core.service.OcflRepositoryService;
+import nl.knaw.dans.ttv.core.service.FileService;
 import nl.knaw.dans.ttv.core.service.TransferItemService;
 import nl.knaw.dans.ttv.db.Tar;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,20 +31,20 @@ class ConfirmArchivedTaskTest {
 
     private TransferItemService transferItemService;
     private ArchiveStatusService archiveStatusService;
-    private OcflRepositoryService ocflRepositoryService;
+    private FileService fileService;
 
     @BeforeEach
     void setUp() {
         this.transferItemService = Mockito.mock(TransferItemService.class);
         this.archiveStatusService = Mockito.mock(ArchiveStatusService.class);
-        this.ocflRepositoryService = Mockito.mock(OcflRepositoryService.class);
+        this.fileService = Mockito.mock(FileService.class);
     }
 
     @Test
     void testCompletelyArchived() throws IOException, InterruptedException {
         var tar = new Tar("test1", Tar.TarStatus.OCFLTARCREATED, false);
         var path = Path.of("workingdir");
-        var task = new ConfirmArchivedTask(tar, transferItemService, archiveStatusService, ocflRepositoryService, path);
+        var task = new ConfirmArchivedTask(tar, transferItemService, archiveStatusService, fileService, path);
 
         var fileStatus = Map.of(
             "file1", ArchiveStatusService.FileStatus.DUAL,
@@ -57,14 +57,14 @@ class ConfirmArchivedTaskTest {
         task.run();
 
         Mockito.verify(transferItemService).updateTarToArchived(Mockito.any());
-        Mockito.verify(ocflRepositoryService).cleanupRepository(Mockito.any(), Mockito.any());
+        Mockito.verify(fileService).deleteDirectory(Path.of("workingdir", "test1"));
     }
 
     @Test
     void testPartiallyArchived() throws IOException, InterruptedException {
         var tar = new Tar("test1", Tar.TarStatus.OCFLTARCREATED, false);
         var path = Path.of("workingdir");
-        var task = new ConfirmArchivedTask(tar, transferItemService, archiveStatusService, ocflRepositoryService, path);
+        var task = new ConfirmArchivedTask(tar, transferItemService, archiveStatusService, fileService, path);
 
         var fileStatus = Map.of(
             "file1", ArchiveStatusService.FileStatus.DUAL,
@@ -77,15 +77,15 @@ class ConfirmArchivedTaskTest {
         task.run();
 
         Mockito.verify(transferItemService).resetTarToArchiving(Mockito.any());
-        Mockito.verify(ocflRepositoryService, Mockito.times(0))
-            .cleanupRepository(Mockito.any(), Mockito.any());
+        Mockito.verify(fileService, Mockito.times(0))
+            .deleteDirectory(Mockito.any());
     }
 
     @Test
     void testOnError() throws IOException, InterruptedException {
         var tar = new Tar("test1", Tar.TarStatus.OCFLTARCREATED, false);
         var path = Path.of("workingdir");
-        var task = new ConfirmArchivedTask(tar, transferItemService, archiveStatusService, ocflRepositoryService, path);
+        var task = new ConfirmArchivedTask(tar, transferItemService, archiveStatusService, fileService, path);
 
         var fileStatus = Map.of(
             "file1", ArchiveStatusService.FileStatus.DUAL,
@@ -98,15 +98,15 @@ class ConfirmArchivedTaskTest {
         task.run();
 
         Mockito.verify(transferItemService).resetTarToArchiving(Mockito.any());
-        Mockito.verify(ocflRepositoryService, Mockito.times(0))
-            .cleanupRepository(Mockito.any(), Mockito.any());
+        Mockito.verify(fileService, Mockito.times(0))
+            .deleteDirectory(Mockito.any());
     }
 
     @Test
     void testOnCleanupErrorShouldNotThrowErrors() throws IOException, InterruptedException {
         var tar = new Tar("test1", Tar.TarStatus.OCFLTARCREATED, false);
         var path = Path.of("workingdir");
-        var task = new ConfirmArchivedTask(tar, transferItemService, archiveStatusService, ocflRepositoryService, path);
+        var task = new ConfirmArchivedTask(tar, transferItemService, archiveStatusService, fileService, path);
 
         var fileStatus = Map.of(
             "file1", ArchiveStatusService.FileStatus.DUAL,
@@ -117,10 +117,10 @@ class ConfirmArchivedTaskTest {
             .thenReturn(fileStatus);
 
         Mockito.doThrow(IOException.class)
-            .when(ocflRepositoryService).cleanupRepository(Mockito.any(), Mockito.any());
+            .when(fileService).deleteDirectory(Mockito.any());
 
         task.run();
 
-        Mockito.verify(ocflRepositoryService).cleanupRepository(Mockito.any(), Mockito.any());
+        Mockito.verify(fileService).deleteDirectory(Mockito.any());
     }
 }

@@ -45,8 +45,8 @@ class TarCommandRunnerImplTest {
             "-c",
             "-f",
             "username@hostname:path/abc.dmftar",
-            "some/path/1"
-        });
+            "."
+        }, Path.of("some/path/1"));
     }
 
     @Test

@@ -41,19 +41,6 @@ class OcflRepositoryServiceImplTest {
     }
 
     @Test
-    void createRepository() throws IOException {
-        var service = new OcflRepositoryServiceImpl(fileService, ocflRepositoryFactory);
-
-        Mockito.when(fileService.createDirectory(Mockito.any()))
-            .thenReturn(Path.of("primary-dir"))
-            .thenReturn(Path.of("working-dir"));
-
-        service.createRepository(Path.of("some/path"), "uuid");
-        Mockito.verify(ocflRepositoryFactory).createRepository(Path.of("primary-dir"), Path.of("working-dir"));
-
-    }
-
-    @Test
     void importTransferItem() {
         var repository = Mockito.mock(OcflRepository.class);
         var transferItem = new TransferItem("pid", 1, 0, "path/to/dir", LocalDateTime.now(), TransferItem.TransferStatus.METADATA_EXTRACTED);
@@ -72,25 +59,12 @@ class OcflRepositoryServiceImplTest {
     }
 
     @Test
-    void closeOcflRepository() {
+    void closeOcflRepository() throws IOException {
         var repository = Mockito.mock(OcflRepository.class);
         var service = new OcflRepositoryServiceImpl(fileService, ocflRepositoryFactory);
-        service.closeOcflRepository(repository);
+        service.closeOcflRepository(repository, Path.of("test/path"));
 
         Mockito.verify(repository).close();
     }
 
-    @Test
-    void cleanupRepository() throws IOException {
-        var service = new OcflRepositoryServiceImpl(fileService, ocflRepositoryFactory);
-
-        service.cleanupRepository(Path.of("some/path/123"), "123");
-
-        Mockito.verify(fileService, Mockito.times(1))
-            .deleteDirectory(Path.of("some/path/123/123"));
-
-        Mockito.verify(fileService, Mockito.times(1))
-            .deleteDirectory(Path.of("some/path/123/123-wd"));
-
-    }
 }
