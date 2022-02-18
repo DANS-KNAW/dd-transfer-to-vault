@@ -141,6 +141,7 @@ class OcflTarTaskManagerTest {
         var scheduler = Mockito.mock(Scheduler.class);
         Mockito.when(manager.createScheduler()).thenReturn(scheduler);
 
+        // note that the second file has already been moved to the working directory and should not be moved again
         var transferItems = List.of(
             new TransferItem("pid1", 1, 0, "data/inbox/1.zip", LocalDateTime.now(), TransferItem.TransferStatus.TARRING),
             new TransferItem("pid2", 1, 0, "data/workdir/tarid/dve/2.zip", LocalDateTime.now(), TransferItem.TransferStatus.TARRING)
@@ -153,11 +154,14 @@ class OcflTarTaskManagerTest {
 
         Mockito.when(fileService.moveFile(Mockito.any(), Mockito.any()))
                 .thenReturn(Path.of("data/workdir/tarid/dve/1.zip"));
+        Mockito.when(fileService.exists(Mockito.any())).thenReturn(true, false);
 
         manager.verifyInbox();
 
         Mockito.verify(fileService).ensureDirectoryExists(Mockito.eq(Path.of("data/workdir/tarid/dve")));
         Mockito.verify(fileService).moveFile(Mockito.eq(Path.of("data/inbox/1.zip")), Mockito.eq(Path.of("data/workdir/tarid/dve/1.zip")));
+        Mockito.verify(fileService).exists(Mockito.eq(Path.of("data/inbox/1.zip")));
+        Mockito.verify(fileService).exists(Mockito.eq(Path.of("data/inbox/2.zip")));
         Mockito.verifyNoMoreInteractions(fileService);
 
         Mockito.verify(transferItemService).moveTransferItem(transferItems.get(0), TransferItem.TransferStatus.TARRING, Path.of("data/workdir/tarid/dve/1.zip"));

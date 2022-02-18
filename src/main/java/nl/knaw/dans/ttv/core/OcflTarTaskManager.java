@@ -194,14 +194,21 @@ public class OcflTarTaskManager implements Managed {
         fileService.ensureDirectoryExists(targetDirDve);
 
         for (var transferItem : tarArchive.getTransferItems()) {
-            var currentPath = Path.of(transferItem.getDveFilePath());
-            var targetPath = targetDirDve.resolve(currentPath.getFileName());
+            // the file could be in the inbox or in the working directory
+            // in the first case, it has to be moved first
+            // in the second case it does not need to be moved
+            var filename = Path.of(transferItem.getDveFilePath()).getFileName();
 
-            if (!currentPath.equals(targetPath)) {
-                log.info("Moving DVE file '{}' to workdir location '{}'", currentPath, tarArchive);
+            var expectedPath = inboxPath.resolve(filename);
+            var targetPath = targetDirDve.resolve(filename);
 
-                var newPath = fileService.moveFile(currentPath, targetPath);
-                transferItemService.moveTransferItem(transferItem, TransferItem.TransferStatus.TARRING, newPath);
+            if (fileService.exists(expectedPath)) {
+                log.info("Moving DVE file '{}' to workdir location '{}'", expectedPath, tarArchive);
+
+                transferItemService.moveTransferItem(transferItem, TransferItem.TransferStatus.TARRING, targetPath);
+                fileService.moveFile(expectedPath, targetPath);
+            } else {
+                log.warn("File '{}' cannot be found for TransferItem {}", expectedPath, transferItem);
             }
         }
     }

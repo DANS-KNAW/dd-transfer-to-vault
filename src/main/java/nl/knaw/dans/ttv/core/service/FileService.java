@@ -46,4 +46,5 @@ public interface FileService {
 
     void rejectFile(Path path, Exception exception) throws IOException;
 
+    boolean exists(Path path);
 }

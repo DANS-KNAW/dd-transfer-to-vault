@@ -103,6 +103,11 @@ public class FileServiceImpl implements FileService {
         writeExceptionToFile(targetErrorPath, exception);
     }
 
+    @Override
+    public boolean exists(Path path) {
+        return Files.exists(path);
+    }
+
     void writeExceptionToFile(Path errorReportName, Exception exception) throws FileNotFoundException {
         var writer = new PrintWriter(errorReportName.toFile());
         exception.printStackTrace(writer);

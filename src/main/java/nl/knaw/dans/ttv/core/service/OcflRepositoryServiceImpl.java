@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Objects;
+import java.util.regex.Pattern;
 
 public class OcflRepositoryServiceImpl implements OcflRepositoryService {
     private static final Logger log = LoggerFactory.getLogger(OcflRepositoryServiceImpl.class);
@@ -62,7 +63,7 @@ public class OcflRepositoryServiceImpl implements OcflRepositoryService {
 
     @Override
     public String importTransferItem(OcflRepository ocflRepository, TransferItem transferItem) {
-        var objectId = getObjectIdForTransferItem(transferItem);
+        var objectId = getObjectIdForBagId(transferItem.getBagId());
         var source = Objects.requireNonNull(Path.of(transferItem.getDveFilePath()), "dveFilePath can't be null: " + transferItem.getDveFilePath());
 
         log.debug("Importing file '{}' with objectId '{}' into OCFL repository", source, objectId);
@@ -72,8 +73,16 @@ public class OcflRepositoryServiceImpl implements OcflRepositoryService {
     }
 
     @Override
-    public String getObjectIdForTransferItem(TransferItem transferItem) {
-        var bagId = Objects.requireNonNull(transferItem.getBagId(), "Bag ID can't be null: " + transferItem.getDveFilePath());
+    public String getObjectIdForBagId(String bagId) {
+        Objects.requireNonNull(bagId, "Bag ID can't be null");
+        bagId = bagId.strip();
+        var idPattern = Pattern.compile("^urn:uuid:[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}$");
+        var matcher = idPattern.matcher(bagId);
+
+        if (!matcher.matches()) {
+            throw new IllegalArgumentException(String.format("Value %s does not match expected pattern", bagId));
+        }
+
         return bagId.substring(0, 9) + bagId.substring(9, 11) + "/" + bagId.substring(11, 13) + "/" + bagId.substring(13, 15) + "/" + bagId.substring(15);
     }
 

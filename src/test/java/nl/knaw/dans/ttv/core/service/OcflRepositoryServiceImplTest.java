@@ -28,6 +28,7 @@ import java.nio.file.Path;
 import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class OcflRepositoryServiceImplTest {
 
@@ -67,4 +68,19 @@ class OcflRepositoryServiceImplTest {
         Mockito.verify(repository).close();
     }
 
+    @Test
+    void getObjectIdForTransferItem() {
+        var service = new OcflRepositoryServiceImpl(fileService, ocflRepositoryFactory);
+
+        assertEquals("urn:uuid:b0/b8/0c/cd-504a-4167-8d80-90ee6c478b46",
+            service.getObjectIdForBagId("urn:uuid:b0b80ccd-504a-4167-8d80-90ee6c478b46"));
+
+        // spaces
+        assertEquals("urn:uuid:b0/b8/0c/cd-504a-4167-8d80-90ee6c478b46",
+            service.getObjectIdForBagId("  urn:uuid:b0b80ccd-504a-4167-8d80-90ee6c478b46  "));
+
+        assertThrows(IllegalArgumentException.class, () -> {
+            service.getObjectIdForBagId("Xrn:uuid:b0b80ccd-504a-4167-8d80-90ee6c478b46");
+        });
+    }
 }

@@ -27,7 +27,7 @@ public interface OcflRepositoryService {
 
     String importTransferItem(OcflRepository ocflRepository, TransferItem transferItem);
 
-    String getObjectIdForTransferItem(TransferItem transferItem);
+    String getObjectIdForBagId(String bagId);
 
     void closeOcflRepository(OcflRepository ocflRepository, Path path) throws IOException;
 }
