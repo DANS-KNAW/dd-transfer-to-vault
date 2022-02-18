@@ -158,7 +158,7 @@ public class OcflTarTaskManager implements Managed {
         try {
             var totalSize = fileService.getPathSize(inboxPath);
             var uuid = UUID.randomUUID().toString();
-            log.debug("Total size of inbox is {}, threshold is {}", totalSize, inboxThreshold);
+            log.debug("Total size of inbox is {} bytes, threshold is {} bytes", totalSize, inboxThreshold);
 
             if (totalSize >= inboxThreshold) {
                 log.info("Threshold reached, moving files to workdir; size of inbox is {} bytes, threshold is {} bytes", totalSize, inboxThreshold);
