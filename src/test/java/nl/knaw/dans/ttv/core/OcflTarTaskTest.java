@@ -23,8 +23,10 @@ import nl.knaw.dans.ttv.core.service.TarCommandRunner;
 import nl.knaw.dans.ttv.core.service.TransferItemService;
 import nl.knaw.dans.ttv.db.Tar;
 import nl.knaw.dans.ttv.db.TransferItem;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
 import org.mockito.Mockito;
 
 import java.io.IOException;
@@ -157,8 +159,8 @@ class OcflTarTaskTest {
     }
 
     /**
-     * Tests if the OcflTarTask::importTransferItemsIntoRepository method imports items into the repo, and only
-     * those that are not yet imported.
+     * Tests if the OcflTarTask::importTransferItemsIntoRepository method imports items into the repo, and only those that are not yet imported.
+     *
      * @throws IOException
      * @throws InterruptedException
      */
@@ -181,6 +183,18 @@ class OcflTarTaskTest {
         task.importTransferItemsIntoRepository(tar);
 
         Mockito.verify(ocflRepositoryService).importTransferItem(ocflRepository, transferItems.get(0));
+    }
+
+    @Test
+    void throwsExceptions() throws IOException, InterruptedException {
+        var uuid = UUID.fromString("82fa8591-b7e7-4efc-821e-addacb0cb364").toString();
+        var path = Path.of("data/inbox", uuid);
+        var task = new OcflTarTask(transferItemService, uuid, path, tarCommandRunner, archiveMetadataService, ocflRepositoryService, 1);
+
+        Mockito.when(transferItemService.getTarById(Mockito.any()))
+            .thenReturn(Optional.empty());
+
+        Assertions.assertThrows(InvalidTarException.class, task::createArchive);
 
     }
 
