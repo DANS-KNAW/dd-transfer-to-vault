@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Objects;
+import java.util.regex.Pattern;
 
 public class OcflRepositoryServiceImpl implements OcflRepositoryService {
     private static final Logger log = LoggerFactory.getLogger(OcflRepositoryServiceImpl.class);
@@ -39,40 +40,30 @@ public class OcflRepositoryServiceImpl implements OcflRepositoryService {
     }
 
     @Override
-    public OcflRepository createRepository(Path path, String id) throws IOException {
-        var newPath = fileService.createDirectory(Path.of(path.toString(), id));
-        var newPathWorkdir = fileService.createDirectory(Path.of(path.toString(), id + "-wd"));
+    public OcflRepository openRepository(Path path) throws IOException {
+        var workingDir = getWorkingDir(path);
 
-        log.trace("Creating OCFL repository on location '{}' and working dir '{}'", newPath, newPathWorkdir);
-        return ocflRepositoryFactory.createRepository(newPath, newPathWorkdir);
+        fileService.ensureDirectoryExists(path);
+        fileService.ensureDirectoryExists(workingDir);
+
+        log.trace("Opening OCFL repository on location '{}' and working dir '{}'", path, workingDir);
+        return ocflRepositoryFactory.createRepository(path, workingDir);
     }
 
-    @Override
-    public OcflRepository openRepository(Path path, String id) {
-        var newPath = Path.of(path.toString(), id);
-        var newPathWorkdir = Path.of(path.toString(), id + "-wd");
+    Path getWorkingDir(Path path) {
+        var parent = path.normalize().getParent();
+        var name = "." + path.getFileName() + ".wd";
 
-        try {
-            fileService.createDirectory(newPath);
-        }
-        catch (IOException e) {
-            log.debug("Creating directory failed because repository already exists");
+        if (parent == null) {
+            return Path.of(name);
         }
 
-        try {
-            fileService.createDirectory(newPathWorkdir);
-        }
-        catch (IOException e) {
-            log.debug("Creating directory failed because repository already exists");
-        }
-
-        log.trace("Opening OCFL repository on location '{}' and working dir '{}'", newPath, newPathWorkdir);
-        return ocflRepositoryFactory.createRepository(newPath, newPathWorkdir);
+        return parent.resolve(name);
     }
 
     @Override
     public String importTransferItem(OcflRepository ocflRepository, TransferItem transferItem) {
-        var objectId = getObjectIdForTransferItem(transferItem);
+        var objectId = getObjectIdForBagId(transferItem.getBagId());
         var source = Objects.requireNonNull(Path.of(transferItem.getDveFilePath()), "dveFilePath can't be null: " + transferItem.getDveFilePath());
 
         log.debug("Importing file '{}' with objectId '{}' into OCFL repository", source, objectId);
@@ -82,26 +73,24 @@ public class OcflRepositoryServiceImpl implements OcflRepositoryService {
     }
 
     @Override
-    public String getObjectIdForTransferItem(TransferItem transferItem) {
-        var bagId = Objects.requireNonNull(transferItem.getBagId(), "Bag ID can't be null: " + transferItem.getDveFilePath());
+    public String getObjectIdForBagId(String bagId) {
+        Objects.requireNonNull(bagId, "Bag ID can't be null");
+        bagId = bagId.strip();
+        var idPattern = Pattern.compile("^urn:uuid:[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}$");
+        var matcher = idPattern.matcher(bagId);
+
+        if (!matcher.matches()) {
+            throw new IllegalArgumentException(String.format("Value %s does not match expected pattern", bagId));
+        }
+
         return bagId.substring(0, 9) + bagId.substring(9, 11) + "/" + bagId.substring(11, 13) + "/" + bagId.substring(13, 15) + "/" + bagId.substring(15);
     }
 
     @Override
-    public void closeOcflRepository(OcflRepository ocflRepository) {
+    public void closeOcflRepository(OcflRepository ocflRepository, Path path) throws IOException {
+        var workingDir = getWorkingDir(path);
+        fileService.deleteDirectory(workingDir);
         ocflRepository.close();
     }
 
-    @Override
-    public void cleanupRepository(Path path, String id) throws IOException {
-        // does the inverse of createRepository
-        var newPath = Path.of(path.toString(), id);
-        var newPathWorkdir = Path.of(path.toString(), id + "-wd");
-
-        log.debug("Deleting OCFL repository '{}'", newPath);
-        fileService.deleteDirectory(newPath);
-
-        log.debug("Deleting OCFL repository workdir '{}'", newPathWorkdir);
-        fileService.deleteDirectory(newPathWorkdir);
-    }
 }

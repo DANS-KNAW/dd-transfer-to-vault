@@ -103,6 +103,11 @@ public class FileServiceImpl implements FileService {
         writeExceptionToFile(targetErrorPath, exception);
     }
 
+    @Override
+    public boolean exists(Path path) {
+        return Files.exists(path);
+    }
+
     void writeExceptionToFile(Path errorReportName, Exception exception) throws FileNotFoundException {
         var writer = new PrintWriter(errorReportName.toFile());
         exception.printStackTrace(writer);
@@ -158,13 +163,6 @@ public class FileServiceImpl implements FileService {
                 throw new RuntimeException(e);
             }
         }).reduce(0L, Long::sum);
-    }
-
-    @Override
-    public Path createDirectory(Path path) throws IOException {
-        Objects.requireNonNull(path, "path cannot be null");
-        log.trace("Creating directories '{}'", path);
-        return Files.createDirectories(path);
     }
 
     @Override

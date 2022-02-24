@@ -25,8 +25,8 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.nio.file.Path;
 
-public class MetadataTask implements Runnable {
-    private static final Logger log = LoggerFactory.getLogger(MetadataTask.class);
+public class ExtractMetadataTask implements Runnable {
+    private static final Logger log = LoggerFactory.getLogger(ExtractMetadataTask.class);
 
     private final Path filePath;
     private final Path outbox;
@@ -34,7 +34,7 @@ public class MetadataTask implements Runnable {
     private final TransferItemMetadataReader metadataReader;
     private final FileService fileService;
 
-    public MetadataTask(Path filePath, Path outbox, TransferItemService transferItemService,
+    public ExtractMetadataTask(Path filePath, Path outbox, TransferItemService transferItemService,
         TransferItemMetadataReader metadataReader, FileService fileService) {
         this.filePath = filePath;
         this.outbox = outbox;

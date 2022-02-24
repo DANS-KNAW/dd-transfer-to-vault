@@ -28,6 +28,7 @@ import java.nio.file.Path;
 import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class OcflRepositoryServiceImplTest {
 
@@ -38,19 +39,6 @@ class OcflRepositoryServiceImplTest {
     void setUp() {
         fileService = Mockito.mock(FileService.class);
         ocflRepositoryFactory = Mockito.mock(OcflRepositoryFactory.class);
-    }
-
-    @Test
-    void createRepository() throws IOException {
-        var service = new OcflRepositoryServiceImpl(fileService, ocflRepositoryFactory);
-
-        Mockito.when(fileService.createDirectory(Mockito.any()))
-            .thenReturn(Path.of("primary-dir"))
-            .thenReturn(Path.of("working-dir"));
-
-        service.createRepository(Path.of("some/path"), "uuid");
-        Mockito.verify(ocflRepositoryFactory).createRepository(Path.of("primary-dir"), Path.of("working-dir"));
-
     }
 
     @Test
@@ -72,25 +60,27 @@ class OcflRepositoryServiceImplTest {
     }
 
     @Test
-    void closeOcflRepository() {
+    void closeOcflRepository() throws IOException {
         var repository = Mockito.mock(OcflRepository.class);
         var service = new OcflRepositoryServiceImpl(fileService, ocflRepositoryFactory);
-        service.closeOcflRepository(repository);
+        service.closeOcflRepository(repository, Path.of("test/path"));
 
         Mockito.verify(repository).close();
     }
 
     @Test
-    void cleanupRepository() throws IOException {
+    void getObjectIdForTransferItem() {
         var service = new OcflRepositoryServiceImpl(fileService, ocflRepositoryFactory);
 
-        service.cleanupRepository(Path.of("some/path/123"), "123");
+        assertEquals("urn:uuid:b0/b8/0c/cd-504a-4167-8d80-90ee6c478b46",
+            service.getObjectIdForBagId("urn:uuid:b0b80ccd-504a-4167-8d80-90ee6c478b46"));
 
-        Mockito.verify(fileService, Mockito.times(1))
-            .deleteDirectory(Path.of("some/path/123/123"));
+        // spaces
+        assertEquals("urn:uuid:b0/b8/0c/cd-504a-4167-8d80-90ee6c478b46",
+            service.getObjectIdForBagId("  urn:uuid:b0b80ccd-504a-4167-8d80-90ee6c478b46  "));
 
-        Mockito.verify(fileService, Mockito.times(1))
-            .deleteDirectory(Path.of("some/path/123/123-wd"));
-
+        assertThrows(IllegalArgumentException.class, () -> {
+            service.getObjectIdForBagId("Xrn:uuid:b0b80ccd-504a-4167-8d80-90ee6c478b46");
+        });
     }
 }

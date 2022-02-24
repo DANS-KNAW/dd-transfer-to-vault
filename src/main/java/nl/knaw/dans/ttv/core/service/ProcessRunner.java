@@ -18,18 +18,9 @@ package nl.knaw.dans.ttv.core.service;
 import nl.knaw.dans.ttv.core.dto.ProcessResult;
 
 import java.io.IOException;
+import java.nio.file.Path;
 
 public interface ProcessRunner {
-    /**
-     * Executes a command; the command is split on spaces. If the command has spaces in the parameters itself, this should not be used
-     *
-     * @param command
-     * @return ProcessResult
-     * @throws IOException
-     * @throws InterruptedException
-     */
-    ProcessResult run(String command) throws IOException, InterruptedException;
-
     /**
      * Executes a command, where each item in the array is a parameter
      *
@@ -39,4 +30,15 @@ public interface ProcessRunner {
      * @throws InterruptedException
      */
     ProcessResult run(String[] command) throws IOException, InterruptedException;
+
+
+    /**
+     * Executes a command in a specific working directory
+     *
+     * @param command
+     * @return ProcessResult
+     * @throws IOException
+     * @throws InterruptedException
+     */
+    ProcessResult run(String[] command, Path workingDirectory) throws IOException, InterruptedException;
 }

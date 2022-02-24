@@ -16,6 +16,7 @@
 package nl.knaw.dans.ttv.core;
 
 import nl.knaw.dans.ttv.core.service.ArchiveMetadataService;
+import nl.knaw.dans.ttv.core.service.OcflRepositoryService;
 import nl.knaw.dans.ttv.core.service.TarCommandRunner;
 import nl.knaw.dans.ttv.core.service.TransferItemService;
 import nl.knaw.dans.ttv.db.Tar;
@@ -34,11 +35,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class TarRetryTaskCreatorTest {
+class OcflTarRetryTaskCreatorTest {
     private TransferItemService transferItemService;
     private ExecutorService executorService;
     private TarCommandRunner tarCommandRunner;
     private ArchiveMetadataService archiveMetadataService;
+    private OcflRepositoryService ocflRepositoryService;
     private Path workDir;
 
     @BeforeEach
@@ -48,6 +50,7 @@ class TarRetryTaskCreatorTest {
         this.tarCommandRunner = Mockito.mock(TarCommandRunner.class);
         this.archiveMetadataService = Mockito.mock(ArchiveMetadataService.class);
         this.workDir = Path.of("workdir");
+        this.ocflRepositoryService = Mockito.mock(OcflRepositoryService.class);
     }
 
     @Test
@@ -57,17 +60,18 @@ class TarRetryTaskCreatorTest {
             Duration.of(8, ChronoUnit.HOURS),
             Duration.of(24, ChronoUnit.HOURS)
         );
-        var params = new TarRetryTaskCreator.TaskRetryTaskCreatorParameters(
-            transferItemService, workDir, tarCommandRunner, archiveMetadataService, executorService, 5, intervals
+        var params = new OcflTarRetryTaskCreator.TaskRetryTaskCreatorParameters(
+            transferItemService, workDir, tarCommandRunner, archiveMetadataService, executorService, 5, intervals, ocflRepositoryService
         );
 
         var tar = new Tar();
         tar.setCreated(LocalDateTime.now().minus(20, ChronoUnit.HOURS));
         tar.setTransferAttempt(0);
+        tar.setTarUuid("test1");
 
         Mockito.when(transferItemService.findTarsToBeRetried()).thenReturn(List.of(tar));
 
-        var creator = new TarRetryTaskCreator();
+        var creator = new OcflTarRetryTaskCreator();
         creator.run(params);
 
         // it should have started up a task because the Tar is within range
@@ -81,17 +85,18 @@ class TarRetryTaskCreatorTest {
             Duration.of(8, ChronoUnit.HOURS),
             Duration.of(24, ChronoUnit.HOURS)
         );
-        var params = new TarRetryTaskCreator.TaskRetryTaskCreatorParameters(
-            transferItemService, workDir, tarCommandRunner, archiveMetadataService, executorService, 5, intervals
+        var params = new OcflTarRetryTaskCreator.TaskRetryTaskCreatorParameters(
+            transferItemService, workDir, tarCommandRunner, archiveMetadataService, executorService, 5, intervals, ocflRepositoryService
         );
 
         var tar = new Tar();
         tar.setCreated(LocalDateTime.now().minus(20, ChronoUnit.HOURS));
         tar.setTransferAttempt(2);
+        tar.setTarUuid("test1");
 
         Mockito.when(transferItemService.findTarsToBeRetried()).thenReturn(List.of(tar));
 
-        var creator = new TarRetryTaskCreator();
+        var creator = new OcflTarRetryTaskCreator();
         creator.run(params);
 
         // it should have started up a task because the Tar is within range
@@ -100,7 +105,7 @@ class TarRetryTaskCreatorTest {
 
     @Test
     void shouldRetry() {
-        var creator = new TarRetryTaskCreator();
+        var creator = new OcflTarRetryTaskCreator();
         var intervals = List.of(
             Duration.of(1, ChronoUnit.HOURS),
             Duration.of(8, ChronoUnit.HOURS),
@@ -110,6 +115,8 @@ class TarRetryTaskCreatorTest {
         var tar = new Tar();
         tar.setCreated(LocalDateTime.now().minus(20, ChronoUnit.HOURS));
         tar.setTransferAttempt(0);
+        tar.setTarUuid("test1");
+
         assertTrue(creator.shouldRetry(tar, intervals));
 
         tar.setTransferAttempt(1);
@@ -124,7 +131,7 @@ class TarRetryTaskCreatorTest {
 
     @Test
     void calculateThreshold() {
-        var creator = new TarRetryTaskCreator();
+        var creator = new OcflTarRetryTaskCreator();
         var intervals = List.of(
             Duration.of(1, ChronoUnit.HOURS),
             Duration.of(8, ChronoUnit.HOURS),

@@ -32,7 +32,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-class MetadataTaskTest {
+class ExtractMetadataTaskTest {
 
     private TransferItemService transferItemService;
     private TransferItemMetadataReader transferItemMetadataReader;
@@ -50,7 +50,7 @@ class MetadataTaskTest {
         var filePath = Path.of("data/inbox/doi-10-5072-dar-kxteqtv1.0.zip");
         var outbox = Path.of("data/outbox");
 
-        var task = new MetadataTask(filePath, outbox, transferItemService, transferItemMetadataReader, fileService);
+        var task = new ExtractMetadataTask(filePath, outbox, transferItemService, transferItemMetadataReader, fileService);
 
         Mockito.when(transferItemService.getTransferItemByFilenameAttributes(Mockito.any()))
             .thenReturn(Optional.of(new TransferItem("pid", 1, 0, "path", LocalDateTime.now(), TransferItem.TransferStatus.COLLECTED)));
@@ -65,7 +65,7 @@ class MetadataTaskTest {
         var filePath = Path.of("data/inbox/doi-10-5072-dar-kxteqtv1.0.zip");
         var outbox = Path.of("data/outbox");
 
-        var task = new MetadataTask(filePath, outbox, transferItemService, transferItemMetadataReader, fileService);
+        var task = new ExtractMetadataTask(filePath, outbox, transferItemService, transferItemMetadataReader, fileService);
         var transferItem = new TransferItem("pid", 1, 0, "path", LocalDateTime.now(), TransferItem.TransferStatus.COLLECTED);
 
         Mockito.when(transferItemService.getTransferItemByFilenameAttributes(Mockito.any()))
@@ -86,7 +86,7 @@ class MetadataTaskTest {
         var filePath = Path.of("data/inbox/doi-10-5072-dar-kxteqtv1.0.zip");
         var outbox = Path.of("data/outbox");
 
-        var task = new MetadataTask(filePath, outbox, transferItemService, transferItemMetadataReader, fileService);
+        var task = new ExtractMetadataTask(filePath, outbox, transferItemService, transferItemMetadataReader, fileService);
         var transferItem = new TransferItem("pid", 1, 0, "path", LocalDateTime.now(), TransferItem.TransferStatus.METADATA_EXTRACTED);
 
         Mockito.when(transferItemService.getTransferItemByFilenameAttributes(Mockito.any()))
@@ -108,7 +108,7 @@ class MetadataTaskTest {
         var filePath = Path.of("data/inbox/doi-10-5072-dar-kxteqtv1.0.zip");
         var outbox = Path.of("data/outbox");
 
-        var task = new MetadataTask(filePath, outbox, transferItemService, transferItemMetadataReader, fileService);
+        var task = new ExtractMetadataTask(filePath, outbox, transferItemService, transferItemMetadataReader, fileService);
         var transferItem = new TransferItem("pid", 1, 0, "path", LocalDateTime.now(), status);
 
         Mockito.when(transferItemService.getTransferItemByFilenameAttributes(Mockito.any()))
@@ -123,7 +123,7 @@ class MetadataTaskTest {
         var filePath = Path.of("data/inbox/doi-10-5072-dar-kxteqtv1.0.zip");
         var outbox = Path.of("data/outbox");
 
-        var task = new MetadataTask(filePath, outbox, transferItemService, transferItemMetadataReader, fileService);
+        var task = new ExtractMetadataTask(filePath, outbox, transferItemService, transferItemMetadataReader, fileService);
         var transferItem = new TransferItem("pid", 1, 0, "path", LocalDateTime.now(), status);
 
         Mockito.when(transferItemService.getTransferItemByFilenameAttributes(Mockito.any()))

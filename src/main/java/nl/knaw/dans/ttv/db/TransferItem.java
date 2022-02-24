@@ -49,8 +49,9 @@ public class TransferItem {
     private int versionMajor;
     @Column(name = "version_minor", nullable = false)
     private int versionMinor;
-    @Column(name = "creation_time")
+    @Column(name = "creation_time", nullable = false)
     private LocalDateTime creationTime;
+    
     @Column(name = "dve_file_path", nullable = false)
     private String dveFilePath;
     @Column(name = "bag_id")

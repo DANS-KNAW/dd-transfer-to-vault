@@ -47,11 +47,11 @@ public interface TransferItemService {
 
     List<Tar> stageAllTarsToBeConfirmed();
 
-    void updateConfirmArchivedResult(Tar tar, Tar.TarStatus status);
-
     Optional<TransferItem> getTransferItemByFilenameAttributes(FilenameAttributes filenameAttributes);
 
     TransferItem addMetadataAndMoveFile(TransferItem transferItem, FileContentAttributes fileContentAttributes, TransferItem.TransferStatus status, Path newPath);
+
+    Optional<Tar> getTarById(String id);
 
     Tar createTarArchiveWithAllMetadataExtractedTransferItems(String id, String vaultPath);
 

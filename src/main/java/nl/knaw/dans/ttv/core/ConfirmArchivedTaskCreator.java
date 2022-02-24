@@ -16,7 +16,7 @@
 package nl.knaw.dans.ttv.core;
 
 import nl.knaw.dans.ttv.core.service.ArchiveStatusService;
-import nl.knaw.dans.ttv.core.service.OcflRepositoryService;
+import nl.knaw.dans.ttv.core.service.FileService;
 import nl.knaw.dans.ttv.core.service.TransferItemService;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
@@ -41,13 +41,13 @@ public class ConfirmArchivedTaskCreator implements Job {
         var transferItemService = params.getTransferItemService();
         var workingDir = params.getWorkingDir();
         var archiveStatusService = params.getArchiveStatusService();
-        var ocflRepositoryService = params.getOcflRepositoryService();
+        var fileService = params.getFileService();
         var executorService = params.getExecutorService();
 
         var tars = transferItemService.stageAllTarsToBeConfirmed();
 
         for (var tar : tars) {
-            var task = new ConfirmArchivedTask(tar, transferItemService, archiveStatusService, ocflRepositoryService, workingDir);
+            var task = new ConfirmArchivedTask(tar, transferItemService, archiveStatusService, fileService, workingDir);
             log.debug("Executing task {}", task);
             executorService.execute(task);
         }
@@ -57,15 +57,15 @@ public class ConfirmArchivedTaskCreator implements Job {
         private final TransferItemService transferItemService;
         private final Path workingDir;
         private final ArchiveStatusService archiveStatusService;
-        private final OcflRepositoryService ocflRepositoryService;
+        private final FileService fileService;
         private final ExecutorService executorService;
 
         public ConfirmArchivedTaskCreatorParameters(TransferItemService transferItemService, Path workingDir, ArchiveStatusService archiveStatusService,
-            OcflRepositoryService ocflRepositoryService, ExecutorService executorService) {
+            FileService fileService, ExecutorService executorService) {
             this.transferItemService = transferItemService;
             this.workingDir = workingDir;
             this.archiveStatusService = archiveStatusService;
-            this.ocflRepositoryService = ocflRepositoryService;
+            this.fileService = fileService;
             this.executorService = executorService;
         }
 
@@ -81,8 +81,8 @@ public class ConfirmArchivedTaskCreator implements Job {
             return archiveStatusService;
         }
 
-        public OcflRepositoryService getOcflRepositoryService() {
-            return ocflRepositoryService;
+        public FileService getFileService() {
+            return fileService;
         }
 
         public ExecutorService getExecutorService() {

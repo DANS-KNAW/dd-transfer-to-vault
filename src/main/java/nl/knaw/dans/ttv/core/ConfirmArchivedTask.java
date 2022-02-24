@@ -16,7 +16,7 @@
 package nl.knaw.dans.ttv.core;
 
 import nl.knaw.dans.ttv.core.service.ArchiveStatusService;
-import nl.knaw.dans.ttv.core.service.OcflRepositoryService;
+import nl.knaw.dans.ttv.core.service.FileService;
 import nl.knaw.dans.ttv.core.service.TransferItemService;
 import nl.knaw.dans.ttv.db.Tar;
 import org.slf4j.Logger;
@@ -32,14 +32,14 @@ public class ConfirmArchivedTask implements Runnable {
     private final Tar tar;
     private final TransferItemService transferItemService;
     private final ArchiveStatusService archiveStatusService;
-    private final OcflRepositoryService ocflRepositoryService;
+    private final FileService fileService;
     private final Path workingDir;
 
-    public ConfirmArchivedTask(Tar tar, TransferItemService transferItemService, ArchiveStatusService archiveStatusService, OcflRepositoryService ocflRepositoryService,
+    public ConfirmArchivedTask(Tar tar, TransferItemService transferItemService, ArchiveStatusService archiveStatusService, FileService fileService,
         Path workingDir) {
         this.transferItemService = transferItemService;
         this.archiveStatusService = archiveStatusService;
-        this.ocflRepositoryService = ocflRepositoryService;
+        this.fileService = fileService;
         this.workingDir = workingDir;
         this.tar = tar;
     }
@@ -60,7 +60,8 @@ public class ConfirmArchivedTask implements Runnable {
 
                 try {
                     log.info("Cleaning workdir files and folders for tar archive '{}'", tarId);
-                    ocflRepositoryService.cleanupRepository(workingDir, tarId);
+                    var targetPath = workingDir.resolve(tarId);
+                    fileService.deleteDirectory(targetPath);
                 }
                 catch (IOException e) {
                     log.error("Unable to cleanup TAR OCFL repository in directory '{}/{}'", workingDir, tarId, e);

@@ -30,8 +30,8 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 
-public class MetadataTaskManager implements Managed {
-    private static final Logger log = LoggerFactory.getLogger(MetadataTaskManager.class);
+public class ExtractMetadataTaskManager implements Managed {
+    private static final Logger log = LoggerFactory.getLogger(ExtractMetadataTaskManager.class);
     private final Path inbox;
     private final Path outbox;
     private final long pollingInterval;
@@ -42,7 +42,7 @@ public class MetadataTaskManager implements Managed {
     private final InboxWatcherFactory inboxWatcherFactory;
     private InboxWatcher inboxWatcher;
 
-    public MetadataTaskManager(Path inbox, Path outbox, long pollingInterval, ExecutorService executorService,
+    public ExtractMetadataTaskManager(Path inbox, Path outbox, long pollingInterval, ExecutorService executorService,
         TransferItemService transferItemService, TransferItemMetadataReader metadataReader, FileService fileService, InboxWatcherFactory inboxWatcherFactory) {
 
         this.inbox = Objects.requireNonNull(inbox);
@@ -67,7 +67,7 @@ public class MetadataTaskManager implements Managed {
     public void onFileAdded(File file, String datastationName) {
         log.debug("Received file creation event for file '{}'", file);
         if (file.isFile() && file.getName().toLowerCase(Locale.ROOT).endsWith(".zip")) {
-            var metadataTask = new MetadataTask(
+            var metadataTask = new ExtractMetadataTask(
                 file.toPath(), outbox, transferItemService, metadataReader, fileService
             );
 

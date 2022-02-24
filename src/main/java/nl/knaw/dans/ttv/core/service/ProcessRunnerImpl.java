@@ -22,18 +22,24 @@ import org.slf4j.LoggerFactory;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.file.Path;
 
 public class ProcessRunnerImpl implements ProcessRunner {
     private static final Logger log = LoggerFactory.getLogger(ProcessRunnerImpl.class);
 
     @Override
-    public ProcessResult run(String command) throws IOException, InterruptedException {
-        return run(command.split(" "));
+    public ProcessResult run(String[] command) throws IOException, InterruptedException {
+        var processBuilder = new ProcessBuilder(command);
+        return runWithProcessBuilder(command, processBuilder);
     }
 
     @Override
-    public ProcessResult run(String[] command) throws IOException, InterruptedException {
-        var processBuilder = new ProcessBuilder(command);
+    public ProcessResult run(String[] command, Path workingDirectory) throws IOException, InterruptedException {
+        var processBuilder = new ProcessBuilder(command).directory(workingDirectory.toFile());
+        return runWithProcessBuilder(command, processBuilder);
+    }
+
+    ProcessResult runWithProcessBuilder(String[] command, ProcessBuilder processBuilder) throws IOException, InterruptedException {
         processBuilder.redirectOutput(ProcessBuilder.Redirect.PIPE);
         processBuilder.redirectErrorStream(true);
         log.trace("Waiting for command {}", String.join(" ", command));

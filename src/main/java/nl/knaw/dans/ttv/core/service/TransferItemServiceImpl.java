@@ -230,14 +230,6 @@ public class TransferItemServiceImpl implements TransferItemService {
 
     @Override
     @UnitOfWork
-    public void updateConfirmArchivedResult(Tar tar, Tar.TarStatus status) {
-        tar.setTarStatus(status);
-        tar.setConfirmCheckInProgress(false);
-        save(tar);
-    }
-
-    @Override
-    @UnitOfWork
     public Optional<TransferItem> getTransferItemByFilenameAttributes(FilenameAttributes filenameAttributes) {
         return transferItemDAO.findByDatasetPidAndVersion(
             filenameAttributes.getDatasetPid(),
@@ -271,6 +263,17 @@ public class TransferItemServiceImpl implements TransferItemService {
         transferItem.setSwordToken(fileContentAttributes.getSwordToken());
 
         return transferItemDAO.save(transferItem);
+    }
+
+    @Override
+    @UnitOfWork
+    public Optional<Tar> getTarById(String id) {
+        return tarDAO.findById(id).map(tar -> {
+            Hibernate.initialize(tar.getTarParts());
+            Hibernate.initialize(tar.getTransferItems());
+
+            return tar;
+        });
     }
 
     @Override

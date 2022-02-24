@@ -62,10 +62,13 @@ public class Tar {
         this.tarUuid = tarUuid;
         this.tarStatus = status;
         this.confirmCheckInProgress = confirmCheckInProgress;
+        this.setTransferItems(new ArrayList<>());
+        this.setTarParts(new ArrayList<>());
     }
 
     public Tar() {
-
+        this.setTransferItems(new ArrayList<>());
+        this.setTarParts(new ArrayList<>());
     }
 
     public Tar(String uuid) {

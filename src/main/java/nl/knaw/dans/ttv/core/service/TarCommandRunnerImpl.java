@@ -42,10 +42,10 @@ public class TarCommandRunnerImpl implements TarCommandRunner {
             "-c",
             "-f",
             String.format("%s:%s", getSshHost(), remotePath),
-            path.toString()
+            ".",
         };
 
-        return processRunner.run(command);
+        return processRunner.run(command, path);
     }
 
     @Override

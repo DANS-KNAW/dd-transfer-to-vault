@@ -13,21 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ttv.core.service;
+package nl.knaw.dans.ttv.core;
 
-import edu.wisc.library.ocfl.api.OcflRepository;
-import nl.knaw.dans.ttv.db.TransferItem;
+public class InvalidTarException extends Exception {
 
-import java.io.IOException;
-import java.nio.file.Path;
+    public InvalidTarException(String msg, Throwable t) {
+        super(msg, t);
+    }
 
-public interface OcflRepositoryService {
-
-    OcflRepository openRepository(Path path) throws IOException;
-
-    String importTransferItem(OcflRepository ocflRepository, TransferItem transferItem);
-
-    String getObjectIdForBagId(String bagId);
-
-    void closeOcflRepository(OcflRepository ocflRepository, Path path) throws IOException;
+    public InvalidTarException(String msg) {
+        this(msg, null);
+    }
 }

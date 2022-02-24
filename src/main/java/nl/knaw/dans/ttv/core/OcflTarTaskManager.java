@@ -15,7 +15,6 @@
  */
 package nl.knaw.dans.ttv.core;
 
-import edu.wisc.library.ocfl.api.OcflRepository;
 import io.dropwizard.lifecycle.Managed;
 import nl.knaw.dans.ttv.core.service.ArchiveMetadataService;
 import nl.knaw.dans.ttv.core.service.FileService;
@@ -24,6 +23,8 @@ import nl.knaw.dans.ttv.core.service.InboxWatcherFactory;
 import nl.knaw.dans.ttv.core.service.OcflRepositoryService;
 import nl.knaw.dans.ttv.core.service.TarCommandRunner;
 import nl.knaw.dans.ttv.core.service.TransferItemService;
+import nl.knaw.dans.ttv.db.Tar;
+import nl.knaw.dans.ttv.db.TransferItem;
 import org.quartz.JobBuilder;
 import org.quartz.JobDataMap;
 import org.quartz.Scheduler;
@@ -43,8 +44,8 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 
-public class TarTaskManager implements Managed {
-    private static final Logger log = LoggerFactory.getLogger(TarTaskManager.class);
+public class OcflTarTaskManager implements Managed {
+    private static final Logger log = LoggerFactory.getLogger(OcflTarTaskManager.class);
 
     private final ExecutorService executorService;
     private final Path inboxPath;
@@ -64,7 +65,7 @@ public class TarTaskManager implements Managed {
     private InboxWatcher inboxWatcher;
     private Scheduler retryScheduler;
 
-    public TarTaskManager(Path inboxPath, Path workDir, String vaultPath, long inboxThreshold, long pollingInterval, int maxRetries, Duration retryInterval, List<Duration> retrySchedule,
+    public OcflTarTaskManager(Path inboxPath, Path workDir, String vaultPath, long inboxThreshold, long pollingInterval, int maxRetries, Duration retryInterval, List<Duration> retrySchedule,
         ExecutorService executorService,
         InboxWatcherFactory inboxWatcherFactory, FileService fileService, OcflRepositoryService ocflRepositoryService, TransferItemService transferItemService, TarCommandRunner tarCommandRunner,
         ArchiveMetadataService archiveMetadataService) {
@@ -112,30 +113,12 @@ public class TarTaskManager implements Managed {
         this.retryScheduler.shutdown();
     }
 
-    void verifyInbox() {
+    void verifyInbox() throws IOException {
         var tars = transferItemService.findTarsByStatusTarring();
 
         for (var tar : tars) {
-            log.debug("Checking status for TAR {}", tar);
-            var ocflRepository = ocflRepositoryService.openRepository(workDir, tar.getTarUuid());
-
-            for (var transferItem : tar.getTransferItems()) {
-                var objectId = ocflRepositoryService.getObjectIdForTransferItem(transferItem);
-                log.debug("Checking status for objectId {}", objectId);
-
-                // object not in repository yet, just import it
-                if (!ocflRepository.containsObject(objectId)) {
-                    log.warn("Object id {} has not yet been imported in the OCFL repository yet, doing so now", objectId);
-                    ocflRepositoryService.importTransferItem(ocflRepository, transferItem);
-                }
-
-                transferItem.setAipTarEntryName(objectId);
-            }
-
-            tar.setArchiveInProgress(false);
-
-            log.trace("Saving TAR {}", tar);
-            transferItemService.save(tar);
+            log.info("Resetting status for TAR {}", tar);
+            moveInboxFilesToWorkdir(tar);
         }
     }
 
@@ -143,12 +126,12 @@ public class TarTaskManager implements Managed {
         this.retryScheduler = createScheduler();
 
         log.info("Configuring JobDataMap for cron-based tasks");
-        var jobParams = new TarRetryTaskCreator.TaskRetryTaskCreatorParameters(
-            transferItemService, workDir, tarCommandRunner, archiveMetadataService, executorService, maxRetries, retrySchedule
+        var jobParams = new OcflTarRetryTaskCreator.TaskRetryTaskCreatorParameters(
+            transferItemService, workDir, tarCommandRunner, archiveMetadataService, executorService, maxRetries, retrySchedule, ocflRepositoryService
         );
         var jobData = new JobDataMap(Map.of("params", jobParams));
 
-        var job = JobBuilder.newJob(TarRetryTaskCreator.class)
+        var job = JobBuilder.newJob(OcflTarRetryTaskCreator.class)
             .withIdentity("tarRetryTask", "createocfltar")
             .setJobData(jobData)
             .build();
@@ -175,12 +158,11 @@ public class TarTaskManager implements Managed {
         try {
             var totalSize = fileService.getPathSize(inboxPath);
             var uuid = UUID.randomUUID().toString();
-            log.debug("Total size of inbox is {}, threshold is {}", totalSize, inboxThreshold);
+            log.debug("Total size of inbox is {} bytes, threshold is {} bytes", totalSize, inboxThreshold);
 
             if (totalSize >= inboxThreshold) {
-                log.info("Threshold reached, creating OCFL repo; size of inbox is {} bytes, threshold is {} bytes", totalSize, inboxThreshold);
-                var ocflRepo = createOcflRepo(uuid);
-                moveAllInboxFilesToOcflRepo(ocflRepo, uuid);
+                log.info("Threshold reached, moving files to workdir; size of inbox is {} bytes, threshold is {} bytes", totalSize, inboxThreshold);
+                createTarArchive(uuid);
                 startTarringTask(uuid);
             }
         }
@@ -191,36 +173,47 @@ public class TarTaskManager implements Managed {
 
     void startTarringTask(String uuid) {
         var repoPath = Path.of(workDir.toString(), uuid);
-        var task = new TarTask(transferItemService, uuid, repoPath, tarCommandRunner, archiveMetadataService, maxRetries);
+        var task = new OcflTarTask(transferItemService, uuid, repoPath, tarCommandRunner, archiveMetadataService, ocflRepositoryService, maxRetries);
 
-        log.info("Starting TarTask {}", task);
+        log.info("Starting OcflTarTask {}", task);
         executorService.execute(task);
     }
 
-    void moveAllInboxFilesToOcflRepo(OcflRepository ocflRepository, String uuid) {
+    void createTarArchive(String uuid) throws IOException {
         // create a tar record with all COLLECTED TransferItem's in it
         var tarArchive = transferItemService.createTarArchiveWithAllMetadataExtractedTransferItems(uuid, vaultPath);
 
-        // import them into the OCFL repo
-        for (var transferItem : tarArchive.getTransferItems()) {
-            var objectId = ocflRepositoryService.importTransferItem(ocflRepository, transferItem);
-            log.debug("TransferItem {} added, objectId is {}", transferItem, objectId);
-            transferItem.setAipTarEntryName(objectId);
-        }
-
-        // persist items
-        transferItemService.save(tarArchive);
-
-        // close repository
-        ocflRepositoryService.closeOcflRepository(ocflRepository);
+        moveInboxFilesToWorkdir(tarArchive);
     }
 
-    OcflRepository createOcflRepo(String uuid) throws IOException {
-        return ocflRepositoryService.createRepository(workDir, uuid);
+    void moveInboxFilesToWorkdir(Tar tarArchive) throws IOException {
+        // move to workdir
+        var targetDirBase = workDir.resolve(tarArchive.getTarUuid());
+        var targetDirDve = targetDirBase.resolve("dve");
+
+        fileService.ensureDirectoryExists(targetDirDve);
+
+        for (var transferItem : tarArchive.getTransferItems()) {
+            // the file could be in the inbox or in the working directory
+            // in the first case, it has to be moved first
+            // in the second case it does not need to be moved
+            var filename = Path.of(transferItem.getDveFilePath()).getFileName();
+
+            var expectedPath = inboxPath.resolve(filename);
+            var targetPath = targetDirDve.resolve(filename);
+
+            if (fileService.exists(expectedPath)) {
+                log.info("Moving DVE file '{}' to workdir location '{}'", expectedPath, tarArchive);
+
+                transferItemService.moveTransferItem(transferItem, TransferItem.TransferStatus.TARRING, targetPath);
+                fileService.moveFile(expectedPath, targetPath);
+            } else {
+                log.warn("File '{}' cannot be found for TransferItem {}", expectedPath, transferItem);
+            }
+        }
     }
 
     Scheduler createScheduler() throws SchedulerException {
         return new StdSchedulerFactory().getScheduler();
     }
-
 }
