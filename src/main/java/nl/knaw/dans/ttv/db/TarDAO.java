@@ -47,6 +47,13 @@ public class TarDAO extends AbstractDAO<Tar> {
 
         query.setParameter("status", Tar.TarStatus.OCFLTARCREATED);
 
+        var items = query.list();
+
+        for (var item: items) {
+            Hibernate.initialize(item.getTransferItems());
+            Hibernate.initialize(item.getTarParts());
+        }
+
         return query.list();
     }
 

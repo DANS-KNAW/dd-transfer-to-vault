@@ -18,7 +18,9 @@ package nl.knaw.dans.ttv.core;
 import nl.knaw.dans.ttv.core.service.ArchiveStatusService;
 import nl.knaw.dans.ttv.core.service.FileService;
 import nl.knaw.dans.ttv.core.service.TransferItemService;
+import nl.knaw.dans.ttv.core.service.VaultCatalogService;
 import nl.knaw.dans.ttv.db.Tar;
+import nl.knaw.dans.ttv.openapi.ApiException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,14 +36,16 @@ public class ConfirmArchivedTask implements Runnable {
     private final ArchiveStatusService archiveStatusService;
     private final FileService fileService;
     private final Path workingDir;
+    private final VaultCatalogService vaultCatalogService;
 
     public ConfirmArchivedTask(Tar tar, TransferItemService transferItemService, ArchiveStatusService archiveStatusService, FileService fileService,
-        Path workingDir) {
+        Path workingDir, VaultCatalogService vaultCatalogService) {
         this.transferItemService = transferItemService;
         this.archiveStatusService = archiveStatusService;
         this.fileService = fileService;
         this.workingDir = workingDir;
         this.tar = tar;
+        this.vaultCatalogService = vaultCatalogService;
     }
 
     @Override
@@ -56,6 +60,7 @@ public class ConfirmArchivedTask implements Runnable {
 
             if (completelyArchived) {
                 log.info("All files in tar archive '{}' have been archived to tape", tarId);
+                vaultCatalogService.addTar(tar);
                 transferItemService.updateTarToArchived(tar);
 
                 try {
@@ -72,7 +77,7 @@ public class ConfirmArchivedTask implements Runnable {
                 transferItemService.resetTarToArchiving(tar);
             }
         }
-        catch (IOException | InterruptedException e) {
+        catch (IOException | InterruptedException | ApiException e) {
             log.error("An error occurred while checking archiving status", e);
 
             // in case it fails to check, still set the transfer status to OCFLTARCREATED and reset the checking flag

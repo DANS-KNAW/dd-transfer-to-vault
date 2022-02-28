@@ -91,6 +91,7 @@ public class CollectTask implements Runnable {
             return transferItem.get();
         }
 
+
         var filesystemAttributes = metadataReader.getFilesystemAttributes(path);
 
         log.debug("No existing TransferItem found, creating new one with attributes {} and {}",

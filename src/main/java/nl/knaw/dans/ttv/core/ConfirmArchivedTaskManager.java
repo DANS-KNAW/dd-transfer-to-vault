@@ -19,6 +19,7 @@ import io.dropwizard.lifecycle.Managed;
 import nl.knaw.dans.ttv.core.service.ArchiveStatusService;
 import nl.knaw.dans.ttv.core.service.FileService;
 import nl.knaw.dans.ttv.core.service.TransferItemService;
+import nl.knaw.dans.ttv.core.service.VaultCatalogService;
 import org.quartz.CronScheduleBuilder;
 import org.quartz.JobBuilder;
 import org.quartz.JobDataMap;
@@ -41,10 +42,12 @@ public class ConfirmArchivedTaskManager implements Managed {
     private final TransferItemService transferItemService;
     private final ArchiveStatusService archiveStatusService;
     private final FileService fileService;
+    private final VaultCatalogService vaultCatalogService;
     private Scheduler scheduler;
 
     public ConfirmArchivedTaskManager(String schedule, Path workingDir,
-        ExecutorService executorService, TransferItemService transferItemService, ArchiveStatusService archiveStatusService, FileService fileService) {
+        ExecutorService executorService, TransferItemService transferItemService, ArchiveStatusService archiveStatusService, FileService fileService,
+        VaultCatalogService vaultCatalogService) {
 
         this.workingDir = workingDir;
         this.executorService = executorService;
@@ -52,6 +55,7 @@ public class ConfirmArchivedTaskManager implements Managed {
         this.transferItemService = transferItemService;
         this.archiveStatusService = archiveStatusService;
         this.fileService = fileService;
+        this.vaultCatalogService = vaultCatalogService;
     }
 
     @Override
@@ -63,8 +67,8 @@ public class ConfirmArchivedTaskManager implements Managed {
 
         log.debug("Configuring JobDataMap for cron-based tasks");
         var params = new ConfirmArchivedTaskCreator.ConfirmArchivedTaskCreatorParameters(
-            transferItemService, workingDir, archiveStatusService, fileService, executorService
-        );
+            transferItemService, workingDir, archiveStatusService, fileService, executorService,
+            vaultCatalogService);
         var jobData = new JobDataMap(Map.of("params", params));
 
         var job = JobBuilder.newJob(ConfirmArchivedTaskCreator.class)

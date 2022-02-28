@@ -37,6 +37,7 @@ import nl.knaw.dans.ttv.core.service.ProcessRunnerImpl;
 import nl.knaw.dans.ttv.core.service.TarCommandRunnerImpl;
 import nl.knaw.dans.ttv.core.service.TransferItemMetadataReaderImpl;
 import nl.knaw.dans.ttv.core.service.TransferItemServiceImpl;
+import nl.knaw.dans.ttv.core.service.VaultCatalogServiceImpl;
 import nl.knaw.dans.ttv.db.Tar;
 import nl.knaw.dans.ttv.db.TarDAO;
 import nl.knaw.dans.ttv.db.TarPart;
@@ -90,6 +91,8 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
         );
 
         final var metadataReader = new TransferItemMetadataReaderImpl(environment.getObjectMapper(), fileService);
+
+        final var vaultCatalogService = new VaultCatalogServiceImpl("http://localhost:20100");
 
         // the Collect task, which listens to new files on the network-drive shares
         log.info("Creating CollectTaskManager");
@@ -160,7 +163,7 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
 
         log.info("Creating ConfirmArchivedTaskManager");
         final var confirmArchivedTaskManager = new ConfirmArchivedTaskManager(confirmConfig.getCron(), configuration.getCreateOcflTar().getWorkDir(),
-            confirmArchivedExecutorService, transferItemService, archiveStatusService, fileService);
+            confirmArchivedExecutorService, transferItemService, archiveStatusService, fileService, vaultCatalogService);
 
         environment.lifecycle().manage(confirmArchivedTaskManager);
     }
