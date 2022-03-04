@@ -23,8 +23,6 @@ import nl.knaw.dans.ttv.openapi.api.TransferItem;
 import nl.knaw.dans.ttv.openapi.client.TarApi;
 
 import java.nio.charset.StandardCharsets;
-import java.sql.Date;
-import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.stream.Collectors;
 
@@ -67,7 +65,7 @@ public class VaultCatalogServiceImpl implements VaultCatalogService {
             transferItem.setNbn(t.getNbn());
             transferItem.setOtherId(t.getOtherId());
             transferItem.setOtherIdVersion(t.getOtherIdVersion());
-            transferItem.setSwordClient(t.getSwordClient() == null ? "FAKE" : t.getSwordClient()); // TODO make this an actual value
+            transferItem.setSwordClient(t.getSwordClient());
             transferItem.setSwordToken(t.getSwordToken());
             transferItem.setOcflObjectPath(t.getAipTarEntryName());
             transferItem.setFilepidToLocalPath(new String(t.getPidMapping(), StandardCharsets.UTF_8));

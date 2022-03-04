@@ -25,9 +25,11 @@ public class FileContentAttributes {
     private String otherId;
     private String otherIdVersion;
     private String swordToken;
+    private String swordClient;
     private String bagChecksum;
 
-    public FileContentAttributes(String datasetVersion, String bagId, String nbn, byte[] oaiOre, byte[] pidMapping, String otherId, String otherIdVersion, String swordToken, String bagChecksum) {
+    public FileContentAttributes(String datasetVersion, String bagId, String nbn, byte[] oaiOre, byte[] pidMapping, String otherId, String otherIdVersion, String swordToken, String swordClient,
+        String bagChecksum) {
         this.datasetVersion = datasetVersion;
         this.bagId = bagId;
         this.nbn = nbn;
@@ -36,10 +38,18 @@ public class FileContentAttributes {
         this.otherId = otherId;
         this.otherIdVersion = otherIdVersion;
         this.swordToken = swordToken;
+        this.swordClient = swordClient;
         this.bagChecksum = bagChecksum;
     }
-
     public FileContentAttributes() {
+    }
+
+    public String getSwordClient() {
+        return swordClient;
+    }
+
+    public void setSwordClient(String swordClient) {
+        this.swordClient = swordClient;
     }
 
     public String getOtherId() {
@@ -115,6 +125,7 @@ public class FileContentAttributes {
             ", otherId='" + otherId + '\'' +
             ", otherIdVersion='" + otherIdVersion + '\'' +
             ", swordToken='" + swordToken + '\'' +
+            ", swordClient='" + swordClient + '\'' +
             ", bagChecksum='" + bagChecksum + '\'' +
             '}';
     }

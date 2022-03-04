@@ -261,6 +261,7 @@ public class TransferItemServiceImpl implements TransferItemService {
         transferItem.setOtherId(fileContentAttributes.getOtherId());
         transferItem.setOtherIdVersion(fileContentAttributes.getOtherIdVersion());
         transferItem.setSwordToken(fileContentAttributes.getSwordToken());
+        transferItem.setSwordClient(fileContentAttributes.getSwordClient());
 
         return transferItemDAO.save(transferItem);
     }
