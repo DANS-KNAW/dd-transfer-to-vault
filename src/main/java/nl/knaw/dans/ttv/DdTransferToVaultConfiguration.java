@@ -19,6 +19,7 @@ package nl.knaw.dans.ttv;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.dropwizard.Configuration;
 import io.dropwizard.db.DataSourceFactory;
+import io.dropwizard.health.conf.HealthConfiguration;
 import nl.knaw.dans.ttv.core.config.CollectConfiguration;
 import nl.knaw.dans.ttv.core.config.ConfirmArchivedConfiguration;
 import nl.knaw.dans.ttv.core.config.CreateOcflTarConfiguration;
@@ -33,26 +34,42 @@ public class DdTransferToVaultConfiguration extends Configuration {
     @Valid
     @NotNull
     private DataSourceFactory database = new DataSourceFactory();
-
     @Valid
     @NotNull
     private CollectConfiguration collect;
-
     @Valid
     @NotNull
     private ExtractMetadataConfiguration extractMetadata;
-
     @Valid
     @NotNull
     private CreateOcflTarConfiguration createOcflTar;
-
     @Valid
     @NotNull
     private ConfirmArchivedConfiguration confirmArchived;
-
     @Valid
     @NotNull
     private DataArchiveConfiguration dataArchive;
+    @Valid
+    @NotNull
+    @JsonProperty("health")
+    private HealthConfiguration healthConfiguration = new HealthConfiguration();
+
+    public DataSourceFactory getDatabase() {
+
+        return database;
+    }
+
+    public void setDatabase(DataSourceFactory database) {
+        this.database = database;
+    }
+
+    public HealthConfiguration getHealthConfiguration() {
+        return healthConfiguration;
+    }
+
+    public void setHealthConfiguration(final HealthConfiguration healthConfiguration) {
+        this.healthConfiguration = healthConfiguration;
+    }
 
     public DataArchiveConfiguration getDataArchive() {
         return dataArchive;
@@ -64,6 +81,10 @@ public class DdTransferToVaultConfiguration extends Configuration {
 
     public CreateOcflTarConfiguration getCreateOcflTar() {
         return createOcflTar;
+    }
+
+    public void setCreateOcflTar(CreateOcflTarConfiguration createOcflTar) {
+        this.createOcflTar = createOcflTar;
     }
 
     @JsonProperty("database")
@@ -80,8 +101,16 @@ public class DdTransferToVaultConfiguration extends Configuration {
         return collect;
     }
 
+    public void setCollect(CollectConfiguration collect) {
+        this.collect = collect;
+    }
+
     public ConfirmArchivedConfiguration getConfirmArchived() {
         return confirmArchived;
+    }
+
+    public void setConfirmArchived(ConfirmArchivedConfiguration confirmArchived) {
+        this.confirmArchived = confirmArchived;
     }
 
     public ExtractMetadataConfiguration getExtractMetadata() {

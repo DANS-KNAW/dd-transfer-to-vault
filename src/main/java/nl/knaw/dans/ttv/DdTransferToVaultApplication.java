@@ -18,6 +18,8 @@ package nl.knaw.dans.ttv;
 
 import io.dropwizard.Application;
 import io.dropwizard.db.PooledDataSourceFactory;
+import io.dropwizard.health.conf.HealthConfiguration;
+import io.dropwizard.health.core.HealthCheckBundle;
 import io.dropwizard.hibernate.HibernateBundle;
 import io.dropwizard.hibernate.UnitOfWorkAwareProxyFactory;
 import io.dropwizard.setup.Bootstrap;
@@ -26,6 +28,11 @@ import nl.knaw.dans.ttv.core.CollectTaskManager;
 import nl.knaw.dans.ttv.core.ConfirmArchivedTaskManager;
 import nl.knaw.dans.ttv.core.ExtractMetadataTaskManager;
 import nl.knaw.dans.ttv.core.OcflTarTaskManager;
+import nl.knaw.dans.ttv.core.health.DmftarHealthCheck;
+import nl.knaw.dans.ttv.core.health.FilesystemHealthCheck;
+import nl.knaw.dans.ttv.core.health.InboxHealthCheck;
+import nl.knaw.dans.ttv.core.health.PartitionHealthCheck;
+import nl.knaw.dans.ttv.core.health.SSHHealthCheck;
 import nl.knaw.dans.ttv.core.service.ArchiveMetadataServiceImpl;
 import nl.knaw.dans.ttv.core.service.ArchiveStatusService;
 import nl.knaw.dans.ttv.core.service.ArchiveStatusServiceImpl;
@@ -70,6 +77,13 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
     @Override
     public void initialize(final Bootstrap<DdTransferToVaultConfiguration> bootstrap) {
         bootstrap.addBundle(hibernateBundle);
+        bootstrap.addBundle(new HealthCheckBundle<>() {
+
+            @Override
+            protected HealthConfiguration getHealthConfiguration(final DdTransferToVaultConfiguration configuration) {
+                return configuration.getHealthConfiguration();
+            }
+        });
     }
 
     @Override
@@ -90,6 +104,38 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
         );
 
         final var metadataReader = new TransferItemMetadataReaderImpl(environment.getObjectMapper(), fileService);
+        // the process that looks for new files in the tar-inbox, and when reaching a certain combined size, tars them
+        // and sends it to the archiving service
+        final var ocflRepositoryFactory = new OcflRepositoryFactory();
+        final var ocflRepositoryService = new OcflRepositoryServiceImpl(fileService, ocflRepositoryFactory);
+        final var processRunner = new ProcessRunnerImpl();
+        final var tarCommandRunner = new TarCommandRunnerImpl(configuration.getDataArchive(), processRunner);
+        final var archiveMetadataService = new ArchiveMetadataServiceImpl(configuration.getDataArchive(), processRunner);
+        final var createTarExecutorService = configuration.getCreateOcflTar().getTaskQueue().build(environment);
+
+        environment.healthChecks().register("Inbox", new InboxHealthCheck(configuration, fileService));
+        environment.healthChecks().register("Filesystem", new FilesystemHealthCheck(configuration, fileService));
+        environment.healthChecks().register("Partitions", new PartitionHealthCheck(configuration, fileService));
+        environment.healthChecks().register("Dmftar", new DmftarHealthCheck(configuration, processRunner));
+        environment.healthChecks().register("SSH", new SSHHealthCheck(tarCommandRunner));
+
+        var isHealthy = true;
+
+        for (var entry: environment.healthChecks().runHealthChecks().entrySet()) {
+            log.info("Health check {} status: {}", entry.getKey(), entry.getValue());
+
+            if (!entry.getValue().isHealthy()) {
+                log.error("HealthCheck {} is not healthy, shutting down", entry.getKey());
+                isHealthy = false;
+            }
+        }
+
+        if (!isHealthy) {
+            log.error("Some health checks failed, shutting down");
+            System.exit(1);
+            return;
+        }
+
 
         // the Collect task, which listens to new files on the network-drive shares
         log.info("Creating CollectTaskManager");
@@ -121,15 +167,6 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
             inboxWatcherFactory
         );
         environment.lifecycle().manage(extractMetadataTaskManager);
-
-        // the process that looks for new files in the tar-inbox, and when reaching a certain combined size, tars them
-        // and sends it to the archiving service
-        final var ocflRepositoryFactory = new OcflRepositoryFactory();
-        final var ocflRepositoryService = new OcflRepositoryServiceImpl(fileService, ocflRepositoryFactory);
-        final var processRunner = new ProcessRunnerImpl();
-        final var tarCommandRunner = new TarCommandRunnerImpl(configuration.getDataArchive(), processRunner);
-        final var archiveMetadataService = new ArchiveMetadataServiceImpl(configuration.getDataArchive(), processRunner);
-        final var createTarExecutorService = configuration.getCreateOcflTar().getTaskQueue().build(environment);
 
         log.info("Creating TarTaskManager");
         final var ocflTarTaskManager = new OcflTarTaskManager(

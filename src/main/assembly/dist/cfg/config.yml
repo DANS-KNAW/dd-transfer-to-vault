@@ -35,6 +35,7 @@ createOcflTar:
   inbox: /var/opt/dans.knaw.nl/tmp/ocfl-tar/inbox
   workDir: /var/opt/dans.knaw.nl/tmp/ocfl-tar/workdirs
   inboxThreshold: 2G
+  dmftarVersion: 2.2
   # polling interval in milliseconds
   pollingInterval: 500
   maxRetries: 6
