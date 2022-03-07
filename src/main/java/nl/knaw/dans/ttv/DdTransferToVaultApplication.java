@@ -49,9 +49,7 @@ import org.slf4j.LoggerFactory;
 public class DdTransferToVaultApplication extends Application<DdTransferToVaultConfiguration> {
 
     private static final Logger log = LoggerFactory.getLogger(DdTransferToVaultApplication.class);
-    private final HibernateBundle<DdTransferToVaultConfiguration> hibernateBundle = new HibernateBundle<>(
-        TransferItem.class, Tar.class, TarPart.class
-    ) {
+    private final HibernateBundle<DdTransferToVaultConfiguration> hibernateBundle = new HibernateBundle<>(TransferItem.class, Tar.class, TarPart.class) {
 
         @Override
         public PooledDataSourceFactory getDataSourceFactory(DdTransferToVaultConfiguration configuration) {
@@ -84,28 +82,17 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
 
         final var inboxWatcherFactory = new InboxWatcherFactoryImpl();
 
-        final var transferItemService = new UnitOfWorkAwareProxyFactory(hibernateBundle).create(
-            TransferItemServiceImpl.class,
-            new Class[] { TransferItemDAO.class, TarDAO.class },
-            new Object[] { transferItemDAO, tarDAO }
-        );
+        final var transferItemService = new UnitOfWorkAwareProxyFactory(hibernateBundle).create(TransferItemServiceImpl.class, new Class[] { TransferItemDAO.class, TarDAO.class },
+            new Object[] { transferItemDAO, tarDAO });
 
         final var metadataReader = new TransferItemMetadataReaderImpl(environment.getObjectMapper(), fileService);
 
-        final var vaultCatalogService = new VaultCatalogServiceImpl("http://localhost:20100");
+        final var vaultCatalogService = new VaultCatalogServiceImpl(configuration.getConfirmArchived().getVaultServiceEndpoint());
 
         // the Collect task, which listens to new files on the network-drive shares
         log.info("Creating CollectTaskManager");
-        final var collectTaskManager = new CollectTaskManager(
-            configuration.getCollect().getInboxes(),
-            configuration.getExtractMetadata().getInbox(),
-            configuration.getCollect().getPollingInterval(),
-            collectExecutorService,
-            transferItemService,
-            metadataReader,
-            fileService,
-            inboxWatcherFactory
-        );
+        final var collectTaskManager = new CollectTaskManager(configuration.getCollect().getInboxes(), configuration.getExtractMetadata().getInbox(), configuration.getCollect().getPollingInterval(),
+            collectExecutorService, transferItemService, metadataReader, fileService, inboxWatcherFactory);
 
         environment.lifecycle().manage(collectTaskManager);
 
@@ -113,16 +100,8 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
         // and then moves it to the tar inbox
         log.info("Creating ExtractMetadataTaskManager");
         final var extractMetadataExecutorService = configuration.getExtractMetadata().getTaskQueue().build(environment);
-        final var extractMetadataTaskManager = new ExtractMetadataTaskManager(
-            configuration.getExtractMetadata().getInbox(),
-            configuration.getCreateOcflTar().getInbox(),
-            configuration.getExtractMetadata().getPollingInterval(),
-            extractMetadataExecutorService,
-            transferItemService,
-            metadataReader,
-            fileService,
-            inboxWatcherFactory
-        );
+        final var extractMetadataTaskManager = new ExtractMetadataTaskManager(configuration.getExtractMetadata().getInbox(), configuration.getCreateOcflTar().getInbox(),
+            configuration.getExtractMetadata().getPollingInterval(), extractMetadataExecutorService, transferItemService, metadataReader, fileService, inboxWatcherFactory);
         environment.lifecycle().manage(extractMetadataTaskManager);
 
         // the process that looks for new files in the tar-inbox, and when reaching a certain combined size, tars them
@@ -135,23 +114,10 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
         final var createTarExecutorService = configuration.getCreateOcflTar().getTaskQueue().build(environment);
 
         log.info("Creating TarTaskManager");
-        final var ocflTarTaskManager = new OcflTarTaskManager(
-            configuration.getCreateOcflTar().getInbox(),
-            configuration.getCreateOcflTar().getWorkDir(),
-            configuration.getDataArchive().getPath(),
-            configuration.getCreateOcflTar().getInboxThreshold(),
-            configuration.getCreateOcflTar().getPollingInterval(),
-            configuration.getCreateOcflTar().getMaxRetries(),
-            configuration.getCreateOcflTar().getRetryInterval(),
-            configuration.getCreateOcflTar().getRetrySchedule(),
-            createTarExecutorService,
-            inboxWatcherFactory,
-            fileService,
-            ocflRepositoryService,
-            transferItemService,
-            tarCommandRunner,
-            archiveMetadataService
-        );
+        final var ocflTarTaskManager = new OcflTarTaskManager(configuration.getCreateOcflTar().getInbox(), configuration.getCreateOcflTar().getWorkDir(), configuration.getDataArchive().getPath(),
+            configuration.getCreateOcflTar().getInboxThreshold(), configuration.getCreateOcflTar().getPollingInterval(), configuration.getCreateOcflTar().getMaxRetries(),
+            configuration.getCreateOcflTar().getRetryInterval(), configuration.getCreateOcflTar().getRetrySchedule(), createTarExecutorService, inboxWatcherFactory, fileService, ocflRepositoryService,
+            transferItemService, tarCommandRunner, archiveMetadataService);
 
         environment.lifecycle().manage(ocflTarTaskManager);
 
@@ -162,8 +128,8 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
         final ArchiveStatusService archiveStatusService = new ArchiveStatusServiceImpl(configuration.getDataArchive(), processRunner);
 
         log.info("Creating ConfirmArchivedTaskManager");
-        final var confirmArchivedTaskManager = new ConfirmArchivedTaskManager(confirmConfig.getCron(), configuration.getCreateOcflTar().getWorkDir(),
-            confirmArchivedExecutorService, transferItemService, archiveStatusService, fileService, vaultCatalogService);
+        final var confirmArchivedTaskManager = new ConfirmArchivedTaskManager(confirmConfig.getCron(), configuration.getCreateOcflTar().getWorkDir(), confirmArchivedExecutorService,
+            transferItemService, archiveStatusService, fileService, vaultCatalogService);
 
         environment.lifecycle().manage(confirmArchivedTaskManager);
     }
