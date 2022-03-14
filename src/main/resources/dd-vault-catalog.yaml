@@ -3,11 +3,14 @@ info:
   title: DANS Vault Catalog API
   description: Catalog service for archives
   version: 1.0.0
+servers:
+  - url: http://localhost:20100/api
+    description: Tape Archive API
 paths:
-  /api/tar:
+  /tar:
     post:
       tags:
-      - tar
+        - tar
       description: Adds a new archive
       operationId: addArchive
       requestBody:
@@ -23,18 +26,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Tar'
-  /api/tar/{id}:
+  /tar/{id}:
     get:
       tags:
-      - tar
+        - tar
       description: Get archive details
       operationId: getArchiveById
       parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
       responses:
         default:
           description: default response
@@ -44,15 +47,15 @@ paths:
                 $ref: '#/components/schemas/Tar'
     put:
       tags:
-      - tar
+        - tar
       description: Updates an existing archive
       operationId: updateArchive
       parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
       requestBody:
         content:
           application/json:
@@ -70,11 +73,11 @@ components:
   schemas:
     Tar:
       required:
-      - archival_date
-      - tar_parts
-      - tar_uuid
-      - transfer_items
-      - vault_path
+        - archival_date
+        - tar_parts
+        - tar_uuid
+        - ocfl_object_versions
+        - vault_path
       type: object
       properties:
         tar_uuid:
@@ -88,10 +91,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/TarPart'
-        transfer_items:
+        ocfl_objects:
           type: array
           items:
-            $ref: '#/components/schemas/TransferItem'
+            $ref: '#/components/schemas/OcflObject'
     TarPart:
       type: object
       properties:
@@ -101,21 +104,22 @@ components:
           type: string
         checksum_value:
           type: string
-    TransferItem:
+    OcflObject:
       required:
-      - bag_id
-      - datastation
-      - dataverse_pid
-      - dataverse_pid_version
-      - metadata
-      - nbn
-      - object_version
-      - ocfl_object_path
-      - sword_client
+        - bag_id
+        - datastation
+        - dataverse_pid
+        - dataverse_pid_version
+        - metadata
+        - nbn
+        - version_major
+        - version_minor
+        - object_version
+        - ocfl_object_path
       type: object
       properties:
         metadata:
-          type: string
+          type: object
         bag_id:
           type: string
         object_version:
@@ -128,6 +132,10 @@ components:
           type: string
         nbn:
           type: string
+        version_major:
+          type: integer
+        version_minor:
+          type: integer
         other_id:
           type: string
         other_id_version:
