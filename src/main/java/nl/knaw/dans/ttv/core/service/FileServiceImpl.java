@@ -24,6 +24,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
+import java.nio.file.FileStore;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
@@ -106,6 +107,21 @@ public class FileServiceImpl implements FileService {
     @Override
     public boolean exists(Path path) {
         return Files.exists(path);
+    }
+
+    @Override
+    public boolean canRead(Path path) {
+        return Files.isReadable(path);
+    }
+
+    @Override
+    public boolean canWrite(Path path) {
+        return Files.isWritable(path);
+    }
+
+    @Override
+    public FileStore getFileStore(Path path) throws IOException {
+        return Files.getFileStore(path);
     }
 
     void writeExceptionToFile(Path errorReportName, Exception exception) throws FileNotFoundException {

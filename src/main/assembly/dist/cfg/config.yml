@@ -1,3 +1,33 @@
+health:
+  delayedShutdownHandlerEnabled: false
+  initialOverallState: false
+  healthChecks:
+    - name: Inbox
+      critical: true
+      initialState: false
+      schedule:
+        checkInterval: 60s
+    - name: Filesystem
+      critical: true
+      initialState: false
+      schedule:
+        checkInterval: 60s
+    - name: Partitions
+      critical: true
+      initialState: false
+      schedule:
+        checkInterval: 60s
+    - name: Dmftar
+      critical: true
+      initialState: false
+      schedule:
+        checkInterval: 300s
+    - name: SSH
+      critical: false
+      initialState: false
+      schedule:
+        checkInterval: 300s
+
 collect:
   inboxes: [ ]
   # polling interval in milliseconds
@@ -35,6 +65,7 @@ createOcflTar:
   inbox: /var/opt/dans.knaw.nl/tmp/ocfl-tar/inbox
   workDir: /var/opt/dans.knaw.nl/tmp/ocfl-tar/workdirs
   inboxThreshold: 2G
+  dmftarVersion: 2.2
   # polling interval in milliseconds
   pollingInterval: 500
   maxRetries: 6

@@ -17,6 +17,7 @@ package nl.knaw.dans.ttv.core.service;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.FileStore;
 import java.nio.file.Path;
 import java.util.zip.ZipFile;
 
@@ -47,4 +48,9 @@ public interface FileService {
     void rejectFile(Path path, Exception exception) throws IOException;
 
     boolean exists(Path path);
+
+    boolean canRead(Path path);
+    boolean canWrite(Path path);
+
+    FileStore getFileStore(Path path) throws IOException;
 }
