@@ -35,33 +35,38 @@ public class CreateOcflTarConfiguration {
     @Valid
     @NotNull
     private Path workDir;
-
+    @Valid
+    @NotNull
+    private String dmftarVersion;
     @Valid
     @NotNull
     @JsonDeserialize(converter = StringByteSizeConverter.class)
     private long inboxThreshold;
-
     @Valid
     @NotNull
     @Min(1)
     private long pollingInterval;
-
     @Valid
     @NotNull
     @Min(1)
     private int maxRetries;
-
     @Valid
     @NotNull
     private Duration retryInterval;
-
     @Valid
     @NotNull
     private List<Duration> retrySchedule;
-
     @Valid
     @NotNull
     private ExecutorServiceFactory taskQueue;
+
+    public String getDmftarVersion() {
+        return dmftarVersion;
+    }
+
+    public void setDmftarVersion(String dmftarVersion) {
+        this.dmftarVersion = dmftarVersion;
+    }
 
     public Duration getRetryInterval() {
         return retryInterval;

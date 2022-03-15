@@ -65,6 +65,7 @@ class TarCommandRunnerImplTest {
         runner.verifyPackage("abc.dmftar");
         Mockito.verify(processRunner).run(new String[] {
             "ssh",
+            "-o", "StrictHostKeyChecking=no",
             "username@hostname",
             "dmftar",
             "--verify",
