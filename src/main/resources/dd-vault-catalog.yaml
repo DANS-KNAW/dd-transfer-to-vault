@@ -2,7 +2,7 @@ openapi: 3.0.1
 info:
   title: DANS Vault Catalog API
   description: Catalog service for archives
-  version: 1.0.0
+  version: 1.0.1
 servers:
   - url: http://localhost:20100/api
     description: Tape Archive API
@@ -116,6 +116,7 @@ components:
         - version_minor
         - object_version
         - ocfl_object_path
+        - export_timestamp
       type: object
       properties:
         metadata:
@@ -148,3 +149,6 @@ components:
           type: string
         filepid_to_local_path:
           type: string
+        export_timestamp:
+          type: string
+          format: date-time

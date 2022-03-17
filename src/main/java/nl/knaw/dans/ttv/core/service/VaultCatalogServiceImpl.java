@@ -45,8 +45,7 @@ public class VaultCatalogServiceImpl implements VaultCatalogService {
         var apiTar = new nl.knaw.dans.ttv.openapi.api.Tar();
 
         apiTar.setTarUuid(tar.getTarUuid());
-//        apiTar.setArchivalDate(tar.getDatetimeConfirmedArchived().atOffset(ZoneOffset.UTC));
-        apiTar.setArchivalDate(OffsetDateTime.now()); //tar.getDatetimeConfirmedArchived().atOffset(ZoneOffset.UTC));
+        apiTar.setArchivalDate(tar.getDatetimeConfirmedArchived().atOffset(ZoneOffset.UTC));
         apiTar.setVaultPath(tar.getVaultPath());
         apiTar.setTarParts(tar.getTarParts().stream().map(p -> {
             var part = new TarPart();
@@ -74,6 +73,7 @@ public class VaultCatalogServiceImpl implements VaultCatalogService {
             ocflObject.setMetadata(new String(t.getOaiOre(), StandardCharsets.UTF_8));
             ocflObject.setVersionMajor(t.getVersionMajor());
             ocflObject.setVersionMinor(t.getVersionMinor());
+            ocflObject.setExportTimestamp(t.getBagDepositDate().atOffset(ZoneOffset.UTC));
 
             return ocflObject;
         }).collect(Collectors.toList()));
