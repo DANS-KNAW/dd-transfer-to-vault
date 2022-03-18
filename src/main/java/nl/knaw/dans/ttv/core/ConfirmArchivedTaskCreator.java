@@ -18,6 +18,7 @@ package nl.knaw.dans.ttv.core;
 import nl.knaw.dans.ttv.core.service.ArchiveStatusService;
 import nl.knaw.dans.ttv.core.service.FileService;
 import nl.knaw.dans.ttv.core.service.TransferItemService;
+import nl.knaw.dans.ttv.core.service.VaultCatalogService;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.slf4j.Logger;
@@ -43,11 +44,12 @@ public class ConfirmArchivedTaskCreator implements Job {
         var archiveStatusService = params.getArchiveStatusService();
         var fileService = params.getFileService();
         var executorService = params.getExecutorService();
+        var vaultCatalogService = params.getVaultCatalogService();
 
         var tars = transferItemService.stageAllTarsToBeConfirmed();
 
         for (var tar : tars) {
-            var task = new ConfirmArchivedTask(tar, transferItemService, archiveStatusService, fileService, workingDir);
+            var task = new ConfirmArchivedTask(tar, transferItemService, archiveStatusService, fileService, workingDir, vaultCatalogService);
             log.debug("Executing task {}", task);
             executorService.execute(task);
         }
@@ -59,14 +61,20 @@ public class ConfirmArchivedTaskCreator implements Job {
         private final ArchiveStatusService archiveStatusService;
         private final FileService fileService;
         private final ExecutorService executorService;
+        private final VaultCatalogService vaultCatalogService;
 
         public ConfirmArchivedTaskCreatorParameters(TransferItemService transferItemService, Path workingDir, ArchiveStatusService archiveStatusService,
-            FileService fileService, ExecutorService executorService) {
+            FileService fileService, ExecutorService executorService, VaultCatalogService vaultCatalogService) {
             this.transferItemService = transferItemService;
             this.workingDir = workingDir;
             this.archiveStatusService = archiveStatusService;
             this.fileService = fileService;
             this.executorService = executorService;
+            this.vaultCatalogService = vaultCatalogService;
+        }
+
+        public VaultCatalogService getVaultCatalogService() {
+            return vaultCatalogService;
         }
 
         public TransferItemService getTransferItemService() {

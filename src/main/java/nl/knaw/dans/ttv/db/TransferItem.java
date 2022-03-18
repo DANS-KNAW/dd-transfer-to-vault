@@ -51,7 +51,6 @@ public class TransferItem {
     private int versionMinor;
     @Column(name = "creation_time", nullable = false)
     private LocalDateTime creationTime;
-    
     @Column(name = "dve_file_path", nullable = false)
     private String dveFilePath;
     @Column(name = "bag_id")
@@ -62,6 +61,8 @@ public class TransferItem {
     private String otherId;
     @Column(name = "other_id_version")
     private String otherIdVersion;
+    @Column(name = "sword_client")
+    private String swordClient;
     @Column(name = "sword_token")
     private String swordToken;
     @Column(name = "dataset_dv_instance")
@@ -88,11 +89,9 @@ public class TransferItem {
     private Tar aipsTar;
     @Column(name = "bag_deposit_date")
     private LocalDateTime bagDepositDate;
-
     public TransferItem() {
 
     }
-
     public TransferItem(String datasetPid, int versionMajor, int versionMinor, String dveFilePath, LocalDateTime creationTime, TransferStatus transferStatus) {
         this.datasetPid = datasetPid;
         this.versionMajor = versionMajor;
@@ -100,6 +99,14 @@ public class TransferItem {
         this.dveFilePath = dveFilePath;
         this.creationTime = creationTime;
         this.transferStatus = transferStatus;
+    }
+
+    public String getSwordClient() {
+        return swordClient;
+    }
+
+    public void setSwordClient(String swordClient) {
+        this.swordClient = swordClient;
     }
 
     public long getId() {

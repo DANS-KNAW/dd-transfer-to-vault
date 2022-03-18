@@ -254,6 +254,7 @@ class TransferItemServiceImplTest {
             "otherid",
             "otheridversion",
             "sword",
+            "sword2",
             "checksum"
         );
         var transferItem = new TransferItem();

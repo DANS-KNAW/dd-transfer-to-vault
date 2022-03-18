@@ -116,6 +116,7 @@ public class TransferItemServiceImpl implements TransferItemService {
         transferItem.setTransferStatus(TransferItem.TransferStatus.COLLECTED);
         transferItem.setQueueDate(LocalDateTime.now());
         transferItem.setDatasetDvInstance(datastationName);
+        transferItem.setBagDepositDate(LocalDateTime.now());
 
         // filename attributes
         transferItem.setDveFilePath(filenameAttributes.getDveFilePath());
@@ -261,6 +262,7 @@ public class TransferItemServiceImpl implements TransferItemService {
         transferItem.setOtherId(fileContentAttributes.getOtherId());
         transferItem.setOtherIdVersion(fileContentAttributes.getOtherIdVersion());
         transferItem.setSwordToken(fileContentAttributes.getSwordToken());
+        transferItem.setSwordClient(fileContentAttributes.getSwordClient());
 
         return transferItemDAO.save(transferItem);
     }
