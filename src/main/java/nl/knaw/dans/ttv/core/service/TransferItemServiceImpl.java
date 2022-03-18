@@ -116,6 +116,7 @@ public class TransferItemServiceImpl implements TransferItemService {
         transferItem.setTransferStatus(TransferItem.TransferStatus.COLLECTED);
         transferItem.setQueueDate(LocalDateTime.now());
         transferItem.setDatasetDvInstance(datastationName);
+        transferItem.setBagDepositDate(LocalDateTime.now());
 
         // filename attributes
         transferItem.setDveFilePath(filenameAttributes.getDveFilePath());

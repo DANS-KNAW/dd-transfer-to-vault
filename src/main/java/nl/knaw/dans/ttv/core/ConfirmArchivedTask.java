@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.time.LocalDateTime;
 import java.util.Map;
 
 public class ConfirmArchivedTask implements Runnable {
@@ -60,8 +61,8 @@ public class ConfirmArchivedTask implements Runnable {
 
             if (completelyArchived) {
                 log.info("All files in tar archive '{}' have been archived to tape", tarId);
-                vaultCatalogService.addTar(tar);
                 transferItemService.updateTarToArchived(tar);
+                vaultCatalogService.addTar(tar);
 
                 try {
                     log.info("Cleaning workdir files and folders for tar archive '{}'", tarId);
