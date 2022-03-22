@@ -17,8 +17,13 @@ health:
       initialState: false
       schedule:
         checkInterval: 60s
-    - name: Dmftar
-      critical: true
+    - name: DmftarLocal
+      critical: false
+      initialState: false
+      schedule:
+        checkInterval: 300s
+    - name: DmftarRemote
+      critical: false
       initialState: false
       schedule:
         checkInterval: 300s
@@ -65,7 +70,9 @@ createOcflTar:
   inbox: /var/opt/dans.knaw.nl/tmp/ocfl-tar/inbox
   workDir: /var/opt/dans.knaw.nl/tmp/ocfl-tar/workdirs
   inboxThreshold: 2G
-  dmftarVersion: 2.2
+  dmftarVersion:
+    local: 2.2
+    remote: 2.2
   # polling interval in milliseconds
   pollingInterval: 500
   maxRetries: 6
