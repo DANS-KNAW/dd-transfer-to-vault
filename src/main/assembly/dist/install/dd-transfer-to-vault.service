@@ -1,5 +1,5 @@
 [Unit]
-Description=${project.name} Service
+Description=Transfer to Vault Service
 
 [Service]
 ExecStart=/opt/dans.knaw.nl/dd-transfer-to-vault/bin/dd-transfer-to-vault server /etc/opt/dans.knaw.nl/dd-transfer-to-vault/config.yml

@@ -113,6 +113,7 @@ public class TransferItemMetadataReaderImpl implements TransferItemMetadataReade
             var bagId = getStringFromNode(describesNode, "dansDataVaultMetadata:Bag ID");
             var otherId = getOptionalStringFromNode(describesNode, "dansDataVaultMetadata:Other ID");
             var otherIdVersion = getOptionalStringFromNode(describesNode, "dansDataVaultMetadata:Other ID Version");
+            var swordClient = getOptionalStringFromNode(describesNode, "dansDataVaultMetadata:SWORD Client");
             var swordToken = getOptionalStringFromNode(describesNode, "dansDataVaultMetadata:SWORD Token");
 
             result.setBagChecksum(fileService.calculateChecksum(path));
@@ -124,6 +125,7 @@ public class TransferItemMetadataReaderImpl implements TransferItemMetadataReade
             result.setOtherId(otherId);
             result.setOtherIdVersion(otherIdVersion);
             result.setSwordToken(swordToken);
+            result.setSwordClient(swordClient);
         }
         catch (IOException e) {
             throw new InvalidTransferItemException(String.format("unable to read zip file contents for file '%s'", path), e);

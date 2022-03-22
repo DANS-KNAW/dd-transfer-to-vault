@@ -24,10 +24,20 @@ public class ConfirmArchivedConfiguration {
     @Valid
     @NotNull
     private String cron;
-
+    @Valid
+    @NotNull
+    private String vaultServiceEndpoint;
     @Valid
     @NotNull
     private ExecutorServiceFactory taskQueue;
+
+    public String getVaultServiceEndpoint() {
+        return vaultServiceEndpoint;
+    }
+
+    public void setVaultServiceEndpoint(String vaultServiceEndpoint) {
+        this.vaultServiceEndpoint = vaultServiceEndpoint;
+    }
 
     public String getCron() {
         return cron;
