@@ -49,7 +49,7 @@ public interface TransferItemService {
 
     Optional<TransferItem> getTransferItemByFilenameAttributes(FilenameAttributes filenameAttributes);
 
-    TransferItem addMetadataAndMoveFile(TransferItem transferItem, FileContentAttributes fileContentAttributes, TransferItem.TransferStatus status, Path newPath);
+    TransferItem addMetadata(TransferItem transferItem, FileContentAttributes fileContentAttributes);
 
     Optional<Tar> getTarById(String id);
 

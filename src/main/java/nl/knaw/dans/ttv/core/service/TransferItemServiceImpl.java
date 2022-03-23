@@ -240,17 +240,10 @@ public class TransferItemServiceImpl implements TransferItemService {
     }
 
     @Override
-    @UnitOfWork
-    public TransferItem addMetadataAndMoveFile(TransferItem transferItem, FileContentAttributes fileContentAttributes, TransferItem.TransferStatus status,
-        Path newPath) {
+    public TransferItem addMetadata(TransferItem transferItem, FileContentAttributes fileContentAttributes) {
 
         Objects.requireNonNull(transferItem, "transferItem cannot be null");
         Objects.requireNonNull(fileContentAttributes, "fileContentAttributes cannot be null");
-        Objects.requireNonNull(status, "status cannot be null");
-        Objects.requireNonNull(newPath, "newPath cannot be null");
-
-        transferItem.setTransferStatus(status);
-        transferItem.setDveFilePath(newPath.toString());
 
         // file content attributes
         transferItem.setDatasetVersion(fileContentAttributes.getDatasetVersion());
@@ -264,7 +257,7 @@ public class TransferItemServiceImpl implements TransferItemService {
         transferItem.setSwordToken(fileContentAttributes.getSwordToken());
         transferItem.setSwordClient(fileContentAttributes.getSwordClient());
 
-        return transferItemDAO.save(transferItem);
+        return transferItem;
     }
 
     @Override
