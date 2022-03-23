@@ -62,7 +62,6 @@ public class ConfirmArchivedTask implements Runnable {
             if (completelyArchived) {
                 log.info("All files in tar archive '{}' have been archived to tape", tarId);
                 transferItemService.updateTarToArchived(tar);
-                vaultCatalogService.addTar(tar);
 
                 try {
                     log.info("Cleaning workdir files and folders for tar archive '{}'", tarId);
@@ -77,6 +76,8 @@ public class ConfirmArchivedTask implements Runnable {
                 log.info("Some files in tar archive '{}' have not yet been archived to tape", tarId);
                 transferItemService.resetTarToArchiving(tar);
             }
+
+            vaultCatalogService.addOrUpdateTar(tar);
         }
         catch (IOException | InterruptedException | ApiException e) {
             log.error("An error occurred while checking archiving status", e);

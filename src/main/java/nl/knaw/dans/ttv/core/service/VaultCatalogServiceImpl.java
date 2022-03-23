@@ -21,31 +21,69 @@ import nl.knaw.dans.ttv.openapi.ApiException;
 import nl.knaw.dans.ttv.openapi.api.OcflObject;
 import nl.knaw.dans.ttv.openapi.api.TarPart;
 import nl.knaw.dans.ttv.openapi.client.TarApi;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.charset.StandardCharsets;
-import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.stream.Collectors;
 
 public class VaultCatalogServiceImpl implements VaultCatalogService {
+    private static final Logger log = LoggerFactory.getLogger(VaultCatalogServiceImpl.class);
+
     private final String baseUrl;
 
     public VaultCatalogServiceImpl(String baseUrl) {
         this.baseUrl = baseUrl;
     }
 
-    @Override
-    public void addTar(Tar tar) throws ApiException {
+    private TarApi getApi() {
         var api = new TarApi();
         api.setCustomBaseUrl(baseUrl);
+        return api;
+    }
+
+    @Override
+    public void addTar(Tar tar) throws ApiException {
+        var api = getApi();
         api.addArchive(mapTarToAPI(tar));
+    }
+
+    @Override
+    public void addOrUpdateTar(Tar tar) throws ApiException {
+        var api = getApi();
+
+        try {
+            log.info("Checking if TAR is already sent to vault");
+            var response = api.getArchiveByIdWithHttpInfo(tar.getTarUuid());
+
+            log.info("Response did not throw an error, meaning the TAR exists in the vault; updating records");
+            log.debug("API response code: {}", response.getStatusCode());
+            api.updateArchive(tar.getTarUuid(), mapTarToAPI(tar));
+        }
+        catch (ApiException e) {
+            if (e.getCode() == 404) {
+                log.info("Archive not yet present in vault, creating");
+                api.addArchive(mapTarToAPI(tar));
+            }
+            else {
+                log.error("Received unexpected error from vault", e);
+                throw e;
+            }
+        }
+
     }
 
     nl.knaw.dans.ttv.openapi.api.Tar mapTarToAPI(Tar tar) {
         var apiTar = new nl.knaw.dans.ttv.openapi.api.Tar();
 
         apiTar.setTarUuid(tar.getTarUuid());
-        apiTar.setArchivalDate(tar.getDatetimeConfirmedArchived().atOffset(ZoneOffset.UTC));
+        apiTar.setStagedDate(tar.getCreated().atOffset(ZoneOffset.UTC));
+
+        if (tar.getDatetimeConfirmedArchived() != null) {
+            apiTar.setArchivalDate(tar.getDatetimeConfirmedArchived().atOffset(ZoneOffset.UTC));
+        }
+
         apiTar.setVaultPath(tar.getVaultPath());
         apiTar.setTarParts(tar.getTarParts().stream().map(p -> {
             var part = new TarPart();
