@@ -207,7 +207,8 @@ public class OcflTarTaskManager implements Managed {
 
                 transferItemService.moveTransferItem(transferItem, TransferItem.TransferStatus.TARRING, targetPath);
                 fileService.moveFile(expectedPath, targetPath);
-            } else {
+            }
+            else {
                 log.warn("File '{}' cannot be found for TransferItem {}", expectedPath, transferItem);
             }
         }

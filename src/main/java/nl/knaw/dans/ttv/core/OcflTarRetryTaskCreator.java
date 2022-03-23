@@ -104,6 +104,7 @@ public class OcflTarRetryTaskCreator implements Job {
         private OcflRepositoryService ocflRepositoryService;
         private int maxRetries;
         private List<Duration> retryIntervals;
+
         public TaskRetryTaskCreatorParameters(TransferItemService transferItemService, Path workDir, TarCommandRunner tarCommandRunner,
             ArchiveMetadataService archiveMetadataService, ExecutorService executorService, int maxRetries, List<Duration> retryIntervals, OcflRepositoryService ocflRepositoryService) {
             this.transferItemService = transferItemService;

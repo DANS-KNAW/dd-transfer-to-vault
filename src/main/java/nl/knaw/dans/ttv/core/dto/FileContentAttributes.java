@@ -41,6 +41,7 @@ public class FileContentAttributes {
         this.swordClient = swordClient;
         this.bagChecksum = bagChecksum;
     }
+
     public FileContentAttributes() {
     }
 
