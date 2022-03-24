@@ -24,19 +24,19 @@ import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
-class DmftarHealthCheckTest {
+class LocalDmftarHealthCheckTest {
 
     @Test
     void testCommandExists() throws Exception {
         var processRunner = Mockito.mock(ProcessRunner.class);
         var config = new DdTransferToVaultConfiguration();
         config.setCreateOcflTar(new CreateOcflTarConfiguration());
-        config.getCreateOcflTar().setDmftarVersion("2.0");
+        config.getCreateOcflTar().setDmftarVersion(new CreateOcflTarConfiguration.DmfTarVersion("2.0", "2.0"));
 
         Mockito.when(processRunner.run(Mockito.any()))
             .thenReturn(new ProcessResult(0, "dmftar version 2.0\ncopyright"));
 
-        var result = new DmftarHealthCheck(config, processRunner).check();
+        var result = new LocalDmftarHealthCheck(config, processRunner).check();
 
         assertEquals(HealthCheck.Result.healthy(), result);
     }
@@ -46,12 +46,12 @@ class DmftarHealthCheckTest {
         var processRunner = Mockito.mock(ProcessRunner.class);
         var config = new DdTransferToVaultConfiguration();
         config.setCreateOcflTar(new CreateOcflTarConfiguration());
-        config.getCreateOcflTar().setDmftarVersion("2.0");
+        config.getCreateOcflTar().setDmftarVersion(new CreateOcflTarConfiguration.DmfTarVersion("2.0", "2.0"));
 
         Mockito.when(processRunner.run(Mockito.any()))
             .thenReturn(new ProcessResult(255, "dmftar version 2.0\ncopyright"));
 
-        var result = new DmftarHealthCheck(config, processRunner).check();
+        var result = new LocalDmftarHealthCheck(config, processRunner).check();
 
         assertFalse(result.isHealthy());
     }
@@ -61,12 +61,12 @@ class DmftarHealthCheckTest {
         var processRunner = Mockito.mock(ProcessRunner.class);
         var config = new DdTransferToVaultConfiguration();
         config.setCreateOcflTar(new CreateOcflTarConfiguration());
-        config.getCreateOcflTar().setDmftarVersion("3.0");
+        config.getCreateOcflTar().setDmftarVersion(new CreateOcflTarConfiguration.DmfTarVersion("3.0", "3.0"));
 
         Mockito.when(processRunner.run(Mockito.any()))
             .thenReturn(new ProcessResult(0, "dmftar version 2.0\ncopyright"));
 
-        var result = new DmftarHealthCheck(config, processRunner).check();
+        var result = new LocalDmftarHealthCheck(config, processRunner).check();
 
         assertFalse(result.isHealthy());
     }

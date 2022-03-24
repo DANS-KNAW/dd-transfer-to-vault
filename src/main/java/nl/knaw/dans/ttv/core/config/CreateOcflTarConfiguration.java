@@ -37,7 +37,7 @@ public class CreateOcflTarConfiguration {
     private Path workDir;
     @Valid
     @NotNull
-    private String dmftarVersion;
+    private DmfTarVersion dmftarVersion;
     @Valid
     @NotNull
     @JsonDeserialize(converter = StringByteSizeConverter.class)
@@ -60,11 +60,11 @@ public class CreateOcflTarConfiguration {
     @NotNull
     private ExecutorServiceFactory taskQueue;
 
-    public String getDmftarVersion() {
+    public DmfTarVersion getDmftarVersion() {
         return dmftarVersion;
     }
 
-    public void setDmftarVersion(String dmftarVersion) {
+    public void setDmftarVersion(DmfTarVersion dmftarVersion) {
         this.dmftarVersion = dmftarVersion;
     }
 
@@ -130,5 +130,36 @@ public class CreateOcflTarConfiguration {
 
     public void setTaskQueue(ExecutorServiceFactory taskQueue) {
         this.taskQueue = taskQueue;
+    }
+
+    public static class DmfTarVersion {
+        @NotNull
+        private String local;
+        @NotNull
+        private String remote;
+
+        public DmfTarVersion() {
+
+        }
+        public DmfTarVersion(String local, String remote) {
+            this.local = local;
+            this.remote = remote;
+        }
+
+        public String getLocal() {
+            return local;
+        }
+
+        public void setLocal(String local) {
+            this.local = local;
+        }
+
+        public String getRemote() {
+            return remote;
+        }
+
+        public void setRemote(String remote) {
+            this.remote = remote;
+        }
     }
 }
