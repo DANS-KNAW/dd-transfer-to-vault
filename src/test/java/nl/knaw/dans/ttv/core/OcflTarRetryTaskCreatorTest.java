@@ -19,6 +19,7 @@ import nl.knaw.dans.ttv.core.service.ArchiveMetadataService;
 import nl.knaw.dans.ttv.core.service.OcflRepositoryService;
 import nl.knaw.dans.ttv.core.service.TarCommandRunner;
 import nl.knaw.dans.ttv.core.service.TransferItemService;
+import nl.knaw.dans.ttv.core.service.VaultCatalogService;
 import nl.knaw.dans.ttv.db.Tar;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -41,6 +42,7 @@ class OcflTarRetryTaskCreatorTest {
     private TarCommandRunner tarCommandRunner;
     private ArchiveMetadataService archiveMetadataService;
     private OcflRepositoryService ocflRepositoryService;
+    private VaultCatalogService vaultCatalogService;
     private Path workDir;
 
     @BeforeEach
@@ -51,6 +53,7 @@ class OcflTarRetryTaskCreatorTest {
         this.archiveMetadataService = Mockito.mock(ArchiveMetadataService.class);
         this.workDir = Path.of("workdir");
         this.ocflRepositoryService = Mockito.mock(OcflRepositoryService.class);
+        this.vaultCatalogService = Mockito.mock(VaultCatalogService.class);
     }
 
     @Test
@@ -61,8 +64,8 @@ class OcflTarRetryTaskCreatorTest {
             Duration.of(24, ChronoUnit.HOURS)
         );
         var params = new OcflTarRetryTaskCreator.TaskRetryTaskCreatorParameters(
-            transferItemService, workDir, tarCommandRunner, archiveMetadataService, executorService, 5, intervals, ocflRepositoryService
-        );
+            transferItemService, workDir, tarCommandRunner, archiveMetadataService, executorService, 5, intervals, ocflRepositoryService,
+            vaultCatalogService);
 
         var tar = new Tar();
         tar.setCreated(LocalDateTime.now().minus(20, ChronoUnit.HOURS));
@@ -86,8 +89,8 @@ class OcflTarRetryTaskCreatorTest {
             Duration.of(24, ChronoUnit.HOURS)
         );
         var params = new OcflTarRetryTaskCreator.TaskRetryTaskCreatorParameters(
-            transferItemService, workDir, tarCommandRunner, archiveMetadataService, executorService, 5, intervals, ocflRepositoryService
-        );
+            transferItemService, workDir, tarCommandRunner, archiveMetadataService, executorService, 5, intervals, ocflRepositoryService,
+            vaultCatalogService);
 
         var tar = new Tar();
         tar.setCreated(LocalDateTime.now().minus(20, ChronoUnit.HOURS));
