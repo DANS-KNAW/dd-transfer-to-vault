@@ -19,6 +19,7 @@ import nl.knaw.dans.ttv.core.service.ArchiveMetadataService;
 import nl.knaw.dans.ttv.core.service.OcflRepositoryService;
 import nl.knaw.dans.ttv.core.service.TarCommandRunner;
 import nl.knaw.dans.ttv.core.service.TransferItemService;
+import nl.knaw.dans.ttv.core.service.VaultCatalogService;
 import nl.knaw.dans.ttv.db.Tar;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
@@ -51,6 +52,7 @@ public class OcflTarRetryTaskCreator implements Job {
         var maxRetries = params.getMaxRetries();
         var retryIntervals = params.getRetryIntervals();
         var ocflRepositoryService = params.getOcflRepositoryService();
+        var vaultCatalogService = params.getVaultCatalogService();
 
         // get a list of Tars that need to be retried
         var tars = transferItemService.findTarsToBeRetried();
@@ -69,7 +71,7 @@ public class OcflTarRetryTaskCreator implements Job {
 
             // check if tar should be retried again
             var task = new OcflTarTask(transferItemService, tar.getTarUuid(),
-                repoPath, tarCommandRunner, archiveMetadataService, ocflRepositoryService, maxRetries);
+                repoPath, tarCommandRunner, archiveMetadataService, ocflRepositoryService, vaultCatalogService, maxRetries);
 
             log.info("Starting TarTask {}", task);
             executorService.execute(task);
@@ -102,11 +104,12 @@ public class OcflTarRetryTaskCreator implements Job {
         private ArchiveMetadataService archiveMetadataService;
         private ExecutorService executorService;
         private OcflRepositoryService ocflRepositoryService;
+        private VaultCatalogService vaultCatalogService;
         private int maxRetries;
         private List<Duration> retryIntervals;
-
         public TaskRetryTaskCreatorParameters(TransferItemService transferItemService, Path workDir, TarCommandRunner tarCommandRunner,
-            ArchiveMetadataService archiveMetadataService, ExecutorService executorService, int maxRetries, List<Duration> retryIntervals, OcflRepositoryService ocflRepositoryService) {
+            ArchiveMetadataService archiveMetadataService, ExecutorService executorService, int maxRetries, List<Duration> retryIntervals, OcflRepositoryService ocflRepositoryService,
+            VaultCatalogService vaultCatalogService) {
             this.transferItemService = transferItemService;
             this.workDir = workDir;
             this.tarCommandRunner = tarCommandRunner;
@@ -115,6 +118,15 @@ public class OcflTarRetryTaskCreator implements Job {
             this.maxRetries = maxRetries;
             this.retryIntervals = retryIntervals;
             this.ocflRepositoryService = ocflRepositoryService;
+            this.vaultCatalogService = vaultCatalogService;
+        }
+
+        public VaultCatalogService getVaultCatalogService() {
+            return vaultCatalogService;
+        }
+
+        public void setVaultCatalogService(VaultCatalogService vaultCatalogService) {
+            this.vaultCatalogService = vaultCatalogService;
         }
 
         public OcflRepositoryService getOcflRepositoryService() {

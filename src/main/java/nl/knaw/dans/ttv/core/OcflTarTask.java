@@ -20,7 +20,9 @@ import nl.knaw.dans.ttv.core.service.ArchiveMetadataService;
 import nl.knaw.dans.ttv.core.service.OcflRepositoryService;
 import nl.knaw.dans.ttv.core.service.TarCommandRunner;
 import nl.knaw.dans.ttv.core.service.TransferItemService;
+import nl.knaw.dans.ttv.core.service.VaultCatalogService;
 import nl.knaw.dans.ttv.db.Tar;
+import nl.knaw.dans.ttv.openapi.ApiException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,16 +38,18 @@ public class OcflTarTask implements Runnable {
     private final TarCommandRunner tarCommandRunner;
     private final ArchiveMetadataService archiveMetadataService;
     private final OcflRepositoryService ocflRepositoryService;
+    private final VaultCatalogService vaultCatalogService;
     private final int maxRetries;
 
     public OcflTarTask(TransferItemService transferItemService, String uuid, Path inboxPath, TarCommandRunner tarCommandRunner, ArchiveMetadataService archiveMetadataService,
-        OcflRepositoryService ocflRepositoryService, int maxRetries) {
+        OcflRepositoryService ocflRepositoryService, VaultCatalogService vaultCatalogService, int maxRetries) {
         this.transferItemService = transferItemService;
         this.inboxPath = inboxPath;
         this.uuid = uuid;
         this.tarCommandRunner = tarCommandRunner;
         this.archiveMetadataService = archiveMetadataService;
         this.ocflRepositoryService = ocflRepositoryService;
+        this.vaultCatalogService = vaultCatalogService;
         this.maxRetries = maxRetries;
     }
 
@@ -125,6 +129,9 @@ public class OcflTarTask implements Runnable {
 
             log.info("Extracted metadata for remote TAR with uuid {}: {}", uuid, metadata);
             transferItemService.updateTarToCreated(uuid, metadata);
+
+            log.info("Adding TAR to vault catalog with uuid {}", uuid);
+            vaultCatalogService.addOrUpdateTar(tar);
         }
         catch (IOException e) {
             log.error("Unable to transfer archive, marking for retry", e);
@@ -133,6 +140,9 @@ public class OcflTarTask implements Runnable {
         catch (InterruptedException e) {
             log.error("Unable to transfer archive due to InterruptedException", e);
             transferItemService.setArchiveAttemptFailed(uuid, false, maxRetries);
+        }
+        catch (ApiException e) {
+            log.error("Unable to update vault catalog", e);
         }
     }
 
