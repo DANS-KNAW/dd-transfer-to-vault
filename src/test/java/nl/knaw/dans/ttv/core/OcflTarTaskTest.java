@@ -21,12 +21,13 @@ import nl.knaw.dans.ttv.core.service.ArchiveMetadataService;
 import nl.knaw.dans.ttv.core.service.OcflRepositoryService;
 import nl.knaw.dans.ttv.core.service.TarCommandRunner;
 import nl.knaw.dans.ttv.core.service.TransferItemService;
+import nl.knaw.dans.ttv.core.service.VaultCatalogService;
 import nl.knaw.dans.ttv.db.Tar;
 import nl.knaw.dans.ttv.db.TransferItem;
+import nl.knaw.dans.ttv.openapi.ApiException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
 import org.mockito.Mockito;
 
 import java.io.IOException;
@@ -42,6 +43,7 @@ class OcflTarTaskTest {
     private TarCommandRunner tarCommandRunner;
     private ArchiveMetadataService archiveMetadataService;
     private OcflRepositoryService ocflRepositoryService;
+    private VaultCatalogService vaultCatalogService;
 
     @BeforeEach
     void setUp() {
@@ -49,14 +51,15 @@ class OcflTarTaskTest {
         this.tarCommandRunner = Mockito.mock(TarCommandRunner.class);
         this.archiveMetadataService = Mockito.mock(ArchiveMetadataService.class);
         this.ocflRepositoryService = Mockito.mock(OcflRepositoryService.class);
+        this.vaultCatalogService = Mockito.mock(VaultCatalogService.class);
 
     }
 
     @Test
-    void run() throws IOException, InterruptedException {
+    void run() throws IOException, InterruptedException, ApiException {
         var uuid = UUID.fromString("82fa8591-b7e7-4efc-821e-addacb0cb364").toString();
         var path = Path.of("data/inbox", uuid);
-        var task = new OcflTarTask(transferItemService, uuid, path, tarCommandRunner, archiveMetadataService, ocflRepositoryService, 1);
+        var task = new OcflTarTask(transferItemService, uuid, path, tarCommandRunner, archiveMetadataService, ocflRepositoryService, vaultCatalogService, 1);
         var result = new ProcessResult(0, "OK");
         var tar = new Tar();
         Mockito.when(transferItemService.getTarById(Mockito.any()))
@@ -79,13 +82,14 @@ class OcflTarTaskTest {
 
         Mockito.verify(transferItemService).updateTarToCreated(Mockito.eq(uuid), Mockito.any());
 
+        Mockito.verify(vaultCatalogService).addOrUpdateTar(Mockito.any());
     }
 
     @Test
     void runWithExistingValidRemoteArchive() throws IOException, InterruptedException {
         var uuid = UUID.fromString("82fa8591-b7e7-4efc-821e-addacb0cb364").toString();
         var path = Path.of("data/inbox", uuid);
-        var task = new OcflTarTask(transferItemService, uuid, path, tarCommandRunner, archiveMetadataService, ocflRepositoryService, 1);
+        var task = new OcflTarTask(transferItemService, uuid, path, tarCommandRunner, archiveMetadataService, ocflRepositoryService, vaultCatalogService, 1);
         var tar = new Tar();
         Mockito.when(transferItemService.getTarById(Mockito.any()))
             .thenReturn(Optional.of(tar));
@@ -110,7 +114,7 @@ class OcflTarTaskTest {
     void runWithExistingInvalidRemoteArchive() throws IOException, InterruptedException {
         var uuid = UUID.fromString("82fa8591-b7e7-4efc-821e-addacb0cb364").toString();
         var path = Path.of("data/inbox", uuid);
-        var task = new OcflTarTask(transferItemService, uuid, path, tarCommandRunner, archiveMetadataService, ocflRepositoryService, 1);
+        var task = new OcflTarTask(transferItemService, uuid, path, tarCommandRunner, archiveMetadataService, ocflRepositoryService, vaultCatalogService, 1);
         var tar = new Tar();
         Mockito.when(transferItemService.getTarById(Mockito.any()))
             .thenReturn(Optional.of(tar));
@@ -136,7 +140,7 @@ class OcflTarTaskTest {
     void runWithFailedCommand() throws IOException, InterruptedException {
         var uuid = UUID.fromString("82fa8591-b7e7-4efc-821e-addacb0cb364").toString();
         var path = Path.of("data/inbox", uuid);
-        var task = new OcflTarTask(transferItemService, uuid, path, tarCommandRunner, archiveMetadataService, ocflRepositoryService, 1);
+        var task = new OcflTarTask(transferItemService, uuid, path, tarCommandRunner, archiveMetadataService, ocflRepositoryService, vaultCatalogService, 1);
         var tar = new Tar();
         Mockito.when(transferItemService.getTarById(Mockito.any()))
             .thenReturn(Optional.of(tar));
@@ -168,7 +172,7 @@ class OcflTarTaskTest {
     void doesInitialImport() throws IOException, InterruptedException {
         var uuid = UUID.fromString("82fa8591-b7e7-4efc-821e-addacb0cb364").toString();
         var path = Path.of("data/inbox", uuid);
-        var task = new OcflTarTask(transferItemService, uuid, path, tarCommandRunner, archiveMetadataService, ocflRepositoryService, 1);
+        var task = new OcflTarTask(transferItemService, uuid, path, tarCommandRunner, archiveMetadataService, ocflRepositoryService, vaultCatalogService, 1);
         var tar = new Tar();
 
         var ocflRepository = Mockito.mock(OcflRepository.class);
@@ -189,7 +193,7 @@ class OcflTarTaskTest {
     void throwsExceptions() throws IOException, InterruptedException {
         var uuid = UUID.fromString("82fa8591-b7e7-4efc-821e-addacb0cb364").toString();
         var path = Path.of("data/inbox", uuid);
-        var task = new OcflTarTask(transferItemService, uuid, path, tarCommandRunner, archiveMetadataService, ocflRepositoryService, 1);
+        var task = new OcflTarTask(transferItemService, uuid, path, tarCommandRunner, archiveMetadataService, ocflRepositoryService, vaultCatalogService, 1);
 
         Mockito.when(transferItemService.getTarById(Mockito.any()))
             .thenReturn(Optional.empty());

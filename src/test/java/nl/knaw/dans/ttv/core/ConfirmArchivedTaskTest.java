@@ -21,6 +21,7 @@ import nl.knaw.dans.ttv.core.service.TransferItemService;
 import nl.knaw.dans.ttv.core.service.VaultCatalogService;
 import nl.knaw.dans.ttv.core.service.VaultCatalogServiceImpl;
 import nl.knaw.dans.ttv.db.Tar;
+import nl.knaw.dans.ttv.openapi.ApiException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -45,7 +46,7 @@ class ConfirmArchivedTaskTest {
     }
 
     @Test
-    void testCompletelyArchived() throws IOException, InterruptedException {
+    void testCompletelyArchived() throws IOException, InterruptedException, ApiException {
         var tar = new Tar("test1", Tar.TarStatus.OCFLTARCREATED, false);
         var path = Path.of("workingdir");
         var task = new ConfirmArchivedTask(tar, transferItemService, archiveStatusService, fileService, path, vaultCatalogService);
@@ -62,6 +63,7 @@ class ConfirmArchivedTaskTest {
 
         Mockito.verify(transferItemService).updateTarToArchived(Mockito.any());
         Mockito.verify(fileService).deleteDirectory(Path.of("workingdir", "test1"));
+        Mockito.verify(vaultCatalogService).addOrUpdateTar(Mockito.any());
     }
 
     @Test
@@ -83,6 +85,7 @@ class ConfirmArchivedTaskTest {
         Mockito.verify(transferItemService).resetTarToArchiving(Mockito.any());
         Mockito.verify(fileService, Mockito.times(0))
             .deleteDirectory(Mockito.any());
+        Mockito.verifyNoInteractions(vaultCatalogService);
     }
 
     @Test
@@ -90,11 +93,6 @@ class ConfirmArchivedTaskTest {
         var tar = new Tar("test1", Tar.TarStatus.OCFLTARCREATED, false);
         var path = Path.of("workingdir");
         var task = new ConfirmArchivedTask(tar, transferItemService, archiveStatusService, fileService, path, vaultCatalogService);
-
-        var fileStatus = Map.of(
-            "file1", ArchiveStatusService.FileStatus.DUAL,
-            "file2", ArchiveStatusService.FileStatus.REGULAR
-        );
 
         Mockito.when(archiveStatusService.getFileStatus("test1"))
             .thenThrow(IOException.class);
@@ -104,6 +102,8 @@ class ConfirmArchivedTaskTest {
         Mockito.verify(transferItemService).resetTarToArchiving(Mockito.any());
         Mockito.verify(fileService, Mockito.times(0))
             .deleteDirectory(Mockito.any());
+
+        Mockito.verifyNoInteractions(vaultCatalogService);
     }
 
     @Test
