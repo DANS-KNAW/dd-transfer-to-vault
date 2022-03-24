@@ -50,6 +50,7 @@ public interface FileService {
     boolean exists(Path path);
 
     boolean canRead(Path path);
+
     boolean canWrite(Path path);
 
     FileStore getFileStore(Path path) throws IOException;

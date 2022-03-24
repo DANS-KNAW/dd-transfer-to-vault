@@ -31,7 +31,6 @@ public interface ProcessRunner {
      */
     ProcessResult run(String[] command) throws IOException, InterruptedException;
 
-
     /**
      * Executes a command in a specific working directory
      *

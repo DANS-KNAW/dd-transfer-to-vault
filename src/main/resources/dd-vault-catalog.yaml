@@ -73,7 +73,7 @@ components:
   schemas:
     Tar:
       required:
-        - archival_date
+        - staged_date
         - tar_parts
         - tar_uuid
         - ocfl_object_versions
@@ -84,6 +84,9 @@ components:
           type: string
         vault_path:
           type: string
+        staged_date:
+          type: string
+          format: date-time
         archival_date:
           type: string
           format: date-time

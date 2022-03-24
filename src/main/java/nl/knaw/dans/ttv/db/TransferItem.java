@@ -89,9 +89,11 @@ public class TransferItem {
     private Tar aipsTar;
     @Column(name = "bag_deposit_date")
     private LocalDateTime bagDepositDate;
+
     public TransferItem() {
 
     }
+
     public TransferItem(String datasetPid, int versionMajor, int versionMinor, String dveFilePath, LocalDateTime creationTime, TransferStatus transferStatus) {
         this.datasetPid = datasetPid;
         this.versionMajor = versionMajor;

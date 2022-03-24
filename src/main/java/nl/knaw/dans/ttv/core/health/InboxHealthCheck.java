@@ -58,7 +58,8 @@ public class InboxHealthCheck extends HealthCheck {
 
         if (valid) {
             return Result.healthy();
-        } else {
+        }
+        else {
             return Result.unhealthy("InboxPaths are not accessible");
         }
     }

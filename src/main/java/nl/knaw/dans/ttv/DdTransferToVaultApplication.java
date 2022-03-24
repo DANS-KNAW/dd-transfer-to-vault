@@ -117,7 +117,7 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
 
         var isHealthy = true;
 
-        for (var entry: environment.healthChecks().runHealthChecks().entrySet()) {
+        for (var entry : environment.healthChecks().runHealthChecks().entrySet()) {
             log.info("Health check {} status: {}", entry.getKey(), entry.getValue());
 
             if (!entry.getValue().isHealthy()) {
@@ -131,7 +131,6 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
             System.exit(1);
             return;
         }
-
 
         final var vaultCatalogService = new VaultCatalogServiceImpl(configuration.getConfirmArchived().getVaultServiceEndpoint());
 
