@@ -45,6 +45,7 @@ import nl.knaw.dans.ttv.core.service.ProcessRunnerImpl;
 import nl.knaw.dans.ttv.core.service.TarCommandRunnerImpl;
 import nl.knaw.dans.ttv.core.service.TransferItemMetadataReaderImpl;
 import nl.knaw.dans.ttv.core.service.TransferItemServiceImpl;
+import nl.knaw.dans.ttv.core.service.TransferItemValidatorImpl;
 import nl.knaw.dans.ttv.core.service.VaultCatalogServiceImpl;
 import nl.knaw.dans.ttv.db.Tar;
 import nl.knaw.dans.ttv.db.TarDAO;
@@ -92,6 +93,7 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
         final TransferItemDAO transferItemDAO = new TransferItemDAO(hibernateBundle.getSessionFactory());
         final TarDAO tarDAO = new TarDAO(hibernateBundle.getSessionFactory());
 
+        final var transferItemValidator = new TransferItemValidatorImpl();
         final var collectExecutorService = configuration.getCollect().getTaskQueue().build(environment);
         final var fileService = new FileServiceImpl();
 
@@ -131,7 +133,7 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
         log.info("Creating ExtractMetadataTaskManager");
         final var extractMetadataExecutorService = configuration.getExtractMetadata().getTaskQueue().build(environment);
         final var extractMetadataTaskManager = new ExtractMetadataTaskManager(configuration.getExtractMetadata().getInbox(), configuration.getCreateOcflTar().getInbox(),
-            configuration.getExtractMetadata().getPollingInterval(), extractMetadataExecutorService, transferItemService, metadataReader, fileService, inboxWatcherFactory);
+            configuration.getExtractMetadata().getPollingInterval(), extractMetadataExecutorService, transferItemService, metadataReader, fileService, inboxWatcherFactory, transferItemValidator);
         environment.lifecycle().manage(extractMetadataTaskManager);
 
         log.info("Creating TarTaskManager");

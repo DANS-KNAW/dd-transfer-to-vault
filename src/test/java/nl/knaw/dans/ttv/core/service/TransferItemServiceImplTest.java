@@ -262,11 +262,9 @@ class TransferItemServiceImplTest {
         Mockito.when(transferItemDao.save(transferItem))
             .thenReturn(transferItem);
 
-        var result = transferItemService.addMetadataAndMoveFile(
+        var result = transferItemService.addMetadata(
             transferItem,
-            attributes,
-            TransferItem.TransferStatus.TARRING,
-            Path.of("test/path.zip")
+            attributes
         );
 
         assertEquals("version", result.getDatasetVersion());
@@ -278,9 +276,6 @@ class TransferItemServiceImplTest {
         assertEquals("checksum", result.getBagChecksum());
         assertArrayEquals(new byte[] { 1 }, result.getOaiOre());
         assertArrayEquals(new byte[] { 2 }, result.getPidMapping());
-        assertEquals(TransferItem.TransferStatus.TARRING, result.getTransferStatus());
-        assertEquals("test/path.zip", result.getDveFilePath());
-
     }
 
     @Test

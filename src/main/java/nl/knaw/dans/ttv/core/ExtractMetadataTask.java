@@ -18,6 +18,7 @@ package nl.knaw.dans.ttv.core;
 import nl.knaw.dans.ttv.core.service.FileService;
 import nl.knaw.dans.ttv.core.service.TransferItemMetadataReader;
 import nl.knaw.dans.ttv.core.service.TransferItemService;
+import nl.knaw.dans.ttv.core.service.TransferItemValidator;
 import nl.knaw.dans.ttv.db.TransferItem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,14 +34,16 @@ public class ExtractMetadataTask implements Runnable {
     private final TransferItemService transferItemService;
     private final TransferItemMetadataReader metadataReader;
     private final FileService fileService;
+    private final TransferItemValidator transferItemValidator;
 
     public ExtractMetadataTask(Path filePath, Path outbox, TransferItemService transferItemService,
-        TransferItemMetadataReader metadataReader, FileService fileService) {
+        TransferItemMetadataReader metadataReader, FileService fileService, TransferItemValidator transferItemValidator) {
         this.filePath = filePath;
         this.outbox = outbox;
         this.transferItemService = transferItemService;
         this.metadataReader = metadataReader;
         this.fileService = fileService;
+        this.transferItemValidator = transferItemValidator;
     }
 
     @Override
@@ -76,14 +79,13 @@ public class ExtractMetadataTask implements Runnable {
         var fileContentAttributes = metadataReader.getFileContentAttributes(path);
         log.trace("Received file content attributes: {}", fileContentAttributes);
 
+        // apply content attributes and validate the transfer item
+        var updatedTransferItem = transferItemService.addMetadata(transferItem, fileContentAttributes);
+        transferItemValidator.validateTransferItem(updatedTransferItem);
+
         var newPath = outbox.resolve(filePath.getFileName());
 
-        transferItemService.addMetadataAndMoveFile(
-            transferItem,
-            fileContentAttributes,
-            TransferItem.TransferStatus.METADATA_EXTRACTED,
-            newPath
-        );
+        transferItemService.moveTransferItem(updatedTransferItem, TransferItem.TransferStatus.METADATA_EXTRACTED, newPath);
 
         log.info("Updated file metadata, moving file '{}' to '{}'", path, newPath);
         fileService.moveFile(path, newPath);

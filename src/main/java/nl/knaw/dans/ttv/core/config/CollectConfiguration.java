@@ -22,6 +22,7 @@ import nl.knaw.dans.ttv.core.config.validation.UniqueInboxEntryPaths;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
+import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.nio.file.Path;
@@ -71,7 +72,9 @@ public class CollectConfiguration {
     }
 
     public static class InboxEntry {
+        @NotEmpty
         private String name;
+        @NotNull
         private Path path;
 
         public InboxEntry() {
