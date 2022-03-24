@@ -18,30 +18,30 @@ package nl.knaw.dans.ttv.core.health;
 
 import com.codahale.metrics.health.HealthCheck;
 import nl.knaw.dans.ttv.DdTransferToVaultConfiguration;
-import nl.knaw.dans.ttv.core.service.ProcessRunner;
+import nl.knaw.dans.ttv.core.service.TarCommandRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
-public class DmftarHealthCheck extends HealthCheck {
-    private static final Logger log = LoggerFactory.getLogger(DmftarHealthCheck.class);
+public class RemoteDmftarHealthCheck extends HealthCheck {
+    private static final Logger log = LoggerFactory.getLogger(RemoteDmftarHealthCheck.class);
 
     private final DdTransferToVaultConfiguration configuration;
-    private final ProcessRunner processRunner;
+    private final TarCommandRunner tarCommandRunner;
 
-    public DmftarHealthCheck(DdTransferToVaultConfiguration configuration, ProcessRunner processRunner) {
+    public RemoteDmftarHealthCheck(DdTransferToVaultConfiguration configuration, TarCommandRunner tarCommandRunner) {
         this.configuration = configuration;
-        this.processRunner = processRunner;
+        this.tarCommandRunner = tarCommandRunner;
     }
 
     @Override
     protected Result check() throws Exception {
-        log.debug("Checking if dmftar is available");
+        log.debug("Checking if dmftar is available remotely");
         var healthy = true;
 
         try {
-            var result = processRunner.run(new String[] { "dmftar", "--version" });
+            var result = tarCommandRunner.getDmftarVersion();
 
             if (result.getStatusCode() != 0) {
                 log.error("Return code for command 'dmftar --version' is {}, expected 0", result.getStatusCode());
@@ -53,14 +53,15 @@ public class DmftarHealthCheck extends HealthCheck {
                 // there seems to be no functional difference
                 try {
                     var version = result.getStdout().split("\\n")[0].split(" ")[2];
+                    var expected = configuration.getCreateOcflTar().getDmftarVersion().getRemote();
 
-                    if (version.equals(configuration.getCreateOcflTar().getDmftarVersion())) {
-                        log.debug("dmftar version is correct, installed version is {}, expected {}",
-                            version, configuration.getCreateOcflTar().getDmftarVersion());
+                    if (version.equals(expected)) {
+                        log.debug("Remote dmftar version is correct, installed version is {}, expected {}",
+                            version, expected);
                     }
                     else {
-                        log.error("dmftar version is incorrect, installed version is {}, expected {}",
-                            version, configuration.getCreateOcflTar().getDmftarVersion());
+                        log.error("Remote dmftar version is incorrect, installed version is {}, expected {}",
+                            version, expected);
                         healthy = false;
                     }
                 }

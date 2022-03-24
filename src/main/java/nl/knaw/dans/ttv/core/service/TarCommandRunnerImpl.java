@@ -55,7 +55,6 @@ public class TarCommandRunnerImpl implements TarCommandRunner {
         var remotePath = Path.of(dataArchiveConfiguration.getPath(), path);
         var command = new String[] {
             "ssh",
-            "-o", "StrictHostKeyChecking=no",
             getSshHost(),
             "dmftar",
             "--verify",
@@ -71,7 +70,6 @@ public class TarCommandRunnerImpl implements TarCommandRunner {
         var remotePath = Path.of(dataArchiveConfiguration.getPath(), path);
         var command = new String[] {
             "ssh",
-            "-o", "StrictHostKeyChecking=no",
             getSshHost(),
             "dmftar",
             "--delete-archive",
@@ -86,7 +84,6 @@ public class TarCommandRunnerImpl implements TarCommandRunner {
     public ProcessResult getDmftarVersion() throws IOException, InterruptedException {
         var command = new String[] {
             "ssh",
-            "-o", "StrictHostKeyChecking=no",
             "-o", "BatchMode=yes",
             getSshHost(),
             "dmftar",

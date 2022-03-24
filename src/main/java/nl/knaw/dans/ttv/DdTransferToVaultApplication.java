@@ -28,10 +28,11 @@ import nl.knaw.dans.ttv.core.CollectTaskManager;
 import nl.knaw.dans.ttv.core.ConfirmArchivedTaskManager;
 import nl.knaw.dans.ttv.core.ExtractMetadataTaskManager;
 import nl.knaw.dans.ttv.core.OcflTarTaskManager;
-import nl.knaw.dans.ttv.core.health.DmftarHealthCheck;
+import nl.knaw.dans.ttv.core.health.LocalDmftarHealthCheck;
 import nl.knaw.dans.ttv.core.health.FilesystemHealthCheck;
 import nl.knaw.dans.ttv.core.health.InboxHealthCheck;
 import nl.knaw.dans.ttv.core.health.PartitionHealthCheck;
+import nl.knaw.dans.ttv.core.health.RemoteDmftarHealthCheck;
 import nl.knaw.dans.ttv.core.health.SSHHealthCheck;
 import nl.knaw.dans.ttv.core.service.ArchiveMetadataServiceImpl;
 import nl.knaw.dans.ttv.core.service.ArchiveStatusService;
@@ -112,26 +113,9 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
         environment.healthChecks().register("Inbox", new InboxHealthCheck(configuration, fileService));
         environment.healthChecks().register("Filesystem", new FilesystemHealthCheck(configuration, fileService));
         environment.healthChecks().register("Partitions", new PartitionHealthCheck(configuration, fileService));
-        environment.healthChecks().register("Dmftar", new DmftarHealthCheck(configuration, processRunner));
+        environment.healthChecks().register("DmftarLocal", new LocalDmftarHealthCheck(configuration, processRunner));
+        environment.healthChecks().register("DmftarRemote", new RemoteDmftarHealthCheck(configuration, tarCommandRunner));
         environment.healthChecks().register("SSH", new SSHHealthCheck(tarCommandRunner));
-
-        var isHealthy = true;
-
-        for (var entry: environment.healthChecks().runHealthChecks().entrySet()) {
-            log.info("Health check {} status: {}", entry.getKey(), entry.getValue());
-
-            if (!entry.getValue().isHealthy()) {
-                log.error("HealthCheck {} is not healthy, shutting down", entry.getKey());
-                isHealthy = false;
-            }
-        }
-
-        if (!isHealthy) {
-            log.error("Some health checks failed, shutting down");
-            System.exit(1);
-            return;
-        }
-
 
         final var vaultCatalogService = new VaultCatalogServiceImpl(configuration.getConfirmArchived().getVaultServiceEndpoint());
 

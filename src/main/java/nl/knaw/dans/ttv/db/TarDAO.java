@@ -49,7 +49,7 @@ public class TarDAO extends AbstractDAO<Tar> {
 
         var items = query.list();
 
-        for (var item: items) {
+        for (var item : items) {
             Hibernate.initialize(item.getTransferItems());
             Hibernate.initialize(item.getTarParts());
         }
