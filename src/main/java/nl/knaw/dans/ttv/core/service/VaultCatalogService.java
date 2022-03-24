@@ -22,4 +22,6 @@ import nl.knaw.dans.ttv.openapi.ApiException;
 public interface VaultCatalogService {
 
     void addTar(Tar tar) throws ApiException;
+
+    void addOrUpdateTar(Tar tar) throws ApiException;
 }
