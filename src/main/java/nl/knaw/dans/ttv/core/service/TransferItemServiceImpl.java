@@ -180,8 +180,8 @@ public class TransferItemServiceImpl implements TransferItemService {
 
     @Override
     @UnitOfWork
-    public void updateTarToCreated(String id, ArchiveMetadata metadata) {
-        tarDAO.findById(id).map(tar -> {
+    public Optional<Tar> updateTarToCreated(String id, ArchiveMetadata metadata) {
+        return tarDAO.findById(id).map(tar -> {
             tar.setTarStatus(Tar.TarStatus.OCFLTARCREATED);
             tar.setArchiveInProgress(false);
 
