@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ttv.core.health;
+package nl.knaw.dans.ttv.health;
 
 import nl.knaw.dans.ttv.core.dto.ProcessResult;
 import nl.knaw.dans.ttv.core.service.TarCommandRunner;
