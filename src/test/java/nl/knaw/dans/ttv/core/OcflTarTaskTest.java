@@ -73,6 +73,9 @@ class OcflTarTaskTest {
         Mockito.when(tarCommandRunner.deletePackage(Mockito.any()))
             .thenThrow(IOException.class);
 
+        Mockito.when(transferItemService.updateTarToCreated(Mockito.any(), Mockito.any()))
+                .thenReturn(Optional.of(tar));
+
         task.run();
 
         Mockito.verify(tarCommandRunner).tarDirectory(

@@ -128,10 +128,14 @@ public class OcflTarTask implements Runnable {
             var metadata = extractTarMetadata(uuid);
 
             log.info("Extracted metadata for remote TAR with uuid {}: {}", uuid, metadata);
-            transferItemService.updateTarToCreated(uuid, metadata);
+            var updatedTar = transferItemService.updateTarToCreated(uuid, metadata);
 
-            log.info("Adding TAR to vault catalog with uuid {}", uuid);
-            vaultCatalogService.addOrUpdateTar(tar);
+            if (updatedTar.isPresent()) {
+                log.info("Adding TAR to vault catalog with uuid {}", uuid);
+                vaultCatalogService.addOrUpdateTar(updatedTar.get());
+            } else {
+                log.warn("Unable to update TAR, returned value is null");
+            }
         }
         catch (IOException e) {
             log.error("Unable to transfer archive, marking for retry", e);

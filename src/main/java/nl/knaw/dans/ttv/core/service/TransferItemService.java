@@ -41,7 +41,7 @@ public interface TransferItemService {
 
     void setArchiveAttemptFailed(String id, boolean increaseAttemptCount, int maxRetries);
 
-    void updateTarToCreated(String id, ArchiveMetadata metadata);
+    Optional<Tar> updateTarToCreated(String id, ArchiveMetadata metadata);
 
     void setArchivingInProgress(String id);
 
