@@ -120,9 +120,8 @@ database:
 
 logging:
   level: INFO
-  loggers:
-    "nl.knaw.dans": INFO
   appenders:
-    - type: file
-      archive: false
+    - archive: false
+      type: file
+      timeZone: system
       currentLogFilename: '/var/opt/dans.knaw.nl/log/dd-transfer-to-vault/dd-transfer-to-vault.log'
