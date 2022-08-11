@@ -15,6 +15,7 @@
  */
 package nl.knaw.dans.ttv.db;
 
+import org.hibernate.annotations.Type;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -77,10 +78,10 @@ public class TransferItem {
     @Column(name = "transfer_status", nullable = false)
     private TransferStatus transferStatus;
     @Column(name = "oai_ore", length = 10000)
-    @org.hibernate.annotations.Type(type = "materialized_blob")
+    @Type(type = "materialized_blob")
     private byte[] oaiOre;
     @Column(name = "pid_mapping", length = 10000)
-    @org.hibernate.annotations.Type(type = "materialized_blob")
+    @Type(type = "materialized_blob")
     private byte[] pidMapping;
     @Column(name = "aip_tar_entry_name")
     private String aipTarEntryName;

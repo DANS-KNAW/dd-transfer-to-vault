@@ -19,7 +19,7 @@ collect:
     # Threads will die after 60 seconds of idleness
     keepAliveTime: 60 seconds
 
-metadata:
+extractMetadata:
   inbox: data/tmp/metadata-inbox
   # polling interval in milliseconds
   pollingInterval: 500
@@ -42,6 +42,9 @@ createOcflTar:
   inbox: data/tmp/ocfl-tar-inbox
   workDir: data/tmp/ocfl-tar-workdirs
   inboxThreshold: 100k
+  dmftarVersion:
+    local: 2.0
+    remote: 2.2
   # polling interval in milliseconds
   pollingInterval: 500
   maxRetries: 6
@@ -65,6 +68,7 @@ createOcflTar:
 
 confirmArchived:
   cron: '0 0/15 * * * ?' # cron expression for triggering a polling round
+  vaultServiceEndpoint: http://localhost:20100/api
   taskQueue:
     nameFormat: "confirm-thread-%d"
     maxQueueSize: 5000
