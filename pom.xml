@@ -59,12 +59,12 @@
     <parent>
         <artifactId>dans-dropwizard-project</artifactId>
         <groupId>nl.knaw.dans.shared</groupId>
-        <version>7.0.0</version>
+        <version>7.2.0</version>
     </parent>
 
     <groupId>nl.knaw.dans</groupId>
     <artifactId>dd-transfer-to-vault</artifactId>
-    <version>0.0.5-SNAPSHOT</version>
+    <version>0.0.6-SNAPSHOT</version>
 
     <name>DD Transfer To Vault</name>
     <url>https://github.com/DANS-KNAW/dd-transfer-to-vault</url>

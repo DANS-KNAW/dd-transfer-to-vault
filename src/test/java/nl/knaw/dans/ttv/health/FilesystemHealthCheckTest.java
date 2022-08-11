@@ -13,56 +13,55 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ttv.core.health;
+package nl.knaw.dans.ttv.health;
 
 import nl.knaw.dans.ttv.DdTransferToVaultConfiguration;
-import nl.knaw.dans.ttv.core.config.CollectConfiguration;
+import nl.knaw.dans.ttv.core.config.CreateOcflTarConfiguration;
+import nl.knaw.dans.ttv.core.config.ExtractMetadataConfiguration;
 import nl.knaw.dans.ttv.core.service.FileService;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.nio.file.Path;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class InboxHealthCheckTest {
+class FilesystemHealthCheckTest {
 
     @Test
-    void checkValid() throws Exception {
+    void checkAllWriteable() throws Exception {
         var fileService = Mockito.mock(FileService.class);
         var config = new DdTransferToVaultConfiguration();
-        config.setCollect(new CollectConfiguration());
-        config.getCollect().setInboxes(List.of(
-            new CollectConfiguration.InboxEntry("a", Path.of("a")),
-            new CollectConfiguration.InboxEntry("b", Path.of("b"))
-        ));
+        config.setCreateOcflTar(new CreateOcflTarConfiguration());
+        config.getCreateOcflTar().setInbox(Path.of("ocfl-inbox"));
+        config.getCreateOcflTar().setWorkDir(Path.of("ocfl-workdir"));
+        config.setExtractMetadata(new ExtractMetadataConfiguration());
+        config.getExtractMetadata().setInbox(Path.of("data-inbox"));
 
         Mockito.when(fileService.canRead(Mockito.any())).thenReturn(true);
-        Mockito.when(fileService.exists(Mockito.any())).thenReturn(true);
+        Mockito.when(fileService.canWrite(Mockito.any())).thenReturn(true);
 
-        var result = new InboxHealthCheck(config, fileService).check();
+        var result = new FilesystemHealthCheck(config, fileService).check();
 
         assertTrue(result.isHealthy());
     }
 
     @Test
-    void checkInvalid() throws Exception {
+    void checkSomeWrong() throws Exception {
         var fileService = Mockito.mock(FileService.class);
         var config = new DdTransferToVaultConfiguration();
-        config.setCollect(new CollectConfiguration());
-        config.getCollect().setInboxes(List.of(
-            new CollectConfiguration.InboxEntry("a", Path.of("a")),
-            new CollectConfiguration.InboxEntry("b", Path.of("b"))
-        ));
+        config.setCreateOcflTar(new CreateOcflTarConfiguration());
+        config.getCreateOcflTar().setInbox(Path.of("ocfl-inbox"));
+        config.getCreateOcflTar().setWorkDir(Path.of("ocfl-workdir"));
+        config.setExtractMetadata(new ExtractMetadataConfiguration());
+        config.getExtractMetadata().setInbox(Path.of("data-inbox"));
 
         Mockito.when(fileService.canRead(Mockito.any())).thenReturn(false).thenReturn(true);
-        Mockito.when(fileService.exists(Mockito.any())).thenReturn(true).thenReturn(false);
+        Mockito.when(fileService.canWrite(Mockito.any())).thenReturn(false).thenReturn(true);
 
-        var result = new InboxHealthCheck(config, fileService).check();
+        var result = new FilesystemHealthCheck(config, fileService).check();
 
         assertFalse(result.isHealthy());
     }
-
 }

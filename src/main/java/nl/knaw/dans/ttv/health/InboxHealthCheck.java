@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package nl.knaw.dans.ttv.core.health;
+package nl.knaw.dans.ttv.health;
 
 import com.codahale.metrics.health.HealthCheck;
 import nl.knaw.dans.ttv.DdTransferToVaultConfiguration;

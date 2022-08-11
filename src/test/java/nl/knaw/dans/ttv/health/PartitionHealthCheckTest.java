@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ttv.core.health;
+package nl.knaw.dans.ttv.health;
 
 import nl.knaw.dans.ttv.DdTransferToVaultConfiguration;
 import nl.knaw.dans.ttv.core.config.CreateOcflTarConfiguration;
@@ -22,45 +22,53 @@ import nl.knaw.dans.ttv.core.service.FileService;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
+import java.nio.file.FileStore;
 import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class FilesystemHealthCheckTest {
+class PartitionHealthCheckTest {
 
     @Test
-    void checkAllWriteable() throws Exception {
+    void onSamePartition() throws Exception {
         var fileService = Mockito.mock(FileService.class);
         var config = new DdTransferToVaultConfiguration();
+        config.setExtractMetadata(new ExtractMetadataConfiguration());
+        config.getExtractMetadata().setInbox(Path.of("metadata"));
         config.setCreateOcflTar(new CreateOcflTarConfiguration());
         config.getCreateOcflTar().setInbox(Path.of("ocfl-inbox"));
         config.getCreateOcflTar().setWorkDir(Path.of("ocfl-workdir"));
-        config.setExtractMetadata(new ExtractMetadataConfiguration());
-        config.getExtractMetadata().setInbox(Path.of("data-inbox"));
 
-        Mockito.when(fileService.canRead(Mockito.any())).thenReturn(true);
-        Mockito.when(fileService.canWrite(Mockito.any())).thenReturn(true);
+        var fs1 = Mockito.mock(FileStore.class);
+        var fs2 = Mockito.mock(FileStore.class);
 
-        var result = new FilesystemHealthCheck(config, fileService).check();
+        Mockito.when(fileService.getFileStore(Mockito.any()))
+            .thenReturn(fs1);
+
+        var result = new PartitionHealthCheck(config, fileService).check();
 
         assertTrue(result.isHealthy());
     }
 
     @Test
-    void checkSomeWrong() throws Exception {
+    void onDifferentPartition() throws Exception {
         var fileService = Mockito.mock(FileService.class);
         var config = new DdTransferToVaultConfiguration();
+        config.setExtractMetadata(new ExtractMetadataConfiguration());
+        config.getExtractMetadata().setInbox(Path.of("metadata"));
         config.setCreateOcflTar(new CreateOcflTarConfiguration());
         config.getCreateOcflTar().setInbox(Path.of("ocfl-inbox"));
         config.getCreateOcflTar().setWorkDir(Path.of("ocfl-workdir"));
-        config.setExtractMetadata(new ExtractMetadataConfiguration());
-        config.getExtractMetadata().setInbox(Path.of("data-inbox"));
 
-        Mockito.when(fileService.canRead(Mockito.any())).thenReturn(false).thenReturn(true);
-        Mockito.when(fileService.canWrite(Mockito.any())).thenReturn(false).thenReturn(true);
+        var fs1 = Mockito.mock(FileStore.class);
+        var fs2 = Mockito.mock(FileStore.class);
 
-        var result = new FilesystemHealthCheck(config, fileService).check();
+        Mockito.when(fileService.getFileStore(Mockito.any()))
+            .thenReturn(fs1)
+            .thenReturn(fs2);
+
+        var result = new PartitionHealthCheck(config, fileService).check();
 
         assertFalse(result.isHealthy());
     }

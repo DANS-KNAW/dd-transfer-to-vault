@@ -13,13 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ttv.core.health;
+package nl.knaw.dans.ttv.health;
 
 import com.codahale.metrics.health.HealthCheck;
 import nl.knaw.dans.ttv.DdTransferToVaultConfiguration;
 import nl.knaw.dans.ttv.core.config.CreateOcflTarConfiguration;
 import nl.knaw.dans.ttv.core.dto.ProcessResult;
-import nl.knaw.dans.ttv.core.service.ProcessRunner;
 import nl.knaw.dans.ttv.core.service.TarCommandRunner;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
