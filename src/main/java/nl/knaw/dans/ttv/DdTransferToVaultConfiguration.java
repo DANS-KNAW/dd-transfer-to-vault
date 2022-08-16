@@ -19,7 +19,6 @@ package nl.knaw.dans.ttv;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.dropwizard.Configuration;
 import io.dropwizard.db.DataSourceFactory;
-import io.dropwizard.health.conf.HealthConfiguration;
 import nl.knaw.dans.ttv.core.config.CollectConfiguration;
 import nl.knaw.dans.ttv.core.config.ConfirmArchivedConfiguration;
 import nl.knaw.dans.ttv.core.config.CreateOcflTarConfiguration;
@@ -49,10 +48,6 @@ public class DdTransferToVaultConfiguration extends Configuration {
     @Valid
     @NotNull
     private DataArchiveConfiguration dataArchive;
-    @Valid
-    @NotNull
-    @JsonProperty("health")
-    private HealthConfiguration healthConfiguration = new HealthConfiguration();
 
     public DataSourceFactory getDatabase() {
 
@@ -61,14 +56,6 @@ public class DdTransferToVaultConfiguration extends Configuration {
 
     public void setDatabase(DataSourceFactory database) {
         this.database = database;
-    }
-
-    public HealthConfiguration getHealthConfiguration() {
-        return healthConfiguration;
-    }
-
-    public void setHealthConfiguration(final HealthConfiguration healthConfiguration) {
-        this.healthConfiguration = healthConfiguration;
     }
 
     public DataArchiveConfiguration getDataArchive() {

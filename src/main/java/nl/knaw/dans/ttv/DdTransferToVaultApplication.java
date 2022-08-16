@@ -18,8 +18,6 @@ package nl.knaw.dans.ttv;
 
 import io.dropwizard.Application;
 import io.dropwizard.db.PooledDataSourceFactory;
-import io.dropwizard.health.conf.HealthConfiguration;
-import io.dropwizard.health.core.HealthCheckBundle;
 import io.dropwizard.hibernate.HibernateBundle;
 import io.dropwizard.hibernate.UnitOfWorkAwareProxyFactory;
 import io.dropwizard.setup.Bootstrap;
@@ -28,12 +26,6 @@ import nl.knaw.dans.ttv.core.CollectTaskManager;
 import nl.knaw.dans.ttv.core.ConfirmArchivedTaskManager;
 import nl.knaw.dans.ttv.core.ExtractMetadataTaskManager;
 import nl.knaw.dans.ttv.core.OcflTarTaskManager;
-import nl.knaw.dans.ttv.health.LocalDmftarHealthCheck;
-import nl.knaw.dans.ttv.health.FilesystemHealthCheck;
-import nl.knaw.dans.ttv.health.InboxHealthCheck;
-import nl.knaw.dans.ttv.health.PartitionHealthCheck;
-import nl.knaw.dans.ttv.health.RemoteDmftarHealthCheck;
-import nl.knaw.dans.ttv.health.SSHHealthCheck;
 import nl.knaw.dans.ttv.core.service.ArchiveMetadataServiceImpl;
 import nl.knaw.dans.ttv.core.service.ArchiveStatusService;
 import nl.knaw.dans.ttv.core.service.ArchiveStatusServiceImpl;
@@ -52,6 +44,12 @@ import nl.knaw.dans.ttv.db.TarDAO;
 import nl.knaw.dans.ttv.db.TarPart;
 import nl.knaw.dans.ttv.db.TransferItem;
 import nl.knaw.dans.ttv.db.TransferItemDAO;
+import nl.knaw.dans.ttv.health.FilesystemHealthCheck;
+import nl.knaw.dans.ttv.health.InboxHealthCheck;
+import nl.knaw.dans.ttv.health.LocalDmftarHealthCheck;
+import nl.knaw.dans.ttv.health.PartitionHealthCheck;
+import nl.knaw.dans.ttv.health.RemoteDmftarHealthCheck;
+import nl.knaw.dans.ttv.health.SSHHealthCheck;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -78,13 +76,6 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
     @Override
     public void initialize(final Bootstrap<DdTransferToVaultConfiguration> bootstrap) {
         bootstrap.addBundle(hibernateBundle);
-        bootstrap.addBundle(new HealthCheckBundle<>() {
-
-            @Override
-            protected HealthConfiguration getHealthConfiguration(final DdTransferToVaultConfiguration configuration) {
-                return configuration.getHealthConfiguration();
-            }
-        });
     }
 
     @Override
