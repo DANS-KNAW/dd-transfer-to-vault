@@ -20,6 +20,8 @@
 /.vagrant/
 /.yum-repo
 /.dans.knaw.nl-yum-repo
+/.venv-mkdocs
+
 
 .classpath
 .settings
