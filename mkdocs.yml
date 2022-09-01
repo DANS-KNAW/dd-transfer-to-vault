@@ -16,8 +16,7 @@
 
 site_name: dd-transfer-to-vault
 theme:
-  name: dans
-  disclaimer: false
+  name: readthedocs
 
 repo_name: DANS-KNAW/dd-transfer-to-vault
 repo_url: https://github.com/DANS-KNAW/dd-transfer-to-vault
@@ -31,30 +30,12 @@ plugins:
 
 markdown_extensions:
   - attr_list
-  #- legacy_attr
   - admonition
   - codehilite:
-      guess_lang: false
+      guess_lang: False
+      use_pygments: False
   - def_list
   - footnotes
   - meta
   - toc:
-      permalink: true
-  - pymdownx.arithmatex
-  - pymdownx.betterem:
-      smart_enable: all
-  - pymdownx.caret
-  - pymdownx.critic
-  - pymdownx.details
-  - pymdownx.inlinehilite
-  - pymdownx.keys
-  - pymdownx.magiclink:
-      repo_url_shorthand: true
-      user: Dans-labs
-      repo: mkdocs-dans
-  - pymdownx.mark
-  - pymdownx.smartsymbols
-  - pymdownx.superfences
-  - pymdownx.tasklist:
-      custom_checkbox: true
-  - pymdownx.tilde
+      permalink: True
