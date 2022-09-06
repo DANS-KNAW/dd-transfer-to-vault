@@ -22,7 +22,7 @@
     <parent>
         <artifactId>dans-dropwizard-project</artifactId>
         <groupId>nl.knaw.dans.shared</groupId>
-        <version>9.3.0</version>
+        <version>9.4.0</version>
     </parent>
 
     <groupId>nl.knaw.dans</groupId>
