@@ -19,12 +19,11 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <artifactId>dans-dropwizard-project</artifactId>
-        <groupId>nl.knaw.dans.shared</groupId>
-        <version>9.5.0</version>
+        <groupId>nl.knaw.dans</groupId>
+        <artifactId>dd-parent-service</artifactId>
+        <version>0.1.2-SNAPSHOT</version>
     </parent>
 
-    <groupId>nl.knaw.dans</groupId>
     <artifactId>dd-transfer-to-vault</artifactId>
     <version>0.0.7-SNAPSHOT</version>
 
@@ -215,14 +214,6 @@
                     <plugin>
                         <groupId>org.codehaus.mojo</groupId>
                         <artifactId>rpm-maven-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>attach-rpm</id>
-                                <goals>
-                                    <goal>attached-rpm</goal>
-                                </goals>
-                            </execution>
-                        </executions>
                     </plugin>
                 </plugins>
             </build>
