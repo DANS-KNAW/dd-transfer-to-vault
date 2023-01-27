@@ -22,14 +22,6 @@ git remote set-url origin ${REMOTE}
 
 pip install -r .github/workflows/mkdocs/requirements.txt
 
-echo "START installing DANS mkdocs theme..."
-git clone https://github.com/Dans-labs/mkdocs-dans $HOME/mkdocs-dans
-pushd $HOME/mkdocs-dans
-git pull
-python3 build.py pack
-popd
-echo "DONE installing DANS mkdocs theme."
-
 echo "START deploying docs to GitHub pages..."
 mkdocs gh-deploy --force
 echo "DONE deploying docs to GitHub pages."
