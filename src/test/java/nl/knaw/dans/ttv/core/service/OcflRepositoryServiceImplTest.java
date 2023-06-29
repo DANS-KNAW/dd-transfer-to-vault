@@ -15,9 +15,9 @@
  */
 package nl.knaw.dans.ttv.core.service;
 
-import edu.wisc.library.ocfl.api.OcflOption;
-import edu.wisc.library.ocfl.api.OcflRepository;
-import edu.wisc.library.ocfl.api.model.VersionInfo;
+import io.ocfl.api.OcflOption;
+import io.ocfl.api.OcflRepository;
+import io.ocfl.api.model.VersionInfo;
 import nl.knaw.dans.ttv.db.TransferItem;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
