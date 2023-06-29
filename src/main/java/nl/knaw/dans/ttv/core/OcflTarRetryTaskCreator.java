@@ -19,7 +19,6 @@ import nl.knaw.dans.ttv.core.service.ArchiveMetadataService;
 import nl.knaw.dans.ttv.core.service.OcflRepositoryService;
 import nl.knaw.dans.ttv.core.service.TarCommandRunner;
 import nl.knaw.dans.ttv.core.service.TransferItemService;
-import nl.knaw.dans.ttv.core.service.VaultCatalogService;
 import nl.knaw.dans.ttv.db.Tar;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
@@ -104,12 +103,12 @@ public class OcflTarRetryTaskCreator implements Job {
         private ArchiveMetadataService archiveMetadataService;
         private ExecutorService executorService;
         private OcflRepositoryService ocflRepositoryService;
-        private VaultCatalogService vaultCatalogService;
+        private VaultCatalogRepository vaultCatalogRepository;
         private int maxRetries;
         private List<Duration> retryIntervals;
         public TaskRetryTaskCreatorParameters(TransferItemService transferItemService, Path workDir, TarCommandRunner tarCommandRunner,
             ArchiveMetadataService archiveMetadataService, ExecutorService executorService, int maxRetries, List<Duration> retryIntervals, OcflRepositoryService ocflRepositoryService,
-            VaultCatalogService vaultCatalogService) {
+            VaultCatalogRepository vaultCatalogRepository) {
             this.transferItemService = transferItemService;
             this.workDir = workDir;
             this.tarCommandRunner = tarCommandRunner;
@@ -118,15 +117,15 @@ public class OcflTarRetryTaskCreator implements Job {
             this.maxRetries = maxRetries;
             this.retryIntervals = retryIntervals;
             this.ocflRepositoryService = ocflRepositoryService;
-            this.vaultCatalogService = vaultCatalogService;
+            this.vaultCatalogRepository = vaultCatalogRepository;
         }
 
-        public VaultCatalogService getVaultCatalogService() {
-            return vaultCatalogService;
+        public VaultCatalogRepository getVaultCatalogService() {
+            return vaultCatalogRepository;
         }
 
-        public void setVaultCatalogService(VaultCatalogService vaultCatalogService) {
-            this.vaultCatalogService = vaultCatalogService;
+        public void setVaultCatalogService(VaultCatalogRepository vaultCatalogRepository) {
+            this.vaultCatalogRepository = vaultCatalogRepository;
         }
 
         public OcflRepositoryService getOcflRepositoryService() {

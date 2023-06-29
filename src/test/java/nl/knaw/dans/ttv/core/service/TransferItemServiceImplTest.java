@@ -16,10 +16,7 @@
 package nl.knaw.dans.ttv.core.service;
 
 import nl.knaw.dans.ttv.core.InvalidTransferItemException;
-import nl.knaw.dans.ttv.core.dto.ArchiveMetadata;
-import nl.knaw.dans.ttv.core.dto.FileContentAttributes;
-import nl.knaw.dans.ttv.core.dto.FilenameAttributes;
-import nl.knaw.dans.ttv.core.dto.FilesystemAttributes;
+import nl.knaw.dans.ttv.core.domain.*;
 import nl.knaw.dans.ttv.db.Tar;
 import nl.knaw.dans.ttv.db.TarDAO;
 import nl.knaw.dans.ttv.db.TransferItem;
@@ -35,13 +32,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.*;
 
 class TransferItemServiceImplTest {
 
@@ -56,23 +47,25 @@ class TransferItemServiceImplTest {
         transferItemDao = Mockito.mock(TransferItemDAO.class);
         tarDAO = Mockito.mock(TarDAO.class);
 
-        filenameAttributes = new FilenameAttributes();
-        filenameAttributes.setDveFilePath("some/file.zip");
-        filenameAttributes.setDatasetPid("pid");
-        filenameAttributes.setVersionMajor(5);
-        filenameAttributes.setVersionMinor(3);
+        filenameAttributes = FilenameAttributes
+            .builder()
+            .dveFilePath("some/file.zip")
+            .datasetPid("pid")
+            .version(Version.of(5, 3))
+            .build();
 
         filesystemAttributes = new FilesystemAttributes();
         filesystemAttributes.setCreationTime(LocalDateTime.now());
         filesystemAttributes.setBagSize(1234L);
 
-        fileContentAttributes = new FileContentAttributes();
-        fileContentAttributes.setBagId("bag id");
-        fileContentAttributes.setNbn("nbn value");
-        fileContentAttributes.setOaiOre(new byte[] { 1, 2 });
-        fileContentAttributes.setPidMapping(new byte[] { 3, 4 });
-        fileContentAttributes.setDatasetVersion("dv version");
-        fileContentAttributes.setBagChecksum("check");
+        fileContentAttributes = FileContentAttributes.builder()
+            .bagId("bag id")
+            .nbn("nbn value")
+            .oaiOre("{}")
+            .pidMapping("string\nline2\n")
+            .datasetVersion("5.3")
+            .bagChecksum("check")
+            .build();
     }
 
     /**
@@ -94,15 +87,11 @@ class TransferItemServiceImplTest {
             assertEquals("check", transferItem.getBagChecksum());
             assertEquals(1234L, transferItem.getBagSize());
 
-            assertEquals("dv version", transferItem.getDatasetVersion());
+            assertEquals("5.3", transferItem.getDatasetVersion());
             assertEquals("bag id", transferItem.getBagId());
             assertEquals("nbn value", transferItem.getNbn());
-            assertEquals(2, transferItem.getOaiOre().length);
-            assertEquals(2, transferItem.getPidMapping().length);
-            assertEquals(1, transferItem.getOaiOre()[0]);
-            assertEquals(2, transferItem.getOaiOre()[1]);
-            assertEquals(3, transferItem.getPidMapping()[0]);
-            assertEquals(4, transferItem.getPidMapping()[1]);
+            assertEquals("{}", transferItem.getOaiOre());
+            assertEquals("string\nline2\n", transferItem.getPidMapping());
 
             Mockito.verify(transferItemDao).save(transferItem);
         }
@@ -144,17 +133,18 @@ class TransferItemServiceImplTest {
 
     @Test
     void createDuplicateTransferItem() {
-        Mockito.when(transferItemDao.findByDatasetPidAndVersion("pid", 5, 3))
+        Mockito.when(transferItemDao.findByDatasetPidAndVersion("pid", Version.of(5, 3)))
             .thenReturn(Optional.of(new TransferItem()));
 
         var transferItemService = new TransferItemServiceImpl(transferItemDao, tarDAO);
 
-        assertThrows(InvalidTransferItemException.class, () -> transferItemService.createTransferItem("name", filenameAttributes, filesystemAttributes, fileContentAttributes));
+        assertThrows(InvalidTransferItemException.class, () ->
+            transferItemService.createTransferItem("name", filenameAttributes, filesystemAttributes, fileContentAttributes));
     }
 
     @Test
     void createDuplicateTransferItemPartial() {
-        Mockito.when(transferItemDao.findByDatasetPidAndVersion("pid", 5, 3))
+        Mockito.when(transferItemDao.findByDatasetPidAndVersion("pid", Version.of(5, 3)))
             .thenReturn(Optional.of(new TransferItem()));
 
         var transferItemService = new TransferItemServiceImpl(transferItemDao, tarDAO);
@@ -179,9 +169,20 @@ class TransferItemServiceImplTest {
     void saveAll() {
         var transferItemService = new TransferItemServiceImpl(transferItemDao, tarDAO);
         var items = List.of(
-            new TransferItem("pid", 1, 0, "path", LocalDateTime.now(), TransferItem.TransferStatus.TARRING),
-            new TransferItem("pid2", 1, 0, "path", LocalDateTime.now(), TransferItem.TransferStatus.TARRING)
+            TransferItem.builder()
+                .datasetPid("pid1")
+                .dveFilePath("path")
+                .creationTime(LocalDateTime.now())
+                .transferStatus(TransferItem.TransferStatus.TARRING)
+                .build(),
+            TransferItem.builder()
+                .datasetPid("pid2")
+                .dveFilePath("path")
+                .creationTime(LocalDateTime.now())
+                .transferStatus(TransferItem.TransferStatus.TARRING)
+                .build()
         );
+
         transferItemService.saveAllTransferItems(items);
 
         Mockito.verify(transferItemDao, Mockito.times(1)).merge(items.get(0));
@@ -212,17 +213,32 @@ class TransferItemServiceImplTest {
     @Test
     void findAllTarsToBeConfirmed() {
         var items = List.of(
-            new TransferItem("pid", 1, 0, "path", LocalDateTime.now(), TransferItem.TransferStatus.TARRING),
-            new TransferItem("pid2", 1, 0, "path", LocalDateTime.now(), TransferItem.TransferStatus.TARRING),
-            new TransferItem("pid3", 1, 0, "path", LocalDateTime.now(), TransferItem.TransferStatus.TARRING)
+            TransferItem.builder()
+                .datasetPid("pid1")
+                .dveFilePath("path")
+                .creationTime(LocalDateTime.now())
+                .transferStatus(TransferItem.TransferStatus.TARRING)
+                .build(),
+            TransferItem.builder()
+                .datasetPid("pid2")
+                .dveFilePath("path")
+                .creationTime(LocalDateTime.now())
+                .transferStatus(TransferItem.TransferStatus.TARRING)
+                .build(),
+            TransferItem.builder()
+                .datasetPid("pid3")
+                .dveFilePath("path")
+                .creationTime(LocalDateTime.now())
+                .transferStatus(TransferItem.TransferStatus.TARRING)
+                .build()
         );
 
         var tar1 = new Tar(UUID.randomUUID().toString());
         var tar2 = new Tar(UUID.randomUUID().toString());
 
-        items.get(0).setAipsTar(tar1);
-        items.get(1).setAipsTar(tar2);
-        items.get(2).setAipsTar(tar2);
+        items.get(0).setTar(tar1);
+        items.get(1).setTar(tar2);
+        items.get(2).setTar(tar2);
 
         Mockito.when(tarDAO.findAllTarsToBeConfirmed())
             .thenReturn(List.of(tar1, tar2));
@@ -236,27 +252,33 @@ class TransferItemServiceImplTest {
     @Test
     void getTransferItemByFilenameAttributes() {
         var transferItemService = new TransferItemServiceImpl(transferItemDao, tarDAO);
-        var attributes = new FilenameAttributes("path", "pid", 5, 3);
+        var attributes = FilenameAttributes.builder()
+            .dveFilePath("path")
+            .datasetPid("pid")
+            .version(Version.of(5, 3))
+            .build();
+
         transferItemService.getTransferItemByFilenameAttributes(attributes);
 
-        Mockito.verify(transferItemDao).findByDatasetPidAndVersion("pid", 5, 3);
+        Mockito.verify(transferItemDao).findByDatasetPidAndVersion("pid", Version.of(5, 3));
     }
 
     @Test
     void addMetadataAndMoveFile() {
         var transferItemService = new TransferItemServiceImpl(transferItemDao, tarDAO);
-        var attributes = new FileContentAttributes(
-            "version",
-            "id",
-            "nbn",
-            new byte[] { 1 },
-            new byte[] { 2 },
-            "otherid",
-            "otheridversion",
-            "sword",
-            "sword2",
-            "checksum"
-        );
+        var attributes = FileContentAttributes.builder()
+            .datasetVersion("1.0")
+            .bagId("id")
+            .nbn("nbn")
+            .oaiOre("{}")
+            .pidMapping("a  b")
+            .otherId("otherId")
+            .otherIdVersion("otherIdVersion")
+            .swordClient("swordClient")
+            .swordToken("swordToken")
+            .bagChecksum("bagChecksum")
+            .build();
+
         var transferItem = new TransferItem();
 
         Mockito.when(transferItemDao.save(transferItem))
@@ -267,15 +289,16 @@ class TransferItemServiceImplTest {
             attributes
         );
 
-        assertEquals("version", result.getDatasetVersion());
+        assertEquals("1.0", result.getDatasetVersion());
         assertEquals("id", result.getBagId());
         assertEquals("nbn", result.getNbn());
-        assertEquals("otherid", result.getOtherId());
-        assertEquals("otheridversion", result.getOtherIdVersion());
-        assertEquals("sword", result.getSwordToken());
-        assertEquals("checksum", result.getBagChecksum());
-        assertArrayEquals(new byte[] { 1 }, result.getOaiOre());
-        assertArrayEquals(new byte[] { 2 }, result.getPidMapping());
+        assertEquals("otherId", result.getOtherId());
+        assertEquals("otherIdVersion", result.getOtherIdVersion());
+        assertEquals("swordToken", result.getSwordToken());
+        assertEquals("swordClient", result.getSwordClient());
+        assertEquals("bagChecksum", result.getBagChecksum());
+        assertEquals("{}", result.getOaiOre());
+        assertEquals("a  b", result.getPidMapping());
     }
 
     @Test
@@ -283,8 +306,18 @@ class TransferItemServiceImplTest {
         var transferItemService = new TransferItemServiceImpl(transferItemDao, tarDAO);
         var uuid = UUID.randomUUID().toString();
         var items = List.of(
-            new TransferItem("pid", 1, 0, "path", LocalDateTime.now(), TransferItem.TransferStatus.METADATA_EXTRACTED),
-            new TransferItem("pid2", 1, 0, "path", LocalDateTime.now(), TransferItem.TransferStatus.METADATA_EXTRACTED)
+            TransferItem.builder()
+                .datasetPid("pid1")
+                .dveFilePath("path")
+                .creationTime(LocalDateTime.now())
+                .transferStatus(TransferItem.TransferStatus.METADATA_EXTRACTED)
+                .build(),
+            TransferItem.builder()
+                .datasetPid("pid2")
+                .dveFilePath("path")
+                .creationTime(LocalDateTime.now())
+                .transferStatus(TransferItem.TransferStatus.METADATA_EXTRACTED)
+                .build()
         );
 
         Mockito.when(transferItemDao.findByStatus(TransferItem.TransferStatus.METADATA_EXTRACTED))
@@ -300,8 +333,8 @@ class TransferItemServiceImplTest {
         assertNotNull(tar.getCreated());
         assertEquals("some-path", tar.getVaultPath());
 
-        assertEquals(tar, items.get(0).getAipsTar());
-        assertEquals(tar, items.get(1).getAipsTar());
+        assertEquals(tar, items.get(0).getTar());
+        assertEquals(tar, items.get(1).getTar());
     }
 
     @Test

@@ -17,6 +17,7 @@ package nl.knaw.dans.ttv.core.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import nl.knaw.dans.ttv.core.InvalidTransferItemException;
+import nl.knaw.dans.ttv.core.domain.Version;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
@@ -45,8 +46,7 @@ class TransferItemMetadataReaderImplTest {
         try {
             var path = Path.of("doi-10-5072-dar-kxteqtv1.0.zip");
             var attributes = service.getFilenameAttributes(path);
-            assertEquals(0, attributes.getVersionMinor());
-            assertEquals(1, attributes.getVersionMajor());
+            assertEquals(Version.of(1, 0), attributes.getVersion());
             assertEquals(path.toString(), attributes.getDveFilePath());
             assertEquals("10.5072/DAR/KXTEQT", attributes.getDatasetPid());
         }
@@ -147,8 +147,8 @@ class TransferItemMetadataReaderImplTest {
         assertNull(result.getOtherId());
         assertNull(result.getOtherIdVersion());
         assertNull(result.getSwordToken());
-        assertArrayEquals(fakeJsonld.getBytes(StandardCharsets.UTF_8), result.getOaiOre());
-        assertArrayEquals(fakePidmapping.getBytes(StandardCharsets.UTF_8), result.getPidMapping());
+        assertEquals(fakeJsonld, result.getOaiOre());
+        assertEquals(fakePidmapping, result.getPidMapping());
         assertEquals("checksum-test", result.getBagChecksum());
     }
 

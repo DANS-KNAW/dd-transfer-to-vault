@@ -33,6 +33,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 class CollectTaskManagerTest {
     private TransferItemService transferItemService;
+    private VaultCatalogRepository vaultCatalogRepository;
     private TransferItemMetadataReader transferItemMetadataReader;
     private FileService fileService;
     private ExecutorService executorService;
@@ -44,6 +45,7 @@ class CollectTaskManagerTest {
         this.transferItemService = Mockito.mock(TransferItemService.class);
         this.transferItemMetadataReader = Mockito.mock(TransferItemMetadataReader.class);
         this.fileService = Mockito.mock(FileService.class);
+        this.vaultCatalogRepository = Mockito.mock(VaultCatalogRepository.class);
         this.executorService = Mockito.mock(ExecutorService.class);
         this.inboxWatcherFactory = Mockito.mock(InboxWatcherFactory.class);
         this.inboxes = List.of(
@@ -63,7 +65,7 @@ class CollectTaskManagerTest {
     @Test
     void createsInboxWatchersOnStart() {
         var manager = new CollectTaskManager(inboxes, Path.of("data/outbox/"), 100, executorService, transferItemService, transferItemMetadataReader, fileService,
-            inboxWatcherFactory);
+            inboxWatcherFactory, vaultCatalogRepository);
 
         try {
             manager.start();
@@ -88,7 +90,7 @@ class CollectTaskManagerTest {
     @Test
     void onZipFileAdded() {
         var manager = new CollectTaskManager(inboxes, Path.of("data/outbox/"), 150L, executorService, transferItemService, transferItemMetadataReader, fileService,
-            inboxWatcherFactory);
+            inboxWatcherFactory, vaultCatalogRepository);
         var file = Mockito.mock(File.class);
         Mockito.when(file.isFile()).thenReturn(true);
         Mockito.when(file.getName()).thenReturn("some_file.zip");
@@ -101,7 +103,7 @@ class CollectTaskManagerTest {
     @Test
     void onNonZipFileAdded() {
         var manager = new CollectTaskManager(inboxes, Path.of("data/outbox/"), 100L, executorService, transferItemService, transferItemMetadataReader, fileService,
-            inboxWatcherFactory);
+            inboxWatcherFactory, vaultCatalogRepository);
         var file = Mockito.mock(File.class);
         Mockito.when(file.isFile()).thenReturn(true);
         Mockito.when(file.getName()).thenReturn("some_file.exe");

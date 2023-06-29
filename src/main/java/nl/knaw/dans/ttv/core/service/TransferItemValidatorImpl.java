@@ -18,11 +18,12 @@ package nl.knaw.dans.ttv.core.service;
 import nl.knaw.dans.ttv.core.InvalidTransferItemException;
 import nl.knaw.dans.ttv.db.TransferItem;
 
+import java.util.Optional;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
 public class TransferItemValidatorImpl implements TransferItemValidator {
-    private static final Pattern VERSION_PATTERN = Pattern.compile("^[0-9]+\\.[0-9]+$");
+    private static final Pattern VERSION_PATTERN = Pattern.compile("^([0-9]+)\\.([0-9]+)$");
 
     @Override
     public void validateTransferItem(TransferItem transferItem) throws InvalidTransferItemException {
@@ -30,11 +31,6 @@ public class TransferItemValidatorImpl implements TransferItemValidator {
         // check if datasetVersion is a valid version (eg 1.0)
         if (!isValidVersion(transferItem.getDatasetVersion())) {
             throw new InvalidTransferItemException(String.format("Dataset Version is invalid: '%s'", transferItem.getDatasetVersion()));
-        }
-
-        // version major should be 1 or greater, version minor should be 0 or greater
-        if (!isValidVersionMajorAndMinor(transferItem.getVersionMajor(), transferItem.getVersionMinor())) {
-            throw new InvalidTransferItemException(String.format("Version numbers are incorrect: major is %s and minor is %s", transferItem.getVersionMajor(), transferItem.getVersionMinor()));
         }
 
         if (!isValidBagId(transferItem.getBagId())) {
@@ -51,7 +47,16 @@ public class TransferItemValidatorImpl implements TransferItemValidator {
             return false;
         }
 
-        return VERSION_PATTERN.matcher(version).matches();
+        var matches = VERSION_PATTERN.matcher(version);
+
+        if (!matches.matches()) {
+            return false;
+        }
+
+        var versionMajor = Optional.ofNullable(matches.group(1)).map(Integer::parseInt).orElse(0);
+        var versionMinor = Optional.ofNullable(matches.group(2)).map(Integer::parseInt).orElse(0);
+
+        return versionMajor >= 1 && versionMinor >= 0;
     }
 
     boolean isValidVersionMajorAndMinor(int versionMajor, int versionMinor) {
@@ -72,7 +77,8 @@ public class TransferItemValidatorImpl implements TransferItemValidator {
         try {
             UUID.fromString(bagId.substring(prefix.length()));
             return true;
-        } catch (IllegalArgumentException e) {
+        }
+        catch (IllegalArgumentException e) {
             return false;
         }
     }

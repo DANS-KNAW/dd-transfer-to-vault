@@ -1,0 +1,43 @@
+====
+    Copyright (C) 2021 DANS - Data Archiving and Networked Services (info@dans.knaw.nl)
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+====
+
+working notes for adding new vault catalog api support
+
+current situation
+- collect task gets basic metadata and creates transferitem record
+- extractmetadata task gets more metadata and updates transferitem record
+- ocfltartask collects a bunch of these transfer items and creates a tar entity
+- this is then sent to the vault catalog
+
+new situation
+- collect task collects bag, creates record in vault catalog with basic info
+- extractmetadata task gets more metadata and updates vault catalog record (and also internal record)
+- ocfltartask collects a bunch of these transfer items and creates a tar entity
+- once the tar is created, it is done? verify this. Or can a tar be re-created for some reason
+- ocfltartask creates tar in vault catalog, but the ocfl objects should already exist there
+
+todos
+create a new interface with the catalog api
+have methods:
+ - create ocfl version
+ - update ocfl version
+ - create tar
+
+
+notes
+everything coming from sword2 has a unique bag id
+if it is an update to an existing bag, it will have a different bag id
+the sword token might be the same, and it is an update, but it will have

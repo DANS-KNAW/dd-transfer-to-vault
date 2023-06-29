@@ -13,20 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ttv.core.service;
+package nl.knaw.dans.ttv.core;
 
-import nl.knaw.dans.ttv.core.domain.ProcessResult;
+import nl.knaw.dans.ttv.api.ApiException;
+import nl.knaw.dans.ttv.db.Tar;
+import nl.knaw.dans.ttv.db.TransferItem;
 
 import java.io.IOException;
-import java.nio.file.Path;
 
-public interface TarCommandRunner {
+public interface VaultCatalogRepository {
 
-    ProcessResult tarDirectory(Path path, String target) throws IOException, InterruptedException;
+    void registerOcflObjectVersion(TransferItem transferItem) throws IOException;
 
-    ProcessResult verifyPackage(String targetPackage) throws IOException, InterruptedException;
+    void registerTar(Tar tar) throws IOException;
 
-    ProcessResult deletePackage(String targetPackage) throws IOException, InterruptedException;
-
-    ProcessResult getDmftarVersion() throws IOException, InterruptedException;
 }

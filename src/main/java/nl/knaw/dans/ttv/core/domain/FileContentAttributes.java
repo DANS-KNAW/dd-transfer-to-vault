@@ -13,20 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ttv.core.service;
+package nl.knaw.dans.ttv.core.domain;
 
-import nl.knaw.dans.ttv.core.domain.ProcessResult;
+import lombok.Builder;
+import lombok.Value;
 
-import java.io.IOException;
-import java.nio.file.Path;
+@Value
+@Builder
+public class FileContentAttributes {
 
-public interface TarCommandRunner {
+    String datasetVersion;
+    String bagId;
+    String nbn;
+    String oaiOre;
+    String pidMapping;
+    String otherId;
+    String otherIdVersion;
+    String swordToken;
+    String swordClient;
+    String bagChecksum;
 
-    ProcessResult tarDirectory(Path path, String target) throws IOException, InterruptedException;
-
-    ProcessResult verifyPackage(String targetPackage) throws IOException, InterruptedException;
-
-    ProcessResult deletePackage(String targetPackage) throws IOException, InterruptedException;
-
-    ProcessResult getDmftarVersion() throws IOException, InterruptedException;
 }

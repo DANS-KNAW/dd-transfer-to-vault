@@ -41,7 +41,7 @@ public class Tar {
     private LocalDateTime created;
     @Column(name = "datetime_confirmed_archived")
     private LocalDateTime datetimeConfirmedArchived;
-    @OneToMany(mappedBy = "aipsTar", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "tar", cascade = CascadeType.ALL)
     private List<TransferItem> transferItems;
     @Column(name = "archive_in_progress")
     @ColumnDefault("false")

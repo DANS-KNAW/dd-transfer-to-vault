@@ -35,7 +35,7 @@ public class CollectTask implements Runnable {
     private final TransferItemMetadataReader metadataReader;
     private final FileService fileService;
 
-    public CollectTask(Path filePath, Path outbox, String datastationName, TransferItemService transferItemService, TransferItemMetadataReader metadataReader, FileService fileService) {
+    public CollectTask(Path filePath, Path outbox, String datastationName, TransferItemService transferItemService, TransferItemMetadataReader metadataReader, FileService fileService, VaultCatalogRepository vaultCatalogRepository) {
         this.filePath = filePath;
         this.outbox = outbox;
         this.datastationName = datastationName;
@@ -74,6 +74,7 @@ public class CollectTask implements Runnable {
                 String.format("TransferItem exists already, but does not have expected status of COLLECTED: %s", transferItem)
             );
         }
+
 
         log.info("Moving file '{}' to outbox '{}'", path, this.outbox);
         moveFileToOutbox(transferItem, path, this.outbox);

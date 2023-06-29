@@ -15,13 +15,11 @@
  */
 package nl.knaw.dans.ttv.core;
 
+import nl.knaw.dans.ttv.api.ApiException;
 import nl.knaw.dans.ttv.core.service.ArchiveStatusService;
 import nl.knaw.dans.ttv.core.service.FileService;
 import nl.knaw.dans.ttv.core.service.TransferItemService;
-import nl.knaw.dans.ttv.core.service.VaultCatalogService;
-import nl.knaw.dans.ttv.core.service.VaultCatalogServiceImpl;
 import nl.knaw.dans.ttv.db.Tar;
-import nl.knaw.dans.ttv.openapi.ApiException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -35,21 +33,21 @@ class ConfirmArchivedTaskTest {
     private TransferItemService transferItemService;
     private ArchiveStatusService archiveStatusService;
     private FileService fileService;
-    private VaultCatalogService vaultCatalogService;
+    private VaultCatalogRepository vaultCatalogRepository;
 
     @BeforeEach
     void setUp() {
         this.transferItemService = Mockito.mock(TransferItemService.class);
         this.archiveStatusService = Mockito.mock(ArchiveStatusService.class);
         this.fileService = Mockito.mock(FileService.class);
-        this.vaultCatalogService = Mockito.mock(VaultCatalogService.class);
+        this.vaultCatalogRepository = Mockito.mock(VaultCatalogRepository.class);
     }
 
     @Test
     void testCompletelyArchived() throws IOException, InterruptedException, ApiException {
         var tar = new Tar("test1", Tar.TarStatus.OCFLTARCREATED, false);
         var path = Path.of("workingdir");
-        var task = new ConfirmArchivedTask(tar, transferItemService, archiveStatusService, fileService, path, vaultCatalogService);
+        var task = new ConfirmArchivedTask(tar, transferItemService, archiveStatusService, fileService, path, vaultCatalogRepository);
 
         var fileStatus = Map.of(
             "file1", ArchiveStatusService.FileStatus.DUAL,
@@ -63,14 +61,14 @@ class ConfirmArchivedTaskTest {
 
         Mockito.verify(transferItemService).updateTarToArchived(Mockito.any());
         Mockito.verify(fileService).deleteDirectory(Path.of("workingdir", "test1"));
-        Mockito.verify(vaultCatalogService).addOrUpdateTar(Mockito.any());
+        Mockito.verify(vaultCatalogRepository).registerTar(Mockito.any());
     }
 
     @Test
     void testPartiallyArchived() throws IOException, InterruptedException {
         var tar = new Tar("test1", Tar.TarStatus.OCFLTARCREATED, false);
         var path = Path.of("workingdir");
-        var task = new ConfirmArchivedTask(tar, transferItemService, archiveStatusService, fileService, path, vaultCatalogService);
+        var task = new ConfirmArchivedTask(tar, transferItemService, archiveStatusService, fileService, path, vaultCatalogRepository);
 
         var fileStatus = Map.of(
             "file1", ArchiveStatusService.FileStatus.DUAL,
@@ -85,14 +83,14 @@ class ConfirmArchivedTaskTest {
         Mockito.verify(transferItemService).resetTarToArchiving(Mockito.any());
         Mockito.verify(fileService, Mockito.times(0))
             .deleteDirectory(Mockito.any());
-        Mockito.verifyNoInteractions(vaultCatalogService);
+        Mockito.verifyNoInteractions(vaultCatalogRepository);
     }
 
     @Test
     void testOnError() throws IOException, InterruptedException {
         var tar = new Tar("test1", Tar.TarStatus.OCFLTARCREATED, false);
         var path = Path.of("workingdir");
-        var task = new ConfirmArchivedTask(tar, transferItemService, archiveStatusService, fileService, path, vaultCatalogService);
+        var task = new ConfirmArchivedTask(tar, transferItemService, archiveStatusService, fileService, path, vaultCatalogRepository);
 
         Mockito.when(archiveStatusService.getFileStatus("test1"))
             .thenThrow(IOException.class);
@@ -103,14 +101,14 @@ class ConfirmArchivedTaskTest {
         Mockito.verify(fileService, Mockito.times(0))
             .deleteDirectory(Mockito.any());
 
-        Mockito.verifyNoInteractions(vaultCatalogService);
+        Mockito.verifyNoInteractions(vaultCatalogRepository);
     }
 
     @Test
     void testOnCleanupErrorShouldNotThrowErrors() throws IOException, InterruptedException {
         var tar = new Tar("test1", Tar.TarStatus.OCFLTARCREATED, false);
         var path = Path.of("workingdir");
-        var task = new ConfirmArchivedTask(tar, transferItemService, archiveStatusService, fileService, path, vaultCatalogService);
+        var task = new ConfirmArchivedTask(tar, transferItemService, archiveStatusService, fileService, path, vaultCatalogRepository);
 
         var fileStatus = Map.of(
             "file1", ArchiveStatusService.FileStatus.DUAL,

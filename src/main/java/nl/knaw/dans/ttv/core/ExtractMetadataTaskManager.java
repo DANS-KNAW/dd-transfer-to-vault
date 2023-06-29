@@ -16,12 +16,7 @@
 package nl.knaw.dans.ttv.core;
 
 import io.dropwizard.lifecycle.Managed;
-import nl.knaw.dans.ttv.core.service.FileService;
-import nl.knaw.dans.ttv.core.service.InboxWatcher;
-import nl.knaw.dans.ttv.core.service.InboxWatcherFactory;
-import nl.knaw.dans.ttv.core.service.TransferItemMetadataReader;
-import nl.knaw.dans.ttv.core.service.TransferItemService;
-import nl.knaw.dans.ttv.core.service.TransferItemValidator;
+import nl.knaw.dans.ttv.core.service.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,11 +37,12 @@ public class ExtractMetadataTaskManager implements Managed {
     private final FileService fileService;
     private final InboxWatcherFactory inboxWatcherFactory;
     private final TransferItemValidator transferItemValidator;
+    private final VaultCatalogRepository vaultCatalogRepository;
     private InboxWatcher inboxWatcher;
 
     public ExtractMetadataTaskManager(Path inbox, Path outbox, long pollingInterval, ExecutorService executorService,
-        TransferItemService transferItemService, TransferItemMetadataReader metadataReader, FileService fileService, InboxWatcherFactory inboxWatcherFactory,
-        TransferItemValidator transferItemValidator) {
+                                      TransferItemService transferItemService, TransferItemMetadataReader metadataReader, FileService fileService, InboxWatcherFactory inboxWatcherFactory,
+                                      TransferItemValidator transferItemValidator, VaultCatalogRepository vaultCatalogRepository) {
 
         this.inbox = Objects.requireNonNull(inbox);
         this.outbox = Objects.requireNonNull(outbox);
@@ -57,6 +53,7 @@ public class ExtractMetadataTaskManager implements Managed {
         this.fileService = Objects.requireNonNull(fileService);
         this.inboxWatcherFactory = Objects.requireNonNull(inboxWatcherFactory);
         this.transferItemValidator = transferItemValidator;
+        this.vaultCatalogRepository = vaultCatalogRepository;
     }
 
     @Override
@@ -73,7 +70,7 @@ public class ExtractMetadataTaskManager implements Managed {
         if (file.isFile() && file.getName().toLowerCase(Locale.ROOT).endsWith(".zip")) {
             var metadataTask = new ExtractMetadataTask(
                 file.toPath(), outbox, transferItemService, metadataReader, fileService,
-                transferItemValidator);
+                transferItemValidator, vaultCatalogRepository);
 
             log.debug("Executing task {}", metadataTask);
             executorService.execute(metadataTask);

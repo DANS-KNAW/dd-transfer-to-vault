@@ -16,7 +16,7 @@
 package nl.knaw.dans.ttv.core.service;
 
 import nl.knaw.dans.ttv.core.config.DataArchiveConfiguration;
-import nl.knaw.dans.ttv.core.dto.ArchiveMetadata;
+import nl.knaw.dans.ttv.core.domain.ArchiveMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

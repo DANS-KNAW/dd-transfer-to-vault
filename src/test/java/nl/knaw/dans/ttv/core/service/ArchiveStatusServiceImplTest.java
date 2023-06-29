@@ -16,7 +16,7 @@
 package nl.knaw.dans.ttv.core.service;
 
 import nl.knaw.dans.ttv.core.config.DataArchiveConfiguration;
-import nl.knaw.dans.ttv.core.dto.ProcessResult;
+import nl.knaw.dans.ttv.core.domain.ProcessResult;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;

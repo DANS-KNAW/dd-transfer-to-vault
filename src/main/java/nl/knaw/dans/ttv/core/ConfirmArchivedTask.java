@@ -18,9 +18,7 @@ package nl.knaw.dans.ttv.core;
 import nl.knaw.dans.ttv.core.service.ArchiveStatusService;
 import nl.knaw.dans.ttv.core.service.FileService;
 import nl.knaw.dans.ttv.core.service.TransferItemService;
-import nl.knaw.dans.ttv.core.service.VaultCatalogService;
 import nl.knaw.dans.ttv.db.Tar;
-import nl.knaw.dans.ttv.openapi.ApiException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,16 +34,16 @@ public class ConfirmArchivedTask implements Runnable {
     private final ArchiveStatusService archiveStatusService;
     private final FileService fileService;
     private final Path workingDir;
-    private final VaultCatalogService vaultCatalogService;
+    private final VaultCatalogRepository vaultCatalogRepository;
 
     public ConfirmArchivedTask(Tar tar, TransferItemService transferItemService, ArchiveStatusService archiveStatusService, FileService fileService,
-        Path workingDir, VaultCatalogService vaultCatalogService) {
+                               Path workingDir, VaultCatalogRepository vaultCatalogRepository) {
         this.transferItemService = transferItemService;
         this.archiveStatusService = archiveStatusService;
         this.fileService = fileService;
         this.workingDir = workingDir;
         this.tar = tar;
-        this.vaultCatalogService = vaultCatalogService;
+        this.vaultCatalogRepository = vaultCatalogRepository;
     }
 
     @Override
@@ -63,7 +61,8 @@ public class ConfirmArchivedTask implements Runnable {
                 transferItemService.updateTarToArchived(tar);
 
                 log.info("Updating TAR in vault catalog with uuid {}", tarId);
-                vaultCatalogService.addOrUpdateTar(tar);
+                vaultCatalogRepository.registerTar(tar);
+//                vaultCatalogRepository.addOrUpdateTar(tar);
 
                 try {
                     log.info("Cleaning workdir files and folders for tar archive '{}'", tarId);
@@ -79,7 +78,7 @@ public class ConfirmArchivedTask implements Runnable {
                 transferItemService.resetTarToArchiving(tar);
             }
         }
-        catch (IOException | InterruptedException | ApiException e) {
+        catch (IOException | InterruptedException e) {
             log.error("An error occurred while checking archiving status", e);
 
             // in case it fails to check, still set the transfer status to OCFLTARCREATED and reset the checking flag
