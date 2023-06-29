@@ -25,7 +25,6 @@ import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
 import java.util.Map;
-import java.util.UUID;
 
 @Mapper
 public interface OcflObjectVersionMapper {
@@ -34,7 +33,6 @@ public interface OcflObjectVersionMapper {
     OcflObjectVersionMapper INSTANCE = Mappers.getMapper(OcflObjectVersionMapper.class);
 
     @Mapping(source = "swordClient", target = "dataSupplier")
-    @Mapping(source = "tar.tarUuid", target = "tarUuid")
     @Mapping(source = "datasetPid", target = "dataversePid")
     @Mapping(source = "datasetVersion", target = "dataversePidVersion")
     // TODO confirm this is correct
@@ -43,20 +41,6 @@ public interface OcflObjectVersionMapper {
     @Mapping(source = "pidMapping", target = "filePidToLocalPath")
     @Mapping(target = "skeletonRecord", constant = "false")
     OcflObjectVersionParametersDto mapParameters(TransferItem transferItem);
-
-    default UUID mapUuid(String value) {
-        if (value == null) {
-            return null;
-        }
-        return UUID.fromString(value);
-    }
-
-    default String mapUuid(UUID value) {
-        if (value == null) {
-            return null;
-        }
-        return value.toString();
-    }
 
     default Map<String, Object> mapMetadata(String value) {
         if (value == null) {

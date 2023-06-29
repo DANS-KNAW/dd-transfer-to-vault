@@ -35,9 +35,13 @@ have methods:
  - create ocfl version
  - update ocfl version
  - create tar
+ - move vault catalog config to top level config
 
 
 notes
 everything coming from sword2 has a unique bag id
 if it is an update to an existing bag, it will have a different bag id
 the sword token might be the same, and it is an update, but it will have
+
+the bag id is a urn:uuid here, but the catalog expects a regular UUID
+

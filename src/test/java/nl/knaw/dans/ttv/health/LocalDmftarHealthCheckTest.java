@@ -38,7 +38,9 @@ class LocalDmftarHealthCheckTest {
 
         var result = new LocalDmftarHealthCheck(config, processRunner).check();
 
-        assertEquals(HealthCheck.Result.healthy(), result);
+        var healtyhStatus = HealthCheck.Result.healthy();
+        assertTrue(result.isHealthy());
+        assertEquals(healtyhStatus.getMessage(), result.getMessage());
     }
 
     @Test
