@@ -81,8 +81,10 @@ public class TransferItem {
     @Column(name = "transfer_status", nullable = false)
     private TransferStatus transferStatus;
     @Column(name = "oai_ore")
+    @ToString.Exclude
     private String oaiOre;
     @Column(name = "pid_mapping")
+    @ToString.Exclude
     private String pidMapping;
     @Column(name = "aip_tar_entry_name")
     private String aipTarEntryName;

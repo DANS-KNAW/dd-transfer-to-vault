@@ -67,7 +67,12 @@ public class OcflRepositoryServiceImpl implements OcflRepositoryService {
         var source = Objects.requireNonNull(Path.of(transferItem.getDveFilePath()), "dveFilePath can't be null: " + transferItem.getDveFilePath());
 
         log.debug("Importing file '{}' with objectId '{}' into OCFL repository", source, objectId);
-        ocflRepository.putObject(ObjectVersionId.head(objectId), source, new VersionInfo().setMessage("initial commit"), OcflOption.MOVE_SOURCE);
+        ocflRepository.putObject(
+            ObjectVersionId.version(objectId, transferItem.getOcflObjectVersion()),
+            source,
+            new VersionInfo().setMessage("initial commit"),
+            OcflOption.MOVE_SOURCE
+        );
 
         return objectId;
     }

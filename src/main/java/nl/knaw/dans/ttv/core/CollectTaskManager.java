@@ -43,11 +43,10 @@ public class CollectTaskManager implements Managed {
     private final TransferItemMetadataReader metadataReader;
     private final FileService fileService;
     private final InboxWatcherFactory inboxWatcherFactory;
-    private final VaultCatalogRepository vaultCatalogRepository;
     private List<InboxWatcher> inboxWatchers;
 
     public CollectTaskManager(List<CollectConfiguration.InboxEntry> inboxes, Path outbox, long pollingInterval, ExecutorService executorService,
-                              TransferItemService transferItemService, TransferItemMetadataReader metadataReader, FileService fileService, InboxWatcherFactory inboxWatcherFactory, VaultCatalogRepository vaultCatalogRepository) {
+                              TransferItemService transferItemService, TransferItemMetadataReader metadataReader, FileService fileService, InboxWatcherFactory inboxWatcherFactory) {
 
         this.inboxes = Objects.requireNonNull(inboxes);
         this.outbox = Objects.requireNonNull(outbox);
@@ -57,7 +56,6 @@ public class CollectTaskManager implements Managed {
         this.metadataReader = Objects.requireNonNull(metadataReader);
         this.fileService = Objects.requireNonNull(fileService);
         this.inboxWatcherFactory = Objects.requireNonNull(inboxWatcherFactory);
-        this.vaultCatalogRepository = vaultCatalogRepository;
     }
 
     @Override
@@ -91,7 +89,7 @@ public class CollectTaskManager implements Managed {
         log.debug("Received file creation event for file '{}' and datastation name '{}'", file, datastationName);
         if (file.isFile() && file.getName().toLowerCase(Locale.ROOT).endsWith(".zip")) {
             var collectTask = new CollectTask(
-                file.toPath(), outbox, datastationName, transferItemService, metadataReader, fileService, vaultCatalogRepository
+                file.toPath(), outbox, datastationName, transferItemService, metadataReader, fileService
             );
 
             log.debug("Executing task {}", collectTask);

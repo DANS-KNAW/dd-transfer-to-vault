@@ -15,22 +15,26 @@
  */
 package nl.knaw.dans.ttv.db;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
+import org.hibernate.proxy.HibernateProxy;
+
+import javax.persistence.*;
+import java.util.Objects;
 
 @Entity
 @Table(name = "tar_parts")
+@Getter
+@Setter
+@ToString
+@RequiredArgsConstructor
 public class TarPart {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Long id;
     @Column(name = "part_name")
     private String partName;
     @Column(name = "checksum_algorithm")
@@ -48,48 +52,19 @@ public class TarPart {
         this.tar = tar;
     }
 
-    public TarPart() {
-
+    @Override
+    public final boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null) return false;
+        Class<?> oEffectiveClass = o instanceof HibernateProxy ? ((HibernateProxy) o).getHibernateLazyInitializer().getPersistentClass() : o.getClass();
+        Class<?> thisEffectiveClass = this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass() : this.getClass();
+        if (thisEffectiveClass != oEffectiveClass) return false;
+        TarPart tarPart = (TarPart) o;
+        return getId() != null && Objects.equals(getId(), tarPart.getId());
     }
 
-    public long getId() {
-        return id;
+    @Override
+    public final int hashCode() {
+        return getClass().hashCode();
     }
-
-    public void setId(long id) {
-        this.id = id;
-    }
-
-    public String getPartName() {
-        return partName;
-    }
-
-    public void setPartName(String partName) {
-        this.partName = partName;
-    }
-
-    public String getChecksumAlgorithm() {
-        return checksumAlgorithm;
-    }
-
-    public void setChecksumAlgorithm(String checksumAlgorithm) {
-        this.checksumAlgorithm = checksumAlgorithm;
-    }
-
-    public String getChecksumValue() {
-        return checksumValue;
-    }
-
-    public void setChecksumValue(String checksumValue) {
-        this.checksumValue = checksumValue;
-    }
-
-    public Tar getTar() {
-        return tar;
-    }
-
-    public void setTar(Tar tar) {
-        this.tar = tar;
-    }
-
 }

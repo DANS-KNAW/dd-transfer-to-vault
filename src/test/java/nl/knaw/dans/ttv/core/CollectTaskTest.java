@@ -55,7 +55,7 @@ class CollectTaskTest {
         var workDir = Path.of("data/workdir");
         var datastationName = "dsname";
 
-        var task = new CollectTask(filePath, outbox, datastationName, transferItemService, transferItemMetadataReader, fileService, vaultCatalogRepository);
+        var task = new CollectTask(filePath, outbox, datastationName, transferItemService, transferItemMetadataReader, fileService);
 
         Mockito.when(transferItemMetadataReader.getAssociatedXmlFile(Mockito.any()))
             .thenReturn(Optional.of(Path.of("data/inbox/doi-10-5072-dar-kxteqt-datacite.v1.0.xml")));
@@ -92,7 +92,7 @@ class CollectTaskTest {
         var outbox = Path.of("data/outbox");
         var datastationName = "dsname";
 
-        var task = new CollectTask(filePath, outbox, datastationName, transferItemService, transferItemMetadataReader, fileService, vaultCatalogRepository);
+        var task = new CollectTask(filePath, outbox, datastationName, transferItemService, transferItemMetadataReader, fileService);
 
         try {
             var filenameAttributes = FilenameAttributes.builder().build();
@@ -121,7 +121,7 @@ class CollectTaskTest {
         var outbox = Path.of("data/outbox");
         var datastationName = "dsname";
 
-        var task = new CollectTask(filePath, outbox, datastationName, transferItemService, transferItemMetadataReader, fileService, vaultCatalogRepository);
+        var task = new CollectTask(filePath, outbox, datastationName, transferItemService, transferItemMetadataReader, fileService);
         var testPath = Path.of("data/inbox/doi-10-5072-dar-kxteqt-datacite.v1.0.zip");
 
         Mockito.when(transferItemMetadataReader.getAssociatedXmlFile(filePath))
@@ -142,7 +142,7 @@ class CollectTaskTest {
         var outbox = Path.of("data/outbox");
         var datastationName = "dsname";
 
-        var task = new CollectTask(filePath, outbox, datastationName, transferItemService, transferItemMetadataReader, fileService, vaultCatalogRepository);
+        var task = new CollectTask(filePath, outbox, datastationName, transferItemService, transferItemMetadataReader, fileService);
         var testPath = Path.of("data/inbox/doi-10-5072-dar-kxteqt-datacite.v1.0.zip");
 
         Mockito.when(transferItemMetadataReader.getAssociatedXmlFile(filePath))
@@ -161,7 +161,7 @@ class CollectTaskTest {
         var outbox = Path.of("data/outbox");
         var datastationName = "dsname";
 
-        var task = new CollectTask(filePath, outbox, datastationName, transferItemService, transferItemMetadataReader, fileService, vaultCatalogRepository);
+        var task = new CollectTask(filePath, outbox, datastationName, transferItemService, transferItemMetadataReader, fileService);
         //        var testPath = Path.of("data/inbox/doi-10-5072-dar-kxteqt-datacite.v1.0.zip");
 
         var transferItem = new TransferItem();
@@ -183,7 +183,7 @@ class CollectTaskTest {
         var outbox = Path.of("data/outbox");
         var datastationName = "dsname";
 
-        var task = new CollectTask(filePath, outbox, datastationName, transferItemService, transferItemMetadataReader, fileService, vaultCatalogRepository);
+        var task = new CollectTask(filePath, outbox, datastationName, transferItemService, transferItemMetadataReader, fileService);
         var transferItem = TransferItem.builder()
             .datasetPid("pid1")
             .dveFilePath("path/to1.zip")
@@ -208,7 +208,7 @@ class CollectTaskTest {
         var outbox = Path.of("data/outbox");
         var datastationName = "dsname";
 
-        var task = new CollectTask(filePath, outbox, datastationName, transferItemService, transferItemMetadataReader, fileService, vaultCatalogRepository);
+        var task = new CollectTask(filePath, outbox, datastationName, transferItemService, transferItemMetadataReader, fileService);
         var transferItem = TransferItem.builder()
             .datasetPid("pid1")
             .dveFilePath("path/to1.zip")
