@@ -15,33 +15,12 @@
  */
 package nl.knaw.dans.ttv.core.domain;
 
-import java.time.LocalDateTime;
+import lombok.Value;
 
+import java.time.OffsetDateTime;
+
+@Value
 public class FilesystemAttributes {
-    private LocalDateTime creationTime;
-    private long bagSize;
-
-    public LocalDateTime getCreationTime() {
-        return creationTime;
-    }
-
-    public void setCreationTime(LocalDateTime creationTime) {
-        this.creationTime = creationTime;
-    }
-
-    public long getBagSize() {
-        return bagSize;
-    }
-
-    public void setBagSize(long bagSize) {
-        this.bagSize = bagSize;
-    }
-
-    @Override
-    public String toString() {
-        return "FilesystemAttributes{" +
-            "creationTime=" + creationTime +
-            ", bagSize=" + bagSize +
-            '}';
-    }
+    OffsetDateTime creationTime;
+    long bagSize;
 }

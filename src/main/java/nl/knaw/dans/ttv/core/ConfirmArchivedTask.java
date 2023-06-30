@@ -60,9 +60,8 @@ public class ConfirmArchivedTask implements Runnable {
                 log.info("All files in tar archive '{}' have been archived to tape", tarId);
                 transferItemService.updateTarToArchived(tar);
 
-                log.info("Updating TAR in vault catalog with uuid {}", tarId);
+                log.info("Updating TAR {} in vault catalog", tarId);
                 vaultCatalogRepository.registerTar(tar);
-//                vaultCatalogRepository.addOrUpdateTar(tar);
 
                 try {
                     log.info("Cleaning workdir files and folders for tar archive '{}'", tarId);

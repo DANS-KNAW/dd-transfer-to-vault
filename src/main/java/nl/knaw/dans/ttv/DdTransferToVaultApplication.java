@@ -22,11 +22,10 @@ import io.dropwizard.hibernate.HibernateBundle;
 import io.dropwizard.hibernate.UnitOfWorkAwareProxyFactory;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
+import nl.knaw.dans.ttv.client.OcflObjectVersionApi;
+import nl.knaw.dans.ttv.client.TarApi;
 import nl.knaw.dans.ttv.client.VaultCatalogAPIRepository;
-import nl.knaw.dans.ttv.core.CollectTaskManager;
-import nl.knaw.dans.ttv.core.ConfirmArchivedTaskManager;
-import nl.knaw.dans.ttv.core.ExtractMetadataTaskManager;
-import nl.knaw.dans.ttv.core.OcflTarTaskManager;
+import nl.knaw.dans.ttv.core.*;
 import nl.knaw.dans.ttv.core.service.*;
 import nl.knaw.dans.ttv.db.*;
 import nl.knaw.dans.ttv.health.*;
@@ -90,7 +89,7 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
         environment.healthChecks().register("DmftarRemote", new RemoteDmftarHealthCheck(configuration, tarCommandRunner));
         environment.healthChecks().register("SSH", new SSHHealthCheck(tarCommandRunner));
 
-        final var vaultCatalogRepository = new VaultCatalogAPIRepository(configuration.getConfirmArchived().getVaultServiceEndpoint());
+        final var vaultCatalogRepository = buildCatalogRepository(configuration.getConfirmArchived().getVaultServiceEndpoint());
 
 
         // the Collect task, which listens to new files on the network-drive shares
@@ -129,4 +128,13 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
         environment.lifecycle().manage(confirmArchivedTaskManager);
     }
 
+    VaultCatalogRepository buildCatalogRepository(String baseUrl) {
+        var tarApi = new TarApi();
+        tarApi.setCustomBaseUrl(baseUrl);
+
+        var ocflObjectVersionApi = new OcflObjectVersionApi();
+        ocflObjectVersionApi.setCustomBaseUrl(baseUrl);
+
+        return new VaultCatalogAPIRepository(tarApi, ocflObjectVersionApi);
+    }
 }

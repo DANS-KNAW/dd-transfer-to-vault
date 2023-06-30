@@ -27,7 +27,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.nio.file.Path;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -54,9 +54,7 @@ class TransferItemServiceImplTest {
             .version(Version.of(5, 3))
             .build();
 
-        filesystemAttributes = new FilesystemAttributes();
-        filesystemAttributes.setCreationTime(LocalDateTime.now());
-        filesystemAttributes.setBagSize(1234L);
+        filesystemAttributes = new FilesystemAttributes(OffsetDateTime.now(), 1234L);
 
         fileContentAttributes = FileContentAttributes.builder()
             .bagId("bag id")
@@ -172,13 +170,13 @@ class TransferItemServiceImplTest {
             TransferItem.builder()
                 .datasetPid("pid1")
                 .dveFilePath("path")
-                .creationTime(LocalDateTime.now())
+                .creationTime(OffsetDateTime.now())
                 .transferStatus(TransferItem.TransferStatus.TARRING)
                 .build(),
             TransferItem.builder()
                 .datasetPid("pid2")
                 .dveFilePath("path")
-                .creationTime(LocalDateTime.now())
+                .creationTime(OffsetDateTime.now())
                 .transferStatus(TransferItem.TransferStatus.TARRING)
                 .build()
         );
@@ -216,19 +214,19 @@ class TransferItemServiceImplTest {
             TransferItem.builder()
                 .datasetPid("pid1")
                 .dveFilePath("path")
-                .creationTime(LocalDateTime.now())
+                .creationTime(OffsetDateTime.now())
                 .transferStatus(TransferItem.TransferStatus.TARRING)
                 .build(),
             TransferItem.builder()
                 .datasetPid("pid2")
                 .dveFilePath("path")
-                .creationTime(LocalDateTime.now())
+                .creationTime(OffsetDateTime.now())
                 .transferStatus(TransferItem.TransferStatus.TARRING)
                 .build(),
             TransferItem.builder()
                 .datasetPid("pid3")
                 .dveFilePath("path")
-                .creationTime(LocalDateTime.now())
+                .creationTime(OffsetDateTime.now())
                 .transferStatus(TransferItem.TransferStatus.TARRING)
                 .build()
         );
@@ -309,13 +307,13 @@ class TransferItemServiceImplTest {
             TransferItem.builder()
                 .datasetPid("pid1")
                 .dveFilePath("path")
-                .creationTime(LocalDateTime.now())
+                .creationTime(OffsetDateTime.now())
                 .transferStatus(TransferItem.TransferStatus.METADATA_EXTRACTED)
                 .build(),
             TransferItem.builder()
                 .datasetPid("pid2")
                 .dveFilePath("path")
-                .creationTime(LocalDateTime.now())
+                .creationTime(OffsetDateTime.now())
                 .transferStatus(TransferItem.TransferStatus.METADATA_EXTRACTED)
                 .build()
         );

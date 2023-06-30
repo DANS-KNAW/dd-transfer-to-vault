@@ -27,15 +27,10 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
 import java.time.Instant;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.*;
 
 class TransferItemMetadataReaderImplTest {
 
@@ -92,7 +87,7 @@ class TransferItemMetadataReaderImplTest {
             var attributes = service.getFilesystemAttributes(path);
 
             assertEquals(1234L, attributes.getBagSize());
-            assertEquals(LocalDateTime.ofInstant(ts, ZoneId.systemDefault()), attributes.getCreationTime());
+            assertEquals(OffsetDateTime.ofInstant(ts, ZoneId.systemDefault()), attributes.getCreationTime());
         }
         catch (InvalidTransferItemException | IOException e) {
             e.printStackTrace();
@@ -106,7 +101,6 @@ class TransferItemMetadataReaderImplTest {
 
         try {
             var path = Path.of("doi-10-5072-dar-kxteqtv1.0.zip");
-            var ts = Instant.now();
 
             Mockito.when(fileService.getFilesystemAttribute(path, "creationTime"))
                 .thenThrow(IOException.class);

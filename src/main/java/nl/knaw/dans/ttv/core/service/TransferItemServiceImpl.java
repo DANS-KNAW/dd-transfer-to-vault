@@ -26,7 +26,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.ObjectNotFoundException;
 
 import java.nio.file.Path;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -43,13 +43,15 @@ public class TransferItemServiceImpl implements TransferItemService {
 
     @Override
     @UnitOfWork
-    public TransferItem createTransferItem(String datastationName, FilenameAttributes filenameAttributes, FilesystemAttributes filesystemAttributes,
+    public TransferItem createTransferItem(String datastationName,
+                                           FilenameAttributes filenameAttributes,
+                                           FilesystemAttributes filesystemAttributes,
                                            FileContentAttributes fileContentAttributes)
         throws InvalidTransferItemException {
         var transferItem = new TransferItem();
 
         transferItem.setTransferStatus(TransferItem.TransferStatus.COLLECTED);
-        transferItem.setQueueDate(LocalDateTime.now());
+        transferItem.setQueueDate(OffsetDateTime.now());
         transferItem.setDatasetDvInstance(datastationName);
         transferItem.setVersion(filenameAttributes.getVersion());
 
@@ -109,9 +111,9 @@ public class TransferItemServiceImpl implements TransferItemService {
         var transferItem = new TransferItem();
 
         transferItem.setTransferStatus(TransferItem.TransferStatus.COLLECTED);
-        transferItem.setQueueDate(LocalDateTime.now());
+        transferItem.setQueueDate(OffsetDateTime.now());
         transferItem.setDatasetDvInstance(datastationName);
-        transferItem.setBagDepositDate(LocalDateTime.now());
+        transferItem.setBagDepositDate(OffsetDateTime.now());
 
         // filename attributes
         transferItem.setDveFilePath(filenameAttributes.getDveFilePath());
@@ -273,7 +275,7 @@ public class TransferItemServiceImpl implements TransferItemService {
         var tarArchive = new Tar();
         tarArchive.setTarUuid(id);
         tarArchive.setTarStatus(Tar.TarStatus.TARRING);
-        tarArchive.setCreated(LocalDateTime.now());
+        tarArchive.setCreated(OffsetDateTime.now());
         tarArchive.setVaultPath(vaultPath);
         tarArchive.setArchiveInProgress(true);
 
@@ -306,7 +308,7 @@ public class TransferItemServiceImpl implements TransferItemService {
     public void updateTarToArchived(Tar tar) {
         tar.setTarStatus(Tar.TarStatus.CONFIRMEDARCHIVED);
         tar.setConfirmCheckInProgress(false);
-        tar.setDatetimeConfirmedArchived(LocalDateTime.now());
+        tar.setDatetimeConfirmedArchived(OffsetDateTime.now());
         save(tar);
     }
 

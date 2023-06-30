@@ -23,7 +23,7 @@ import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.type.TextType;
 
 import javax.persistence.*;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.Objects;
 
 @Entity
@@ -56,7 +56,7 @@ public class TransferItem {
     @Column(name = "dataset_version")
     private String datasetVersion;
     @Column(name = "creation_time", nullable = false)
-    private LocalDateTime creationTime;
+    private OffsetDateTime creationTime;
     @Column(name = "dve_file_path", nullable = false)
     private String dveFilePath;
     @Column(name = "nbn")
@@ -74,7 +74,7 @@ public class TransferItem {
     @Column(name = "bag_checksum")
     private String bagChecksum;
     @Column(name = "queue_date")
-    private LocalDateTime queueDate;
+    private OffsetDateTime queueDate;
     @Column(name = "bag_size")
     private long bagSize;
     @Enumerated(EnumType.STRING)
@@ -92,7 +92,7 @@ public class TransferItem {
     @JoinColumn(name = "tar_id")
     private Tar tar;
     @Column(name = "bag_deposit_date")
-    private LocalDateTime bagDepositDate;
+    private OffsetDateTime bagDepositDate;
 
     public Version getVersion() {
         return Version.of(versionMajor, versionMinor);

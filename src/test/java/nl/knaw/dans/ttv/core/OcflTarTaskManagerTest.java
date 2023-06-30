@@ -28,7 +28,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.time.Duration;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 
@@ -70,14 +70,14 @@ class OcflTarTaskManagerTest {
             TransferItem.builder()
                 .bagId("id1")
                 .dveFilePath("path1")
-                .creationTime(LocalDateTime.now())
+                .creationTime(OffsetDateTime.now())
                 .transferStatus(TransferItem.TransferStatus.METADATA_EXTRACTED)
                 .build(),
 
             TransferItem.builder()
                 .bagId("id2")
                 .dveFilePath("path2")
-                .creationTime(LocalDateTime.now())
+                .creationTime(OffsetDateTime.now())
                 .transferStatus(TransferItem.TransferStatus.METADATA_EXTRACTED)
                 .build()
         );
@@ -123,14 +123,14 @@ class OcflTarTaskManagerTest {
             TransferItem.builder()
                 .bagId("id1")
                 .dveFilePath("path1")
-                .creationTime(LocalDateTime.now())
+                .creationTime(OffsetDateTime.now())
                 .transferStatus(TransferItem.TransferStatus.METADATA_EXTRACTED)
                 .build(),
 
             TransferItem.builder()
                 .bagId("id2")
                 .dveFilePath("path2")
-                .creationTime(LocalDateTime.now())
+                .creationTime(OffsetDateTime.now())
                 .transferStatus(TransferItem.TransferStatus.METADATA_EXTRACTED)
                 .build()
         );
@@ -164,14 +164,14 @@ class OcflTarTaskManagerTest {
             TransferItem.builder()
                 .bagId("id1")
                 .dveFilePath("data/inbox/1.zip")
-                .creationTime(LocalDateTime.now())
+                .creationTime(OffsetDateTime.now())
                 .transferStatus(TransferItem.TransferStatus.TARRING)
                 .build(),
 
             TransferItem.builder()
                 .bagId("id2")
                 .dveFilePath("data/workdir/tarid/dve/2.zip")
-                .creationTime(LocalDateTime.now())
+                .creationTime(OffsetDateTime.now())
                 .transferStatus(TransferItem.TransferStatus.TARRING)
                 .build()
         );

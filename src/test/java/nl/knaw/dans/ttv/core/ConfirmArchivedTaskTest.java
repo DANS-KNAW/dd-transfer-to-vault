@@ -15,7 +15,7 @@
  */
 package nl.knaw.dans.ttv.core;
 
-import nl.knaw.dans.ttv.api.ApiException;
+import nl.knaw.dans.ttv.client.ApiException;
 import nl.knaw.dans.ttv.core.service.ArchiveStatusService;
 import nl.knaw.dans.ttv.core.service.FileService;
 import nl.knaw.dans.ttv.core.service.TransferItemService;
@@ -44,7 +44,7 @@ class ConfirmArchivedTaskTest {
     }
 
     @Test
-    void testCompletelyArchived() throws IOException, InterruptedException, ApiException {
+    void testCompletelyArchived() throws IOException, InterruptedException {
         var tar = new Tar("test1", Tar.TarStatus.OCFLTARCREATED, false);
         var path = Path.of("workingdir");
         var task = new ConfirmArchivedTask(tar, transferItemService, archiveStatusService, fileService, path, vaultCatalogRepository);

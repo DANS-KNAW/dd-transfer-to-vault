@@ -40,6 +40,7 @@ public interface OcflObjectVersionMapper {
     @Mapping(source = "oaiOre", target = "metadata")
     @Mapping(source = "pidMapping", target = "filePidToLocalPath")
     @Mapping(target = "skeletonRecord", constant = "false")
+    @Mapping(target = "exportTimestamp", source = "bagDepositDate")
     OcflObjectVersionParametersDto mapParameters(TransferItem transferItem);
 
     default Map<String, Object> mapMetadata(String value) {

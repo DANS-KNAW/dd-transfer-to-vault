@@ -27,7 +27,7 @@ import org.mockito.Mockito;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
@@ -36,14 +36,12 @@ import static org.junit.jupiter.api.Assertions.fail;
 class CollectTaskTest {
 
     private TransferItemService transferItemService;
-    private VaultCatalogRepository vaultCatalogRepository;
     private TransferItemMetadataReader transferItemMetadataReader;
     private FileService fileService;
 
     @BeforeEach
     void setUp() {
         this.transferItemService = Mockito.mock(TransferItemService.class);
-        this.vaultCatalogRepository = Mockito.mock(VaultCatalogRepository.class);
         this.transferItemMetadataReader = Mockito.mock(TransferItemMetadataReader.class);
         this.fileService = Mockito.mock(FileService.class);
     }
@@ -61,11 +59,11 @@ class CollectTaskTest {
             .thenReturn(Optional.of(Path.of("data/inbox/doi-10-5072-dar-kxteqt-datacite.v1.0.xml")));
 
         var transferItem = TransferItem.builder()
-                .datasetPid("pid1")
-                .dveFilePath("path/to1.zip")
-                .creationTime(LocalDateTime.now())
-                .transferStatus(TransferItem.TransferStatus.COLLECTED)
-                .build();
+            .datasetPid("pid1")
+            .dveFilePath("path/to1.zip")
+            .creationTime(OffsetDateTime.now())
+            .transferStatus(TransferItem.TransferStatus.COLLECTED)
+            .build();
 
         Mockito.when(transferItemService.createTransferItem(Mockito.any(), Mockito.any(), Mockito.any()))
             .thenReturn(transferItem);
@@ -96,7 +94,7 @@ class CollectTaskTest {
 
         try {
             var filenameAttributes = FilenameAttributes.builder().build();
-            var filesystemAttributes = new FilesystemAttributes();
+            var filesystemAttributes = new FilesystemAttributes(OffsetDateTime.now(), 1234L);
 
             Mockito.when(transferItemMetadataReader.getFilenameAttributes(filePath))
                 .thenReturn(filenameAttributes);
@@ -187,7 +185,7 @@ class CollectTaskTest {
         var transferItem = TransferItem.builder()
             .datasetPid("pid1")
             .dveFilePath("path/to1.zip")
-            .creationTime(LocalDateTime.now())
+            .creationTime(OffsetDateTime.now())
             .transferStatus(TransferItem.TransferStatus.TARRING)
             .build();
 
@@ -212,7 +210,7 @@ class CollectTaskTest {
         var transferItem = TransferItem.builder()
             .datasetPid("pid1")
             .dveFilePath("path/to1.zip")
-            .creationTime(LocalDateTime.now())
+            .creationTime(OffsetDateTime.now())
             .transferStatus(TransferItem.TransferStatus.TARRING)
             .build();
 

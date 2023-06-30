@@ -25,7 +25,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -56,7 +56,7 @@ class TransferItemDAOTest {
                 .datasetPid("doi:10.5072/FK2/P4PHV7")
                 .datasetVersion("1.0")
                 .dveFilePath("src/test/resources/doi-10-5072-fk2-p4phv7v-1-0/metadata/oai-ore.jsonld")
-                .creationTime(LocalDateTime.parse("2007-12-03T10:15:30"))
+                .creationTime(OffsetDateTime.parse("2007-12-03T10:15:30Z"))
                 .transferStatus(TransferItem.TransferStatus.METADATA_EXTRACTED)
                 .build()));
 
@@ -64,7 +64,7 @@ class TransferItemDAOTest {
         assertThat(dataset.getDatasetPid()).isEqualTo("doi:10.5072/FK2/P4PHV7");
         assertThat(dataset.getDatasetVersion()).isEqualTo("1.0");
         assertThat(dataset.getDveFilePath()).isEqualTo("src/test/resources/doi-10-5072-fk2-p4phv7v-1-0/metadata/oai-ore.jsonld");
-        assertThat(dataset.getCreationTime()).isEqualTo(LocalDateTime.parse("2007-12-03T10:15:30"));
+        assertThat(dataset.getCreationTime()).isEqualTo(OffsetDateTime.parse("2007-12-03T10:15:30Z"));
         assertThat(dataset.getTransferStatus()).isEqualTo(TransferItem.TransferStatus.METADATA_EXTRACTED);
         assertThat(transferItemDAO.findById(dataset.getId())).isEqualTo(Optional.of(dataset));
     }
@@ -77,7 +77,7 @@ class TransferItemDAOTest {
                 .datasetPid("doi:10.5072/FK2/P4PHV7")
                 .datasetVersion("1.0")
                 .dveFilePath("src/test/resources/doi-10-5072-fk2-p4phv7v-1-0/metadata/oai-ore.jsonld")
-                .creationTime(LocalDateTime.parse("2007-12-03T10:15:30"))
+                .creationTime(OffsetDateTime.parse("2007-12-03T10:15:30Z"))
                 .transferStatus(TransferItem.TransferStatus.METADATA_EXTRACTED)
                 .build()
             );
@@ -86,7 +86,7 @@ class TransferItemDAOTest {
                 .datasetPid("doi:10.5072/FK2/JOY8UU")
                 .datasetVersion("2.0")
                 .dveFilePath("src/test/resources/doi-10-5072-fk2-joy8uuv-2-0/metadata/oai-ore.jsonld")
-                .creationTime(LocalDateTime.parse("2008-12-03T11:30:00"))
+                .creationTime(OffsetDateTime.parse("2008-12-03T11:30:00Z"))
                 .transferStatus(TransferItem.TransferStatus.METADATA_EXTRACTED)
                 .build()
             );
@@ -95,7 +95,7 @@ class TransferItemDAOTest {
                 .datasetPid("doi:10.5072/FK2/QZ0LJQ")
                 .datasetVersion("2.0")
                 .dveFilePath("src/test/resources/doi-10-5072-fk2-qz0ljqv-1-2/metadata/oai-ore.jsonld")
-                .creationTime(LocalDateTime.parse("2020-08-03T00:15:22"))
+                .creationTime(OffsetDateTime.parse("2020-08-03T00:15:22Z"))
                 .transferStatus(TransferItem.TransferStatus.TARRING)
                 .build()
             );
@@ -109,7 +109,7 @@ class TransferItemDAOTest {
             .containsOnly("src/test/resources/doi-10-5072-fk2-p4phv7v-1-0/metadata/oai-ore.jsonld", "src/test/resources/doi-10-5072-fk2-joy8uuv-2-0/metadata/oai-ore.jsonld",
                 "src/test/resources/doi-10-5072-fk2-qz0ljqv-1-2/metadata/oai-ore.jsonld");
         assertThat(transferItems).extracting("creationTime")
-            .containsOnly(LocalDateTime.parse("2007-12-03T10:15:30"), LocalDateTime.parse("2008-12-03T11:30:00"), LocalDateTime.parse("2020-08-03T00:15:22"));
+            .containsOnly(OffsetDateTime.parse("2007-12-03T10:15:30Z"), OffsetDateTime.parse("2008-12-03T11:30:00Z"), OffsetDateTime.parse("2020-08-03T00:15:22Z"));
         assertThat(transferItems).extracting("transferStatus").containsOnly(TransferItem.TransferStatus.METADATA_EXTRACTED, TransferItem.TransferStatus.TARRING);
     }
 
@@ -135,7 +135,7 @@ class TransferItemDAOTest {
                 .versionMajor(1)
                 .versionMinor(0)
                 .dveFilePath("src/test/resources/doi-10-5072-fk2-p4phv7v-1-0/metadata/oai-ore.jsonld")
-                .creationTime(LocalDateTime.parse("2007-12-03T10:15:30"))
+                .creationTime(OffsetDateTime.parse("2007-12-03T10:15:30Z"))
                 .transferStatus(TransferItem.TransferStatus.METADATA_EXTRACTED)
                 .build()
             );
@@ -145,7 +145,7 @@ class TransferItemDAOTest {
                 .versionMajor(2)
                 .versionMinor(0)
                 .dveFilePath("src/test/resources/doi-10-5072-fk2-joy8uuv-2-0/metadata/oai-ore.jsonld")
-                .creationTime(LocalDateTime.parse("2008-12-03T11:30:00"))
+                .creationTime(OffsetDateTime.parse("2008-12-03T11:30:00Z"))
                 .transferStatus(TransferItem.TransferStatus.METADATA_EXTRACTED)
                 .build()
             );
@@ -155,16 +155,10 @@ class TransferItemDAOTest {
                 .versionMajor(1)
                 .versionMinor(1)
                 .dveFilePath("src/test/resources/doi-10-5072-fk2-qz0ljqv-1-2/metadata/oai-ore.jsonld")
-                .creationTime(LocalDateTime.parse("2020-08-03T11:30:00"))
+                .creationTime(OffsetDateTime.parse("2020-08-03T11:30:00Z"))
                 .transferStatus(TransferItem.TransferStatus.TARRING)
                 .build()
             );
-//            transferItemDAO.save(new TransferItem("doi:10.5072/FK2/P4PHV7", "1.0", "src/test/resources/doi-10-5072-fk2-p4phv7v-1-0/metadata/oai-ore.jsonld", LocalDateTime.parse("2007-12-03T10:15:30"),
-//                TransferItem.TransferStatus.METADATA_EXTRACTED));
-//            transferItemDAO.save(new TransferItem("doi:10.5072/FK2/JOY8UU", "2.0", "src/test/resources/doi-10-5072-fk2-joy8uuv-2-0/metadata/oai-ore.jsonld", LocalDateTime.parse("2008-12-03T11:30:00"),
-//                TransferItem.TransferStatus.METADATA_EXTRACTED));
-//            transferItemDAO.save(new TransferItem("doi:10.5072/FK2/QZ0LJQ", "3.0", "src/test/resources/doi-10-5072-fk2-qz0ljqv-1-2/metadata/oai-ore.jsonld", LocalDateTime.parse("2020-08-03T00:15:22"),
-//                TransferItem.TransferStatus.TARRING));
         });
 
         var item = transferItemDAO.findByDatasetPidAndVersion("doi:10.5072/FK2/JOY8UU", Version.of(2, 0)).get();
@@ -182,7 +176,7 @@ class TransferItemDAOTest {
                 .datasetPid("doi:10.5072/FK2/P4PHV7")
                 .datasetVersion("1.0")
                 .dveFilePath("src/test/resources/doi-10-5072-fk2-p4phv7v-1-0/metadata/oai-ore.jsonld")
-                .creationTime(LocalDateTime.parse("2007-12-03T10:15:30"))
+                .creationTime(OffsetDateTime.parse("2007-12-03T10:15:30Z"))
                 .transferStatus(TransferItem.TransferStatus.METADATA_EXTRACTED)
                 .build()
             );
@@ -191,7 +185,7 @@ class TransferItemDAOTest {
                 .datasetPid("doi:10.5072/FK2/JOY8UU")
                 .datasetVersion("2.0")
                 .dveFilePath("src/test/resources/doi-10-5072-fk2-joy8uuv-2-0/metadata/oai-ore.jsonld")
-                .creationTime(LocalDateTime.parse("2008-12-03T11:30:00"))
+                .creationTime(OffsetDateTime.parse("2008-12-03T11:30:00Z"))
                 .transferStatus(TransferItem.TransferStatus.COLLECTED)
                 .build()
             );
@@ -200,16 +194,10 @@ class TransferItemDAOTest {
                 .datasetPid("doi:10.5072/FK2/QZ0LJQ")
                 .datasetVersion("3.0")
                 .dveFilePath("src/test/resources/doi-10-5072-fk2-qz0ljqv-1-2/metadata/oai-ore.jsonld")
-                .creationTime(LocalDateTime.parse("2020-08-03T11:30:00"))
+                .creationTime(OffsetDateTime.parse("2020-08-03T11:30:00Z"))
                 .transferStatus(TransferItem.TransferStatus.TARRING)
                 .build()
             );
-//            transferItemDAO.save(new TransferItem("doi:10.5072/FK2/P4PHV7", "src/test/resources/doi-10-5072-fk2-p4phv7v-1-0/metadata/oai-ore.jsonld", LocalDateTime.parse("2007-12-03T10:15:30"),
-//                TransferItem.TransferStatus.METADATA_EXTRACTED));
-//            transferItemDAO.save(new TransferItem("doi:10.5072/FK2/JOY8UU", "src/test/resources/doi-10-5072-fk2-joy8uuv-2-0/metadata/oai-ore.jsonld", LocalDateTime.parse("2008-12-03T11:30:00"),
-//                TransferItem.TransferStatus.COLLECTED));
-//            transferItemDAO.save(new TransferItem("doi:10.5072/FK2/QZ0LJQ", "src/test/resources/doi-10-5072-fk2-qz0ljqv-1-2/metadata/oai-ore.jsonld", LocalDateTime.parse("2020-08-03T00:15:22"),
-//                TransferItem.TransferStatus.TARRING));
         });
 
         var items = transferItemDAO.findByStatus(TransferItem.TransferStatus.METADATA_EXTRACTED);

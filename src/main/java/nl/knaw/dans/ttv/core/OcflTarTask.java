@@ -15,7 +15,6 @@
  */
 package nl.knaw.dans.ttv.core;
 
-import nl.knaw.dans.ttv.api.ApiException;
 import nl.knaw.dans.ttv.core.domain.ArchiveMetadata;
 import nl.knaw.dans.ttv.core.service.ArchiveMetadataService;
 import nl.knaw.dans.ttv.core.service.OcflRepositoryService;
@@ -69,7 +68,7 @@ public class OcflTarTask implements Runnable {
     /**
      * Verifies the local repository to confirm all the entries are imported already. There are 2 scenarios that this method has to deal with. First, it is a brand new repo and it should create the
      * repository first. Second, something went wrong in a previous attempt to create the repository and import the items, so it should do it again.
-     *
+     * <p>
      * The way this is implemented should not make a distinction between the two cases, except for checking if the file has already been imported into the repo. The repo itself is created or opened,
      * depending on whether the repo directory exists.
      */
@@ -101,7 +100,7 @@ public class OcflTarTask implements Runnable {
     /**
      * Verifies the remote archive, and attempts to transfer it if it does not exist or is invalid. Only after everything is correctly transferred, it will extract metadata (checksums) from the remote
      * archive.
-     *
+     * <p>
      * Note that InterruptedException will not increase the attempt count, because interrupts
      */
     void createArchive() throws InvalidTarException {
@@ -110,6 +109,8 @@ public class OcflTarTask implements Runnable {
 
         try {
             importTransferItemsIntoRepository(tar);
+
+            registerTarWithVaultService(tar);
 
             // The first step is validating the remote archive. It might not even exist,
             // in which case we upload it.
@@ -130,10 +131,9 @@ public class OcflTarTask implements Runnable {
             var updatedTar = transferItemService.updateTarToCreated(uuid, metadata);
 
             if (updatedTar.isPresent()) {
-                log.info("Adding TAR to vault catalog with uuid {}", uuid);
-                vaultCatalogRepository.registerTar(updatedTar.get());
-//                vaultCatalogRepository.addOrUpdateTar(updatedTar.get());
-            } else {
+                registerTarWithVaultService(updatedTar.get());
+            }
+            else {
                 log.warn("Unable to update TAR, returned value is null");
             }
         }
@@ -145,6 +145,11 @@ public class OcflTarTask implements Runnable {
             log.error("Unable to transfer archive due to InterruptedException", e);
             transferItemService.setArchiveAttemptFailed(uuid, false, maxRetries);
         }
+    }
+
+    private void registerTarWithVaultService(Tar tar) throws IOException {
+        log.info("Registring TAR {} with vault catalog", tar.getTarUuid());
+        vaultCatalogRepository.registerTar(tar);
     }
 
     /**

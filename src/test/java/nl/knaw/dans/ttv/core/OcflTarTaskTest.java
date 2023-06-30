@@ -16,7 +16,7 @@
 package nl.knaw.dans.ttv.core;
 
 import io.ocfl.api.OcflRepository;
-import nl.knaw.dans.ttv.api.ApiException;
+import nl.knaw.dans.ttv.client.ApiException;
 import nl.knaw.dans.ttv.core.domain.ProcessResult;
 import nl.knaw.dans.ttv.core.service.ArchiveMetadataService;
 import nl.knaw.dans.ttv.core.service.OcflRepositoryService;
@@ -31,7 +31,7 @@ import org.mockito.Mockito;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -55,7 +55,7 @@ class OcflTarTaskTest {
     }
 
     @Test
-    void run() throws IOException, InterruptedException, ApiException {
+    void run() throws IOException, InterruptedException {
         var uuid = UUID.fromString("82fa8591-b7e7-4efc-821e-addacb0cb364").toString();
         var path = Path.of("data/inbox", uuid);
         var task = new OcflTarTask(transferItemService, uuid, path, tarCommandRunner, archiveMetadataService, ocflRepositoryService, vaultCatalogRepository, 1);
@@ -84,7 +84,7 @@ class OcflTarTaskTest {
 
         Mockito.verify(transferItemService).updateTarToCreated(Mockito.eq(uuid), Mockito.any());
 
-        Mockito.verify(vaultCatalogRepository).registerTar(Mockito.any());
+        Mockito.verify(vaultCatalogRepository, Mockito.times(2)).registerTar(Mockito.any());
     }
 
     @Test
@@ -182,13 +182,13 @@ class OcflTarTaskTest {
             TransferItem.builder()
                 .datasetPid("pid1")
                 .dveFilePath("path/to1.zip")
-                .creationTime(LocalDateTime.now())
+                .creationTime(OffsetDateTime.now())
                 .transferStatus(TransferItem.TransferStatus.TARRING)
                 .build(),
             TransferItem.builder()
                 .datasetPid("pid2")
                 .dveFilePath("path/to2.zip")
-                .creationTime(LocalDateTime.now())
+                .creationTime(OffsetDateTime.now())
                 .transferStatus(TransferItem.TransferStatus.TARRING)
                 .build()
         );

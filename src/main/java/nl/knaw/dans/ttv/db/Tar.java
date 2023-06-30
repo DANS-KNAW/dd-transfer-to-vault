@@ -23,7 +23,7 @@ import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.proxy.HibernateProxy;
 
 import javax.persistence.*;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -41,9 +41,9 @@ public class Tar {
     @Column(name = "vault_path")
     private String vaultPath;
     @Column(name = "datetime_created")
-    private LocalDateTime created;
+    private OffsetDateTime created;
     @Column(name = "datetime_confirmed_archived")
-    private LocalDateTime datetimeConfirmedArchived;
+    private OffsetDateTime datetimeConfirmedArchived;
     @OneToMany(mappedBy = "tar", cascade = CascadeType.ALL)
     @ToString.Exclude
     private List<TransferItem> transferItems = new ArrayList<>();

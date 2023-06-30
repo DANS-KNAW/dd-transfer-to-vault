@@ -26,14 +26,12 @@ import org.mockito.Mockito;
 
 import java.nio.file.Path;
 import java.time.Duration;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 class OcflTarRetryTaskCreatorTest {
     private TransferItemService transferItemService;
@@ -67,7 +65,7 @@ class OcflTarRetryTaskCreatorTest {
             vaultCatalogRepository);
 
         var tar = new Tar();
-        tar.setCreated(LocalDateTime.now().minus(20, ChronoUnit.HOURS));
+        tar.setCreated(OffsetDateTime.now().minus(20, ChronoUnit.HOURS));
         tar.setTransferAttempt(0);
         tar.setTarUuid("test1");
 
@@ -92,7 +90,7 @@ class OcflTarRetryTaskCreatorTest {
             vaultCatalogRepository);
 
         var tar = new Tar();
-        tar.setCreated(LocalDateTime.now().minus(20, ChronoUnit.HOURS));
+        tar.setCreated(OffsetDateTime.now().minus(20, ChronoUnit.HOURS));
         tar.setTransferAttempt(2);
         tar.setTarUuid("test1");
 
@@ -115,7 +113,7 @@ class OcflTarRetryTaskCreatorTest {
         );
 
         var tar = new Tar();
-        tar.setCreated(LocalDateTime.now().minus(20, ChronoUnit.HOURS));
+        tar.setCreated(OffsetDateTime.now().minus(20, ChronoUnit.HOURS));
         tar.setTransferAttempt(0);
         tar.setTarUuid("test1");
 

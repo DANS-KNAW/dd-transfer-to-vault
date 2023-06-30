@@ -15,7 +15,6 @@
  */
 package nl.knaw.dans.ttv.core;
 
-import nl.knaw.dans.ttv.api.ApiException;
 import nl.knaw.dans.ttv.db.Tar;
 import nl.knaw.dans.ttv.db.TransferItem;
 

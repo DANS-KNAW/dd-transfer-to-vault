@@ -25,7 +25,7 @@ import org.mockito.Mockito;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -48,7 +48,7 @@ class OcflRepositoryServiceImplTest {
             .ocflObjectVersion(1)
             .datasetPid("pid1")
             .dveFilePath("path/to/dir")
-            .creationTime(LocalDateTime.now())
+            .creationTime(OffsetDateTime.now())
             .transferStatus(TransferItem.TransferStatus.METADATA_EXTRACTED)
             .build();
         transferItem.setBagId("urn:uuid:a175c497-9a42-4832-9e71-626db678ed1b");

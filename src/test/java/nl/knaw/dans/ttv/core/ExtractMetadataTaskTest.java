@@ -28,7 +28,7 @@ import org.mockito.Mockito;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -62,7 +62,7 @@ class ExtractMetadataTaskTest {
                 TransferItem.builder()
                     .datasetPid("pid")
                     .dveFilePath("path")
-                    .creationTime(LocalDateTime.now())
+                    .creationTime(OffsetDateTime.now())
                     .transferStatus(TransferItem.TransferStatus.COLLECTED)
                     .build()));
 
@@ -80,7 +80,7 @@ class ExtractMetadataTaskTest {
         var transferItem = TransferItem.builder()
             .datasetPid("pid")
             .dveFilePath("path")
-            .creationTime(LocalDateTime.now())
+            .creationTime(OffsetDateTime.now())
             .transferStatus(TransferItem.TransferStatus.COLLECTED)
             .build();
 
@@ -113,7 +113,7 @@ class ExtractMetadataTaskTest {
         var transferItem = TransferItem.builder()
             .datasetPid("pid")
             .dveFilePath("path")
-            .creationTime(LocalDateTime.now())
+            .creationTime(OffsetDateTime.now())
             .transferStatus(TransferItem.TransferStatus.METADATA_EXTRACTED)
             .build();
 
@@ -147,7 +147,7 @@ class ExtractMetadataTaskTest {
         var transferItem = TransferItem.builder()
             .datasetPid("pid")
             .dveFilePath("path")
-            .creationTime(LocalDateTime.now())
+            .creationTime(OffsetDateTime.now())
             .transferStatus(status)
             .build();
 
@@ -167,7 +167,7 @@ class ExtractMetadataTaskTest {
         var transferItem = TransferItem.builder()
             .datasetPid("pid")
             .dveFilePath("path")
-            .creationTime(LocalDateTime.now())
+            .creationTime(OffsetDateTime.now())
             .transferStatus(status)
             .build();
 

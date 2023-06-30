@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory;
 
 import java.nio.file.Path;
 import java.time.Duration;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 
@@ -80,7 +80,7 @@ public class OcflTarRetryTaskCreator implements Job {
     boolean shouldRetry(Tar tar, List<Duration> retryIntervals) {
         var attempt = tar.getTransferAttempt();
         var threshold = calculateThreshold(attempt, retryIntervals);
-        var now = LocalDateTime.now();
+        var now = OffsetDateTime.now();
 
         log.trace("Comparing date {} and {}", tar.getCreated(), now);
         var offset = Duration.between(tar.getCreated(), now);
@@ -106,9 +106,10 @@ public class OcflTarRetryTaskCreator implements Job {
         private VaultCatalogRepository vaultCatalogRepository;
         private int maxRetries;
         private List<Duration> retryIntervals;
+
         public TaskRetryTaskCreatorParameters(TransferItemService transferItemService, Path workDir, TarCommandRunner tarCommandRunner,
-            ArchiveMetadataService archiveMetadataService, ExecutorService executorService, int maxRetries, List<Duration> retryIntervals, OcflRepositoryService ocflRepositoryService,
-            VaultCatalogRepository vaultCatalogRepository) {
+                                              ArchiveMetadataService archiveMetadataService, ExecutorService executorService, int maxRetries, List<Duration> retryIntervals, OcflRepositoryService ocflRepositoryService,
+                                              VaultCatalogRepository vaultCatalogRepository) {
             this.transferItemService = transferItemService;
             this.workDir = workDir;
             this.tarCommandRunner = tarCommandRunner;

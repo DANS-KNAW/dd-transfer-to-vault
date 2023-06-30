@@ -28,7 +28,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.Objects;
 import java.util.Optional;
@@ -79,21 +79,20 @@ public class TransferItemMetadataReaderImpl implements TransferItemMetadataReade
 
     @Override
     public FilesystemAttributes getFilesystemAttributes(Path path) throws InvalidTransferItemException {
-        var result = new FilesystemAttributes();
 
         try {
             var creationTime = fileService.getFilesystemAttribute(path, "creationTime");
+            var time = Optional.ofNullable(creationTime)
+                .map(FileTime.class::cast)
+                .map(FileTime::toInstant)
+                .map(t -> OffsetDateTime.ofInstant(t, ZoneId.systemDefault()))
+                .orElse(null);
 
-            if (creationTime != null) {
-                result.setCreationTime(LocalDateTime.ofInstant(((FileTime) creationTime).toInstant(), ZoneId.systemDefault()));
-                result.setBagSize(fileService.getFileSize(path));
-            }
+            return new FilesystemAttributes(time, fileService.getFileSize(path));
         }
         catch (IOException e) {
             throw new InvalidTransferItemException(String.format("unable to read filesystem attributes for file %s", path.toString()), e);
         }
-
-        return result;
     }
 
     @Override

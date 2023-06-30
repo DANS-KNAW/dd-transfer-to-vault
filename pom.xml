@@ -204,9 +204,9 @@
                             <generateApiTests>false</generateApiTests>
                             <modelNameSuffix>Dto</modelNameSuffix>
                             <configOptions>
-                                <apiPackage>nl.knaw.dans.ttv.resource</apiPackage>
+                                <apiPackage>nl.knaw.dans.ttv.client</apiPackage>
                                 <modelPackage>nl.knaw.dans.ttv.api</modelPackage>
-                                <invokerPackage>nl.knaw.dans.ttv.api</invokerPackage>
+                                <invokerPackage>nl.knaw.dans.ttv.client</invokerPackage>
                                 <sourceFolder>src/gen/java/main</sourceFolder>
                                 <dateLibrary>java8</dateLibrary>
                                 <delegatePattern>true</delegatePattern>

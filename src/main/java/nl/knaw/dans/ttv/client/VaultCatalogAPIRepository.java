@@ -18,17 +18,19 @@ package nl.knaw.dans.ttv.client;
 
 
 import lombok.extern.slf4j.Slf4j;
-import nl.knaw.dans.ttv.api.ApiException;
 import nl.knaw.dans.ttv.api.OcflObjectVersionDto;
+import nl.knaw.dans.ttv.api.OcflObjectVersionRefDto;
+import nl.knaw.dans.ttv.api.TarParameterDto;
+import nl.knaw.dans.ttv.api.TarPartParameterDto;
 import nl.knaw.dans.ttv.client.mappers.OcflObjectVersionMapper;
 import nl.knaw.dans.ttv.core.VaultCatalogRepository;
 import nl.knaw.dans.ttv.db.Tar;
 import nl.knaw.dans.ttv.db.TransferItem;
-import nl.knaw.dans.ttv.resource.OcflObjectVersionApi;
-import nl.knaw.dans.ttv.resource.TarApi;
 
 import java.io.IOException;
 import java.util.Comparator;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class VaultCatalogAPIRepository implements VaultCatalogRepository {
@@ -36,12 +38,9 @@ public class VaultCatalogAPIRepository implements VaultCatalogRepository {
     private final TarApi tarApi;
     private final OcflObjectVersionApi ocflObjectVersionApi;
 
-    public VaultCatalogAPIRepository(String baseUrl) {
-        this.tarApi = new TarApi();
-        this.tarApi.setCustomBaseUrl(baseUrl);
-
-        this.ocflObjectVersionApi = new OcflObjectVersionApi();
-        this.ocflObjectVersionApi.setCustomBaseUrl(baseUrl);
+    public VaultCatalogAPIRepository(TarApi tarApi, OcflObjectVersionApi ocflObjectVersionApi) {
+        this.tarApi = tarApi;
+        this.ocflObjectVersionApi = ocflObjectVersionApi;
     }
 
     @Override
@@ -99,85 +98,40 @@ public class VaultCatalogAPIRepository implements VaultCatalogRepository {
 
     @Override
     public void registerTar(Tar tar) throws IOException {
+        try {
+            var params = new TarParameterDto()
+                .tarUuid(UUID.fromString(tar.getTarUuid()))
+                .archivalDate(tar.getDatetimeConfirmedArchived())
+                .vaultPath(tar.getVaultPath())
+                .tarParts(tar.getTarParts().stream()
+                    .map(p -> new TarPartParameterDto()
+                        .partName(p.getPartName())
+                        .checksumAlgorithm(p.getChecksumAlgorithm())
+                        .checksumValue(p.getChecksumValue()))
+                    .collect(Collectors.toList()))
+                .ocflObjectVersions(tar.getTransferItems().stream()
+                    .map(item -> new OcflObjectVersionRefDto()
+                        .bagId(item.getBagId())
+                        .objectVersion(item.getOcflObjectVersion()))
+                    .collect(Collectors.toList()));
 
-        // creates a tar with some ocfl objects
+            log.info("Registering TAR: {}", params);
 
+            // check if tar already exists
+            var existing = tarApi.getArchiveByIdWithHttpInfo(UUID.fromString(tar.getTarUuid()));
+            log.debug("Response code for tar with UUID {}: {}", tar.getTarUuid(), existing.getStatusCode());
+
+            if (existing.getStatusCode() != 200) {
+                log.info("Tar with UUID {} does not exist in vault; adding it", tar.getTarUuid());
+                tarApi.addArchive(params);
+            }
+            else {
+                log.info("Tar with UUID {} already exists in vault", tar.getTarUuid());
+                tarApi.updateArchive(UUID.fromString(tar.getTarUuid()), params);
+            }
+        }
+        catch (ApiException e) {
+            throw new IOException(e.getMessage(), e);
+        }
     }
-
-//    @Override
-//    public void addTar(Tar tar) throws ApiException {
-//        var api = getApi();
-//        api.addArchive(mapTarToAPI(tar));
-//    }
-//
-//    @Override
-//    public void addOrUpdateTar(Tar tar) throws ApiException {
-//        var api = getApi();
-//
-//        try {
-//            log.info("Checking if TAR is already sent to vault");
-//            var response = api.getArchiveByIdWithHttpInfo(tar.getTarUuid());
-//
-//            log.info("Response did not throw an error, meaning the TAR exists in the vault; updating records");
-//            log.debug("API response code: {}", response.getStatusCode());
-//            api.updateArchive(tar.getTarUuid(), mapTarToAPI(tar));
-//        }
-//        catch (ApiException e) {
-//            if (e.getCode() == 404) {
-//                log.info("Archive not yet present in vault, creating");
-//                api.addArchive(mapTarToAPI(tar));
-//            }
-//            else {
-//                log.error("Received unexpected error from vault", e);
-//                throw e;
-//            }
-//        }
-//
-//    }
-//
-//    TarDto mapTarToAPI(Tar tar) {
-//        var apiTar = new TarDto();
-//
-//        apiTar.setTarUuid(tar.getTarUuid());
-//        apiTar.setStagedDate(tar.getCreated().atOffset(ZoneOffset.UTC));
-//
-//        if (tar.getDatetimeConfirmedArchived() != null) {
-//            apiTar.setArchivalDate(tar.getDatetimeConfirmedArchived().atOffset(ZoneOffset.UTC));
-//        }
-//
-//        apiTar.setVaultPath(tar.getVaultPath());
-//        apiTar.setTarParts(tar.getTarParts().stream().map(p -> {
-//            var part = new TarPartDto();
-//            part.setPartName(p.getPartName());
-//            part.setChecksumAlgorithm(p.getChecksumAlgorithm());
-//            part.setChecksumValue(p.getChecksumValue());
-//
-//            return part;
-//        }).collect(Collectors.toList()));
-//
-//        apiTar.setOcflObjects(tar.getTransferItems().stream().map(t -> {
-//            var ocflObject = new OcflObject();
-//            ocflObject.setBagId(t.getBagId());
-//            ocflObject.setObjectVersion("1");
-//            ocflObject.setDatastation(t.getDatasetDvInstance());
-//            ocflObject.setDataversePid(t.getDatasetPid());
-//            ocflObject.setDataversePidVersion(String.format("V%s.%s", t.getVersionMajor(), t.getVersionMinor()));
-//            ocflObject.setNbn(t.getNbn());
-//            ocflObject.setOtherId(t.getOtherId());
-//            ocflObject.setOtherIdVersion(t.getOtherIdVersion());
-//            ocflObject.setSwordClient(t.getSwordClient());
-//            ocflObject.setSwordToken(t.getSwordToken());
-//            ocflObject.setOcflObjectPath(t.getAipTarEntryName());
-//            ocflObject.setFilepidToLocalPath(new String(t.getPidMapping(), StandardCharsets.UTF_8));
-//            ocflObject.setMetadata(new String(t.getOaiOre(), StandardCharsets.UTF_8));
-//            ocflObject.setVersionMajor(t.getVersionMajor());
-//            ocflObject.setVersionMinor(t.getVersionMinor());
-//            ocflObject.setExportTimestamp(t.getBagDepositDate().atOffset(ZoneOffset.UTC));
-//
-//            return ocflObject;
-//        }).collect(Collectors.toList()));
-//
-//        return apiTar;
-//    }
-
 }
