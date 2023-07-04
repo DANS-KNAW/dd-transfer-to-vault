@@ -16,7 +16,12 @@
 package nl.knaw.dans.ttv.core;
 
 import io.dropwizard.lifecycle.Managed;
-import nl.knaw.dans.ttv.core.service.*;
+import nl.knaw.dans.ttv.core.service.FileService;
+import nl.knaw.dans.ttv.core.service.InboxWatcher;
+import nl.knaw.dans.ttv.core.service.InboxWatcherFactory;
+import nl.knaw.dans.ttv.core.service.TransferItemMetadataReader;
+import nl.knaw.dans.ttv.core.service.TransferItemService;
+import nl.knaw.dans.ttv.core.service.TransferItemValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,8 +46,8 @@ public class ExtractMetadataTaskManager implements Managed {
     private InboxWatcher inboxWatcher;
 
     public ExtractMetadataTaskManager(Path inbox, Path outbox, long pollingInterval, ExecutorService executorService,
-                                      TransferItemService transferItemService, TransferItemMetadataReader metadataReader, FileService fileService, InboxWatcherFactory inboxWatcherFactory,
-                                      TransferItemValidator transferItemValidator, VaultCatalogRepository vaultCatalogRepository) {
+        TransferItemService transferItemService, TransferItemMetadataReader metadataReader, FileService fileService, InboxWatcherFactory inboxWatcherFactory,
+        TransferItemValidator transferItemValidator, VaultCatalogRepository vaultCatalogRepository) {
 
         this.inbox = Objects.requireNonNull(inbox);
         this.outbox = Objects.requireNonNull(outbox);

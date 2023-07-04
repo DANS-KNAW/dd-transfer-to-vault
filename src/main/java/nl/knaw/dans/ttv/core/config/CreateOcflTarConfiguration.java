@@ -141,6 +141,7 @@ public class CreateOcflTarConfiguration {
         public DmfTarVersion() {
 
         }
+
         public DmfTarVersion(String local, String remote) {
             this.local = local;
             this.remote = remote;

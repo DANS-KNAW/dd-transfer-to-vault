@@ -68,7 +68,9 @@ public class OcflRepositoryServiceImpl implements OcflRepositoryService {
 
         log.debug("Importing file '{}' with objectId '{}' into OCFL repository", source, objectId);
         ocflRepository.putObject(
-            ObjectVersionId.version(objectId, transferItem.getOcflObjectVersion()),
+            ObjectVersionId.head(objectId),
+            // TODO this will not work because all versions are required to exist, just inserting a random ID does not work
+            //            ObjectVersionId.version(objectId, transferItem.getOcflObjectVersion()),
             source,
             new VersionInfo().setMessage("initial commit"),
             OcflOption.MOVE_SOURCE

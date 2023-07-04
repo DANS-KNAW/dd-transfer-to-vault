@@ -40,7 +40,7 @@ public class OcflTarTask implements Runnable {
     private final int maxRetries;
 
     public OcflTarTask(TransferItemService transferItemService, String uuid, Path inboxPath, TarCommandRunner tarCommandRunner, ArchiveMetadataService archiveMetadataService,
-                       OcflRepositoryService ocflRepositoryService, VaultCatalogRepository vaultCatalogRepository, int maxRetries) {
+        OcflRepositoryService ocflRepositoryService, VaultCatalogRepository vaultCatalogRepository, int maxRetries) {
         this.transferItemService = transferItemService;
         this.inboxPath = inboxPath;
         this.uuid = uuid;

@@ -38,7 +38,7 @@ public class ExtractMetadataTask implements Runnable {
     private final VaultCatalogRepository vaultCatalogRepository;
 
     public ExtractMetadataTask(Path filePath, Path outbox, TransferItemService transferItemService,
-                               TransferItemMetadataReader metadataReader, FileService fileService, TransferItemValidator transferItemValidator, VaultCatalogRepository vaultCatalogRepository) {
+        TransferItemMetadataReader metadataReader, FileService fileService, TransferItemValidator transferItemValidator, VaultCatalogRepository vaultCatalogRepository) {
         this.filePath = filePath;
         this.outbox = outbox;
         this.transferItemService = transferItemService;

@@ -46,7 +46,7 @@ public class CollectTaskManager implements Managed {
     private List<InboxWatcher> inboxWatchers;
 
     public CollectTaskManager(List<CollectConfiguration.InboxEntry> inboxes, Path outbox, long pollingInterval, ExecutorService executorService,
-                              TransferItemService transferItemService, TransferItemMetadataReader metadataReader, FileService fileService, InboxWatcherFactory inboxWatcherFactory) {
+        TransferItemService transferItemService, TransferItemMetadataReader metadataReader, FileService fileService, InboxWatcherFactory inboxWatcherFactory) {
 
         this.inboxes = Objects.requireNonNull(inboxes);
         this.outbox = Objects.requireNonNull(outbox);

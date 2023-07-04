@@ -25,10 +25,33 @@ import io.dropwizard.setup.Environment;
 import nl.knaw.dans.ttv.client.OcflObjectVersionApi;
 import nl.knaw.dans.ttv.client.TarApi;
 import nl.knaw.dans.ttv.client.VaultCatalogAPIRepository;
-import nl.knaw.dans.ttv.core.*;
-import nl.knaw.dans.ttv.core.service.*;
-import nl.knaw.dans.ttv.db.*;
-import nl.knaw.dans.ttv.health.*;
+import nl.knaw.dans.ttv.core.CollectTaskManager;
+import nl.knaw.dans.ttv.core.ConfirmArchivedTaskManager;
+import nl.knaw.dans.ttv.core.ExtractMetadataTaskManager;
+import nl.knaw.dans.ttv.core.OcflTarTaskManager;
+import nl.knaw.dans.ttv.core.VaultCatalogRepository;
+import nl.knaw.dans.ttv.core.service.ArchiveMetadataServiceImpl;
+import nl.knaw.dans.ttv.core.service.ArchiveStatusServiceImpl;
+import nl.knaw.dans.ttv.core.service.FileServiceImpl;
+import nl.knaw.dans.ttv.core.service.InboxWatcherFactoryImpl;
+import nl.knaw.dans.ttv.core.service.OcflRepositoryFactory;
+import nl.knaw.dans.ttv.core.service.OcflRepositoryServiceImpl;
+import nl.knaw.dans.ttv.core.service.ProcessRunnerImpl;
+import nl.knaw.dans.ttv.core.service.TarCommandRunnerImpl;
+import nl.knaw.dans.ttv.core.service.TransferItemMetadataReaderImpl;
+import nl.knaw.dans.ttv.core.service.TransferItemServiceImpl;
+import nl.knaw.dans.ttv.core.service.TransferItemValidatorImpl;
+import nl.knaw.dans.ttv.db.Tar;
+import nl.knaw.dans.ttv.db.TarDAO;
+import nl.knaw.dans.ttv.db.TarPart;
+import nl.knaw.dans.ttv.db.TransferItem;
+import nl.knaw.dans.ttv.db.TransferItemDAO;
+import nl.knaw.dans.ttv.health.FilesystemHealthCheck;
+import nl.knaw.dans.ttv.health.InboxHealthCheck;
+import nl.knaw.dans.ttv.health.LocalDmftarHealthCheck;
+import nl.knaw.dans.ttv.health.PartitionHealthCheck;
+import nl.knaw.dans.ttv.health.RemoteDmftarHealthCheck;
+import nl.knaw.dans.ttv.health.SSHHealthCheck;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,8 +92,8 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
 
         final var inboxWatcherFactory = new InboxWatcherFactoryImpl();
 
-        final var transferItemService = new UnitOfWorkAwareProxyFactory(hibernateBundle).create(TransferItemServiceImpl.class, new Class[]{TransferItemDAO.class, TarDAO.class},
-            new Object[]{transferItemDAO, tarDAO});
+        final var transferItemService = new UnitOfWorkAwareProxyFactory(hibernateBundle).create(TransferItemServiceImpl.class, new Class[] { TransferItemDAO.class, TarDAO.class },
+            new Object[] { transferItemDAO, tarDAO });
 
         final var metadataReader = new TransferItemMetadataReaderImpl(environment.getObjectMapper(), fileService);
         // the process that looks for new files in the tar-inbox, and when reaching a certain combined size, tars them
@@ -91,7 +114,6 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
 
         final var vaultCatalogRepository = buildCatalogRepository(configuration.getConfirmArchived().getVaultServiceEndpoint());
 
-
         // the Collect task, which listens to new files on the network-drive shares
         log.info("Creating CollectTaskManager");
         final var collectTaskManager = new CollectTaskManager(configuration.getCollect().getInboxes(), configuration.getExtractMetadata().getInbox(), configuration.getCollect().getPollingInterval(),
@@ -104,7 +126,8 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
         log.info("Creating ExtractMetadataTaskManager");
         final var extractMetadataExecutorService = configuration.getExtractMetadata().getTaskQueue().build(environment);
         final var extractMetadataTaskManager = new ExtractMetadataTaskManager(configuration.getExtractMetadata().getInbox(), configuration.getCreateOcflTar().getInbox(),
-            configuration.getExtractMetadata().getPollingInterval(), extractMetadataExecutorService, transferItemService, metadataReader, fileService, inboxWatcherFactory, transferItemValidator, vaultCatalogRepository);
+            configuration.getExtractMetadata().getPollingInterval(), extractMetadataExecutorService, transferItemService, metadataReader, fileService, inboxWatcherFactory, transferItemValidator,
+            vaultCatalogRepository);
         environment.lifecycle().manage(extractMetadataTaskManager);
 
         log.info("Creating TarTaskManager");

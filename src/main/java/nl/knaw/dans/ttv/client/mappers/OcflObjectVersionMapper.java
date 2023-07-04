@@ -50,6 +50,7 @@ public interface OcflObjectVersionMapper {
 
         try {
             return OBJECT_MAPPER.readValue(value, new TypeReference<>() {
+
             });
         }
         catch (JsonProcessingException e) {

@@ -37,7 +37,7 @@ public class ConfirmArchivedTask implements Runnable {
     private final VaultCatalogRepository vaultCatalogRepository;
 
     public ConfirmArchivedTask(Tar tar, TransferItemService transferItemService, ArchiveStatusService archiveStatusService, FileService fileService,
-                               Path workingDir, VaultCatalogRepository vaultCatalogRepository) {
+        Path workingDir, VaultCatalogRepository vaultCatalogRepository) {
         this.transferItemService = transferItemService;
         this.archiveStatusService = archiveStatusService;
         this.fileService = fileService;

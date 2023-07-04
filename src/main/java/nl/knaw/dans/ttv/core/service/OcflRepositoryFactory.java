@@ -15,11 +15,11 @@
  */
 package nl.knaw.dans.ttv.core.service;
 
-import java.nio.file.Path;
-
 import io.ocfl.api.OcflRepository;
 import io.ocfl.core.OcflRepositoryBuilder;
 import io.ocfl.core.extension.storage.layout.config.FlatOmitPrefixLayoutConfig;
+
+import java.nio.file.Path;
 
 public class OcflRepositoryFactory {
     public OcflRepository createRepository(Path storageDirectory, Path workingDirectory) {

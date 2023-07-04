@@ -21,7 +21,11 @@ import nl.knaw.dans.ttv.core.domain.ArchiveMetadata;
 import nl.knaw.dans.ttv.core.domain.FileContentAttributes;
 import nl.knaw.dans.ttv.core.domain.FilenameAttributes;
 import nl.knaw.dans.ttv.core.domain.FilesystemAttributes;
-import nl.knaw.dans.ttv.db.*;
+import nl.knaw.dans.ttv.db.Tar;
+import nl.knaw.dans.ttv.db.TarDAO;
+import nl.knaw.dans.ttv.db.TarPart;
+import nl.knaw.dans.ttv.db.TransferItem;
+import nl.knaw.dans.ttv.db.TransferItemDAO;
 import org.hibernate.Hibernate;
 import org.hibernate.ObjectNotFoundException;
 
@@ -44,9 +48,9 @@ public class TransferItemServiceImpl implements TransferItemService {
     @Override
     @UnitOfWork
     public TransferItem createTransferItem(String datastationName,
-                                           FilenameAttributes filenameAttributes,
-                                           FilesystemAttributes filesystemAttributes,
-                                           FileContentAttributes fileContentAttributes)
+        FilenameAttributes filenameAttributes,
+        FilesystemAttributes filesystemAttributes,
+        FileContentAttributes fileContentAttributes)
         throws InvalidTransferItemException {
         var transferItem = new TransferItem();
 

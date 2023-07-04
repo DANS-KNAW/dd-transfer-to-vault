@@ -16,7 +16,6 @@
 
 package nl.knaw.dans.ttv.client;
 
-
 import lombok.extern.slf4j.Slf4j;
 import nl.knaw.dans.ttv.api.OcflObjectVersionDto;
 import nl.knaw.dans.ttv.api.OcflObjectVersionRefDto;
@@ -57,7 +56,7 @@ public class VaultCatalogAPIRepository implements VaultCatalogRepository {
             transferItem.setOcflObjectVersion(newVersion);
         }
         catch (ApiException e) {
-            throw new IOException(e.getMessage(), e);
+            throw new IOException(e.getResponseBody(), e);
         }
     }
 
@@ -91,10 +90,9 @@ public class VaultCatalogAPIRepository implements VaultCatalogRepository {
             return newVersion;
         }
         catch (ApiException e) {
-            throw new IOException(e.getMessage(), e);
+            throw new IOException(e.getResponseBody(), e);
         }
     }
-
 
     @Override
     public void registerTar(Tar tar) throws IOException {
@@ -118,20 +116,25 @@ public class VaultCatalogAPIRepository implements VaultCatalogRepository {
             log.info("Registering TAR: {}", params);
 
             // check if tar already exists
-            var existing = tarApi.getArchiveByIdWithHttpInfo(UUID.fromString(tar.getTarUuid()));
-            log.debug("Response code for tar with UUID {}: {}", tar.getTarUuid(), existing.getStatusCode());
+            try {
+                var existing = tarApi.getArchiveByIdWithHttpInfo(UUID.fromString(tar.getTarUuid()));
+                log.debug("Response code for tar with UUID {}: {}", tar.getTarUuid(), existing.getStatusCode());
 
-            if (existing.getStatusCode() != 200) {
-                log.info("Tar with UUID {} does not exist in vault; adding it", tar.getTarUuid());
-                tarApi.addArchive(params);
-            }
-            else {
                 log.info("Tar with UUID {} already exists in vault", tar.getTarUuid());
                 tarApi.updateArchive(UUID.fromString(tar.getTarUuid()), params);
             }
+            catch (ApiException e) {
+                if (e.getCode() == 404) {
+                    log.info("Tar with UUID {} does not exist in vault; adding it", tar.getTarUuid());
+                    tarApi.addArchive(params);
+                }
+                else {
+                    throw e;
+                }
+            }
         }
         catch (ApiException e) {
-            throw new IOException(e.getMessage(), e);
+            throw new IOException(e.getResponseBody(), e);
         }
     }
 }

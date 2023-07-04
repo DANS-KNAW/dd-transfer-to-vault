@@ -15,20 +15,35 @@
  */
 package nl.knaw.dans.ttv.db;
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 import nl.knaw.dans.ttv.core.domain.Version;
 import org.hibernate.annotations.TypeDef;
 import org.hibernate.annotations.TypeDefs;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.type.TextType;
 
-import javax.persistence.*;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 import java.time.OffsetDateTime;
 import java.util.Objects;
 
 @Entity
 @Table(name = "transfer_queue",
-    uniqueConstraints = {@UniqueConstraint(columnNames = {"bag_id", "ocfl_object_version"})}
+       uniqueConstraints = { @UniqueConstraint(columnNames = { "bag_id", "ocfl_object_version" }) }
 )
 @TypeDefs({
     @TypeDef(name = "string", defaultForType = String.class, typeClass = TextType.class)
@@ -105,11 +120,14 @@ public class TransferItem {
 
     @Override
     public final boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null) return false;
+        if (this == o)
+            return true;
+        if (o == null)
+            return false;
         Class<?> oEffectiveClass = o instanceof HibernateProxy ? ((HibernateProxy) o).getHibernateLazyInitializer().getPersistentClass() : o.getClass();
         Class<?> thisEffectiveClass = this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass() : this.getClass();
-        if (thisEffectiveClass != oEffectiveClass) return false;
+        if (thisEffectiveClass != oEffectiveClass)
+            return false;
         TransferItem that = (TransferItem) o;
         return getId() != null && Objects.equals(getId(), that.getId());
     }
