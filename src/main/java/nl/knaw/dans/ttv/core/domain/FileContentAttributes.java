@@ -13,35 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ttv.core.dto;
+package nl.knaw.dans.ttv.core.domain;
 
-public class ProcessResult {
-    private int statusCode;
-    private String stdout;
+import lombok.Builder;
+import lombok.Value;
 
-    public ProcessResult() {
+@Value
+@Builder
+public class FileContentAttributes {
 
-    }
-
-    public ProcessResult(int statusCode, String stdout) {
-        this.statusCode = statusCode;
-        this.stdout = stdout;
-    }
-
-    public int getStatusCode() {
-        return statusCode;
-    }
-
-    public void setStatusCode(int statusCode) {
-        this.statusCode = statusCode;
-    }
-
-    public String getStdout() {
-        return stdout;
-    }
-
-    public void setStdout(String stdout) {
-        this.stdout = stdout;
-    }
+    String datasetVersion;
+    String bagId;
+    String nbn;
+    String oaiOre;
+    String pidMapping;
+    String otherId;
+    String otherIdVersion;
+    String swordToken;
+    String swordClient;
+    String bagChecksum;
 
 }

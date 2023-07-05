@@ -13,15 +13,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package nl.knaw.dans.ttv.core.domain;
 
-package nl.knaw.dans.ttv.core.service;
+public class ProcessResult {
+    private int statusCode;
+    private String stdout;
 
-import nl.knaw.dans.ttv.db.Tar;
-import nl.knaw.dans.ttv.openapi.ApiException;
+    public ProcessResult() {
 
-public interface VaultCatalogService {
+    }
 
-    void addTar(Tar tar) throws ApiException;
+    public ProcessResult(int statusCode, String stdout) {
+        this.statusCode = statusCode;
+        this.stdout = stdout;
+    }
 
-    void addOrUpdateTar(Tar tar) throws ApiException;
+    public int getStatusCode() {
+        return statusCode;
+    }
+
+    public void setStatusCode(int statusCode) {
+        this.statusCode = statusCode;
+    }
+
+    public String getStdout() {
+        return stdout;
+    }
+
+    public void setStdout(String stdout) {
+        this.stdout = stdout;
+    }
+
 }

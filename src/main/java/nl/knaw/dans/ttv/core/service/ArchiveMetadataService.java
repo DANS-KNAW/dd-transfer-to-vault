@@ -15,7 +15,7 @@
  */
 package nl.knaw.dans.ttv.core.service;
 
-import nl.knaw.dans.ttv.core.dto.ArchiveMetadata;
+import nl.knaw.dans.ttv.core.domain.ArchiveMetadata;
 
 import java.io.IOException;
 

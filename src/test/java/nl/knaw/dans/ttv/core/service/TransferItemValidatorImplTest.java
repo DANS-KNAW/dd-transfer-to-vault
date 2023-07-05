@@ -19,7 +19,7 @@ import nl.knaw.dans.ttv.core.InvalidTransferItemException;
 import nl.knaw.dans.ttv.db.TransferItem;
 import org.junit.jupiter.api.Test;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -27,7 +27,12 @@ class TransferItemValidatorImplTest {
 
     @Test
     void validateTransferItem() {
-        var transferItem = new TransferItem("pid", 1, 0, "path", LocalDateTime.now(), TransferItem.TransferStatus.COLLECTED);
+        var transferItem = TransferItem.builder()
+            .datasetPid("pid1")
+            .dveFilePath("path/to1.zip")
+            .creationTime(OffsetDateTime.now())
+            .transferStatus(TransferItem.TransferStatus.COLLECTED)
+            .build();
         transferItem.setDatasetVersion("2.1");
         transferItem.setBagId("urn:uuid:1eb8d2fe-b8fa-4a15-9770-731cae6af9ac");
         transferItem.setNbn("urn:nbn:suffix");
@@ -36,7 +41,12 @@ class TransferItemValidatorImplTest {
 
     @Test
     void validateInvalidTransferItemBecauseDatasetVersionIsNull() {
-        var transferItem = new TransferItem("pid", 1, 0, "path", LocalDateTime.now(), TransferItem.TransferStatus.COLLECTED);
+        var transferItem = TransferItem.builder()
+            .datasetPid("pid1")
+            .dveFilePath("path/to1.zip")
+            .creationTime(OffsetDateTime.now())
+            .transferStatus(TransferItem.TransferStatus.COLLECTED)
+            .build();
         transferItem.setBagId("urn:uuid:1eb8d2fe-b8fa-4a15-9770-731cae6af9ac");
         transferItem.setNbn("urn:nbn:suffix");
         assertThrows(InvalidTransferItemException.class, () -> new TransferItemValidatorImpl().validateTransferItem(transferItem));
@@ -44,7 +54,12 @@ class TransferItemValidatorImplTest {
 
     @Test
     void validateInvalidTransferItemBecauseBagIdIsInvalid() {
-        var transferItem = new TransferItem("pid", 1, 0, "path", LocalDateTime.now(), TransferItem.TransferStatus.COLLECTED);
+        var transferItem = TransferItem.builder()
+            .datasetPid("pid1")
+            .dveFilePath("path/to1.zip")
+            .creationTime(OffsetDateTime.now())
+            .transferStatus(TransferItem.TransferStatus.COLLECTED)
+            .build();
         transferItem.setDatasetVersion("2.1");
         transferItem.setNbn("urn:nbn:suffix");
         assertThrows(InvalidTransferItemException.class, () -> new TransferItemValidatorImpl().validateTransferItem(transferItem));
@@ -52,7 +67,12 @@ class TransferItemValidatorImplTest {
 
     @Test
     void validateInvalidTransferItemBecauseNbnIsInvalid() {
-        var transferItem = new TransferItem("pid", 1, 0, "path", LocalDateTime.now(), TransferItem.TransferStatus.COLLECTED);
+        var transferItem = TransferItem.builder()
+            .datasetPid("pid1")
+            .dveFilePath("path/to1.zip")
+            .creationTime(OffsetDateTime.now())
+            .transferStatus(TransferItem.TransferStatus.COLLECTED)
+            .build();
         transferItem.setDatasetVersion("2.1");
         transferItem.setBagId("urn:uuid:1eb8d2fe-b8fa-4a15-9770-731cae6af9ac");
         assertThrows(InvalidTransferItemException.class, () -> new TransferItemValidatorImpl().validateTransferItem(transferItem));
@@ -60,10 +80,15 @@ class TransferItemValidatorImplTest {
 
     @Test
     void validateInvalidTransferItemBecauseVersionIsIncorrect() {
-        var transferItem = new TransferItem("pid", 0, 0, "path", LocalDateTime.now(), TransferItem.TransferStatus.COLLECTED);
-        transferItem.setDatasetVersion("2.1");
-        transferItem.setBagId("urn:uuid:1eb8d2fe-b8fa-4a15-9770-731cae6af9ac");
-        transferItem.setNbn("urn:nbn:suffix");
+        var transferItem = TransferItem.builder()
+            .datasetPid("pid1")
+            .dveFilePath("path/to1.zip")
+            .creationTime(OffsetDateTime.now())
+            .transferStatus(TransferItem.TransferStatus.COLLECTED)
+            .datasetVersion("0.0")
+            .nbn("urn:nbn:suffix")
+            .bagId("urn:uuid:1eb8d2fe-b8fa-4a15-9770-731cae6af9ac")
+            .build();
         assertThrows(InvalidTransferItemException.class, () -> new TransferItemValidatorImpl().validateTransferItem(transferItem));
     }
 

@@ -15,14 +15,7 @@
  */
 package nl.knaw.dans.ttv.core;
 
-import nl.knaw.dans.ttv.core.service.ArchiveMetadataService;
-import nl.knaw.dans.ttv.core.service.FileService;
-import nl.knaw.dans.ttv.core.service.InboxWatcher;
-import nl.knaw.dans.ttv.core.service.InboxWatcherFactory;
-import nl.knaw.dans.ttv.core.service.OcflRepositoryService;
-import nl.knaw.dans.ttv.core.service.TarCommandRunner;
-import nl.knaw.dans.ttv.core.service.TransferItemService;
-import nl.knaw.dans.ttv.core.service.VaultCatalogService;
+import nl.knaw.dans.ttv.core.service.*;
 import nl.knaw.dans.ttv.db.Tar;
 import nl.knaw.dans.ttv.db.TransferItem;
 import org.junit.jupiter.api.BeforeEach;
@@ -35,7 +28,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.time.Duration;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 
@@ -49,7 +42,7 @@ class OcflTarTaskManagerTest {
     private OcflRepositoryService ocflRepositoryService;
     private TarCommandRunner tarCommandRunner;
     private ArchiveMetadataService archiveMetadataService;
-    private VaultCatalogService vaultCatalogService;
+    private VaultCatalogRepository vaultCatalogRepository;
 
     @BeforeEach
     void setUp() {
@@ -60,7 +53,7 @@ class OcflTarTaskManagerTest {
         this.ocflRepositoryService = Mockito.mock(OcflRepositoryService.class);
         this.tarCommandRunner = Mockito.mock(TarCommandRunner.class);
         this.archiveMetadataService = Mockito.mock(ArchiveMetadataService.class);
-        this.vaultCatalogService = Mockito.mock(VaultCatalogService.class);
+        this.vaultCatalogRepository = Mockito.mock(VaultCatalogRepository.class);
     }
 
     /**
@@ -71,11 +64,22 @@ class OcflTarTaskManagerTest {
         var manager = Mockito.spy(new OcflTarTaskManager(
             Path.of("data/inbox"), Path.of("data/workdir"), "some-path", 50, 100L, 10, Duration.ofMinutes(1), List.of(),
             executorService, inboxWatcherFactory, fileService, ocflRepositoryService, transferItemService,
-            tarCommandRunner, archiveMetadataService, vaultCatalogService));
+            tarCommandRunner, archiveMetadataService, vaultCatalogRepository));
 
         var transferItems = List.of(
-            new TransferItem("pid1", 1, 0, "path1", LocalDateTime.now(), TransferItem.TransferStatus.METADATA_EXTRACTED),
-            new TransferItem("pid2", 1, 0, "path2", LocalDateTime.now(), TransferItem.TransferStatus.METADATA_EXTRACTED)
+            TransferItem.builder()
+                .bagId("id1")
+                .dveFilePath("path1")
+                .creationTime(OffsetDateTime.now())
+                .transferStatus(TransferItem.TransferStatus.METADATA_EXTRACTED)
+                .build(),
+
+            TransferItem.builder()
+                .bagId("id2")
+                .dveFilePath("path2")
+                .creationTime(OffsetDateTime.now())
+                .transferStatus(TransferItem.TransferStatus.METADATA_EXTRACTED)
+                .build()
         );
 
         var tar = new Tar("tarid", Tar.TarStatus.TARRING, false);
@@ -113,11 +117,22 @@ class OcflTarTaskManagerTest {
         var manager = Mockito.spy(new OcflTarTaskManager(
             Path.of("data/inbox"), Path.of("data/workdir"), "some-path", 50, 100L, 10, Duration.ofMinutes(1), List.of(),
             executorService, inboxWatcherFactory, fileService, ocflRepositoryService, transferItemService,
-            tarCommandRunner, archiveMetadataService, vaultCatalogService));
+            tarCommandRunner, archiveMetadataService, vaultCatalogRepository));
 
         var transferItems = List.of(
-            new TransferItem("pid1", 1, 0, "path1", LocalDateTime.now(), TransferItem.TransferStatus.METADATA_EXTRACTED),
-            new TransferItem("pid2", 1, 0, "path2", LocalDateTime.now(), TransferItem.TransferStatus.METADATA_EXTRACTED)
+            TransferItem.builder()
+                .bagId("id1")
+                .dveFilePath("path1")
+                .creationTime(OffsetDateTime.now())
+                .transferStatus(TransferItem.TransferStatus.METADATA_EXTRACTED)
+                .build(),
+
+            TransferItem.builder()
+                .bagId("id2")
+                .dveFilePath("path2")
+                .creationTime(OffsetDateTime.now())
+                .transferStatus(TransferItem.TransferStatus.METADATA_EXTRACTED)
+                .build()
         );
 
         var scheduler = Mockito.mock(Scheduler.class);
@@ -139,15 +154,26 @@ class OcflTarTaskManagerTest {
         var manager = Mockito.spy(new OcflTarTaskManager(
             Path.of("data/inbox"), Path.of("data/workdir"), "some-path", 50, 100L, 10, Duration.ofMinutes(1), List.of(),
             executorService, inboxWatcherFactory, fileService, ocflRepositoryService, transferItemService,
-            tarCommandRunner, archiveMetadataService, vaultCatalogService));
+            tarCommandRunner, archiveMetadataService, vaultCatalogRepository));
 
         var scheduler = Mockito.mock(Scheduler.class);
         Mockito.when(manager.createScheduler()).thenReturn(scheduler);
 
         // note that the second file has already been moved to the working directory and should not be moved again
         var transferItems = List.of(
-            new TransferItem("pid1", 1, 0, "data/inbox/1.zip", LocalDateTime.now(), TransferItem.TransferStatus.TARRING),
-            new TransferItem("pid2", 1, 0, "data/workdir/tarid/dve/2.zip", LocalDateTime.now(), TransferItem.TransferStatus.TARRING)
+            TransferItem.builder()
+                .bagId("id1")
+                .dveFilePath("data/inbox/1.zip")
+                .creationTime(OffsetDateTime.now())
+                .transferStatus(TransferItem.TransferStatus.TARRING)
+                .build(),
+
+            TransferItem.builder()
+                .bagId("id2")
+                .dveFilePath("data/workdir/tarid/dve/2.zip")
+                .creationTime(OffsetDateTime.now())
+                .transferStatus(TransferItem.TransferStatus.TARRING)
+                .build()
         );
         var tar = new Tar("tarid", Tar.TarStatus.TARRING, false);
         tar.setTransferItems(transferItems);
@@ -156,7 +182,7 @@ class OcflTarTaskManagerTest {
         Mockito.when(transferItemService.findTarsByStatusTarring()).thenReturn(tars);
 
         Mockito.when(fileService.moveFile(Mockito.any(), Mockito.any()))
-                .thenReturn(Path.of("data/workdir/tarid/dve/1.zip"));
+            .thenReturn(Path.of("data/workdir/tarid/dve/1.zip"));
         Mockito.when(fileService.exists(Mockito.any())).thenReturn(true, false);
 
         manager.verifyInbox();
@@ -176,7 +202,7 @@ class OcflTarTaskManagerTest {
         var manager = Mockito.spy(new OcflTarTaskManager(
             Path.of("data/inbox"), Path.of("data/workdir"), "some-path", 50, 100L, 10, Duration.ofMinutes(1), List.of(),
             executorService, inboxWatcherFactory, fileService, ocflRepositoryService, transferItemService,
-            tarCommandRunner, archiveMetadataService, vaultCatalogService));
+            tarCommandRunner, archiveMetadataService, vaultCatalogRepository));
 
         var scheduler = Mockito.mock(Scheduler.class);
         Mockito.when(manager.createScheduler()).thenReturn(scheduler);

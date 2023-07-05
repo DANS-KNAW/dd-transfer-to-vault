@@ -18,7 +18,7 @@ package nl.knaw.dans.ttv.health;
 import com.codahale.metrics.health.HealthCheck;
 import nl.knaw.dans.ttv.DdTransferToVaultConfiguration;
 import nl.knaw.dans.ttv.core.config.CreateOcflTarConfiguration;
-import nl.knaw.dans.ttv.core.dto.ProcessResult;
+import nl.knaw.dans.ttv.core.domain.ProcessResult;
 import nl.knaw.dans.ttv.core.service.ProcessRunner;
 import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.Test;
@@ -38,7 +38,9 @@ class LocalDmftarHealthCheckTest {
 
         var result = new LocalDmftarHealthCheck(config, processRunner).check();
 
-        assertEquals(HealthCheck.Result.healthy(), result);
+        var healtyhStatus = HealthCheck.Result.healthy();
+        assertTrue(result.isHealthy());
+        assertEquals(healtyhStatus.getMessage(), result.getMessage());
     }
 
     @Test

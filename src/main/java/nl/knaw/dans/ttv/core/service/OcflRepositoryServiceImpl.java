@@ -15,10 +15,10 @@
  */
 package nl.knaw.dans.ttv.core.service;
 
-import edu.wisc.library.ocfl.api.OcflOption;
-import edu.wisc.library.ocfl.api.OcflRepository;
-import edu.wisc.library.ocfl.api.model.ObjectVersionId;
-import edu.wisc.library.ocfl.api.model.VersionInfo;
+import io.ocfl.api.OcflOption;
+import io.ocfl.api.OcflRepository;
+import io.ocfl.api.model.ObjectVersionId;
+import io.ocfl.api.model.VersionInfo;
 import nl.knaw.dans.ttv.db.TransferItem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,7 +67,14 @@ public class OcflRepositoryServiceImpl implements OcflRepositoryService {
         var source = Objects.requireNonNull(Path.of(transferItem.getDveFilePath()), "dveFilePath can't be null: " + transferItem.getDveFilePath());
 
         log.debug("Importing file '{}' with objectId '{}' into OCFL repository", source, objectId);
-        ocflRepository.putObject(ObjectVersionId.head(objectId), source, new VersionInfo().setMessage("initial commit"), OcflOption.MOVE_SOURCE);
+        ocflRepository.putObject(
+            ObjectVersionId.head(objectId),
+            // TODO this will not work because all versions are required to exist, just inserting a random ID does not work
+            //            ObjectVersionId.version(objectId, transferItem.getOcflObjectVersion()),
+            source,
+            new VersionInfo().setMessage("initial commit"),
+            OcflOption.MOVE_SOURCE
+        );
 
         return objectId;
     }

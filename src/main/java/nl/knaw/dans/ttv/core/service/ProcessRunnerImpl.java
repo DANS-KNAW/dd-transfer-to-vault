@@ -15,7 +15,7 @@
  */
 package nl.knaw.dans.ttv.core.service;
 
-import nl.knaw.dans.ttv.core.dto.ProcessResult;
+import nl.knaw.dans.ttv.core.domain.ProcessResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -15,7 +15,7 @@
  */
 package nl.knaw.dans.ttv.health;
 
-import nl.knaw.dans.ttv.core.dto.ProcessResult;
+import nl.knaw.dans.ttv.core.domain.ProcessResult;
 import nl.knaw.dans.ttv.core.service.TarCommandRunner;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;

@@ -15,9 +15,9 @@
  */
 package nl.knaw.dans.ttv.core.service;
 
-import edu.wisc.library.ocfl.api.OcflRepository;
-import edu.wisc.library.ocfl.core.OcflRepositoryBuilder;
-import edu.wisc.library.ocfl.core.extension.storage.layout.config.FlatOmitPrefixLayoutConfig;
+import io.ocfl.api.OcflRepository;
+import io.ocfl.core.OcflRepositoryBuilder;
+import io.ocfl.core.extension.storage.layout.config.FlatOmitPrefixLayoutConfig;
 
 import java.nio.file.Path;
 

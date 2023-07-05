@@ -13,20 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ttv.core.service;
+package nl.knaw.dans.ttv.core.domain;
 
-import nl.knaw.dans.ttv.core.domain.ProcessResult;
+import lombok.Value;
 
-import java.io.IOException;
-import java.nio.file.Path;
+import java.time.OffsetDateTime;
 
-public interface TarCommandRunner {
-
-    ProcessResult tarDirectory(Path path, String target) throws IOException, InterruptedException;
-
-    ProcessResult verifyPackage(String targetPackage) throws IOException, InterruptedException;
-
-    ProcessResult deletePackage(String targetPackage) throws IOException, InterruptedException;
-
-    ProcessResult getDmftarVersion() throws IOException, InterruptedException;
+@Value
+public class FilesystemAttributes {
+    OffsetDateTime creationTime;
+    long bagSize;
 }

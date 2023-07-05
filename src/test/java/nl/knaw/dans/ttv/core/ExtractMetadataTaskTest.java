@@ -28,7 +28,7 @@ import org.mockito.Mockito;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -37,6 +37,7 @@ class ExtractMetadataTaskTest {
 
     private TransferItemService transferItemService;
     private TransferItemMetadataReader transferItemMetadataReader;
+    private VaultCatalogRepository vaultCatalogRepository;
     private FileService fileService;
     private TransferItemValidator transferItemValidator;
 
@@ -44,6 +45,7 @@ class ExtractMetadataTaskTest {
     void setUp() {
         this.transferItemService = Mockito.mock(TransferItemService.class);
         this.transferItemMetadataReader = Mockito.mock(TransferItemMetadataReader.class);
+        this.vaultCatalogRepository = Mockito.mock(VaultCatalogRepository.class);
         this.fileService = Mockito.mock(FileService.class);
         this.transferItemValidator = Mockito.mock(TransferItemValidator.class);
     }
@@ -53,10 +55,16 @@ class ExtractMetadataTaskTest {
         var filePath = Path.of("data/inbox/doi-10-5072-dar-kxteqtv1.0.zip");
         var outbox = Path.of("data/outbox");
 
-        var task = new ExtractMetadataTask(filePath, outbox, transferItemService, transferItemMetadataReader, fileService, transferItemValidator);
+        var task = new ExtractMetadataTask(filePath, outbox, transferItemService, transferItemMetadataReader, fileService, transferItemValidator, vaultCatalogRepository);
 
         Mockito.when(transferItemService.getTransferItemByFilenameAttributes(Mockito.any()))
-            .thenReturn(Optional.of(new TransferItem("pid", 1, 0, "path", LocalDateTime.now(), TransferItem.TransferStatus.COLLECTED)));
+            .thenReturn(Optional.of(
+                TransferItem.builder()
+                    .datasetPid("pid")
+                    .dveFilePath("path")
+                    .creationTime(OffsetDateTime.now())
+                    .transferStatus(TransferItem.TransferStatus.COLLECTED)
+                    .build()));
 
         task.run();
 
@@ -68,8 +76,13 @@ class ExtractMetadataTaskTest {
         var filePath = Path.of("data/inbox/doi-10-5072-dar-kxteqtv1.0.zip");
         var outbox = Path.of("data/outbox");
 
-        var task = new ExtractMetadataTask(filePath, outbox, transferItemService, transferItemMetadataReader, fileService, transferItemValidator);
-        var transferItem = new TransferItem("pid", 1, 0, "path", LocalDateTime.now(), TransferItem.TransferStatus.COLLECTED);
+        var task = new ExtractMetadataTask(filePath, outbox, transferItemService, transferItemMetadataReader, fileService, transferItemValidator, vaultCatalogRepository);
+        var transferItem = TransferItem.builder()
+            .datasetPid("pid")
+            .dveFilePath("path")
+            .creationTime(OffsetDateTime.now())
+            .transferStatus(TransferItem.TransferStatus.COLLECTED)
+            .build();
 
         Mockito.when(transferItemService.getTransferItemByFilenameAttributes(Mockito.any()))
             .thenReturn(Optional.of(transferItem));
@@ -96,14 +109,19 @@ class ExtractMetadataTaskTest {
         var filePath = Path.of("data/inbox/doi-10-5072-dar-kxteqtv1.0.zip");
         var outbox = Path.of("data/outbox");
 
-        var task = new ExtractMetadataTask(filePath, outbox, transferItemService, transferItemMetadataReader, fileService, transferItemValidator);
-        var transferItem = new TransferItem("pid", 1, 0, "path", LocalDateTime.now(), TransferItem.TransferStatus.METADATA_EXTRACTED);
+        var task = new ExtractMetadataTask(filePath, outbox, transferItemService, transferItemMetadataReader, fileService, transferItemValidator, vaultCatalogRepository);
+        var transferItem = TransferItem.builder()
+            .datasetPid("pid")
+            .dveFilePath("path")
+            .creationTime(OffsetDateTime.now())
+            .transferStatus(TransferItem.TransferStatus.METADATA_EXTRACTED)
+            .build();
 
         Mockito.when(transferItemService.getTransferItemByFilenameAttributes(Mockito.any()))
             .thenReturn(Optional.of(transferItem));
 
         Mockito.when(transferItemService.addMetadata(Mockito.any(), Mockito.any()))
-                .thenReturn(transferItem);
+            .thenReturn(transferItem);
 
         task.run();
 
@@ -120,13 +138,18 @@ class ExtractMetadataTaskTest {
     }
 
     @ParameterizedTest
-    @EnumSource(value = TransferItem.TransferStatus.class, mode = EnumSource.Mode.EXCLUDE, names = { "METADATA_EXTRACTED", "COLLECTED" })
+    @EnumSource(value = TransferItem.TransferStatus.class, mode = EnumSource.Mode.EXCLUDE, names = {"METADATA_EXTRACTED", "COLLECTED"})
     void testInvalidStates(TransferItem.TransferStatus status) {
         var filePath = Path.of("data/inbox/doi-10-5072-dar-kxteqtv1.0.zip");
         var outbox = Path.of("data/outbox");
 
-        var task = new ExtractMetadataTask(filePath, outbox, transferItemService, transferItemMetadataReader, fileService, transferItemValidator);
-        var transferItem = new TransferItem("pid", 1, 0, "path", LocalDateTime.now(), status);
+        var task = new ExtractMetadataTask(filePath, outbox, transferItemService, transferItemMetadataReader, fileService, transferItemValidator, vaultCatalogRepository);
+        var transferItem = TransferItem.builder()
+            .datasetPid("pid")
+            .dveFilePath("path")
+            .creationTime(OffsetDateTime.now())
+            .transferStatus(status)
+            .build();
 
         Mockito.when(transferItemService.getTransferItemByFilenameAttributes(Mockito.any()))
             .thenReturn(Optional.of(transferItem));
@@ -135,13 +158,18 @@ class ExtractMetadataTaskTest {
     }
 
     @ParameterizedTest
-    @EnumSource(value = TransferItem.TransferStatus.class, mode = EnumSource.Mode.EXCLUDE, names = { "METADATA_EXTRACTED", "COLLECTED" })
+    @EnumSource(value = TransferItem.TransferStatus.class, mode = EnumSource.Mode.EXCLUDE, names = {"METADATA_EXTRACTED", "COLLECTED"})
     void testInvalidStatesOnRun(TransferItem.TransferStatus status) throws IOException {
         var filePath = Path.of("data/inbox/doi-10-5072-dar-kxteqtv1.0.zip");
         var outbox = Path.of("data/outbox");
 
-        var task = new ExtractMetadataTask(filePath, outbox, transferItemService, transferItemMetadataReader, fileService, transferItemValidator);
-        var transferItem = new TransferItem("pid", 1, 0, "path", LocalDateTime.now(), status);
+        var task = new ExtractMetadataTask(filePath, outbox, transferItemService, transferItemMetadataReader, fileService, transferItemValidator, vaultCatalogRepository);
+        var transferItem = TransferItem.builder()
+            .datasetPid("pid")
+            .dveFilePath("path")
+            .creationTime(OffsetDateTime.now())
+            .transferStatus(status)
+            .build();
 
         Mockito.when(transferItemService.getTransferItemByFilenameAttributes(Mockito.any()))
             .thenReturn(Optional.of(transferItem));

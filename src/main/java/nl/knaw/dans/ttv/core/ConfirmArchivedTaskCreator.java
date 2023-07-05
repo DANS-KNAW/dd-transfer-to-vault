@@ -18,7 +18,6 @@ package nl.knaw.dans.ttv.core;
 import nl.knaw.dans.ttv.core.service.ArchiveStatusService;
 import nl.knaw.dans.ttv.core.service.FileService;
 import nl.knaw.dans.ttv.core.service.TransferItemService;
-import nl.knaw.dans.ttv.core.service.VaultCatalogService;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.slf4j.Logger;
@@ -61,20 +60,20 @@ public class ConfirmArchivedTaskCreator implements Job {
         private final ArchiveStatusService archiveStatusService;
         private final FileService fileService;
         private final ExecutorService executorService;
-        private final VaultCatalogService vaultCatalogService;
+        private final VaultCatalogRepository vaultCatalogRepository;
 
         public ConfirmArchivedTaskCreatorParameters(TransferItemService transferItemService, Path workingDir, ArchiveStatusService archiveStatusService,
-            FileService fileService, ExecutorService executorService, VaultCatalogService vaultCatalogService) {
+            FileService fileService, ExecutorService executorService, VaultCatalogRepository vaultCatalogRepository) {
             this.transferItemService = transferItemService;
             this.workingDir = workingDir;
             this.archiveStatusService = archiveStatusService;
             this.fileService = fileService;
             this.executorService = executorService;
-            this.vaultCatalogService = vaultCatalogService;
+            this.vaultCatalogRepository = vaultCatalogRepository;
         }
 
-        public VaultCatalogService getVaultCatalogService() {
-            return vaultCatalogService;
+        public VaultCatalogRepository getVaultCatalogService() {
+            return vaultCatalogRepository;
         }
 
         public TransferItemService getTransferItemService() {

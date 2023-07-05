@@ -19,7 +19,6 @@ import nl.knaw.dans.ttv.core.service.ArchiveMetadataService;
 import nl.knaw.dans.ttv.core.service.OcflRepositoryService;
 import nl.knaw.dans.ttv.core.service.TarCommandRunner;
 import nl.knaw.dans.ttv.core.service.TransferItemService;
-import nl.knaw.dans.ttv.core.service.VaultCatalogService;
 import nl.knaw.dans.ttv.db.Tar;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,14 +26,12 @@ import org.mockito.Mockito;
 
 import java.nio.file.Path;
 import java.time.Duration;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 class OcflTarRetryTaskCreatorTest {
     private TransferItemService transferItemService;
@@ -42,7 +39,7 @@ class OcflTarRetryTaskCreatorTest {
     private TarCommandRunner tarCommandRunner;
     private ArchiveMetadataService archiveMetadataService;
     private OcflRepositoryService ocflRepositoryService;
-    private VaultCatalogService vaultCatalogService;
+    private VaultCatalogRepository vaultCatalogRepository;
     private Path workDir;
 
     @BeforeEach
@@ -53,7 +50,7 @@ class OcflTarRetryTaskCreatorTest {
         this.archiveMetadataService = Mockito.mock(ArchiveMetadataService.class);
         this.workDir = Path.of("workdir");
         this.ocflRepositoryService = Mockito.mock(OcflRepositoryService.class);
-        this.vaultCatalogService = Mockito.mock(VaultCatalogService.class);
+        this.vaultCatalogRepository = Mockito.mock(VaultCatalogRepository.class);
     }
 
     @Test
@@ -65,10 +62,10 @@ class OcflTarRetryTaskCreatorTest {
         );
         var params = new OcflTarRetryTaskCreator.TaskRetryTaskCreatorParameters(
             transferItemService, workDir, tarCommandRunner, archiveMetadataService, executorService, 5, intervals, ocflRepositoryService,
-            vaultCatalogService);
+            vaultCatalogRepository);
 
         var tar = new Tar();
-        tar.setCreated(LocalDateTime.now().minus(20, ChronoUnit.HOURS));
+        tar.setCreated(OffsetDateTime.now().minus(20, ChronoUnit.HOURS));
         tar.setTransferAttempt(0);
         tar.setTarUuid("test1");
 
@@ -90,10 +87,10 @@ class OcflTarRetryTaskCreatorTest {
         );
         var params = new OcflTarRetryTaskCreator.TaskRetryTaskCreatorParameters(
             transferItemService, workDir, tarCommandRunner, archiveMetadataService, executorService, 5, intervals, ocflRepositoryService,
-            vaultCatalogService);
+            vaultCatalogRepository);
 
         var tar = new Tar();
-        tar.setCreated(LocalDateTime.now().minus(20, ChronoUnit.HOURS));
+        tar.setCreated(OffsetDateTime.now().minus(20, ChronoUnit.HOURS));
         tar.setTransferAttempt(2);
         tar.setTarUuid("test1");
 
@@ -116,7 +113,7 @@ class OcflTarRetryTaskCreatorTest {
         );
 
         var tar = new Tar();
-        tar.setCreated(LocalDateTime.now().minus(20, ChronoUnit.HOURS));
+        tar.setCreated(OffsetDateTime.now().minus(20, ChronoUnit.HOURS));
         tar.setTransferAttempt(0);
         tar.setTarUuid("test1");
 

@@ -16,6 +16,7 @@
 package nl.knaw.dans.ttv.db;
 
 import io.dropwizard.hibernate.AbstractDAO;
+import nl.knaw.dans.ttv.core.domain.Version;
 import org.hibernate.SessionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,18 +55,17 @@ public class TransferItemDAO extends AbstractDAO<TransferItem> {
         return query.list();
     }
 
-    public Optional<TransferItem> findByDatasetPidAndVersion(String datasetPid, int versionMajor, int versionMinor) {
-        var query = currentSession().createQuery(
+    public Optional<TransferItem> findByDatasetPidAndVersion(String datasetPid, Version version) {
+        return query(
             "from TransferItem "
                 + "where datasetPid = :datasetPid "
                 + "and versionMajor = :versionMajor "
-                + "and versionMinor = :versionMinor ",
-            TransferItem.class);
+                + "and versionMinor = :versionMinor "
+        )
+            .setParameter("datasetPid", datasetPid)
+            .setParameter("versionMajor", version.getMajor())
+            .setParameter("versionMinor", version.getMinor())
+            .uniqueResultOptional();
 
-        query.setParameter("datasetPid", datasetPid);
-        query.setParameter("versionMajor", versionMajor);
-        query.setParameter("versionMinor", versionMinor);
-
-        return query.getResultStream().findFirst();
     }
 }

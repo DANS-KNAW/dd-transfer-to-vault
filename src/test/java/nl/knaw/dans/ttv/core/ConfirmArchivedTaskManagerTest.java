@@ -18,7 +18,6 @@ package nl.knaw.dans.ttv.core;
 import nl.knaw.dans.ttv.core.service.ArchiveStatusService;
 import nl.knaw.dans.ttv.core.service.FileService;
 import nl.knaw.dans.ttv.core.service.TransferItemService;
-import nl.knaw.dans.ttv.core.service.VaultCatalogService;
 import nl.knaw.dans.ttv.db.Tar;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -34,7 +33,7 @@ class ConfirmArchivedTaskManagerTest {
     private ExecutorService executorService;
     private FileService fileService;
     private ArchiveStatusService archiveStatusService;
-    private VaultCatalogService vaultCatalogService;
+    private VaultCatalogRepository vaultCatalogRepository;
 
     @BeforeEach
     void setUp() {
@@ -42,7 +41,7 @@ class ConfirmArchivedTaskManagerTest {
         this.executorService = Mockito.mock(ExecutorService.class);
         this.fileService = Mockito.mock(FileService.class);
         this.archiveStatusService = Mockito.mock(ArchiveStatusService.class);
-        this.vaultCatalogService = Mockito.mock(VaultCatalogService.class);
+        this.vaultCatalogRepository = Mockito.mock(VaultCatalogRepository.class);
     }
 
     @Test
@@ -54,7 +53,7 @@ class ConfirmArchivedTaskManagerTest {
             transferItemService,
             archiveStatusService,
             fileService,
-            vaultCatalogService));
+            vaultCatalogRepository));
 
         var scheduler = Mockito.mock(Scheduler.class);
         Mockito.when(manager.createScheduler()).thenReturn(scheduler);
@@ -75,7 +74,7 @@ class ConfirmArchivedTaskManagerTest {
             transferItemService,
             archiveStatusService,
             fileService,
-            vaultCatalogService));
+            vaultCatalogRepository));
 
         var tar = new Tar();
 

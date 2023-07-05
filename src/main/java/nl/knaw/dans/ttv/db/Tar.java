@@ -15,7 +15,12 @@
  */
 package nl.knaw.dans.ttv.db;
 
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.proxy.HibernateProxy;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -25,12 +30,17 @@ import javax.persistence.Enumerated;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Entity
 @Table(name = "tar")
+@Getter
+@Setter
+@ToString
+@RequiredArgsConstructor
 public class Tar {
     @Id
     @Column(name = "tar_uuid", nullable = false)
@@ -38,11 +48,12 @@ public class Tar {
     @Column(name = "vault_path")
     private String vaultPath;
     @Column(name = "datetime_created")
-    private LocalDateTime created;
+    private OffsetDateTime created;
     @Column(name = "datetime_confirmed_archived")
-    private LocalDateTime datetimeConfirmedArchived;
-    @OneToMany(mappedBy = "aipsTar", cascade = CascadeType.ALL)
-    private List<TransferItem> transferItems;
+    private OffsetDateTime datetimeConfirmedArchived;
+    @OneToMany(mappedBy = "tar", cascade = CascadeType.ALL)
+    @ToString.Exclude
+    private List<TransferItem> transferItems = new ArrayList<>();
     @Column(name = "archive_in_progress")
     @ColumnDefault("false")
     private boolean archiveInProgress;
@@ -53,6 +64,7 @@ public class Tar {
     @Column(name = "tar_status")
     private TarStatus tarStatus;
     @OneToMany(mappedBy = "tar", cascade = CascadeType.ALL, orphanRemoval = true)
+    @ToString.Exclude
     private List<TarPart> tarParts = new ArrayList<>();
     @Column(name = "transfer_attempt")
     @ColumnDefault("0")
@@ -62,111 +74,29 @@ public class Tar {
         this.tarUuid = tarUuid;
         this.tarStatus = status;
         this.confirmCheckInProgress = confirmCheckInProgress;
-        this.setTransferItems(new ArrayList<>());
-        this.setTarParts(new ArrayList<>());
-    }
-
-    public Tar() {
-        this.setTransferItems(new ArrayList<>());
-        this.setTarParts(new ArrayList<>());
     }
 
     public Tar(String uuid) {
         this.setTarUuid(uuid);
     }
 
-    public boolean isArchiveInProgress() {
-        return archiveInProgress;
-    }
-
-    public void setArchiveInProgress(boolean archiveInProgress) {
-        this.archiveInProgress = archiveInProgress;
-    }
-
-    public int getTransferAttempt() {
-        return transferAttempt;
-    }
-
-    public void setTransferAttempt(int transferAttempt) {
-        this.transferAttempt = transferAttempt;
-    }
-
-    public String getTarUuid() {
-        return tarUuid;
-    }
-
-    public void setTarUuid(String tarUuid) {
-        this.tarUuid = tarUuid;
-    }
-
-    public String getVaultPath() {
-        return vaultPath;
-    }
-
-    public void setVaultPath(String vaultPath) {
-        this.vaultPath = vaultPath;
-    }
-
-    public LocalDateTime getCreated() {
-        return created;
-    }
-
-    public void setCreated(LocalDateTime created) {
-        this.created = created;
-    }
-
-    public List<TransferItem> getTransferItems() {
-        return transferItems;
-    }
-
-    public void setTransferItems(List<TransferItem> transferItems) {
-        this.transferItems = transferItems;
-    }
-
-    public boolean isConfirmCheckInProgress() {
-        return confirmCheckInProgress;
-    }
-
-    public void setConfirmCheckInProgress(boolean confirmCheckInProgress) {
-        this.confirmCheckInProgress = confirmCheckInProgress;
-    }
-
-    public TarStatus getTarStatus() {
-        return tarStatus;
-    }
-
-    public void setTarStatus(TarStatus tarStatus) {
-        this.tarStatus = tarStatus;
-    }
-
-    public List<TarPart> getTarParts() {
-        return tarParts;
-    }
-
-    public void setTarParts(List<TarPart> tarParts) {
-        this.tarParts = tarParts;
-    }
-
-    public LocalDateTime getDatetimeConfirmedArchived() {
-        return datetimeConfirmedArchived;
-    }
-
-    public void setDatetimeConfirmedArchived(LocalDateTime datetimeConfirmedArchived) {
-        this.datetimeConfirmedArchived = datetimeConfirmedArchived;
+    @Override
+    public final boolean equals(Object o) {
+        if (this == o)
+            return true;
+        if (o == null)
+            return false;
+        Class<?> oEffectiveClass = o instanceof HibernateProxy ? ((HibernateProxy) o).getHibernateLazyInitializer().getPersistentClass() : o.getClass();
+        Class<?> thisEffectiveClass = this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass() : this.getClass();
+        if (thisEffectiveClass != oEffectiveClass)
+            return false;
+        Tar tar = (Tar) o;
+        return getTarUuid() != null && Objects.equals(getTarUuid(), tar.getTarUuid());
     }
 
     @Override
-    public String toString() {
-        return "Tar{" +
-            "tarUuid='" + tarUuid + '\'' +
-            ", vaultPath='" + vaultPath + '\'' +
-            ", created=" + created +
-            ", datetimeConfirmedArchived=" + datetimeConfirmedArchived +
-            ", archiveInProgress=" + archiveInProgress +
-            ", confirmCheckInProgress=" + confirmCheckInProgress +
-            ", tarStatus=" + tarStatus +
-            ", transferAttempt=" + transferAttempt +
-            '}';
+    public final int hashCode() {
+        return getClass().hashCode();
     }
 
     public enum TarStatus {

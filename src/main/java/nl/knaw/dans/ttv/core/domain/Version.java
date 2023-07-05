@@ -13,35 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ttv.core.dto;
+package nl.knaw.dans.ttv.core.domain;
 
-import java.time.LocalDateTime;
+import lombok.EqualsAndHashCode;
+import lombok.Value;
 
-public class FilesystemAttributes {
-    private LocalDateTime creationTime;
-    private long bagSize;
+@Value
+@EqualsAndHashCode
+public class Version {
+    int major;
+    int minor;
 
-    public LocalDateTime getCreationTime() {
-        return creationTime;
+    private Version(int major, int minor) {
+        this.major = major;
+        this.minor = minor;
     }
 
-    public void setCreationTime(LocalDateTime creationTime) {
-        this.creationTime = creationTime;
+    public static Version of(int major, int minor) {
+        return new Version(major, minor);
     }
 
-    public long getBagSize() {
-        return bagSize;
-    }
-
-    public void setBagSize(long bagSize) {
-        this.bagSize = bagSize;
-    }
-
-    @Override
     public String toString() {
-        return "FilesystemAttributes{" +
-            "creationTime=" + creationTime +
-            ", bagSize=" + bagSize +
-            '}';
+        return String.format("%d.%d", major, minor);
     }
 }

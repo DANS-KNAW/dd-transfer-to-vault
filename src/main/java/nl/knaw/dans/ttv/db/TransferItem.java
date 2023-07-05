@@ -15,9 +15,17 @@
  */
 package nl.knaw.dans.ttv.db;
 
-import org.hibernate.annotations.Type;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
+import nl.knaw.dans.ttv.core.domain.Version;
+import org.hibernate.annotations.TypeDef;
+import org.hibernate.annotations.TypeDefs;
+import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.type.TextType;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -30,32 +38,42 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
-import java.time.LocalDateTime;
-import java.util.Arrays;
+import java.time.OffsetDateTime;
 import java.util.Objects;
 
 @Entity
-@Table(name = "transfer_queue", uniqueConstraints = { @UniqueConstraint(columnNames = { "dataset_pid", "version_major", "version_minor" }) })
+@Table(name = "transfer_queue",
+       uniqueConstraints = { @UniqueConstraint(columnNames = { "bag_id", "ocfl_object_version" }) }
+)
+@TypeDefs({
+    @TypeDef(name = "string", defaultForType = String.class, typeClass = TextType.class)
+})
+@Getter
+@Setter
+@ToString
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class TransferItem {
-
-    private static final Logger log = LoggerFactory.getLogger(TransferItem.class);
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
-    @Column(name = "dataset_pid", nullable = false)
-    private String datasetPid;
-    @Column(name = "dataset_version")
-    private String datasetVersion;
+    private Long id;
+    @Column(name = "bag_id")
+    private String bagId;
     @Column(name = "version_major", nullable = false)
     private int versionMajor;
     @Column(name = "version_minor", nullable = false)
     private int versionMinor;
+    @Column(name = "ocfl_object_version")
+    private Integer ocflObjectVersion;
+    @Column(name = "dataset_pid", nullable = false)
+    private String datasetPid;
+    @Column(name = "dataset_version")
+    private String datasetVersion;
     @Column(name = "creation_time", nullable = false)
-    private LocalDateTime creationTime;
+    private OffsetDateTime creationTime;
     @Column(name = "dve_file_path", nullable = false)
     private String dveFilePath;
-    @Column(name = "bag_id")
-    private String bagId;
     @Column(name = "nbn")
     private String nbn;
     @Column(name = "other_id")
@@ -71,262 +89,52 @@ public class TransferItem {
     @Column(name = "bag_checksum")
     private String bagChecksum;
     @Column(name = "queue_date")
-    private LocalDateTime queueDate;
+    private OffsetDateTime queueDate;
     @Column(name = "bag_size")
     private long bagSize;
     @Enumerated(EnumType.STRING)
     @Column(name = "transfer_status", nullable = false)
     private TransferStatus transferStatus;
-    @Column(name = "oai_ore", length = 10000)
-    @Type(type = "materialized_blob")
-    private byte[] oaiOre;
-    @Column(name = "pid_mapping", length = 10000)
-    @Type(type = "materialized_blob")
-    private byte[] pidMapping;
+    @Column(name = "oai_ore")
+    @ToString.Exclude
+    private String oaiOre;
+    @Column(name = "pid_mapping")
+    @ToString.Exclude
+    private String pidMapping;
     @Column(name = "aip_tar_entry_name")
     private String aipTarEntryName;
     @ManyToOne
     @JoinColumn(name = "tar_id")
-    private Tar aipsTar;
+    private Tar tar;
     @Column(name = "bag_deposit_date")
-    private LocalDateTime bagDepositDate;
+    private OffsetDateTime bagDepositDate;
 
-    public TransferItem() {
-
+    public Version getVersion() {
+        return Version.of(versionMajor, versionMinor);
     }
 
-    public TransferItem(String datasetPid, int versionMajor, int versionMinor, String dveFilePath, LocalDateTime creationTime, TransferStatus transferStatus) {
-        this.datasetPid = datasetPid;
-        this.versionMajor = versionMajor;
-        this.versionMinor = versionMinor;
-        this.dveFilePath = dveFilePath;
-        this.creationTime = creationTime;
-        this.transferStatus = transferStatus;
-    }
-
-    public String getSwordClient() {
-        return swordClient;
-    }
-
-    public void setSwordClient(String swordClient) {
-        this.swordClient = swordClient;
-    }
-
-    public long getId() {
-        return id;
-    }
-
-    public void setId(long id) {
-        this.id = id;
-    }
-
-    public String getDatasetPid() {
-        return datasetPid;
-    }
-
-    public void setDatasetPid(String datasetPid) {
-        this.datasetPid = datasetPid;
-    }
-
-    public String getDatasetVersion() {
-        return datasetVersion;
-    }
-
-    public void setDatasetVersion(String datasetVersion) {
-        this.datasetVersion = datasetVersion;
-    }
-
-    public int getVersionMajor() {
-        return versionMajor;
-    }
-
-    public void setVersionMajor(int versionMajor) {
-        this.versionMajor = versionMajor;
-    }
-
-    public int getVersionMinor() {
-        return versionMinor;
-    }
-
-    public void setVersionMinor(int versionMinor) {
-        this.versionMinor = versionMinor;
-    }
-
-    public LocalDateTime getCreationTime() {
-        return creationTime;
-    }
-
-    public void setCreationTime(LocalDateTime creationTime) {
-        this.creationTime = creationTime;
-    }
-
-    public String getDveFilePath() {
-        return dveFilePath;
-    }
-
-    public void setDveFilePath(String dveFilePath) {
-        this.dveFilePath = dveFilePath;
-    }
-
-    public String getBagId() {
-        return bagId;
-    }
-
-    public void setBagId(String bagId) {
-        this.bagId = bagId;
-    }
-
-    public String getNbn() {
-        return nbn;
-    }
-
-    public void setNbn(String nbn) {
-        this.nbn = nbn;
-    }
-
-    public String getOtherId() {
-        return otherId;
-    }
-
-    public void setOtherId(String otherId) {
-        this.otherId = otherId;
-    }
-
-    public String getOtherIdVersion() {
-        return otherIdVersion;
-    }
-
-    public void setOtherIdVersion(String otherIdVersion) {
-        this.otherIdVersion = otherIdVersion;
-    }
-
-    public String getSwordToken() {
-        return swordToken;
-    }
-
-    public void setSwordToken(String swordToken) {
-        this.swordToken = swordToken;
-    }
-
-    public String getDatasetDvInstance() {
-        return datasetDvInstance;
-    }
-
-    public void setDatasetDvInstance(String datasetDvInstance) {
-        this.datasetDvInstance = datasetDvInstance;
-    }
-
-    public String getBagChecksum() {
-        return bagChecksum;
-    }
-
-    public void setBagChecksum(String bagChecksum) {
-        this.bagChecksum = bagChecksum;
-    }
-
-    public LocalDateTime getQueueDate() {
-        return queueDate;
-    }
-
-    public void setQueueDate(LocalDateTime queueDate) {
-        this.queueDate = queueDate;
-    }
-
-    public long getBagSize() {
-        return bagSize;
-    }
-
-    public void setBagSize(long bagSize) {
-        this.bagSize = bagSize;
-    }
-
-    public TransferStatus getTransferStatus() {
-        return transferStatus;
-    }
-
-    public void setTransferStatus(TransferStatus transferStatus) {
-        this.transferStatus = transferStatus;
-    }
-
-    public byte[] getOaiOre() {
-        return oaiOre;
-    }
-
-    public void setOaiOre(byte[] oaiOre) {
-        this.oaiOre = oaiOre;
-    }
-
-    public byte[] getPidMapping() {
-        return pidMapping;
-    }
-
-    public void setPidMapping(byte[] pidMapping) {
-        this.pidMapping = pidMapping;
-    }
-
-    public String getAipTarEntryName() {
-        return aipTarEntryName;
-    }
-
-    public void setAipTarEntryName(String aipTarEntryName) {
-        this.aipTarEntryName = aipTarEntryName;
-    }
-
-    public Tar getAipsTar() {
-        return aipsTar;
-    }
-
-    public void setAipsTar(Tar aipsTar) {
-        this.aipsTar = aipsTar;
-    }
-
-    public LocalDateTime getBagDepositDate() {
-        return bagDepositDate;
-    }
-
-    public void setBagDepositDate(LocalDateTime bagDepositDate) {
-        this.bagDepositDate = bagDepositDate;
+    public void setVersion(Version version) {
+        this.versionMinor = version.getMinor();
+        this.versionMajor = version.getMajor();
     }
 
     @Override
-    public String toString() {
-        return "TransferItem{" +
-            "id=" + id +
-            ", datasetPid='" + datasetPid + '\'' +
-            ", datasetVersion='" + datasetVersion + '\'' +
-            ", versionMajor=" + versionMajor +
-            ", versionMinor=" + versionMinor +
-            ", creationTime=" + creationTime +
-            ", dveFilePath='" + dveFilePath + '\'' +
-            ", bagId='" + bagId + '\'' +
-            ", nbn='" + nbn + '\'' +
-            ", otherId='" + otherId + '\'' +
-            ", otherIdVersion='" + otherIdVersion + '\'' +
-            ", swordToken='" + swordToken + '\'' +
-            ", datasetDvInstance='" + datasetDvInstance + '\'' +
-            ", bagChecksum='" + bagChecksum + '\'' +
-            ", queueDate=" + queueDate +
-            ", bagSize=" + bagSize +
-            ", transferStatus=" + transferStatus +
-            ", aipTarEntryName='" + aipTarEntryName + '\'' +
-            ", aipsTar='" + aipsTar + '\'' +
-            ", bagDepositDate=" + bagDepositDate +
-            '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
+    public final boolean equals(Object o) {
         if (this == o)
             return true;
-        if (o == null || getClass() != o.getClass())
+        if (o == null)
+            return false;
+        Class<?> oEffectiveClass = o instanceof HibernateProxy ? ((HibernateProxy) o).getHibernateLazyInitializer().getPersistentClass() : o.getClass();
+        Class<?> thisEffectiveClass = this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass() : this.getClass();
+        if (thisEffectiveClass != oEffectiveClass)
             return false;
         TransferItem that = (TransferItem) o;
-        return versionMajor == that.versionMajor && versionMinor == that.versionMinor && bagSize == that.bagSize && datasetPid.equals(that.datasetPid) && Objects.equals(datasetVersion,
-            that.datasetVersion) && creationTime.equals(that.creationTime) && dveFilePath.equals(that.dveFilePath) && Objects.equals(bagId, that.bagId) && Objects.equals(nbn, that.nbn)
-            && Objects.equals(otherId, that.otherId) && Objects.equals(otherIdVersion, that.otherIdVersion) && Objects.equals(swordToken, that.swordToken) && Objects.equals(datasetDvInstance,
-            that.datasetDvInstance) && Objects.equals(bagChecksum, that.bagChecksum) && Objects.equals(queueDate, that.queueDate) && transferStatus == that.transferStatus && Arrays.equals(oaiOre,
-            that.oaiOre) && Arrays.equals(pidMapping, that.pidMapping) && Objects.equals(aipTarEntryName, that.aipTarEntryName) && Objects.equals(aipsTar, that.aipsTar) && Objects.equals(
-            bagDepositDate, that.bagDepositDate);
+        return getId() != null && Objects.equals(getId(), that.getId());
+    }
+
+    @Override
+    public final int hashCode() {
+        return getClass().hashCode();
     }
 
     public enum TransferStatus {

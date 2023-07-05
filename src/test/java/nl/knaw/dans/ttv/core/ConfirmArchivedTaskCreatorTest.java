@@ -18,7 +18,6 @@ package nl.knaw.dans.ttv.core;
 import nl.knaw.dans.ttv.core.service.ArchiveStatusService;
 import nl.knaw.dans.ttv.core.service.FileService;
 import nl.knaw.dans.ttv.core.service.TransferItemService;
-import nl.knaw.dans.ttv.core.service.VaultCatalogService;
 import nl.knaw.dans.ttv.db.Tar;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -33,7 +32,7 @@ class ConfirmArchivedTaskCreatorTest {
     private ExecutorService executorService;
     private FileService fileService;
     private ArchiveStatusService archiveStatusService;
-    private VaultCatalogService vaultCatalogService;
+    private VaultCatalogRepository vaultCatalogRepository;
 
     @BeforeEach
     void setUp() {
@@ -41,14 +40,14 @@ class ConfirmArchivedTaskCreatorTest {
         this.executorService = Mockito.mock(ExecutorService.class);
         this.fileService = Mockito.mock(FileService.class);
         this.archiveStatusService = Mockito.mock(ArchiveStatusService.class);
-        this.vaultCatalogService = Mockito.mock(VaultCatalogService.class);
+        this.vaultCatalogRepository = Mockito.mock(VaultCatalogRepository.class);
     }
 
     @Test
     void run() {
         var params = new ConfirmArchivedTaskCreator.ConfirmArchivedTaskCreatorParameters(
             transferItemService, Path.of("workingdir"), archiveStatusService, fileService, executorService,
-            vaultCatalogService);
+            vaultCatalogRepository);
 
         Mockito.when(transferItemService.stageAllTarsToBeConfirmed())
             .thenReturn(List.of(new Tar()));

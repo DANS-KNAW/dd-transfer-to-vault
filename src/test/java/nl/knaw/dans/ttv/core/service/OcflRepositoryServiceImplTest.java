@@ -15,9 +15,9 @@
  */
 package nl.knaw.dans.ttv.core.service;
 
-import edu.wisc.library.ocfl.api.OcflOption;
-import edu.wisc.library.ocfl.api.OcflRepository;
-import edu.wisc.library.ocfl.api.model.VersionInfo;
+import io.ocfl.api.OcflOption;
+import io.ocfl.api.OcflRepository;
+import io.ocfl.api.model.VersionInfo;
 import nl.knaw.dans.ttv.db.TransferItem;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,7 +25,7 @@ import org.mockito.Mockito;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -44,7 +44,13 @@ class OcflRepositoryServiceImplTest {
     @Test
     void importTransferItem() {
         var repository = Mockito.mock(OcflRepository.class);
-        var transferItem = new TransferItem("pid", 1, 0, "path/to/dir", LocalDateTime.now(), TransferItem.TransferStatus.METADATA_EXTRACTED);
+        var transferItem = TransferItem.builder()
+            .ocflObjectVersion(1)
+            .datasetPid("pid1")
+            .dveFilePath("path/to/dir")
+            .creationTime(OffsetDateTime.now())
+            .transferStatus(TransferItem.TransferStatus.METADATA_EXTRACTED)
+            .build();
         transferItem.setBagId("urn:uuid:a175c497-9a42-4832-9e71-626db678ed1b");
         var service = new OcflRepositoryServiceImpl(fileService, ocflRepositoryFactory);
 

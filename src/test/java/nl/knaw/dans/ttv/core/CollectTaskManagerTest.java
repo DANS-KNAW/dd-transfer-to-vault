@@ -33,6 +33,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 class CollectTaskManagerTest {
     private TransferItemService transferItemService;
+    private VaultCatalogRepository vaultCatalogRepository;
     private TransferItemMetadataReader transferItemMetadataReader;
     private FileService fileService;
     private ExecutorService executorService;
@@ -44,6 +45,7 @@ class CollectTaskManagerTest {
         this.transferItemService = Mockito.mock(TransferItemService.class);
         this.transferItemMetadataReader = Mockito.mock(TransferItemMetadataReader.class);
         this.fileService = Mockito.mock(FileService.class);
+        this.vaultCatalogRepository = Mockito.mock(VaultCatalogRepository.class);
         this.executorService = Mockito.mock(ExecutorService.class);
         this.inboxWatcherFactory = Mockito.mock(InboxWatcherFactory.class);
         this.inboxes = List.of(

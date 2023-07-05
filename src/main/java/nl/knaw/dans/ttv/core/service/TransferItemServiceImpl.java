@@ -17,10 +17,10 @@ package nl.knaw.dans.ttv.core.service;
 
 import io.dropwizard.hibernate.UnitOfWork;
 import nl.knaw.dans.ttv.core.InvalidTransferItemException;
-import nl.knaw.dans.ttv.core.dto.ArchiveMetadata;
-import nl.knaw.dans.ttv.core.dto.FileContentAttributes;
-import nl.knaw.dans.ttv.core.dto.FilenameAttributes;
-import nl.knaw.dans.ttv.core.dto.FilesystemAttributes;
+import nl.knaw.dans.ttv.core.domain.ArchiveMetadata;
+import nl.knaw.dans.ttv.core.domain.FileContentAttributes;
+import nl.knaw.dans.ttv.core.domain.FilenameAttributes;
+import nl.knaw.dans.ttv.core.domain.FilesystemAttributes;
 import nl.knaw.dans.ttv.db.Tar;
 import nl.knaw.dans.ttv.db.TarDAO;
 import nl.knaw.dans.ttv.db.TarPart;
@@ -30,7 +30,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.ObjectNotFoundException;
 
 import java.nio.file.Path;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -47,20 +47,21 @@ public class TransferItemServiceImpl implements TransferItemService {
 
     @Override
     @UnitOfWork
-    public TransferItem createTransferItem(String datastationName, FilenameAttributes filenameAttributes, FilesystemAttributes filesystemAttributes,
+    public TransferItem createTransferItem(String datastationName,
+        FilenameAttributes filenameAttributes,
+        FilesystemAttributes filesystemAttributes,
         FileContentAttributes fileContentAttributes)
         throws InvalidTransferItemException {
         var transferItem = new TransferItem();
 
         transferItem.setTransferStatus(TransferItem.TransferStatus.COLLECTED);
-        transferItem.setQueueDate(LocalDateTime.now());
+        transferItem.setQueueDate(OffsetDateTime.now());
         transferItem.setDatasetDvInstance(datastationName);
+        transferItem.setVersion(filenameAttributes.getVersion());
 
         // filename attributes
         transferItem.setDveFilePath(filenameAttributes.getDveFilePath());
         transferItem.setDatasetPid(filenameAttributes.getDatasetPid());
-        transferItem.setVersionMajor(filenameAttributes.getVersionMajor());
-        transferItem.setVersionMinor(filenameAttributes.getVersionMinor());
 
         // filesystem attributes
         transferItem.setCreationTime(filesystemAttributes.getCreationTime());
@@ -75,12 +76,14 @@ public class TransferItemServiceImpl implements TransferItemService {
         transferItem.setBagChecksum(fileContentAttributes.getBagChecksum());
 
         // check if an item with this ID already exists
-        var existing = transferItemDAO.findByDatasetPidAndVersion(transferItem.getDatasetPid(), transferItem.getVersionMajor(), transferItem.getVersionMinor());
+        var existing = transferItemDAO.findByDatasetPidAndVersion(transferItem.getDatasetPid(), transferItem.getVersion());
 
         if (existing.isPresent()) {
             throw new InvalidTransferItemException(
-                String.format("TransferItem with datasetPid=%s, versionMajor=%s, versionMinor=%s already exists in database", transferItem.getDatasetPid(), transferItem.getVersionMajor(),
-                    transferItem.getVersionMinor()));
+                String.format("TransferItem with datasetPid=%s, version=%s already exists in database",
+                    transferItem.getDatasetPid(), transferItem.getDatasetVersion()
+                )
+            );
 
         }
 
@@ -97,16 +100,14 @@ public class TransferItemServiceImpl implements TransferItemService {
         // check if an item with this ID already exists
         var existing = transferItemDAO.findByDatasetPidAndVersion(
             filenameAttributes.getDatasetPid(),
-            filenameAttributes.getVersionMajor(),
-            filenameAttributes.getVersionMinor()
+            filenameAttributes.getVersion()
         );
 
         if (existing.isPresent()) {
             throw new InvalidTransferItemException(
-                String.format("TransferItem with datasetPid=%s, versionMajor=%s, versionMinor=%s already exists in database",
+                String.format("TransferItem with datasetPid=%s, version=%s already exists in database",
                     filenameAttributes.getDatasetPid(),
-                    filenameAttributes.getVersionMajor(),
-                    filenameAttributes.getVersionMinor()
+                    filenameAttributes.getVersion()
                 )
             );
         }
@@ -114,15 +115,14 @@ public class TransferItemServiceImpl implements TransferItemService {
         var transferItem = new TransferItem();
 
         transferItem.setTransferStatus(TransferItem.TransferStatus.COLLECTED);
-        transferItem.setQueueDate(LocalDateTime.now());
+        transferItem.setQueueDate(OffsetDateTime.now());
         transferItem.setDatasetDvInstance(datastationName);
-        transferItem.setBagDepositDate(LocalDateTime.now());
+        transferItem.setBagDepositDate(OffsetDateTime.now());
 
         // filename attributes
         transferItem.setDveFilePath(filenameAttributes.getDveFilePath());
         transferItem.setDatasetPid(filenameAttributes.getDatasetPid());
-        transferItem.setVersionMajor(filenameAttributes.getVersionMajor());
-        transferItem.setVersionMinor(filenameAttributes.getVersionMinor());
+        transferItem.setVersion(filenameAttributes.getVersion());
 
         // filesystem attributes
         transferItem.setCreationTime(filesystemAttributes.getCreationTime());
@@ -234,8 +234,7 @@ public class TransferItemServiceImpl implements TransferItemService {
     public Optional<TransferItem> getTransferItemByFilenameAttributes(FilenameAttributes filenameAttributes) {
         return transferItemDAO.findByDatasetPidAndVersion(
             filenameAttributes.getDatasetPid(),
-            filenameAttributes.getVersionMajor(),
-            filenameAttributes.getVersionMinor()
+            filenameAttributes.getVersion()
         );
     }
 
@@ -280,7 +279,7 @@ public class TransferItemServiceImpl implements TransferItemService {
         var tarArchive = new Tar();
         tarArchive.setTarUuid(id);
         tarArchive.setTarStatus(Tar.TarStatus.TARRING);
-        tarArchive.setCreated(LocalDateTime.now());
+        tarArchive.setCreated(OffsetDateTime.now());
         tarArchive.setVaultPath(vaultPath);
         tarArchive.setArchiveInProgress(true);
 
@@ -288,7 +287,7 @@ public class TransferItemServiceImpl implements TransferItemService {
 
         for (var transferItem : transferItems) {
             transferItem.setTransferStatus(TransferItem.TransferStatus.TARRING);
-            transferItem.setAipsTar(tarArchive);
+            transferItem.setTar(tarArchive);
         }
 
         tarArchive.setTransferItems(transferItems);
@@ -313,7 +312,7 @@ public class TransferItemServiceImpl implements TransferItemService {
     public void updateTarToArchived(Tar tar) {
         tar.setTarStatus(Tar.TarStatus.CONFIRMEDARCHIVED);
         tar.setConfirmCheckInProgress(false);
-        tar.setDatetimeConfirmedArchived(LocalDateTime.now());
+        tar.setDatetimeConfirmedArchived(OffsetDateTime.now());
         save(tar);
     }
 

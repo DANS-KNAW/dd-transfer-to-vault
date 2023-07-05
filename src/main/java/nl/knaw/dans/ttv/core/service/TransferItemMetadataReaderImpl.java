@@ -18,15 +18,17 @@ package nl.knaw.dans.ttv.core.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import nl.knaw.dans.ttv.core.InvalidTransferItemException;
-import nl.knaw.dans.ttv.core.dto.FileContentAttributes;
-import nl.knaw.dans.ttv.core.dto.FilenameAttributes;
-import nl.knaw.dans.ttv.core.dto.FilesystemAttributes;
+import nl.knaw.dans.ttv.core.domain.FileContentAttributes;
+import nl.knaw.dans.ttv.core.domain.FilenameAttributes;
+import nl.knaw.dans.ttv.core.domain.FilesystemAttributes;
+import nl.knaw.dans.ttv.core.domain.Version;
 import org.apache.commons.io.IOUtils;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.Objects;
 import java.util.Optional;
@@ -51,50 +53,50 @@ public class TransferItemMetadataReaderImpl implements TransferItemMetadataReade
     public FilenameAttributes getFilenameAttributes(Path path) throws InvalidTransferItemException {
         var filename = path.getFileName();
         var matcher = PATTERN.matcher(filename.toString());
-        var result = new FilenameAttributes();
-        result.setDveFilePath(path.toString());
 
         if (matcher.matches()) {
-            if (matcher.group("doi") != null) {
-                String datasetPid = matcher.group("doi").substring(4).toUpperCase().replaceFirst("-", ".").replaceAll("-", "/");
-                result.setDatasetPid(datasetPid);
-            }
-            if (matcher.group("major") != null) {
-                result.setVersionMajor(Integer.parseInt(matcher.group("major")));
-            }
-            if (matcher.group("minor") != null) {
-                result.setVersionMinor(Integer.parseInt(matcher.group("minor")));
-            }
+
+            var datasetPid = Optional.ofNullable(matcher.group("doi"))
+                .map(doi -> doi.substring(4).toUpperCase().replaceFirst("-", ".").replaceAll("-", "/"))
+                .orElseThrow(() -> new InvalidTransferItemException(String.format("filename %s does not contain a DOI", filename)));
+
+            var major = Optional.ofNullable(matcher.group("major"))
+                .map(Integer::parseInt).orElse(0);
+
+            var minor = Optional.ofNullable(matcher.group("minor"))
+                .map(Integer::parseInt).orElse(0);
+
+            return FilenameAttributes.builder()
+                .dveFilePath(path.toString())
+                .datasetPid(datasetPid)
+                .version(Version.of(major, minor))
+                .build();
         }
         else {
             throw new InvalidTransferItemException(String.format("filename %s does not match expected pattern", filename));
         }
-
-        return result;
     }
 
     @Override
     public FilesystemAttributes getFilesystemAttributes(Path path) throws InvalidTransferItemException {
-        var result = new FilesystemAttributes();
 
         try {
             var creationTime = fileService.getFilesystemAttribute(path, "creationTime");
+            var time = Optional.ofNullable(creationTime)
+                .map(FileTime.class::cast)
+                .map(FileTime::toInstant)
+                .map(t -> OffsetDateTime.ofInstant(t, ZoneId.systemDefault()))
+                .orElse(null);
 
-            if (creationTime != null) {
-                result.setCreationTime(LocalDateTime.ofInstant(((FileTime) creationTime).toInstant(), ZoneId.systemDefault()));
-                result.setBagSize(fileService.getFileSize(path));
-            }
+            return new FilesystemAttributes(time, fileService.getFileSize(path));
         }
         catch (IOException e) {
             throw new InvalidTransferItemException(String.format("unable to read filesystem attributes for file %s", path.toString()), e);
         }
-
-        return result;
     }
 
     @Override
     public FileContentAttributes getFileContentAttributes(Path path) throws InvalidTransferItemException {
-        var result = new FileContentAttributes();
 
         try {
             var datasetVersionExport = fileService.openZipFile(path);
@@ -102,8 +104,8 @@ public class TransferItemMetadataReaderImpl implements TransferItemMetadataReade
             var metadataContent = fileService.openFileFromZip(datasetVersionExport, Path.of("metadata/oai-ore.jsonld"));
             var pidMappingContent = fileService.openFileFromZip(datasetVersionExport, Path.of("metadata/pid-mapping.txt"));
 
-            byte[] oaiOre = IOUtils.toByteArray(metadataContent);
-            byte[] pidMapping = IOUtils.toByteArray(pidMappingContent);
+            var oaiOre = IOUtils.toString(metadataContent, StandardCharsets.UTF_8);
+            var pidMapping = IOUtils.toString(pidMappingContent, StandardCharsets.UTF_8);
 
             var jsonNode = Objects.requireNonNull(objectMapper.readTree(oaiOre), "jsonld metadata can't be null: " + path);
             var describesNode = Objects.requireNonNull(jsonNode.get("ore:describes"), "ore:describes node can't be null");
@@ -116,16 +118,18 @@ public class TransferItemMetadataReaderImpl implements TransferItemMetadataReade
             var swordClient = getOptionalStringFromNode(describesNode, "dansDataVaultMetadata:SWORD Client");
             var swordToken = getOptionalStringFromNode(describesNode, "dansDataVaultMetadata:SWORD Token");
 
-            result.setBagChecksum(fileService.calculateChecksum(path));
-            result.setPidMapping(pidMapping);
-            result.setOaiOre(oaiOre);
-            result.setNbn(nbn);
-            result.setDatasetVersion(dvPidVersion);
-            result.setBagId(bagId);
-            result.setOtherId(otherId);
-            result.setOtherIdVersion(otherIdVersion);
-            result.setSwordToken(swordToken);
-            result.setSwordClient(swordClient);
+            return FileContentAttributes.builder()
+                .bagChecksum(fileService.calculateChecksum(path))
+                .pidMapping(pidMapping)
+                .oaiOre(oaiOre)
+                .nbn(nbn)
+                .datasetVersion(dvPidVersion)
+                .bagId(bagId)
+                .otherId(otherId)
+                .otherIdVersion(otherIdVersion)
+                .swordToken(swordToken)
+                .swordClient(swordClient)
+                .build();
         }
         catch (IOException e) {
             throw new InvalidTransferItemException(String.format("unable to read zip file contents for file '%s'", path), e);
@@ -133,8 +137,6 @@ public class TransferItemMetadataReaderImpl implements TransferItemMetadataReade
         catch (NullPointerException e) {
             throw new InvalidTransferItemException(String.format("unable to extract metadata from file '%s'", path), e);
         }
-
-        return result;
     }
 
     private String getStringFromNode(JsonNode node, String path) {

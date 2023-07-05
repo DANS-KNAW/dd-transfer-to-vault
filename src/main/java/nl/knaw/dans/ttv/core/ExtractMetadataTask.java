@@ -35,15 +35,17 @@ public class ExtractMetadataTask implements Runnable {
     private final TransferItemMetadataReader metadataReader;
     private final FileService fileService;
     private final TransferItemValidator transferItemValidator;
+    private final VaultCatalogRepository vaultCatalogRepository;
 
     public ExtractMetadataTask(Path filePath, Path outbox, TransferItemService transferItemService,
-        TransferItemMetadataReader metadataReader, FileService fileService, TransferItemValidator transferItemValidator) {
+        TransferItemMetadataReader metadataReader, FileService fileService, TransferItemValidator transferItemValidator, VaultCatalogRepository vaultCatalogRepository) {
         this.filePath = filePath;
         this.outbox = outbox;
         this.transferItemService = transferItemService;
         this.metadataReader = metadataReader;
         this.fileService = fileService;
         this.transferItemValidator = transferItemValidator;
+        this.vaultCatalogRepository = vaultCatalogRepository;
     }
 
     @Override
@@ -84,6 +86,8 @@ public class ExtractMetadataTask implements Runnable {
         transferItemValidator.validateTransferItem(updatedTransferItem);
 
         var newPath = outbox.resolve(filePath.getFileName());
+
+        vaultCatalogRepository.registerOcflObjectVersion(transferItem);
 
         transferItemService.moveTransferItem(updatedTransferItem, TransferItem.TransferStatus.METADATA_EXTRACTED, newPath);
 
