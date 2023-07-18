@@ -23,6 +23,7 @@ import nl.knaw.dans.ttv.core.domain.FilesystemAttributes;
 import nl.knaw.dans.ttv.db.Tar;
 import nl.knaw.dans.ttv.db.TransferItem;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
@@ -32,10 +33,7 @@ public interface TransferItemService {
     TransferItem createTransferItem(String datastationName, FilenameAttributes filenameAttributes, FilesystemAttributes filesystemAttributes, FileContentAttributes fileContentAttributes)
         throws InvalidTransferItemException;
 
-    TransferItem createTransferItem(String datastationName, FilenameAttributes filenameAttributes, FilesystemAttributes filesystemAttributes)
-        throws InvalidTransferItemException;
-
-    TransferItem moveTransferItem(TransferItem transferItem, TransferItem.TransferStatus newStatus, Path newPath);
+    TransferItem moveTransferItem(TransferItem transferItem, TransferItem.TransferStatus newStatus, Path filePath, Path outbox) throws IOException;
 
     void saveAllTars(List<Tar> tars);
 

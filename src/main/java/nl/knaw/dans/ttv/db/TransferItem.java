@@ -21,7 +21,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import nl.knaw.dans.ttv.core.domain.Version;
 import org.hibernate.annotations.TypeDef;
 import org.hibernate.annotations.TypeDefs;
 import org.hibernate.proxy.HibernateProxy;
@@ -60,14 +59,12 @@ public class TransferItem {
     private Long id;
     @Column(name = "bag_id")
     private String bagId;
-    @Column(name = "version_major", nullable = false)
-    private int versionMajor;
-    @Column(name = "version_minor", nullable = false)
-    private int versionMinor;
     @Column(name = "ocfl_object_version")
     private Integer ocflObjectVersion;
-    @Column(name = "dataset_pid", nullable = false)
-    private String datasetPid;
+    @Column(name = "dataset_identifier", nullable = false)
+    private String datasetIdentifier;
+    @Column(name = "doi")
+    private String doi;
     @Column(name = "dataset_version")
     private String datasetVersion;
     @Column(name = "creation_time", nullable = false)
@@ -109,15 +106,6 @@ public class TransferItem {
     @Column(name = "bag_deposit_date")
     private OffsetDateTime bagDepositDate;
 
-    public Version getVersion() {
-        return Version.of(versionMajor, versionMinor);
-    }
-
-    public void setVersion(Version version) {
-        this.versionMinor = version.getMinor();
-        this.versionMajor = version.getMajor();
-    }
-
     @Override
     public final boolean equals(Object o) {
         if (this == o)
@@ -135,6 +123,14 @@ public class TransferItem {
     @Override
     public final int hashCode() {
         return getClass().hashCode();
+    }
+
+    public String getCanonicalFilename() {
+        if (this.getId() == null || this.getDatasetIdentifier() == null) {
+            throw new IllegalStateException("Cannot create canonical filename for transfer item without id and dataset identifier");
+        }
+
+        return String.format("%s-ttv%s.zip", getDatasetIdentifier(), getId());
     }
 
     public enum TransferStatus {

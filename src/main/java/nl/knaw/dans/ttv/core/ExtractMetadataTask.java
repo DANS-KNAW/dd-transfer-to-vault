@@ -15,20 +15,18 @@
  */
 package nl.knaw.dans.ttv.core;
 
+import lombok.extern.slf4j.Slf4j;
 import nl.knaw.dans.ttv.core.service.FileService;
 import nl.knaw.dans.ttv.core.service.TransferItemMetadataReader;
 import nl.knaw.dans.ttv.core.service.TransferItemService;
 import nl.knaw.dans.ttv.core.service.TransferItemValidator;
 import nl.knaw.dans.ttv.db.TransferItem;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Path;
 
+@Slf4j
 public class ExtractMetadataTask implements Runnable {
-    private static final Logger log = LoggerFactory.getLogger(ExtractMetadataTask.class);
-
     private final Path filePath;
     private final Path outbox;
     private final TransferItemService transferItemService;
@@ -82,22 +80,24 @@ public class ExtractMetadataTask implements Runnable {
         log.trace("Received file content attributes: {}", fileContentAttributes);
 
         // apply content attributes and validate the transfer item
-        var updatedTransferItem = transferItemService.addMetadata(transferItem, fileContentAttributes);
-        transferItemValidator.validateTransferItem(updatedTransferItem);
+        transferItemService.addMetadata(transferItem, fileContentAttributes);
+        transferItemValidator.validateTransferItem(transferItem);
 
-        var newPath = outbox.resolve(filePath.getFileName());
+        var newPath = outbox.resolve(path.getFileName());
 
         vaultCatalogRepository.registerOcflObjectVersion(transferItem);
 
-        transferItemService.moveTransferItem(updatedTransferItem, TransferItem.TransferStatus.METADATA_EXTRACTED, newPath);
-
         log.info("Updated file metadata, moving file '{}' to '{}'", path, newPath);
-        fileService.moveFile(path, newPath);
+        transferItemService.moveTransferItem(transferItem, TransferItem.TransferStatus.METADATA_EXTRACTED, path, outbox);
     }
 
     public TransferItem getTransferItem(Path path) throws InvalidTransferItemException {
         var filenameAttributes = metadataReader.getFilenameAttributes(path);
         log.trace("Received filename attributes: {}", filenameAttributes);
+
+        if (filenameAttributes.getInternalId() == null) {
+            throw new InvalidTransferItemException(String.format("Expected filename to contain internal transfer-to-vault ID, not found; filename = %s", path));
+        }
 
         return transferItemService.getTransferItemByFilenameAttributes(filenameAttributes)
             .orElseThrow(() -> new InvalidTransferItemException(String.format("no TransferItem found for filename attributes %s", filenameAttributes)));

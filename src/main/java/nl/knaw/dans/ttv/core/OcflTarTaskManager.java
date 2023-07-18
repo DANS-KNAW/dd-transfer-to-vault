@@ -182,7 +182,7 @@ public class OcflTarTaskManager implements Managed {
     }
 
     void createTarArchive(String uuid) throws IOException {
-        // create a tar record with all COLLECTED TransferItem's in it
+        // create a tar record with all METADATA_EXTRACTED TransferItem's in it
         var tarArchive = transferItemService.createTarArchiveWithAllMetadataExtractedTransferItems(uuid, vaultPath);
 
         moveInboxFilesToWorkdir(tarArchive);
@@ -202,13 +202,11 @@ public class OcflTarTaskManager implements Managed {
             var filename = Path.of(transferItem.getDveFilePath()).getFileName();
 
             var expectedPath = inboxPath.resolve(filename);
-            var targetPath = targetDirDve.resolve(filename);
 
             if (fileService.exists(expectedPath)) {
                 log.info("Moving DVE file '{}' to workdir location '{}'", expectedPath, tarArchive);
 
-                transferItemService.moveTransferItem(transferItem, TransferItem.TransferStatus.TARRING, targetPath);
-                fileService.moveFile(expectedPath, targetPath);
+                transferItemService.moveTransferItem(transferItem, TransferItem.TransferStatus.TARRING, expectedPath, targetDirDve);
             }
             else {
                 log.warn("File '{}' cannot be found for TransferItem {}", expectedPath, transferItem);

@@ -15,7 +15,13 @@
  */
 package nl.knaw.dans.ttv.core;
 
-import nl.knaw.dans.ttv.core.service.*;
+import nl.knaw.dans.ttv.core.service.ArchiveMetadataService;
+import nl.knaw.dans.ttv.core.service.FileService;
+import nl.knaw.dans.ttv.core.service.InboxWatcher;
+import nl.knaw.dans.ttv.core.service.InboxWatcherFactory;
+import nl.knaw.dans.ttv.core.service.OcflRepositoryService;
+import nl.knaw.dans.ttv.core.service.TarCommandRunner;
+import nl.knaw.dans.ttv.core.service.TransferItemService;
 import nl.knaw.dans.ttv.db.Tar;
 import nl.knaw.dans.ttv.db.TransferItem;
 import org.junit.jupiter.api.BeforeEach;
@@ -97,16 +103,16 @@ class OcflTarTaskManagerTest {
         manager.onNewItemInInbox(new File("test.zip"));
 
         Mockito.verify(fileService).getPathSize(Path.of("data/inbox"));
-//        Mockito.verify(ocflRepositoryService).createRepository(Mockito.eq(Path.of("data/workdir")), Mockito.any());
-//        Mockito.verify(ocflRepositoryService).importTransferItem(
-//            Mockito.any(),
-//            Mockito.eq(transferItems.get(0))
-//        );
-//        Mockito.verify(ocflRepositoryService).importTransferItem(
-//            Mockito.any(),
-//            Mockito.eq(transferItems.get(1))
-//        );
-//        Mockito.verify(transferItemService).save(Mockito.any());
+        //        Mockito.verify(ocflRepositoryService).createRepository(Mockito.eq(Path.of("data/workdir")), Mockito.any());
+        //        Mockito.verify(ocflRepositoryService).importTransferItem(
+        //            Mockito.any(),
+        //            Mockito.eq(transferItems.get(0))
+        //        );
+        //        Mockito.verify(ocflRepositoryService).importTransferItem(
+        //            Mockito.any(),
+        //            Mockito.eq(transferItems.get(1))
+        //        );
+        //        Mockito.verify(transferItemService).save(Mockito.any());
 
         Mockito.verify(executorService).execute(Mockito.any());
 
@@ -188,12 +194,16 @@ class OcflTarTaskManagerTest {
         manager.verifyInbox();
 
         Mockito.verify(fileService).ensureDirectoryExists(Mockito.eq(Path.of("data/workdir/tarid/dve")));
-        Mockito.verify(fileService).moveFile(Mockito.eq(Path.of("data/inbox/1.zip")), Mockito.eq(Path.of("data/workdir/tarid/dve/1.zip")));
         Mockito.verify(fileService).exists(Mockito.eq(Path.of("data/inbox/1.zip")));
         Mockito.verify(fileService).exists(Mockito.eq(Path.of("data/inbox/2.zip")));
         Mockito.verifyNoMoreInteractions(fileService);
 
-        Mockito.verify(transferItemService).moveTransferItem(transferItems.get(0), TransferItem.TransferStatus.TARRING, Path.of("data/workdir/tarid/dve/1.zip"));
+        Mockito.verify(transferItemService).moveTransferItem(
+            transferItems.get(0),
+            TransferItem.TransferStatus.TARRING,
+            Path.of("data/inbox/1.zip"),
+            Path.of("data/workdir/tarid/dve/")
+        );
 
     }
 

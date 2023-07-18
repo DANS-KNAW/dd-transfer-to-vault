@@ -20,6 +20,7 @@ import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.BufferedInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -48,9 +49,18 @@ public class FileServiceImpl implements FileService {
 
         var tempTarget = Path.of(newPath + ".part");
 
+        var store1 = Files.getFileStore(filePath);
+        var store2 = Files.getFileStore(newPath.getParent());
+
+        if (store1.equals(store2)) {
+            log.info("Moving file {} to {}", filePath, newPath);
+            return moveFile(filePath, newPath);
+        }
+
         // there could be leftovers from a previous attempt, remove them
         Files.deleteIfExists(tempTarget);
 
+        log.info("Moving file atomically {} to {}", filePath, newPath);
         moveFile(filePath, tempTarget);
         return moveFile(tempTarget, newPath);
     }
@@ -81,7 +91,7 @@ public class FileServiceImpl implements FileService {
         var extension = path.getFileName().toString().substring(index);
         var fileBaseName = path.getFileName().toString().substring(0, index);
 
-        log.trace("File base name is '{}', extension is '{}'", extension, fileBaseName);
+        log.trace("File base name is '{}', extension is '{}'", fileBaseName, extension);
         var rejectedFileName = fileBaseName + extension;
         var errorFileName = fileBaseName + ".error.txt";
 
@@ -156,7 +166,10 @@ public class FileServiceImpl implements FileService {
     public String calculateChecksum(Path path) throws IOException {
         Objects.requireNonNull(path, "path cannot be null");
         log.trace("Calculating checksum for '{}'", path);
-        return new DigestUtils("SHA-256").digestAsHex(Files.readAllBytes(path));
+
+        try (var input = Files.newInputStream(path)) {
+            return DigestUtils.sha256Hex(new BufferedInputStream(input));
+        }
     }
 
     @Override
@@ -169,16 +182,22 @@ public class FileServiceImpl implements FileService {
     @Override
     public long getPathSize(Path path) throws IOException {
         Objects.requireNonNull(path, "path cannot be null");
-        return Files.walk(path).filter(Files::isRegularFile).map(p -> {
-            try {
-                var size = getFileSize(p);
-                log.trace("File size for file '{}' is {} bytes", p, size);
-                return size;
-            }
-            catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }).reduce(0L, Long::sum);
+
+        try (var files = Files.walk(path)) {
+            return files
+                .filter(Files::isRegularFile)
+                .mapToLong(p -> {
+                    try {
+                        var size = getFileSize(p);
+                        log.trace("File size for file '{}' is {} bytes", p, size);
+                        return size;
+                    }
+                    catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                })
+                .sum();
+        }
     }
 
     @Override

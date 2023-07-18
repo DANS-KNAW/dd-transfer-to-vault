@@ -31,6 +31,5 @@ public class FileContentAttributes {
     String otherIdVersion;
     String swordToken;
     String swordClient;
-    String bagChecksum;
 
 }

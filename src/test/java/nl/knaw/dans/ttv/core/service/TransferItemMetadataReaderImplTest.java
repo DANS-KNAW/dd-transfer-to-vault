@@ -41,9 +41,8 @@ class TransferItemMetadataReaderImplTest {
         try {
             var path = Path.of("doi-10-5072-dar-kxteqtv1.0.zip");
             var attributes = service.getFilenameAttributes(path);
-            assertEquals(Version.of(1, 0), attributes.getVersion());
             assertEquals(path.toString(), attributes.getDveFilePath());
-            assertEquals("10.5072/DAR/KXTEQT", attributes.getDatasetPid());
+            assertEquals("doi-10-5072-dar-kxteqtv1.0", attributes.getIdentifier());
         }
         catch (InvalidTransferItemException e) {
             fail(e);
@@ -143,7 +142,6 @@ class TransferItemMetadataReaderImplTest {
         assertNull(result.getSwordToken());
         assertEquals(fakeJsonld, result.getOaiOre());
         assertEquals(fakePidmapping, result.getPidMapping());
-        assertEquals("checksum-test", result.getBagChecksum());
     }
 
     @Test

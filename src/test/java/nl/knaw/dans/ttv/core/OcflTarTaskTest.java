@@ -180,13 +180,13 @@ class OcflTarTaskTest {
         var ocflRepository = Mockito.mock(OcflRepository.class);
         var transferItems = List.of(
             TransferItem.builder()
-                .datasetPid("pid1")
+                .doi("pid1")
                 .dveFilePath("path/to1.zip")
                 .creationTime(OffsetDateTime.now())
                 .transferStatus(TransferItem.TransferStatus.TARRING)
                 .build(),
             TransferItem.builder()
-                .datasetPid("pid2")
+                .doi("pid2")
                 .dveFilePath("path/to2.zip")
                 .creationTime(OffsetDateTime.now())
                 .transferStatus(TransferItem.TransferStatus.TARRING)

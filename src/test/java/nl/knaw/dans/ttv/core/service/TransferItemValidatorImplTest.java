@@ -28,7 +28,7 @@ class TransferItemValidatorImplTest {
     @Test
     void validateTransferItem() {
         var transferItem = TransferItem.builder()
-            .datasetPid("pid1")
+            .doi("pid1")
             .dveFilePath("path/to1.zip")
             .creationTime(OffsetDateTime.now())
             .transferStatus(TransferItem.TransferStatus.COLLECTED)
@@ -42,7 +42,7 @@ class TransferItemValidatorImplTest {
     @Test
     void validateInvalidTransferItemBecauseDatasetVersionIsNull() {
         var transferItem = TransferItem.builder()
-            .datasetPid("pid1")
+            .doi("pid1")
             .dveFilePath("path/to1.zip")
             .creationTime(OffsetDateTime.now())
             .transferStatus(TransferItem.TransferStatus.COLLECTED)
@@ -55,7 +55,7 @@ class TransferItemValidatorImplTest {
     @Test
     void validateInvalidTransferItemBecauseBagIdIsInvalid() {
         var transferItem = TransferItem.builder()
-            .datasetPid("pid1")
+            .doi("pid1")
             .dveFilePath("path/to1.zip")
             .creationTime(OffsetDateTime.now())
             .transferStatus(TransferItem.TransferStatus.COLLECTED)
@@ -68,7 +68,7 @@ class TransferItemValidatorImplTest {
     @Test
     void validateInvalidTransferItemBecauseNbnIsInvalid() {
         var transferItem = TransferItem.builder()
-            .datasetPid("pid1")
+            .doi("pid1")
             .dveFilePath("path/to1.zip")
             .creationTime(OffsetDateTime.now())
             .transferStatus(TransferItem.TransferStatus.COLLECTED)
@@ -81,7 +81,7 @@ class TransferItemValidatorImplTest {
     @Test
     void validateInvalidTransferItemBecauseVersionIsIncorrect() {
         var transferItem = TransferItem.builder()
-            .datasetPid("pid1")
+            .doi("pid1")
             .dveFilePath("path/to1.zip")
             .creationTime(OffsetDateTime.now())
             .transferStatus(TransferItem.TransferStatus.COLLECTED)

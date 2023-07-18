@@ -16,6 +16,7 @@
 package nl.knaw.dans.ttv.core.service;
 
 import io.dropwizard.hibernate.UnitOfWork;
+import lombok.extern.slf4j.Slf4j;
 import nl.knaw.dans.ttv.core.InvalidTransferItemException;
 import nl.knaw.dans.ttv.core.domain.ArchiveMetadata;
 import nl.knaw.dans.ttv.core.domain.FileContentAttributes;
@@ -29,6 +30,7 @@ import nl.knaw.dans.ttv.db.TransferItemDAO;
 import org.hibernate.Hibernate;
 import org.hibernate.ObjectNotFoundException;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -36,97 +38,61 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class TransferItemServiceImpl implements TransferItemService {
     private final TransferItemDAO transferItemDAO;
     private final TarDAO tarDAO;
+    private final FileService fileService;
 
-    public TransferItemServiceImpl(TransferItemDAO transferItemDAO, TarDAO tarDAO) {
+    public TransferItemServiceImpl(TransferItemDAO transferItemDAO, TarDAO tarDAO, FileService fileService) {
         this.transferItemDAO = transferItemDAO;
         this.tarDAO = tarDAO;
+        this.fileService = fileService;
     }
 
     @Override
     @UnitOfWork
-    public TransferItem createTransferItem(String datastationName,
+    public TransferItem createTransferItem(
+        String datastationName,
         FilenameAttributes filenameAttributes,
         FilesystemAttributes filesystemAttributes,
-        FileContentAttributes fileContentAttributes)
-        throws InvalidTransferItemException {
+        FileContentAttributes fileContentAttributes
+    ) throws InvalidTransferItemException {
         var transferItem = new TransferItem();
 
         transferItem.setTransferStatus(TransferItem.TransferStatus.COLLECTED);
         transferItem.setQueueDate(OffsetDateTime.now());
         transferItem.setDatasetDvInstance(datastationName);
-        transferItem.setVersion(filenameAttributes.getVersion());
 
         // filename attributes
         transferItem.setDveFilePath(filenameAttributes.getDveFilePath());
-        transferItem.setDatasetPid(filenameAttributes.getDatasetPid());
+        transferItem.setDatasetIdentifier(filenameAttributes.getIdentifier());
 
         // filesystem attributes
         transferItem.setCreationTime(filesystemAttributes.getCreationTime());
         transferItem.setBagSize(filesystemAttributes.getBagSize());
+        transferItem.setBagChecksum(filesystemAttributes.getChecksum());
 
         // file content attributes
-        transferItem.setDatasetVersion(fileContentAttributes.getDatasetVersion());
-        transferItem.setBagId(fileContentAttributes.getBagId());
-        transferItem.setNbn(fileContentAttributes.getNbn());
-        transferItem.setOaiOre(fileContentAttributes.getOaiOre());
-        transferItem.setPidMapping(fileContentAttributes.getPidMapping());
-        transferItem.setBagChecksum(fileContentAttributes.getBagChecksum());
+        if (fileContentAttributes != null) {
+            transferItem.setDatasetVersion(fileContentAttributes.getDatasetVersion());
+            transferItem.setBagId(fileContentAttributes.getBagId());
+            transferItem.setNbn(fileContentAttributes.getNbn());
+            transferItem.setOaiOre(fileContentAttributes.getOaiOre());
+            transferItem.setPidMapping(fileContentAttributes.getPidMapping());
+        }
 
         // check if an item with this ID already exists
-        var existing = transferItemDAO.findByDatasetPidAndVersion(transferItem.getDatasetPid(), transferItem.getVersion());
+        var existing = transferItemDAO.findByIdentifier(transferItem.getDatasetIdentifier())
+            .filter(item -> Objects.equals(item.getBagChecksum(), transferItem.getBagChecksum()));
 
         if (existing.isPresent()) {
             throw new InvalidTransferItemException(
-                String.format("TransferItem with datasetPid=%s, version=%s already exists in database",
-                    transferItem.getDatasetPid(), transferItem.getDatasetVersion()
-                )
-            );
-
-        }
-
-        transferItemDAO.save(transferItem);
-
-        return transferItem;
-    }
-
-    @Override
-    @UnitOfWork
-    public TransferItem createTransferItem(String datastationName, FilenameAttributes filenameAttributes, FilesystemAttributes filesystemAttributes)
-        throws InvalidTransferItemException {
-
-        // check if an item with this ID already exists
-        var existing = transferItemDAO.findByDatasetPidAndVersion(
-            filenameAttributes.getDatasetPid(),
-            filenameAttributes.getVersion()
-        );
-
-        if (existing.isPresent()) {
-            throw new InvalidTransferItemException(
-                String.format("TransferItem with datasetPid=%s, version=%s already exists in database",
-                    filenameAttributes.getDatasetPid(),
-                    filenameAttributes.getVersion()
+                String.format("TransferItem with datasetIdentifier=%s and identical checksums already exists in database",
+                    transferItem.getDatasetIdentifier()
                 )
             );
         }
-
-        var transferItem = new TransferItem();
-
-        transferItem.setTransferStatus(TransferItem.TransferStatus.COLLECTED);
-        transferItem.setQueueDate(OffsetDateTime.now());
-        transferItem.setDatasetDvInstance(datastationName);
-        transferItem.setBagDepositDate(OffsetDateTime.now());
-
-        // filename attributes
-        transferItem.setDveFilePath(filenameAttributes.getDveFilePath());
-        transferItem.setDatasetPid(filenameAttributes.getDatasetPid());
-        transferItem.setVersion(filenameAttributes.getVersion());
-
-        // filesystem attributes
-        transferItem.setCreationTime(filesystemAttributes.getCreationTime());
-        transferItem.setBagSize(filesystemAttributes.getBagSize());
 
         transferItemDAO.save(transferItem);
         return transferItem;
@@ -134,18 +100,17 @@ public class TransferItemServiceImpl implements TransferItemService {
 
     @Override
     @UnitOfWork
-    public TransferItem moveTransferItem(TransferItem transferItem, TransferItem.TransferStatus newStatus, Path newPath) {
+    public TransferItem moveTransferItem(TransferItem transferItem, TransferItem.TransferStatus newStatus, Path filePath, Path outboxPath) throws IOException {
+        var newPath = outboxPath.resolve(transferItem.getCanonicalFilename());
+        log.trace("filePath is '{}', newPath is '{}'", filePath, newPath);
+
         transferItem.setDveFilePath(newPath.toString());
         transferItem.setTransferStatus(newStatus);
         transferItemDAO.merge(transferItem);
-        return transferItem;
-    }
 
-    @UnitOfWork
-    public void saveAllTransferItems(List<TransferItem> transferItems) {
-        for (var transferItem : transferItems) {
-            transferItemDAO.merge(transferItem);
-        }
+        fileService.moveFileAtomically(filePath, newPath);
+
+        return transferItem;
     }
 
     @Override
@@ -174,7 +139,8 @@ public class TransferItemServiceImpl implements TransferItemService {
                 tar.setTarStatus(Tar.TarStatus.OCFLTARFAILED);
             }
 
-            return tarDAO.save(tar);
+            tarDAO.save(tar);
+            return tar;
         });
     }
 
@@ -199,7 +165,8 @@ public class TransferItemServiceImpl implements TransferItemService {
                 return dbPart;
             }).collect(Collectors.toList());
 
-            return tarDAO.saveWithParts(tar, parts);
+            tarDAO.saveWithParts(tar, parts);
+            return tar;
         });
     }
 
@@ -232,10 +199,15 @@ public class TransferItemServiceImpl implements TransferItemService {
     @Override
     @UnitOfWork
     public Optional<TransferItem> getTransferItemByFilenameAttributes(FilenameAttributes filenameAttributes) {
-        return transferItemDAO.findByDatasetPidAndVersion(
-            filenameAttributes.getDatasetPid(),
-            filenameAttributes.getVersion()
-        );
+        return transferItemDAO.findByIdentifier(filenameAttributes.getIdentifier())
+            .filter(item -> {
+                // if an ID is in the filename, check it matches
+                if (filenameAttributes.getInternalId() != null) {
+                    return Objects.equals(item.getId(), filenameAttributes.getInternalId());
+                }
+
+                return true;
+            });
     }
 
     @Override
@@ -250,7 +222,6 @@ public class TransferItemServiceImpl implements TransferItemService {
         transferItem.setNbn(fileContentAttributes.getNbn());
         transferItem.setOaiOre(fileContentAttributes.getOaiOre());
         transferItem.setPidMapping(fileContentAttributes.getPidMapping());
-        transferItem.setBagChecksum(fileContentAttributes.getBagChecksum());
         transferItem.setOtherId(fileContentAttributes.getOtherId());
         transferItem.setOtherIdVersion(fileContentAttributes.getOtherIdVersion());
         transferItem.setSwordToken(fileContentAttributes.getSwordToken());

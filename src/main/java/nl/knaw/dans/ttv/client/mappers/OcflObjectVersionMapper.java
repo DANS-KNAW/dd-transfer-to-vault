@@ -33,7 +33,7 @@ public interface OcflObjectVersionMapper {
     OcflObjectVersionMapper INSTANCE = Mappers.getMapper(OcflObjectVersionMapper.class);
 
     @Mapping(source = "swordClient", target = "dataSupplier")
-    @Mapping(source = "datasetPid", target = "dataversePid")
+    @Mapping(source = "doi", target = "dataversePid")
     @Mapping(source = "datasetVersion", target = "dataversePidVersion")
     // TODO confirm this is correct
     @Mapping(source = "dveFilePath", target = "ocflObjectPath")
