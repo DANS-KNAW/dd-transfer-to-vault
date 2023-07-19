@@ -121,6 +121,15 @@
             <artifactId>swagger-annotations</artifactId>
         </dependency>
         <!-- end openapi dependencies -->
+
+        <!-- https://mvnrepository.com/artifact/org.apache.jena/apache-jena-libs -->
+        <dependency>
+            <groupId>org.apache.jena</groupId>
+            <artifactId>apache-jena-libs</artifactId>
+            <version>4.9.0</version>
+            <type>pom</type>
+        </dependency>
+
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>

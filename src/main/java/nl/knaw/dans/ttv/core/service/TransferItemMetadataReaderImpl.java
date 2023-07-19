@@ -15,12 +15,11 @@
  */
 package nl.knaw.dans.ttv.core.service;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import nl.knaw.dans.ttv.core.InvalidTransferItemException;
 import nl.knaw.dans.ttv.core.domain.FileContentAttributes;
 import nl.knaw.dans.ttv.core.domain.FilenameAttributes;
 import nl.knaw.dans.ttv.core.domain.FilesystemAttributes;
+import nl.knaw.dans.ttv.core.oaiore.OaiOreMetadataReader;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 
@@ -31,7 +30,6 @@ import java.nio.file.attribute.FileTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -50,12 +48,12 @@ public class TransferItemMetadataReaderImpl implements TransferItemMetadataReade
     );
     private static final Pattern TTV_SUFFIX = Pattern.compile("(?<identifier>.*)(?<suffix>-ttv\\d+)");
     private static final Set<String> ALLOWED_EXTENSIONS = Set.of("zip");
-    private final ObjectMapper objectMapper;
     private final FileService fileService;
+    private final OaiOreMetadataReader oaiOreMetadataReader;
 
-    public TransferItemMetadataReaderImpl(ObjectMapper objectMapper, FileService fileService) {
-        this.objectMapper = objectMapper;
+    public TransferItemMetadataReaderImpl(FileService fileService, OaiOreMetadataReader oaiOreMetadataReader) {
         this.fileService = fileService;
+        this.oaiOreMetadataReader = oaiOreMetadataReader;
     }
 
     @Override
@@ -135,27 +133,19 @@ public class TransferItemMetadataReaderImpl implements TransferItemMetadataReade
             var oaiOre = IOUtils.toString(metadataContent, StandardCharsets.UTF_8);
             var pidMapping = IOUtils.toString(pidMappingContent, StandardCharsets.UTF_8);
 
-            var jsonNode = Objects.requireNonNull(objectMapper.readTree(oaiOre), "jsonld metadata can't be null: " + path);
-            var describesNode = Objects.requireNonNull(jsonNode.get("ore:describes"), "ore:describes node can't be null");
-
-            var nbn = getStringFromNode(describesNode, "dansDataVaultMetadata:NBN");
-            var dvPidVersion = getStringFromNode(describesNode, "dansDataVaultMetadata:DV PID Version");
-            var bagId = getStringFromNode(describesNode, "dansDataVaultMetadata:Bag ID");
-            var otherId = getOptionalStringFromNode(describesNode, "dansDataVaultMetadata:Other ID");
-            var otherIdVersion = getOptionalStringFromNode(describesNode, "dansDataVaultMetadata:Other ID Version");
-            var swordClient = getOptionalStringFromNode(describesNode, "dansDataVaultMetadata:SWORD Client");
-            var swordToken = getOptionalStringFromNode(describesNode, "dansDataVaultMetadata:SWORD Token");
+            var oaiOreMetadata = oaiOreMetadataReader.readMetadata(oaiOre);
 
             return FileContentAttributes.builder()
                 .pidMapping(pidMapping)
                 .oaiOre(oaiOre)
-                .nbn(nbn)
-                .datasetVersion(dvPidVersion)
-                .bagId(bagId)
-                .otherId(otherId)
-                .otherIdVersion(otherIdVersion)
-                .swordToken(swordToken)
-                .swordClient(swordClient)
+                .nbn(oaiOreMetadata.getNbn())
+                .pid(oaiOreMetadata.getPid())
+                .datasetVersion(oaiOreMetadata.getPidVersion())
+                .bagId(oaiOreMetadata.getBagId())
+                .otherId(oaiOreMetadata.getOtherId())
+                .otherIdVersion(oaiOreMetadata.getOtherIdVersion())
+                .swordToken(oaiOreMetadata.getSwordToken())
+                .swordClient(oaiOreMetadata.getDataSupplier())
                 .build();
         }
         catch (IOException e) {
@@ -164,16 +154,6 @@ public class TransferItemMetadataReaderImpl implements TransferItemMetadataReade
         catch (NullPointerException e) {
             throw new InvalidTransferItemException(String.format("unable to extract metadata from file '%s'", path), e);
         }
-    }
-
-    private String getStringFromNode(JsonNode node, String path) {
-        return Objects.requireNonNull(node.get(path), String.format("path '%s' not found in JSON node", path)).asText();
-    }
-
-    private String getOptionalStringFromNode(JsonNode node, String path) {
-        return Optional.ofNullable(node.get(path))
-            .map(JsonNode::asText)
-            .orElse(null);
     }
 
     @Override

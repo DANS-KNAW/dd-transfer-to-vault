@@ -40,7 +40,7 @@ class TransferItemValidatorImplTest {
     }
 
     @Test
-    void validateInvalidTransferItemBecauseDatasetVersionIsNull() {
+    void validateTransferItem_should_accept_null_for_dataset_version() {
         var transferItem = TransferItem.builder()
             .doi("pid1")
             .dveFilePath("path/to1.zip")
@@ -49,7 +49,8 @@ class TransferItemValidatorImplTest {
             .build();
         transferItem.setBagId("urn:uuid:1eb8d2fe-b8fa-4a15-9770-731cae6af9ac");
         transferItem.setNbn("urn:nbn:suffix");
-        assertThrows(InvalidTransferItemException.class, () -> new TransferItemValidatorImpl().validateTransferItem(transferItem));
+
+        assertDoesNotThrow(() -> new TransferItemValidatorImpl().validateTransferItem(transferItem));
     }
 
     @Test

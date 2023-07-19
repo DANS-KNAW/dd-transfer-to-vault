@@ -15,10 +15,10 @@
  */
 package nl.knaw.dans.ttv.core;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.marschall.memoryfilesystem.MemoryFileSystemBuilder;
 import io.dropwizard.testing.junit5.DAOTestExtension;
 import io.dropwizard.testing.junit5.DropwizardExtensionsSupport;
+import nl.knaw.dans.ttv.core.oaiore.OaiOreMetadataReader;
 import nl.knaw.dans.ttv.core.service.FileService;
 import nl.knaw.dans.ttv.core.service.FileServiceImpl;
 import nl.knaw.dans.ttv.core.service.TransferItemMetadataReader;
@@ -49,12 +49,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(DropwizardExtensionsSupport.class)
 public class CollectTaskIntegrationTest {
+    public static final String TEST_BAG = "doi-10-5072-dar-a7axzpv1.0.zip";
+    public static final String TEST_BAG_CHECKSUM = "295ec22a05a3b9ef5917c05ea72495394741d0343337eb763fbca0e87a09aac1";
+
+    private final OaiOreMetadataReader oaiOreMetadataReader = new OaiOreMetadataReader();
     public DAOTestExtension database = DAOTestExtension.newBuilder()
         .addEntityClass(TransferItem.class)
         .addEntityClass(Tar.class)
         .addEntityClass(TarPart.class)
         .build();
-
     private TransferItemService transferItemService;
     private TransferItemMetadataReader transferItemMetadataReader;
     private FileService fileService;
@@ -72,9 +75,10 @@ public class CollectTaskIntegrationTest {
         );
 
         transferItemMetadataReader = new TransferItemMetadataReaderImpl(
-            new ObjectMapper(),
-            fileService
+            fileService,
+            oaiOreMetadataReader
         );
+
     }
 
     @Test
@@ -85,7 +89,7 @@ public class CollectTaskIntegrationTest {
 
             Files.createDirectories(outboxPath);
             Files.createDirectories(filePath.getParent());
-            copyFileToPath("doi-10-5072-dar-vfspuqv1.0.zip", filePath);
+            copyFileToPath(TEST_BAG, filePath);
 
             var task = new CollectTask(
                 filePath,
@@ -113,7 +117,7 @@ public class CollectTaskIntegrationTest {
 
             Files.createDirectories(outboxPath);
             Files.createDirectories(filePath.getParent());
-            copyFileToPath("doi-10-5072-dar-vfspuqv1.0.zip", filePath);
+            copyFileToPath(TEST_BAG, filePath);
 
             var task = new CollectTask(
                 filePath,
@@ -151,7 +155,7 @@ public class CollectTaskIntegrationTest {
 
             Files.createDirectories(outboxPath);
             Files.createDirectories(filePath.getParent());
-            copyFileToPath("doi-10-5072-dar-vfspuqv1.0.zip", filePath);
+            copyFileToPath(TEST_BAG, filePath);
 
             var task = new CollectTask(
                 filePath,
@@ -201,7 +205,7 @@ public class CollectTaskIntegrationTest {
 
             Files.createDirectories(outboxPath);
             Files.createDirectories(filePath.getParent());
-            copyFileToPath("doi-10-5072-dar-vfspuqv1.0.zip", filePath);
+            copyFileToPath(TEST_BAG, filePath);
 
             var task = new CollectTask(
                 filePath,
@@ -240,7 +244,7 @@ public class CollectTaskIntegrationTest {
             var existing = TransferItem.builder()
                 .datasetIdentifier("doi-10-5072-dar-vfspuqv1.0")
                 .transferStatus(TransferItem.TransferStatus.COLLECTED)
-                .bagChecksum("4607c87e7d75924e3d79aea40cd939d43497045605670e634aeb76634cb01b56")
+                .bagChecksum(TEST_BAG_CHECKSUM)
                 .creationTime(OffsetDateTime.now())
                 .bagId("bagid")
                 .ocflObjectVersion(1)
@@ -251,7 +255,7 @@ public class CollectTaskIntegrationTest {
 
             Files.createDirectories(outboxPath);
             Files.createDirectories(filePath.getParent());
-            copyFileToPath("doi-10-5072-dar-vfspuqv1.0.zip", filePath);
+            copyFileToPath(TEST_BAG, filePath);
 
             var task = new CollectTask(
                 filePath,
@@ -290,7 +294,7 @@ public class CollectTaskIntegrationTest {
             var existing = TransferItem.builder()
                 .datasetIdentifier("doi-10-5072-dar-vfspuqv1.0")
                 .transferStatus(TransferItem.TransferStatus.TARRING)
-                .bagChecksum("4607c87e7d75924e3d79aea40cd939d43497045605670e634aeb76634cb01b56")
+                .bagChecksum(TEST_BAG_CHECKSUM)
                 .creationTime(OffsetDateTime.now())
                 .bagId("bagid")
                 .ocflObjectVersion(1)
@@ -301,7 +305,7 @@ public class CollectTaskIntegrationTest {
 
             Files.createDirectories(outboxPath);
             Files.createDirectories(filePath.getParent());
-            copyFileToPath("doi-10-5072-dar-vfspuqv1.0.zip", filePath);
+            copyFileToPath(TEST_BAG, filePath);
 
             var task = new CollectTask(
                 filePath,
@@ -344,7 +348,7 @@ public class CollectTaskIntegrationTest {
             var existing = TransferItem.builder()
                 .datasetIdentifier("doi-10-5072-dar-vfspuqv1.0")
                 .transferStatus(TransferItem.TransferStatus.TARRING)
-                .bagChecksum("4607c87e7d75924e3d79aea40cd939d43497045605670e634aeb76634cb01b56")
+                .bagChecksum(TEST_BAG_CHECKSUM)
                 .creationTime(OffsetDateTime.now())
                 .bagId("bagid")
                 .ocflObjectVersion(1)
@@ -365,9 +369,9 @@ public class CollectTaskIntegrationTest {
                 fileService
             );
 
-            copyFileToPath("doi-10-5072-dar-vfspuqv1.0.zip", filePath);
+            copyFileToPath(TEST_BAG, filePath);
             task.run();
-            copyFileToPath("doi-10-5072-dar-vfspuqv1.0.zip", filePath);
+            copyFileToPath(TEST_BAG, filePath);
             task.run();
 
             var allFiles = getAllFiles(filePath.getParent(), outboxPath);
@@ -391,9 +395,9 @@ public class CollectTaskIntegrationTest {
 
             Files.createDirectories(outboxPath);
             Files.createDirectories(filePath.getParent());
-            copyFileToPath("doi-10-5072-dar-vfspuqv1.0.zip", filePath);
+            copyFileToPath(TEST_BAG, filePath);
             // somehow a file with the exact same name appeared here
-            copyFileToPath("doi-10-5072-dar-vfspuqv1.0.zip", outboxPath.resolve("doi-10-5072-dar-vfspuqv1.0-ttv1.zip"));
+            copyFileToPath(TEST_BAG, outboxPath.resolve("doi-10-5072-dar-vfspuqv1.0-ttv1.zip"));
 
             var task = new CollectTask(
                 filePath,
@@ -435,7 +439,7 @@ public class CollectTaskIntegrationTest {
     }
 
     private void copyFileToPath(String filename, Path filePath) throws Exception {
-        var p = Objects.requireNonNull(getClass().getResource("/data/inbox/" + filename)).getPath();
+        var p = Objects.requireNonNull(getClass().getResource("/bags/" + filename)).getPath();
         var input = Files.newInputStream(Path.of(p));
 
         Files.copy(input, filePath);

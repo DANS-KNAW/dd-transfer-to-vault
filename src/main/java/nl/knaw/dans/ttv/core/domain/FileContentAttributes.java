@@ -22,6 +22,7 @@ import lombok.Value;
 @Builder
 public class FileContentAttributes {
 
+    String pid;
     String datasetVersion;
     String bagId;
     String nbn;

@@ -15,6 +15,7 @@
  */
 package nl.knaw.dans.ttv.core.service;
 
+import lombok.extern.slf4j.Slf4j;
 import nl.knaw.dans.ttv.core.config.DataArchiveConfiguration;
 import nl.knaw.dans.ttv.core.domain.ArchiveMetadata;
 import org.slf4j.Logger;
@@ -24,8 +25,8 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.regex.Pattern;
 
+@Slf4j
 public class ArchiveMetadataServiceImpl implements ArchiveMetadataService {
-    private static final Logger log = LoggerFactory.getLogger(ArchiveMetadataServiceImpl.class);
 
     private final ProcessRunner processRunner;
     private final DataArchiveConfiguration dataArchiveConfiguration;

@@ -43,8 +43,9 @@ public class TransferItemValidatorImpl implements TransferItemValidator {
     }
 
     boolean isValidVersion(String version) {
+        // the dataverse will have a version, but the vaas bags won't
         if (version == null) {
-            return false;
+            return true;
         }
 
         var matches = VERSION_PATTERN.matcher(version);

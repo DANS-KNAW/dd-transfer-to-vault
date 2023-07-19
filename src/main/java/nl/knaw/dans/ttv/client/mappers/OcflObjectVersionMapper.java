@@ -40,6 +40,7 @@ public interface OcflObjectVersionMapper {
     @Mapping(source = "oaiOre", target = "metadata")
     @Mapping(source = "pidMapping", target = "filePidToLocalPath")
     @Mapping(target = "skeletonRecord", constant = "false")
+    // TODO also confirm this is correct, TransferItems have 2 types of dates (bagDepositDate and creationTime)
     @Mapping(target = "exportTimestamp", source = "bagDepositDate")
     OcflObjectVersionParametersDto mapParameters(TransferItem transferItem);
 

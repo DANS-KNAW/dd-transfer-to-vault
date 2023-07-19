@@ -62,6 +62,7 @@ public class TransferItemServiceImpl implements TransferItemService {
         transferItem.setTransferStatus(TransferItem.TransferStatus.COLLECTED);
         transferItem.setQueueDate(OffsetDateTime.now());
         transferItem.setDatasetDvInstance(datastationName);
+        transferItem.setBagDepositDate(OffsetDateTime.now());
 
         // filename attributes
         transferItem.setDveFilePath(filenameAttributes.getDveFilePath());
@@ -211,6 +212,7 @@ public class TransferItemServiceImpl implements TransferItemService {
         Objects.requireNonNull(fileContentAttributes, "fileContentAttributes cannot be null");
 
         // file content attributes
+        transferItem.setDoi(fileContentAttributes.getPid());
         transferItem.setDatasetVersion(fileContentAttributes.getDatasetVersion());
         transferItem.setBagId(fileContentAttributes.getBagId());
         transferItem.setNbn(fileContentAttributes.getNbn());

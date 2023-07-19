@@ -20,6 +20,7 @@ import nl.knaw.dans.ttv.core.InvalidTransferItemException;
 import nl.knaw.dans.ttv.core.domain.FileContentAttributes;
 import nl.knaw.dans.ttv.core.domain.FilenameAttributes;
 import nl.knaw.dans.ttv.core.domain.FilesystemAttributes;
+import nl.knaw.dans.ttv.core.oaiore.OaiOreMetadataReader;
 import nl.knaw.dans.ttv.core.service.FileService;
 import nl.knaw.dans.ttv.core.service.TransferItemMetadataReaderImpl;
 import org.mockito.Mockito;
@@ -39,7 +40,7 @@ public class TestTransferItemMetadataReader extends TransferItemMetadataReaderIm
         FilesystemAttributes filesystemAttributes,
         FileContentAttributes fileContentAttributes
     ) {
-        super(new ObjectMapper(), fileService);
+        super(fileService, new OaiOreMetadataReader());
 
         this.fileContentAttributes = fileContentAttributes;
         this.filesystemAttributes = filesystemAttributes;

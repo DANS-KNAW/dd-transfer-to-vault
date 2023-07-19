@@ -15,9 +15,8 @@
  */
 package nl.knaw.dans.ttv.core.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import nl.knaw.dans.ttv.core.InvalidTransferItemException;
-import nl.knaw.dans.ttv.core.domain.Version;
+import nl.knaw.dans.ttv.core.oaiore.OaiOreMetadataReader;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
@@ -30,14 +29,20 @@ import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 class TransferItemMetadataReaderImplTest {
+
+    private final OaiOreMetadataReader oaiOreMetadataReader = new OaiOreMetadataReader();
 
     @Test
     void getFilenameAttributes() {
         var fileService = Mockito.mock(FileService.class);
-        var service = new TransferItemMetadataReaderImpl(new ObjectMapper(), fileService);
+        var service = new TransferItemMetadataReaderImpl(fileService, oaiOreMetadataReader);
         try {
             var path = Path.of("doi-10-5072-dar-kxteqtv1.0.zip");
             var attributes = service.getFilenameAttributes(path);
@@ -52,7 +57,7 @@ class TransferItemMetadataReaderImplTest {
     @Test
     void getFilenameAttributesInvalidFilename() {
         var fileService = Mockito.mock(FileService.class);
-        var service = new TransferItemMetadataReaderImpl(new ObjectMapper(), fileService);
+        var service = new TransferItemMetadataReaderImpl(fileService, oaiOreMetadataReader);
         var path = Path.of("something.zip");
         assertThrows(InvalidTransferItemException.class, () -> service.getFilenameAttributes(path));
     }
@@ -60,7 +65,7 @@ class TransferItemMetadataReaderImplTest {
     @Test
     void getFilenameAttributesInvalidExtension() {
         var fileService = Mockito.mock(FileService.class);
-        var service = new TransferItemMetadataReaderImpl(new ObjectMapper(), fileService);
+        var service = new TransferItemMetadataReaderImpl(fileService, oaiOreMetadataReader);
         var path = Path.of("doi-10-5072-dar-kxteqtv1.0.rar");
         assertThrows(InvalidTransferItemException.class, () -> service.getFilenameAttributes(path));
     }
@@ -68,7 +73,7 @@ class TransferItemMetadataReaderImplTest {
     @Test
     void getFilesystemAttributes() {
         var fileService = Mockito.mock(FileService.class);
-        var service = new TransferItemMetadataReaderImpl(new ObjectMapper(), fileService);
+        var service = new TransferItemMetadataReaderImpl(fileService, oaiOreMetadataReader);
 
         try {
             var path = Path.of("doi-10-5072-dar-kxteqtv1.0.zip");
@@ -96,7 +101,7 @@ class TransferItemMetadataReaderImplTest {
     @Test
     void getFilesystemAttributesWithIOError() {
         var fileService = Mockito.mock(FileService.class);
-        var service = new TransferItemMetadataReaderImpl(new ObjectMapper(), fileService);
+        var service = new TransferItemMetadataReaderImpl(fileService, oaiOreMetadataReader);
 
         try {
             var path = Path.of("doi-10-5072-dar-kxteqtv1.0.zip");
@@ -111,97 +116,6 @@ class TransferItemMetadataReaderImplTest {
         }
     }
 
-    @Test
-    void getFileContentAttributes() throws IOException, InvalidTransferItemException {
-        var fileService = Mockito.mock(FileService.class);
-        var fakeJsonld = "{\n"
-            + "  \"ore:describes\": {\n"
-            + "    \"dansDataVaultMetadata:Bag ID\": \"urn:uuid:a175c497-9a42-4832-9e71-626db678ed1b\",\n"
-            + "    \"dansDataVaultMetadata:DV PID Version\": \"1.0\",\n"
-            + "    \"dansDataVaultMetadata:DV PID\": \"doi:10.5072/DAR/XZNG4N\",\n"
-            + "    \"dansDataVaultMetadata:NBN\": \"urn:nbn:nl:ui:13-39614943-e5b0-48c6-9383-731ef74cc0e9\"\n"
-            + "  }\n"
-            + "}";
-        var fakePidmapping = "abc";
-
-        Mockito.when(fileService.openFileFromZip(Mockito.any(), Mockito.eq(Path.of("metadata/oai-ore.jsonld"))))
-            .thenReturn(new ByteArrayInputStream(fakeJsonld.getBytes(StandardCharsets.UTF_8)));
-        Mockito.when(fileService.openFileFromZip(Mockito.any(), Mockito.eq(Path.of("metadata/pid-mapping.txt"))))
-            .thenReturn(new ByteArrayInputStream(fakePidmapping.getBytes(StandardCharsets.UTF_8)));
-        Mockito.when(fileService.calculateChecksum(Mockito.any()))
-            .thenReturn("checksum-test");
-
-        var service = new TransferItemMetadataReaderImpl(new ObjectMapper(), fileService);
-        var result = service.getFileContentAttributes(Path.of("test.zip"));
-
-        assertEquals("urn:uuid:a175c497-9a42-4832-9e71-626db678ed1b", result.getBagId());
-        assertEquals("1.0", result.getDatasetVersion());
-        assertEquals("urn:nbn:nl:ui:13-39614943-e5b0-48c6-9383-731ef74cc0e9", result.getNbn());
-        assertNull(result.getOtherId());
-        assertNull(result.getOtherIdVersion());
-        assertNull(result.getSwordToken());
-        assertEquals(fakeJsonld, result.getOaiOre());
-        assertEquals(fakePidmapping, result.getPidMapping());
-    }
-
-    @Test
-    void getFileContentAttributesWithOptionalFields() throws IOException, InvalidTransferItemException {
-        var fileService = Mockito.mock(FileService.class);
-        var fakeJsonld = "{\n"
-            + "  \"ore:describes\": {\n"
-            + "    \"dansDataVaultMetadata:Bag ID\": \"urn:uuid:a175c497-9a42-4832-9e71-626db678ed1b\",\n"
-            + "    \"dansDataVaultMetadata:DV PID Version\": \"1.0\",\n"
-            + "    \"dansDataVaultMetadata:DV PID\": \"doi:10.5072/DAR/XZNG4N\",\n"
-            + "    \"dansDataVaultMetadata:NBN\": \"urn:nbn:nl:ui:13-39614943-e5b0-48c6-9383-731ef74cc0e9\",\n"
-            + "    \"dansDataVaultMetadata:Other ID\": \"39614943-e5b0-48c6-9383-731ef74cc0e9\",\n"
-            + "    \"dansDataVaultMetadata:Other ID Version\": \"1.2\",\n"
-            + "    \"dansDataVaultMetadata:SWORD Token\": \"token\"\n"
-            + "  }\n"
-            + "}";
-        var fakePidmapping = "abc";
-
-        Mockito.when(fileService.openFileFromZip(Mockito.any(), Mockito.eq(Path.of("metadata/oai-ore.jsonld"))))
-            .thenReturn(new ByteArrayInputStream(fakeJsonld.getBytes(StandardCharsets.UTF_8)));
-        Mockito.when(fileService.openFileFromZip(Mockito.any(), Mockito.eq(Path.of("metadata/pid-mapping.txt"))))
-            .thenReturn(new ByteArrayInputStream(fakePidmapping.getBytes(StandardCharsets.UTF_8)));
-
-        var service = new TransferItemMetadataReaderImpl(new ObjectMapper(), fileService);
-        var result = service.getFileContentAttributes(Path.of("test.zip"));
-
-        assertEquals("urn:uuid:a175c497-9a42-4832-9e71-626db678ed1b", result.getBagId());
-        assertEquals("1.0", result.getDatasetVersion());
-        assertEquals("urn:nbn:nl:ui:13-39614943-e5b0-48c6-9383-731ef74cc0e9", result.getNbn());
-        assertEquals("39614943-e5b0-48c6-9383-731ef74cc0e9", result.getOtherId());
-        assertEquals("1.2", result.getOtherIdVersion());
-        assertEquals("token", result.getSwordToken());
-    }
-
-    /**
-     * Test what happens if `DV PID Version` is missing from the JSON
-     *
-     * @throws IOException
-     */
-    @Test
-    void getFileContentAttributesWithMissingFields() throws IOException {
-        var fileService = Mockito.mock(FileService.class);
-        var fakeJsonld = "{\n"
-            + "  \"ore:describes\": {\n"
-            + "    \"dansDataVaultMetadata:Bag ID\": \"urn:uuid:a175c497-9a42-4832-9e71-626db678ed1b\",\n"
-            + "    \"dansDataVaultMetadata:DV PID\": \"doi:10.5072/DAR/XZNG4N\",\n"
-            + "    \"dansDataVaultMetadata:NBN\": \"urn:nbn:nl:ui:13-39614943-e5b0-48c6-9383-731ef74cc0e9\"\n"
-            + "  }\n"
-            + "}";
-        var fakePidmapping = "abc";
-
-        Mockito.when(fileService.openFileFromZip(Mockito.any(), Mockito.eq(Path.of("metadata/oai-ore.jsonld"))))
-            .thenReturn(new ByteArrayInputStream(fakeJsonld.getBytes(StandardCharsets.UTF_8)));
-        Mockito.when(fileService.openFileFromZip(Mockito.any(), Mockito.eq(Path.of("metadata/pid-mapping.txt"))))
-            .thenReturn(new ByteArrayInputStream(fakePidmapping.getBytes(StandardCharsets.UTF_8)));
-
-        var service = new TransferItemMetadataReaderImpl(new ObjectMapper(), fileService);
-
-        assertThrows(InvalidTransferItemException.class, () -> service.getFileContentAttributes(Path.of("test.zip")));
-    }
 
     /**
      * test that IOExceptions are propagated
@@ -214,7 +128,7 @@ class TransferItemMetadataReaderImplTest {
         Mockito.when(fileService.openZipFile(Mockito.any()))
             .thenThrow(IOException.class);
 
-        var service = new TransferItemMetadataReaderImpl(new ObjectMapper(), fileService);
+        var service = new TransferItemMetadataReaderImpl(fileService, oaiOreMetadataReader);
 
         assertThrows(InvalidTransferItemException.class, () -> service.getFileContentAttributes(Path.of("test.zip")));
     }
@@ -222,7 +136,7 @@ class TransferItemMetadataReaderImplTest {
     @Test
     void getAssociatedXmlFile() {
         var fileService = Mockito.mock(FileService.class);
-        var service = new TransferItemMetadataReaderImpl(new ObjectMapper(), fileService);
+        var service = new TransferItemMetadataReaderImpl(fileService, oaiOreMetadataReader);
         var filename = "data/inbox/doi-10-5072-dar-kxteqtv1.0.zip";
 
         var result = service.getAssociatedXmlFile(Path.of(filename));
@@ -234,7 +148,7 @@ class TransferItemMetadataReaderImplTest {
     @Test
     void getAssociatedXmlFileForInvalidFilename() {
         var fileService = Mockito.mock(FileService.class);
-        var service = new TransferItemMetadataReaderImpl(new ObjectMapper(), fileService);
+        var service = new TransferItemMetadataReaderImpl(fileService, oaiOreMetadataReader);
         // it has doa instead of doi
         var filename = "data/inbox/doa-10-5072-dar-kxteqtv1.0.zip";
 

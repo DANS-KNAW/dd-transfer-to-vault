@@ -30,6 +30,7 @@ import nl.knaw.dans.ttv.core.ConfirmArchivedTaskManager;
 import nl.knaw.dans.ttv.core.ExtractMetadataTaskManager;
 import nl.knaw.dans.ttv.core.OcflTarTaskManager;
 import nl.knaw.dans.ttv.core.VaultCatalogRepository;
+import nl.knaw.dans.ttv.core.oaiore.OaiOreMetadataReader;
 import nl.knaw.dans.ttv.core.service.ArchiveMetadataServiceImpl;
 import nl.knaw.dans.ttv.core.service.ArchiveStatusServiceImpl;
 import nl.knaw.dans.ttv.core.service.FileService;
@@ -97,7 +98,8 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
             .create(TransferItemServiceImpl.class, new Class[] { TransferItemDAO.class, TarDAO.class, FileService.class },
             new Object[] { transferItemDAO, tarDAO, fileService });
 
-        final var metadataReader = new TransferItemMetadataReaderImpl(environment.getObjectMapper(), fileService);
+        final var oaiOreMetadataReader = new OaiOreMetadataReader();
+        final var metadataReader = new TransferItemMetadataReaderImpl(fileService, oaiOreMetadataReader);
         // the process that looks for new files in the tar-inbox, and when reaching a certain combined size, tars them
         // and sends it to the archiving service
         final var ocflRepositoryFactory = new OcflRepositoryFactory();
