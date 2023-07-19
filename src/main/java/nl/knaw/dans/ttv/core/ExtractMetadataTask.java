@@ -88,7 +88,7 @@ public class ExtractMetadataTask implements Runnable {
         vaultCatalogRepository.registerOcflObjectVersion(transferItem);
 
         log.info("Updated file metadata, moving file '{}' to '{}'", path, newPath);
-        transferItemService.moveTransferItem(transferItem, TransferItem.TransferStatus.METADATA_EXTRACTED, path, newPath);
+        transferItemService.moveTransferItem(transferItem, TransferItem.TransferStatus.METADATA_EXTRACTED, newPath);
 
         fileService.moveFile(path, newPath);
     }

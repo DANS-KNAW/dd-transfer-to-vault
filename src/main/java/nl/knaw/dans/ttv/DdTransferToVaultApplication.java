@@ -136,7 +136,7 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
         final var ocflTarTaskManager = new OcflTarTaskManager(configuration.getCreateOcflTar().getInbox(), configuration.getCreateOcflTar().getWorkDir(), configuration.getDataArchive().getPath(),
             configuration.getCreateOcflTar().getInboxThreshold(), configuration.getCreateOcflTar().getPollingInterval(), configuration.getCreateOcflTar().getMaxRetries(),
             configuration.getCreateOcflTar().getRetryInterval(), configuration.getCreateOcflTar().getRetrySchedule(), createTarExecutorService, inboxWatcherFactory, fileService, ocflRepositoryService,
-            transferItemService, tarCommandRunner, archiveMetadataService, vaultCatalogRepository);
+            transferItemService, tarCommandRunner, archiveMetadataService, vaultCatalogRepository, metadataReader);
 
         environment.lifecycle().manage(ocflTarTaskManager);
 

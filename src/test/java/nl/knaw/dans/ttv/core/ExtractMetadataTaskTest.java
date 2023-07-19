@@ -18,7 +18,6 @@ package nl.knaw.dans.ttv.core;
 import nl.knaw.dans.ttv.core.domain.FileContentAttributes;
 import nl.knaw.dans.ttv.core.domain.FilesystemAttributes;
 import nl.knaw.dans.ttv.core.service.FileService;
-import nl.knaw.dans.ttv.core.service.TransferItemMetadataReader;
 import nl.knaw.dans.ttv.core.service.TransferItemService;
 import nl.knaw.dans.ttv.core.service.TransferItemValidator;
 import nl.knaw.dans.ttv.db.TransferItem;
@@ -80,7 +79,6 @@ class ExtractMetadataTaskTest {
         Mockito.verify(transferItemService).moveTransferItem(
             Mockito.eq(transferItem),
             Mockito.eq(TransferItem.TransferStatus.METADATA_EXTRACTED),
-            Mockito.eq(filePath),
             Mockito.eq(outbox.resolve(transferItem.getCanonicalFilename()))
         );
     }
@@ -121,7 +119,6 @@ class ExtractMetadataTaskTest {
         Mockito.verify(transferItemService).moveTransferItem(
             Mockito.eq(transferItem),
             Mockito.eq(TransferItem.TransferStatus.METADATA_EXTRACTED),
-            Mockito.any(),
             Mockito.any()
         );
     }
@@ -161,7 +158,6 @@ class ExtractMetadataTaskTest {
         Mockito.verify(transferItemService).moveTransferItem(
             Mockito.eq(transferItem),
             Mockito.eq(TransferItem.TransferStatus.METADATA_EXTRACTED),
-            Mockito.any(),
             Mockito.any()
         );
     }

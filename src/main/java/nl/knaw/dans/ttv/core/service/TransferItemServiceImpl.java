@@ -30,7 +30,6 @@ import nl.knaw.dans.ttv.db.TransferItemDAO;
 import org.hibernate.Hibernate;
 import org.hibernate.ObjectNotFoundException;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -100,7 +99,7 @@ public class TransferItemServiceImpl implements TransferItemService {
 
     @Override
     @UnitOfWork
-    public TransferItem moveTransferItem(TransferItem transferItem, TransferItem.TransferStatus newStatus, Path filePath, Path newPath) {
+    public TransferItem moveTransferItem(TransferItem transferItem, TransferItem.TransferStatus newStatus, Path newPath) {
         transferItem.setDveFilePath(newPath.toString());
         transferItem.setTransferStatus(newStatus);
         transferItemDAO.merge(transferItem);

@@ -33,7 +33,7 @@ public interface TransferItemService {
     TransferItem createTransferItem(String datastationName, FilenameAttributes filenameAttributes, FilesystemAttributes filesystemAttributes, FileContentAttributes fileContentAttributes)
         throws InvalidTransferItemException;
 
-    TransferItem moveTransferItem(TransferItem transferItem, TransferItem.TransferStatus newStatus, Path filePath, Path outbox) throws IOException;
+    TransferItem moveTransferItem(TransferItem transferItem, TransferItem.TransferStatus newStatus, Path newPath) throws IOException;
 
     void saveAllTars(List<Tar> tars);
 

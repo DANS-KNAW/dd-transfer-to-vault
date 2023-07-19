@@ -105,7 +105,7 @@ public class CollectTask implements Runnable {
         log.trace("filePath is '{}', newPath is '{}'", filePath, newPath);
 
         log.trace("Updating database state for item {} with new path '{}'", transferItem, outboxPath);
-        transferItemService.moveTransferItem(transferItem, TransferItem.TransferStatus.COLLECTED, filePath, newPath);
+        transferItemService.moveTransferItem(transferItem, TransferItem.TransferStatus.COLLECTED, newPath);
 
         fileService.moveFileAtomically(filePath, newPath);
     }

@@ -185,7 +185,7 @@ class TransferItemServiceImplTest {
         var newPath = Path.of("new/").resolve(transferItem.getCanonicalFilename());
         var transferItemService = getTransferItemService();
 
-        transferItem = transferItemService.moveTransferItem(transferItem, newStatus, currentPath, newPath);
+        transferItem = transferItemService.moveTransferItem(transferItem, newStatus, newPath);
 
         assertEquals("new/pid-ttv5.zip", transferItem.getDveFilePath());
         assertEquals(TransferItem.TransferStatus.METADATA_EXTRACTED, transferItem.getTransferStatus());

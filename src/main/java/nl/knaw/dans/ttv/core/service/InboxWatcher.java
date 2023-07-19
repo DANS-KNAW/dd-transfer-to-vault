@@ -17,6 +17,8 @@ package nl.knaw.dans.ttv.core.service;
 
 import io.dropwizard.lifecycle.Managed;
 import nl.knaw.dans.ttv.core.InvalidTransferItemException;
+import org.apache.commons.io.filefilter.FileFilterUtils;
+import org.apache.commons.io.filefilter.IOFileFilter;
 import org.apache.commons.io.monitor.FileAlterationListenerAdaptor;
 import org.apache.commons.io.monitor.FileAlterationMonitor;
 import org.apache.commons.io.monitor.FileAlterationObserver;
@@ -62,12 +64,31 @@ public class InboxWatcher extends FileAlterationListenerAdaptor implements Manag
     }
 
     private void startFileAlterationMonitor() throws Exception {
-        FileAlterationObserver observer = new FileAlterationObserver(path.toFile());
+        var filters = FileFilterUtils.and(
+            FileFilterUtils.fileFileFilter(),
+            new IOFileFilter() {
+
+                @Override
+                public boolean accept(File file) {
+                    var filePath = file.toPath();
+                    return filePath.toAbsolutePath().getParent().equals(path.toAbsolutePath());
+                }
+
+                @Override
+                public boolean accept(File dir, String name) {
+                    return dir.toPath().toAbsolutePath().equals(path.toAbsolutePath());
+                }
+            }
+        );
+
+        var observer = new FileAlterationObserver(path.toFile(), filters);
         observer.addListener(this);
 
         monitor = new FileAlterationMonitor(this.interval);
         monitor.addObserver(observer);
         monitor.start();
+
+        observer.checkAndNotify();
     }
 
     @Override
@@ -87,7 +108,12 @@ public class InboxWatcher extends FileAlterationListenerAdaptor implements Manag
     }
 
     private void scanExistingFiles() throws IOException {
-        Files.list(this.path).forEach(f -> onFileCreate(f.toFile()));
+        try (var fileList = Files.list(this.path)) {
+            fileList
+                .filter(Files::isRegularFile)
+                .filter(item -> item.toAbsolutePath().getParent().equals(this.path.toAbsolutePath()))
+                .forEach(f -> onFileCreate(f.toFile()));
+        }
     }
 
     @Override

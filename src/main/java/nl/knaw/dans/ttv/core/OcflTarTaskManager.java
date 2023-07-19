@@ -22,6 +22,7 @@ import nl.knaw.dans.ttv.core.service.InboxWatcher;
 import nl.knaw.dans.ttv.core.service.InboxWatcherFactory;
 import nl.knaw.dans.ttv.core.service.OcflRepositoryService;
 import nl.knaw.dans.ttv.core.service.TarCommandRunner;
+import nl.knaw.dans.ttv.core.service.TransferItemMetadataReader;
 import nl.knaw.dans.ttv.core.service.TransferItemService;
 import nl.knaw.dans.ttv.db.Tar;
 import nl.knaw.dans.ttv.db.TransferItem;
@@ -63,13 +64,14 @@ public class OcflTarTaskManager implements Managed {
     private final List<Duration> retrySchedule;
     private final ArchiveMetadataService archiveMetadataService;
     private final VaultCatalogRepository vaultCatalogRepository;
+    private final TransferItemMetadataReader transferItemMetadataReader;
     private InboxWatcher inboxWatcher;
     private Scheduler retryScheduler;
 
     public OcflTarTaskManager(Path inboxPath, Path workDir, String vaultPath, long inboxThreshold, long pollingInterval, int maxRetries, Duration retryInterval, List<Duration> retrySchedule,
         ExecutorService executorService,
         InboxWatcherFactory inboxWatcherFactory, FileService fileService, OcflRepositoryService ocflRepositoryService, TransferItemService transferItemService, TarCommandRunner tarCommandRunner,
-        ArchiveMetadataService archiveMetadataService, VaultCatalogRepository vaultCatalogRepository) {
+        ArchiveMetadataService archiveMetadataService, VaultCatalogRepository vaultCatalogRepository, TransferItemMetadataReader transferItemMetadataReader) {
         this.vaultPath = vaultPath;
         this.retryInterval = retryInterval;
         this.executorService = executorService;
@@ -86,6 +88,7 @@ public class OcflTarTaskManager implements Managed {
         this.maxRetries = maxRetries;
         this.retrySchedule = retrySchedule;
         this.vaultCatalogRepository = vaultCatalogRepository;
+        this.transferItemMetadataReader = transferItemMetadataReader;
     }
 
     @Override
@@ -157,6 +160,25 @@ public class OcflTarTaskManager implements Managed {
         log.info("New item in inbox, filename is {}", file);
         log.info("Checking total size of inbox located at {}", inboxPath);
 
+        var path = file.toPath();
+
+        // validate it is a direct child of inbox
+        try {
+            validatePathIsInInbox(path);
+        }
+        catch (InvalidTransferItemException e) {
+            log.warn("File '{}' is not in inbox, ignoring", path);
+            return;
+        }
+
+        // validate it is registered in the database
+        try {
+            validateTransferItemExists(path);
+        }
+        catch (InvalidTransferItemException e) {
+            rejectFile(path, e);
+        }
+
         try {
             var totalSize = fileService.getPathSize(inboxPath);
             var uuid = UUID.randomUUID().toString();
@@ -170,6 +192,15 @@ public class OcflTarTaskManager implements Managed {
         }
         catch (IOException e) {
             log.error("Error calculating file size for path '{}'", inboxPath, e);
+        }
+    }
+
+    void rejectFile(Path path, Exception e) {
+        try {
+            fileService.rejectFile(path, e);
+        }
+        catch (IOException ex) {
+            log.error("Error rejecting file '{}'", path, ex);
         }
     }
 
@@ -209,7 +240,7 @@ public class OcflTarTaskManager implements Managed {
             if (fileService.exists(expectedPath)) {
                 log.info("Moving DVE file '{}' to workdir location '{}'", expectedPath, tarArchive);
 
-                transferItemService.moveTransferItem(transferItem, TransferItem.TransferStatus.TARRING, expectedPath, targetPath);
+                transferItemService.moveTransferItem(transferItem, TransferItem.TransferStatus.TARRING, targetPath);
 
                 fileService.moveFile(expectedPath, targetPath);
             }
@@ -221,5 +252,20 @@ public class OcflTarTaskManager implements Managed {
 
     Scheduler createScheduler() throws SchedulerException {
         return new StdSchedulerFactory().getScheduler();
+    }
+
+    private void validatePathIsInInbox(Path path) throws InvalidTransferItemException {
+        if (!path.toAbsolutePath().startsWith(this.inboxPath.toAbsolutePath())) {
+            throw new InvalidTransferItemException("File is not in inbox: " + path);
+        }
+    }
+
+    private void validateTransferItemExists(Path path) throws InvalidTransferItemException {
+        var metadata = transferItemMetadataReader.getFilenameAttributes(path);
+        var transferItem = transferItemService.getTransferItemByFilenameAttributes(metadata);
+
+        if (transferItem.isEmpty()) {
+            throw new InvalidTransferItemException("TransferItem not found for file " + path);
+        }
     }
 }

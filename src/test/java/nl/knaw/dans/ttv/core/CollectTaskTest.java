@@ -82,7 +82,6 @@ class CollectTaskTest {
             .moveTransferItem(
                 Mockito.any(),
                 Mockito.eq(TransferItem.TransferStatus.COLLECTED),
-                Mockito.eq(filePath),
                 Mockito.eq(outbox.resolve(transferItem.getCanonicalFilename()))
             );
     }
@@ -162,7 +161,6 @@ class CollectTaskTest {
             .moveTransferItem(
                 Mockito.eq(existingTransferItem),
                 Mockito.eq(TransferItem.TransferStatus.COLLECTED),
-                Mockito.eq(filePath),
                 Mockito.eq(outbox.resolve(existingTransferItem.getCanonicalFilename()))
             );
     }
@@ -219,7 +217,7 @@ class CollectTaskTest {
             Mockito.verify(transferItemService).moveTransferItem(
                 transferItem,
                 TransferItem.TransferStatus.COLLECTED,
-                filePath, outbox.resolve(transferItem.getCanonicalFilename())
+                outbox.resolve(transferItem.getCanonicalFilename())
             );
         }
         catch (IOException e) {
