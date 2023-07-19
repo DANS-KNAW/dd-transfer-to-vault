@@ -17,14 +17,16 @@ package nl.knaw.dans.ttv.core.service;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.BufferedInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.FileStore;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -39,6 +41,11 @@ public class FileServiceImpl implements FileService {
         Objects.requireNonNull(current, "current path cannot be null");
         Objects.requireNonNull(newPath, "newPath cannot be null");
         log.trace("moving file from {} to {}", current, newPath);
+
+        if (Files.exists(newPath)) {
+            throw new FileAlreadyExistsException(String.format("Cannot move file %s to %s, file already exists", current, newPath));
+        }
+
         return Files.move(current, newPath);
     }
 
@@ -47,7 +54,7 @@ public class FileServiceImpl implements FileService {
         Objects.requireNonNull(filePath, "filePath cannot be null");
         Objects.requireNonNull(newPath, "newPath cannot be null");
 
-        var tempTarget = Path.of(newPath + ".part");
+        var tempTarget = newPath.getParent().resolve(newPath.getFileName() + ".part");
 
         var store1 = Files.getFileStore(filePath);
         var store2 = Files.getFileStore(newPath.getParent());
@@ -86,30 +93,32 @@ public class FileServiceImpl implements FileService {
         var rejectedFolder = path.getParent().resolve("rejected");
         ensureDirectoryExists(rejectedFolder);
 
+        var filename = path.getFileName().toString();
+
         log.debug("Moving rejected file to '{}'", rejectedFolder);
-        var index = path.getFileName().toString().lastIndexOf(".");
-        var extension = path.getFileName().toString().substring(index);
-        var fileBaseName = path.getFileName().toString().substring(0, index);
+        var extension = FilenameUtils.getExtension(filename);
+        var fileBaseName = FilenameUtils.removeExtension(filename);
 
         log.trace("File base name is '{}', extension is '{}'", fileBaseName, extension);
-        var rejectedFileName = fileBaseName + extension;
+        var rejectedFileName = fileBaseName + "." + extension;
         var errorFileName = fileBaseName + ".error.txt";
 
         var duplicateCounter = 1;
 
-        while (Files.exists(Path.of(rejectedFolder.toString(), rejectedFileName))) {
-            log.trace("File '{}' already exists, generating a new filename", Path.of(rejectedFolder.toString(), rejectedFileName));
-            rejectedFileName = fileBaseName + "_" + duplicateCounter + extension;
+        while (Files.exists(rejectedFolder.resolve(rejectedFileName))) {
+            log.trace("File '{}' already exists, generating a new filename", rejectedFolder.resolve(rejectedFileName));
+            rejectedFileName = fileBaseName + "_" + duplicateCounter + "." + extension;
             errorFileName = fileBaseName + "_" + duplicateCounter + ".error.txt";
 
             duplicateCounter += 1;
         }
 
         log.trace("Settled on '{}' for filename", rejectedFileName);
-        var targetPath = Path.of(rejectedFolder.toString(), rejectedFileName);
-        var targetErrorPath = Path.of(rejectedFolder.toString(), errorFileName);
+        var targetPath = rejectedFolder.resolve(rejectedFileName);
+        var targetErrorPath = rejectedFolder.resolve(errorFileName);
 
         log.trace("Moving file to '{}', writing error report to '{}'", targetPath, targetErrorPath);
+
         Files.move(path, targetPath);
         writeExceptionToFile(targetErrorPath, exception);
     }
@@ -134,10 +143,14 @@ public class FileServiceImpl implements FileService {
         return Files.getFileStore(path);
     }
 
-    void writeExceptionToFile(Path errorReportName, Exception exception) throws FileNotFoundException {
-        var writer = new PrintWriter(errorReportName.toFile());
-        exception.printStackTrace(writer);
-        writer.close();
+    void writeExceptionToFile(Path errorReportName, Exception exception) throws IOException {
+        var writer = new StringWriter();
+        var pw = new PrintWriter(writer);
+        exception.printStackTrace(pw);
+        var stackTrace = writer.toString();
+        pw.close();
+
+        Files.write(errorReportName, stackTrace.getBytes());
     }
 
     @Override

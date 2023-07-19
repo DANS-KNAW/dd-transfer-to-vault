@@ -176,13 +176,13 @@ class TransferItemServiceImplTest {
     @Test
     void moveTransferItem() throws Exception {
         var currentPath = Path.of("current/path.zip");
-        var newPath = Path.of("new/");
         var newStatus = TransferItem.TransferStatus.METADATA_EXTRACTED;
         var transferItem = TransferItem.builder()
             .id(5L)
             .datasetIdentifier("pid")
             .build();
 
+        var newPath = Path.of("new/").resolve(transferItem.getCanonicalFilename());
         var transferItemService = getTransferItemService();
 
         transferItem = transferItemService.moveTransferItem(transferItem, newStatus, currentPath, newPath);
@@ -429,6 +429,8 @@ class TransferItemServiceImplTest {
             .dveFilePath("path")
             .build();
 
+        Mockito.when(transferItemDao.findById(1L))
+            .thenReturn(Optional.of(transferItem));
         Mockito.when(transferItemDao.findByIdentifier("pid"))
             .thenReturn(Optional.of(transferItem));
 
@@ -457,29 +459,6 @@ class TransferItemServiceImplTest {
         var result = transferItemService.getTransferItemByFilenameAttributes(attributes);
 
         assertThat(result).isNotEmpty();
-    }
-
-    @Test
-    void getTransferItemByFilenameAttributes_should_return_empty_when_ID_is_different() throws Exception {
-        var transferItemService = getTransferItemService();
-        var attributes = FilenameAttributes.builder()
-            .internalId(2L)
-            .dveFilePath("path")
-            .identifier("pid")
-            .build();
-
-        var transferItem = TransferItem.builder()
-            .id(1L)
-            .doi("pid")
-            .dveFilePath("path")
-            .build();
-
-        Mockito.when(transferItemDao.findByIdentifier("pid"))
-            .thenReturn(Optional.of(transferItem));
-
-        var result = transferItemService.getTransferItemByFilenameAttributes(attributes);
-
-        assertThat(result).isEmpty();
     }
 
     TransferItemService getTransferItemService() {

@@ -81,7 +81,7 @@ class ExtractMetadataTaskTest {
             Mockito.eq(transferItem),
             Mockito.eq(TransferItem.TransferStatus.METADATA_EXTRACTED),
             Mockito.eq(filePath),
-            Mockito.eq(Path.of("data/outbox/"))
+            Mockito.eq(outbox.resolve(transferItem.getCanonicalFilename()))
         );
     }
 
@@ -97,6 +97,8 @@ class ExtractMetadataTaskTest {
 
         var task = new ExtractMetadataTask(filePath, outbox, transferItemService, metadataReader, fileService, transferItemValidator, vaultCatalogRepository);
         var transferItem = TransferItem.builder()
+            .id(1L)
+            .datasetIdentifier("identifier")
             .doi("pid")
             .dveFilePath("path")
             .creationTime(OffsetDateTime.now())
@@ -135,6 +137,8 @@ class ExtractMetadataTaskTest {
         );
         var task = new ExtractMetadataTask(filePath, outbox, transferItemService, metadataReader, fileService, transferItemValidator, vaultCatalogRepository);
         var transferItem = TransferItem.builder()
+            .id(1L)
+            .datasetIdentifier("identifier")
             .doi("pid")
             .dveFilePath("path")
             .creationTime(OffsetDateTime.now())

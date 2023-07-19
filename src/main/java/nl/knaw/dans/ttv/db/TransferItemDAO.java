@@ -36,7 +36,7 @@ public class TransferItemDAO extends AbstractDAO<TransferItem> {
     }
 
     public List<TransferItem> findAll() {
-        return currentSession().createQuery("from TransferItem", TransferItem.class).list();
+        return currentSession().createQuery("from TransferItem order by creationTime asc", TransferItem.class).list();
     }
 
     public void merge(TransferItem transferItem) {
@@ -51,7 +51,7 @@ public class TransferItemDAO extends AbstractDAO<TransferItem> {
     }
 
     public Optional<TransferItem> findByIdentifier(String fileIdentifier) {
-        return query("from TransferItem where datasetIdentifier  = :identifier")
+        return query("from TransferItem where datasetIdentifier = :identifier")
             .setParameter("identifier", fileIdentifier)
             .uniqueResultOptional();
 

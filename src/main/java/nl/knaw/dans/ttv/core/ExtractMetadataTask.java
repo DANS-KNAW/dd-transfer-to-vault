@@ -83,12 +83,14 @@ public class ExtractMetadataTask implements Runnable {
         transferItemService.addMetadata(transferItem, fileContentAttributes);
         transferItemValidator.validateTransferItem(transferItem);
 
-        var newPath = outbox.resolve(path.getFileName());
+        var newPath = outbox.resolve(transferItem.getCanonicalFilename());
 
         vaultCatalogRepository.registerOcflObjectVersion(transferItem);
 
         log.info("Updated file metadata, moving file '{}' to '{}'", path, newPath);
-        transferItemService.moveTransferItem(transferItem, TransferItem.TransferStatus.METADATA_EXTRACTED, path, outbox);
+        transferItemService.moveTransferItem(transferItem, TransferItem.TransferStatus.METADATA_EXTRACTED, path, newPath);
+
+        fileService.moveFile(path, newPath);
     }
 
     public TransferItem getTransferItem(Path path) throws InvalidTransferItemException {

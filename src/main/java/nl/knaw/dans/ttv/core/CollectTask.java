@@ -75,13 +75,10 @@ public class CollectTask implements Runnable {
 
         var existingTransferItem = transferItemService.getTransferItemByFilenameAttributes(filenameAttributes)
             // filter out items that have a different checksum, because they are different
-            .filter(item -> {
-                return Objects.equals(item.getBagChecksum(), filesystemAttributes.getChecksum());
-            });
+            .filter(item -> Objects.equals(item.getBagChecksum(), filesystemAttributes.getChecksum()));
 
-        // treat it as an existing TransferItem if:
-        // - it has the same filename
-        // - it has the same checksum
+        // treat it as an existing TransferItem if either:
+        // - it has the same filename and it has the same checksum
         // - there is an internal ID in the filename, and it matches a record in the database
 
         // if it is an existing TransferItem, it should have status COLLECTED
@@ -104,8 +101,13 @@ public class CollectTask implements Runnable {
     }
 
     void moveFileToOutbox(TransferItem transferItem, Path filePath, Path outboxPath) throws IOException {
+        var newPath = outboxPath.resolve(transferItem.getCanonicalFilename());
+        log.trace("filePath is '{}', newPath is '{}'", filePath, newPath);
+
         log.trace("Updating database state for item {} with new path '{}'", transferItem, outboxPath);
-        transferItemService.moveTransferItem(transferItem, TransferItem.TransferStatus.COLLECTED, filePath, outboxPath);
+        transferItemService.moveTransferItem(transferItem, TransferItem.TransferStatus.COLLECTED, filePath, newPath);
+
+        fileService.moveFileAtomically(filePath, newPath);
     }
 
     void moveFileToErrorBox(Path path, Exception exception) throws IOException {

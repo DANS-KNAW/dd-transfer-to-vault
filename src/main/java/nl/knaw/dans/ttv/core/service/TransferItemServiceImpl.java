@@ -100,15 +100,10 @@ public class TransferItemServiceImpl implements TransferItemService {
 
     @Override
     @UnitOfWork
-    public TransferItem moveTransferItem(TransferItem transferItem, TransferItem.TransferStatus newStatus, Path filePath, Path outboxPath) throws IOException {
-        var newPath = outboxPath.resolve(transferItem.getCanonicalFilename());
-        log.trace("filePath is '{}', newPath is '{}'", filePath, newPath);
-
+    public TransferItem moveTransferItem(TransferItem transferItem, TransferItem.TransferStatus newStatus, Path filePath, Path newPath) throws IOException {
         transferItem.setDveFilePath(newPath.toString());
         transferItem.setTransferStatus(newStatus);
         transferItemDAO.merge(transferItem);
-
-        fileService.moveFileAtomically(filePath, newPath);
 
         return transferItem;
     }
@@ -199,15 +194,15 @@ public class TransferItemServiceImpl implements TransferItemService {
     @Override
     @UnitOfWork
     public Optional<TransferItem> getTransferItemByFilenameAttributes(FilenameAttributes filenameAttributes) {
-        return transferItemDAO.findByIdentifier(filenameAttributes.getIdentifier())
-            .filter(item -> {
-                // if an ID is in the filename, check it matches
-                if (filenameAttributes.getInternalId() != null) {
-                    return Objects.equals(item.getId(), filenameAttributes.getInternalId());
-                }
+        if (filenameAttributes == null) {
+            return Optional.empty();
+        }
 
-                return true;
-            });
+        if (filenameAttributes.getInternalId() != null) {
+            return transferItemDAO.findById(filenameAttributes.getInternalId());
+        }
+
+        return transferItemDAO.findByIdentifier(filenameAttributes.getIdentifier());
     }
 
     @Override
