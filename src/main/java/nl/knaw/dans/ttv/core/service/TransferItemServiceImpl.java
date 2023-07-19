@@ -100,7 +100,7 @@ public class TransferItemServiceImpl implements TransferItemService {
 
     @Override
     @UnitOfWork
-    public TransferItem moveTransferItem(TransferItem transferItem, TransferItem.TransferStatus newStatus, Path filePath, Path newPath) throws IOException {
+    public TransferItem moveTransferItem(TransferItem transferItem, TransferItem.TransferStatus newStatus, Path filePath, Path newPath) {
         transferItem.setDveFilePath(newPath.toString());
         transferItem.setTransferStatus(newStatus);
         transferItemDAO.merge(transferItem);
@@ -254,6 +254,8 @@ public class TransferItemServiceImpl implements TransferItemService {
         for (var transferItem : transferItems) {
             transferItem.setTransferStatus(TransferItem.TransferStatus.TARRING);
             transferItem.setTar(tarArchive);
+
+            transferItemDAO.merge(transferItem);
         }
 
         tarArchive.setTransferItems(transferItems);
