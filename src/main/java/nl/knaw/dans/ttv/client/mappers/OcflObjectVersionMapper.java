@@ -32,16 +32,9 @@ public interface OcflObjectVersionMapper {
 
     OcflObjectVersionMapper INSTANCE = Mappers.getMapper(OcflObjectVersionMapper.class);
 
-    @Mapping(source = "swordClient", target = "dataSupplier")
-    @Mapping(source = "doi", target = "dataversePid")
-    @Mapping(source = "datasetVersion", target = "dataversePidVersion")
-    // TODO confirm this is correct
-    @Mapping(source = "dveFilePath", target = "ocflObjectPath")
-    @Mapping(source = "oaiOre", target = "metadata")
     @Mapping(source = "pidMapping", target = "filePidToLocalPath")
     @Mapping(target = "skeletonRecord", constant = "false")
-    // TODO also confirm this is correct, TransferItems have 2 types of dates (bagDepositDate and creationTime)
-    @Mapping(target = "exportTimestamp", source = "bagDepositDate")
+    @Mapping(source = "bagDepositDate", target = "exportTimestamp")
     OcflObjectVersionParametersDto mapParameters(TransferItem transferItem);
 
     default Map<String, Object> mapMetadata(String value) {

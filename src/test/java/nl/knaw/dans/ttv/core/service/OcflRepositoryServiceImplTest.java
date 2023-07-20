@@ -46,7 +46,7 @@ class OcflRepositoryServiceImplTest {
         var repository = Mockito.mock(OcflRepository.class);
         var transferItem = TransferItem.builder()
             .ocflObjectVersion(1)
-            .doi("pid1")
+            .dataversePid("pid1")
             .dveFilePath("path/to/dir")
             .creationTime(OffsetDateTime.now())
             .transferStatus(TransferItem.TransferStatus.METADATA_EXTRACTED)

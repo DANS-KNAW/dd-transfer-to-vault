@@ -66,6 +66,11 @@ public class OcflRepositoryServiceImpl implements OcflRepositoryService {
         var objectId = getObjectIdForBagId(transferItem.getBagId());
         var source = Objects.requireNonNull(Path.of(transferItem.getDveFilePath()), "dveFilePath can't be null: " + transferItem.getDveFilePath());
 
+        if (ocflRepository.containsObject(objectId)) {
+            log.warn("Object with objectId '{}' already exists in OCFL repository, skipping import", objectId);
+            return objectId;
+        }
+
         log.debug("Importing file '{}' with objectId '{}' into OCFL repository", source, objectId);
         ocflRepository.putObject(
             ObjectVersionId.head(objectId),

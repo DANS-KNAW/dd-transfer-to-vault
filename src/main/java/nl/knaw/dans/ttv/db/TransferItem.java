@@ -63,10 +63,10 @@ public class TransferItem {
     private Integer ocflObjectVersion;
     @Column(name = "dataset_identifier", nullable = false)
     private String datasetIdentifier;
-    @Column(name = "doi")
-    private String doi;
-    @Column(name = "dataset_version")
-    private String datasetVersion;
+    @Column(name = "dataverse_pid")
+    private String dataversePid;
+    @Column(name = "dataverse_pid_version")
+    private String dataversePidVersion;
     @Column(name = "creation_time", nullable = false)
     private OffsetDateTime creationTime;
     @Column(name = "dve_file_path", nullable = false)
@@ -77,12 +77,12 @@ public class TransferItem {
     private String otherId;
     @Column(name = "other_id_version")
     private String otherIdVersion;
-    @Column(name = "sword_client")
-    private String swordClient;
+    @Column(name = "data_supplier")
+    private String dataSupplier;
     @Column(name = "sword_token")
     private String swordToken;
-    @Column(name = "dataset_dv_instance")
-    private String datasetDvInstance;
+    @Column(name = "datastation")
+    private String datastation;
     @Column(name = "bag_checksum")
     private String bagChecksum;
     @Column(name = "queue_date")
@@ -94,12 +94,15 @@ public class TransferItem {
     private TransferStatus transferStatus;
     @Column(name = "oai_ore")
     @ToString.Exclude
-    private String oaiOre;
+    private String metadata;
     @Column(name = "pid_mapping")
     @ToString.Exclude
     private String pidMapping;
     @Column(name = "aip_tar_entry_name")
-    private String aipTarEntryName;
+    private String tarEntryName;
+    // this is the tar entry name without the urn:uuid: prefix
+    @Column(name = "ocfl_object_path")
+    private String ocflObjectPath;
     @ManyToOne
     @JoinColumn(name = "tar_id")
     private Tar tar;

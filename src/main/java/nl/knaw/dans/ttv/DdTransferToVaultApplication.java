@@ -33,7 +33,6 @@ import nl.knaw.dans.ttv.core.VaultCatalogRepository;
 import nl.knaw.dans.ttv.core.oaiore.OaiOreMetadataReader;
 import nl.knaw.dans.ttv.core.service.ArchiveMetadataServiceImpl;
 import nl.knaw.dans.ttv.core.service.ArchiveStatusServiceImpl;
-import nl.knaw.dans.ttv.core.service.FileService;
 import nl.knaw.dans.ttv.core.service.FileServiceImpl;
 import nl.knaw.dans.ttv.core.service.InboxWatcherFactoryImpl;
 import nl.knaw.dans.ttv.core.service.OcflRepositoryFactory;
@@ -95,8 +94,8 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
         final var inboxWatcherFactory = new InboxWatcherFactoryImpl();
 
         final var transferItemService = new UnitOfWorkAwareProxyFactory(hibernateBundle)
-            .create(TransferItemServiceImpl.class, new Class[] { TransferItemDAO.class, TarDAO.class, FileService.class },
-            new Object[] { transferItemDAO, tarDAO, fileService });
+            .create(TransferItemServiceImpl.class, new Class[] { TransferItemDAO.class, TarDAO.class },
+                new Object[] { transferItemDAO, tarDAO });
 
         final var oaiOreMetadataReader = new OaiOreMetadataReader();
         final var metadataReader = new TransferItemMetadataReaderImpl(fileService, oaiOreMetadataReader);

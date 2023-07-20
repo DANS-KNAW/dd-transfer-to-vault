@@ -40,11 +40,13 @@ public class TransferItemMetadataReaderImpl implements TransferItemMetadataReade
             "(?<schema>datacite)?.?" +
             "v(?<major>[0-9]+).(?<minor>[0-9]+)"
     );
+
+    private static final Pattern VAAS_PATTERN = Pattern.compile("^vaas-[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}-v\\d+$");
     private static final List<Pattern> VALID_PATTERNS = List.of(
-        DATAVERSE_PATTERN,
         // the dataverse output
+        DATAVERSE_PATTERN,
         // the vault ingest flow output (uuid + version)
-        Pattern.compile("^vaas-[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}-v\\d+$")
+        VAAS_PATTERN
     );
     private static final Pattern TTV_SUFFIX = Pattern.compile("(?<identifier>.*)(?<suffix>-ttv\\d+)");
     private static final Set<String> ALLOWED_EXTENSIONS = Set.of("zip");
@@ -133,20 +135,12 @@ public class TransferItemMetadataReaderImpl implements TransferItemMetadataReade
             var oaiOre = IOUtils.toString(metadataContent, StandardCharsets.UTF_8);
             var pidMapping = IOUtils.toString(pidMappingContent, StandardCharsets.UTF_8);
 
-            var oaiOreMetadata = oaiOreMetadataReader.readMetadata(oaiOre);
+            var fileContentAttributes = oaiOreMetadataReader.readMetadata(oaiOre);
 
-            return FileContentAttributes.builder()
-                .pidMapping(pidMapping)
-                .oaiOre(oaiOre)
-                .nbn(oaiOreMetadata.getNbn())
-                .pid(oaiOreMetadata.getPid())
-                .datasetVersion(oaiOreMetadata.getPidVersion())
-                .bagId(oaiOreMetadata.getBagId())
-                .otherId(oaiOreMetadata.getOtherId())
-                .otherIdVersion(oaiOreMetadata.getOtherIdVersion())
-                .swordToken(oaiOreMetadata.getSwordToken())
-                .swordClient(oaiOreMetadata.getDataSupplier())
-                .build();
+            fileContentAttributes.setMetadata(oaiOre);
+            fileContentAttributes.setFilePidToLocalPath(pidMapping);
+
+            return fileContentAttributes;
         }
         catch (IOException e) {
             throw new InvalidTransferItemException(String.format("unable to read zip file contents for file '%s'", path), e);

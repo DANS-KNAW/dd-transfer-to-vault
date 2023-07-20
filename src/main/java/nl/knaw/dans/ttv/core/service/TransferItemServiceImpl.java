@@ -41,12 +41,10 @@ import java.util.stream.Collectors;
 public class TransferItemServiceImpl implements TransferItemService {
     private final TransferItemDAO transferItemDAO;
     private final TarDAO tarDAO;
-    private final FileService fileService;
 
-    public TransferItemServiceImpl(TransferItemDAO transferItemDAO, TarDAO tarDAO, FileService fileService) {
+    public TransferItemServiceImpl(TransferItemDAO transferItemDAO, TarDAO tarDAO) {
         this.transferItemDAO = transferItemDAO;
         this.tarDAO = tarDAO;
-        this.fileService = fileService;
     }
 
     @Override
@@ -61,7 +59,7 @@ public class TransferItemServiceImpl implements TransferItemService {
 
         transferItem.setTransferStatus(TransferItem.TransferStatus.COLLECTED);
         transferItem.setQueueDate(OffsetDateTime.now());
-        transferItem.setDatasetDvInstance(datastationName);
+        transferItem.setDatastation(datastationName);
         transferItem.setBagDepositDate(OffsetDateTime.now());
 
         // filename attributes
@@ -75,11 +73,11 @@ public class TransferItemServiceImpl implements TransferItemService {
 
         // file content attributes
         if (fileContentAttributes != null) {
-            transferItem.setDatasetVersion(fileContentAttributes.getDatasetVersion());
+            transferItem.setDataversePidVersion(fileContentAttributes.getDataversePidVersion());
             transferItem.setBagId(fileContentAttributes.getBagId());
             transferItem.setNbn(fileContentAttributes.getNbn());
-            transferItem.setOaiOre(fileContentAttributes.getOaiOre());
-            transferItem.setPidMapping(fileContentAttributes.getPidMapping());
+            transferItem.setMetadata(fileContentAttributes.getMetadata());
+            transferItem.setPidMapping(fileContentAttributes.getFilePidToLocalPath());
         }
 
         // check if an item with this ID already exists
@@ -212,16 +210,16 @@ public class TransferItemServiceImpl implements TransferItemService {
         Objects.requireNonNull(fileContentAttributes, "fileContentAttributes cannot be null");
 
         // file content attributes
-        transferItem.setDoi(fileContentAttributes.getPid());
-        transferItem.setDatasetVersion(fileContentAttributes.getDatasetVersion());
+        transferItem.setDataversePid(fileContentAttributes.getDataversePid());
+        transferItem.setDataversePidVersion(fileContentAttributes.getDataversePidVersion());
         transferItem.setBagId(fileContentAttributes.getBagId());
         transferItem.setNbn(fileContentAttributes.getNbn());
-        transferItem.setOaiOre(fileContentAttributes.getOaiOre());
-        transferItem.setPidMapping(fileContentAttributes.getPidMapping());
+        transferItem.setMetadata(fileContentAttributes.getMetadata());
+        transferItem.setPidMapping(fileContentAttributes.getFilePidToLocalPath());
         transferItem.setOtherId(fileContentAttributes.getOtherId());
         transferItem.setOtherIdVersion(fileContentAttributes.getOtherIdVersion());
         transferItem.setSwordToken(fileContentAttributes.getSwordToken());
-        transferItem.setSwordClient(fileContentAttributes.getSwordClient());
+        transferItem.setDataSupplier(fileContentAttributes.getDataSupplier());
 
         return transferItem;
     }

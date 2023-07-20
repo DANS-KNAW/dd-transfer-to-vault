@@ -65,7 +65,7 @@ class ExtractMetadataTaskTest {
         var transferItem = TransferItem.builder()
             .id(123L)
             .datasetIdentifier("identifier")
-            .doi("pid")
+            .dataversePid("pid")
             .dveFilePath("path")
             .creationTime(OffsetDateTime.now())
             .transferStatus(TransferItem.TransferStatus.COLLECTED)
@@ -97,7 +97,7 @@ class ExtractMetadataTaskTest {
         var transferItem = TransferItem.builder()
             .id(1L)
             .datasetIdentifier("identifier")
-            .doi("pid")
+            .dataversePid("pid")
             .dveFilePath("path")
             .creationTime(OffsetDateTime.now())
             .transferStatus(TransferItem.TransferStatus.COLLECTED)
@@ -136,7 +136,7 @@ class ExtractMetadataTaskTest {
         var transferItem = TransferItem.builder()
             .id(1L)
             .datasetIdentifier("identifier")
-            .doi("pid")
+            .dataversePid("pid")
             .dveFilePath("path")
             .creationTime(OffsetDateTime.now())
             .transferStatus(TransferItem.TransferStatus.METADATA_EXTRACTED)
@@ -174,7 +174,7 @@ class ExtractMetadataTaskTest {
 
         var task = new ExtractMetadataTask(filePath, outbox, transferItemService, metadataReader, fileService, transferItemValidator, vaultCatalogRepository);
         var transferItem = TransferItem.builder()
-            .doi("pid")
+            .dataversePid("pid")
             .dveFilePath("path")
             .creationTime(OffsetDateTime.now())
             .transferStatus(status)
@@ -199,7 +199,7 @@ class ExtractMetadataTaskTest {
 
         var task = new ExtractMetadataTask(filePath, outbox, transferItemService, metadataReader, fileService, transferItemValidator, vaultCatalogRepository);
         var transferItem = TransferItem.builder()
-            .doi("pid")
+            .dataversePid("pid")
             .dveFilePath("path")
             .creationTime(OffsetDateTime.now())
             .transferStatus(status)

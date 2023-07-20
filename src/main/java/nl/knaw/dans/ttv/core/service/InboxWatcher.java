@@ -85,7 +85,7 @@ public class InboxWatcher extends FileAlterationListenerAdaptor implements Manag
             }
         );
 
-        var observer = new FileAlterationObserver(path.toFile(), filters);
+        var observer = new NonInitializedFileAlterationObserver(path.toFile(), filters);
         observer.addListener(this);
 
         monitor = new FileAlterationMonitor(this.interval);
@@ -106,4 +106,15 @@ public class InboxWatcher extends FileAlterationListenerAdaptor implements Manag
         void onFileCreate(File file, String datastationName);
     }
 
+    private static class NonInitializedFileAlterationObserver extends FileAlterationObserver {
+
+        public NonInitializedFileAlterationObserver(File file, IOFileFilter filters) {
+            super(file, filters);
+        }
+
+        @Override
+        public void initialize() {
+            // do nothing
+        }
+    }
 }

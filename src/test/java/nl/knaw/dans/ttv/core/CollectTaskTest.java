@@ -61,7 +61,7 @@ class CollectTaskTest {
         var transferItem = TransferItem.builder()
             .id(16L)
             .datasetIdentifier("doi-10-5072-dar-kxteqtv1.0")
-            .doi("pid1")
+            .dataversePid("pid1")
             .dveFilePath("path/to1.zip")
             .creationTime(OffsetDateTime.now())
             .transferStatus(TransferItem.TransferStatus.COLLECTED)
@@ -233,7 +233,7 @@ class CollectTaskTest {
 
         var task = new CollectTask(filePath, outbox, datastationName, transferItemService, transferItemMetadataReader, fileService);
         var transferItem = TransferItem.builder()
-            .doi("pid1")
+            .dataversePid("pid1")
             .dveFilePath("path/to1.zip")
             .creationTime(OffsetDateTime.now())
             .bagChecksum("abc")

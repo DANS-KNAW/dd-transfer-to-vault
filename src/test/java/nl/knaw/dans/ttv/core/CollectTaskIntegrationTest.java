@@ -71,7 +71,7 @@ public class CollectTaskIntegrationTest {
         fileService = new FileServiceImpl();
 
         transferItemService = new TransferItemServiceImpl(
-            transferItemDAO, tarDAO, fileService
+            transferItemDAO, tarDAO
         );
 
         transferItemMetadataReader = new TransferItemMetadataReaderImpl(

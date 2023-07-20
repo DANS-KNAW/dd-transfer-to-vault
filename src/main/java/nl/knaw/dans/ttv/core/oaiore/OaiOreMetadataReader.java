@@ -17,6 +17,7 @@ package nl.knaw.dans.ttv.core.oaiore;
 
 import lombok.Builder;
 import lombok.Value;
+import nl.knaw.dans.ttv.core.domain.FileContentAttributes;
 import nl.knaw.dans.ttv.core.oaiore.vocabulary.DVCitation;
 import nl.knaw.dans.ttv.core.oaiore.vocabulary.DansDVMetadata;
 import nl.knaw.dans.ttv.core.oaiore.vocabulary.ORE;
@@ -24,7 +25,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.sparql.vocabulary.FOAF;
+import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.RDF;
+import org.apache.jena.vocabulary.SchemaDO;
 
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
@@ -33,31 +37,39 @@ import java.util.HashSet;
 
 public class OaiOreMetadataReader {
 
-    public Metadata readMetadata(String json) {
+    public FileContentAttributes readMetadata(String json) {
         var model = ModelFactory.createDefaultModel();
         model.read(new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8)), null, "JSON-LD");
 
-        var builder = Metadata.builder();
+        var builder = FileContentAttributes.builder();
         var aggregations = model.listStatements(null, RDF.type, ORE.Aggregation);
 
         if (aggregations.hasNext()) {
             var resource = aggregations.next().getSubject();
 
-            builder.nbn(getRDFProperty(resource, DansDVMetadata.dansNbn));
-            builder.pidVersion(getRDFProperty(resource, DansDVMetadata.dansDataversePidVersion));
             builder.bagId(getRDFProperty(resource, DansDVMetadata.dansBagId));
+            builder.nbn(getRDFProperty(resource, DansDVMetadata.dansNbn));
+            builder.swordToken(getRDFProperty(resource, DansDVMetadata.dansSwordToken));
+            builder.dataSupplier(getRDFProperty(resource, DansDVMetadata.dansDataSupplier));
+            builder.dataversePid(getRDFProperty(resource, DansDVMetadata.dansDataversePid));
+            builder.dataversePidVersion(getRDFProperty(resource, DansDVMetadata.dansDataversePidVersion));
             builder.otherId(getEmbeddedRDFProperty(resource, DVCitation.otherId, DVCitation.otherIdValue));
             builder.otherIdVersion(getRDFProperty(resource, DansDVMetadata.dansOtherIdVersion));
-            builder.dataSupplier(getRDFProperty(resource, DansDVMetadata.dansDataSupplier));
-            builder.swordToken(getRDFProperty(resource, DansDVMetadata.dansSwordToken));
+        }
 
-            var pid = getRDFProperty(resource, DansDVMetadata.dansDataversePid);
+        var resourceMap = model.listStatements(null, RDF.type, ORE.ResourceMap);
 
-            if (pid == null) {
-                pid = getRDFProperty(resource, DansDVMetadata.dansOtherId);
+        if (resourceMap.hasNext()) {
+            var resource = resourceMap.next().getSubject();
+            // TODO this is not used, instead the value in config.yml is used as the datastation
+            // verify how this should work
+            var creator = getRDFProperty(resource, DCTerms.creator);
+
+            if (creator == null) {
+                creator = getEmbeddedRDFProperty(resource, DCTerms.creator, FOAF.name);
             }
 
-            builder.pid(pid);
+            builder.datastation(creator);
         }
 
         return builder.build();
@@ -90,7 +102,9 @@ public class OaiOreMetadataReader {
         var results = new HashSet<String>();
 
         resource.listProperties(name).forEachRemaining(item -> {
-            results.add(item.getObject().asLiteral().getString());
+            if (item.getObject().isLiteral()) {
+                results.add(item.getObject().asLiteral().getString());
+            }
         });
 
         if (results.size() == 0) {
@@ -104,16 +118,4 @@ public class OaiOreMetadataReader {
         return StringUtils.join(list, "; ");
     }
 
-    @Value
-    @Builder
-    public static class Metadata {
-        String nbn;
-        String pid;
-        String pidVersion;
-        String bagId;
-        String otherId;
-        String otherIdVersion;
-        String dataSupplier;
-        String swordToken;
-    }
 }

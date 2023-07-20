@@ -162,15 +162,6 @@ public class OcflTarTaskManager implements Managed {
 
         var path = file.toPath();
 
-        // validate it is a direct child of inbox
-        try {
-            validatePathIsInInbox(path);
-        }
-        catch (InvalidTransferItemException e) {
-            log.warn("File '{}' is not in inbox, ignoring", path);
-            return;
-        }
-
         // validate it is registered in the database
         try {
             validateTransferItemExists(path);
@@ -252,12 +243,6 @@ public class OcflTarTaskManager implements Managed {
 
     Scheduler createScheduler() throws SchedulerException {
         return new StdSchedulerFactory().getScheduler();
-    }
-
-    private void validatePathIsInInbox(Path path) throws InvalidTransferItemException {
-        if (!path.toAbsolutePath().startsWith(this.inboxPath.toAbsolutePath())) {
-            throw new InvalidTransferItemException("File is not in inbox: " + path);
-        }
     }
 
     private void validateTransferItemExists(Path path) throws InvalidTransferItemException {

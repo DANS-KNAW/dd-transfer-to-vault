@@ -15,6 +15,7 @@
  */
 package nl.knaw.dans.ttv.core.oaiore;
 
+import nl.knaw.dans.ttv.core.domain.FileContentAttributes;
 import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;
@@ -35,15 +36,16 @@ class OaiOreMetadataReaderTest {
 
         var result = new OaiOreMetadataReader().readMetadata(jsonData);
 
-        var expected = OaiOreMetadataReader.Metadata.builder()
+        var expected = FileContentAttributes.builder()
             .nbn("urn:nbn:nl:ui:13-ar2-u8v")
-            .pid("doi:10.5072/DAR/A7AXZP")
-            .pidVersion("1.0")
+            .dataversePid("doi:10.5072/DAR/A7AXZP")
+            .dataversePidVersion("1.0")
             .bagId("urn:uuid:e1293f37-a334-4559-a02f-4eaa314e57fd")
             .otherId("doi:10-")
             .otherIdVersion("5.3")
             .dataSupplier("user001")
             .swordToken("sword:123e4567-e89b-12d3-a456-556642440000")
+            .datastation("DANS Data Station Archaeology (dev)")
             .build();
 
         assertThat(result).isEqualTo(expected);
@@ -56,15 +58,16 @@ class OaiOreMetadataReaderTest {
             StandardCharsets.UTF_8
         );
 
-        var expected = OaiOreMetadataReader.Metadata.builder()
+        var expected = FileContentAttributes.builder()
             .nbn("urn:nbn:nl:ui:13-d235a58d-84d5-4062-b008-40fec7ebcd83")
-            .pid("10.17026/dans-z6y-5y2e")
-            .pidVersion(null)
+            .dataversePid(null)
+            .dataversePidVersion(null)
             .bagId("urn:uuid:0b9bb5ee-3187-4387-bb39-2c09536c79f7")
             .otherId("1234; DCTERMS_ID001; DCTERMS_ID002; DCTERMS_ID003")
             .otherIdVersion(null)
             .dataSupplier("user001")
             .swordToken("sword:0b9bb5ee-3187-4387-bb39-2c09536c79f7")
+            .datastation("DANS Vault Service")
             .build();
 
         var result = new OaiOreMetadataReader().readMetadata(jsonData);

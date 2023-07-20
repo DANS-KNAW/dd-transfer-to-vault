@@ -29,8 +29,8 @@ public class TransferItemValidatorImpl implements TransferItemValidator {
     public void validateTransferItem(TransferItem transferItem) throws InvalidTransferItemException {
 
         // check if datasetVersion is a valid version (eg 1.0)
-        if (!isValidVersion(transferItem.getDatasetVersion())) {
-            throw new InvalidTransferItemException(String.format("Dataset Version is invalid: '%s'", transferItem.getDatasetVersion()));
+        if (!isValidVersion(transferItem.getDataversePidVersion())) {
+            throw new InvalidTransferItemException(String.format("Dataset Version is invalid: '%s'", transferItem.getDataversePidVersion()));
         }
 
         if (!isValidBagId(transferItem.getBagId())) {

@@ -16,21 +16,24 @@
 package nl.knaw.dans.ttv.core.domain;
 
 import lombok.Builder;
+import lombok.Data;
+import lombok.ToString;
 import lombok.Value;
 
-@Value
+@Data
 @Builder
 public class FileContentAttributes {
-
-    String pid;
-    String datasetVersion;
-    String bagId;
-    String nbn;
-    String oaiOre;
-    String pidMapping;
-    String otherId;
-    String otherIdVersion;
-    String swordToken;
-    String swordClient;
-
+    private String dataversePid;
+    private String dataversePidVersion;
+    private String bagId;
+    private String nbn;
+    @ToString.Exclude
+    private String metadata;
+    @ToString.Exclude
+    private String filePidToLocalPath;
+    private String otherId;
+    private String otherIdVersion;
+    private String swordToken;
+    private String dataSupplier;
+    private String datastation;
 }

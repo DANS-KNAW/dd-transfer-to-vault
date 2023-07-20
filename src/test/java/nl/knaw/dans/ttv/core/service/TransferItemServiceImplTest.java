@@ -69,9 +69,9 @@ class TransferItemServiceImplTest {
         fileContentAttributes = FileContentAttributes.builder()
             .bagId("bag id")
             .nbn("nbn value")
-            .oaiOre("{}")
-            .pidMapping("string\nline2\n")
-            .datasetVersion("5.3")
+            .metadata("{}")
+            .filePidToLocalPath("string\nline2\n")
+            .dataversePidVersion("5.3")
             .build();
     }
 
@@ -81,23 +81,23 @@ class TransferItemServiceImplTest {
     @Test
     void createTransferItem() {
 
-        var transferItemService = new TransferItemServiceImpl(transferItemDao, tarDAO, fileService);
+        var transferItemService = new TransferItemServiceImpl(transferItemDao, tarDAO);
 
         try {
             var transferItem = transferItemService.createTransferItem("datastation name", filenameAttributes, filesystemAttributes, fileContentAttributes);
 
             Assertions.assertEquals(TransferItem.TransferStatus.COLLECTED, transferItem.getTransferStatus());
             assertNotNull(transferItem.getQueueDate());
-            assertEquals("datastation name", transferItem.getDatasetDvInstance());
+            assertEquals("datastation name", transferItem.getDatastation());
 
             assertEquals(filesystemAttributes.getCreationTime(), transferItem.getCreationTime());
             assertEquals("abc123", transferItem.getBagChecksum());
             assertEquals(1234L, transferItem.getBagSize());
 
-            assertEquals("5.3", transferItem.getDatasetVersion());
+            assertEquals("5.3", transferItem.getDataversePidVersion());
             assertEquals("bag id", transferItem.getBagId());
             assertEquals("nbn value", transferItem.getNbn());
-            assertEquals("{}", transferItem.getOaiOre());
+            assertEquals("{}", transferItem.getMetadata());
             assertEquals("string\nline2\n", transferItem.getPidMapping());
 
             Mockito.verify(transferItemDao).save(transferItem);
@@ -113,7 +113,7 @@ class TransferItemServiceImplTest {
     @Test
     void createTransferItemPartial() {
 
-        var transferItemService = new TransferItemServiceImpl(transferItemDao, tarDAO, fileService);
+        var transferItemService = new TransferItemServiceImpl(transferItemDao, tarDAO);
 
         try {
             var transferItem = transferItemService.createTransferItem(
@@ -122,15 +122,15 @@ class TransferItemServiceImplTest {
 
             Assertions.assertEquals(TransferItem.TransferStatus.COLLECTED, transferItem.getTransferStatus());
             assertNotNull(transferItem.getQueueDate());
-            assertEquals("datastation name", transferItem.getDatasetDvInstance());
+            assertEquals("datastation name", transferItem.getDatastation());
             assertEquals(filesystemAttributes.getCreationTime(), transferItem.getCreationTime());
             assertEquals("abc123", transferItem.getBagChecksum());
             assertEquals(1234L, transferItem.getBagSize());
 
-            assertNull(transferItem.getDatasetVersion());
+            assertNull(transferItem.getDataversePidVersion());
             assertNull(transferItem.getBagId());
             assertNull(transferItem.getNbn());
-            assertNull(transferItem.getOaiOre());
+            assertNull(transferItem.getMetadata());
             assertNull(transferItem.getPidMapping());
 
             Mockito.verify(transferItemDao).save(transferItem);
@@ -150,7 +150,7 @@ class TransferItemServiceImplTest {
         Mockito.when(transferItemDao.findByIdentifier("pid"))
             .thenReturn(Optional.of(existing));
 
-        var transferItemService = new TransferItemServiceImpl(transferItemDao, tarDAO, fileService);
+        var transferItemService = new TransferItemServiceImpl(transferItemDao, tarDAO);
 
         assertThrows(InvalidTransferItemException.class, () ->
             transferItemService.createTransferItem("name", filenameAttributes, filesystemAttributes, fileContentAttributes));
@@ -216,19 +216,19 @@ class TransferItemServiceImplTest {
     void findAllTarsToBeConfirmed() {
         var items = List.of(
             TransferItem.builder()
-                .doi("pid1")
+                .dataversePid("pid1")
                 .dveFilePath("path")
                 .creationTime(OffsetDateTime.now())
                 .transferStatus(TransferItem.TransferStatus.TARRING)
                 .build(),
             TransferItem.builder()
-                .doi("pid2")
+                .dataversePid("pid2")
                 .dveFilePath("path")
                 .creationTime(OffsetDateTime.now())
                 .transferStatus(TransferItem.TransferStatus.TARRING)
                 .build(),
             TransferItem.builder()
-                .doi("pid3")
+                .dataversePid("pid3")
                 .dveFilePath("path")
                 .creationTime(OffsetDateTime.now())
                 .transferStatus(TransferItem.TransferStatus.TARRING)
@@ -268,14 +268,14 @@ class TransferItemServiceImplTest {
     void addMetadataAndMoveFile() {
         var transferItemService = getTransferItemService();
         var attributes = FileContentAttributes.builder()
-            .datasetVersion("1.0")
+            .dataversePidVersion("1.0")
             .bagId("id")
             .nbn("nbn")
-            .oaiOre("{}")
-            .pidMapping("a  b")
+            .metadata("{}")
+            .filePidToLocalPath("a  b")
             .otherId("otherId")
             .otherIdVersion("otherIdVersion")
-            .swordClient("swordClient")
+            .dataSupplier("swordClient")
             .swordToken("swordToken")
             .build();
 
@@ -289,15 +289,15 @@ class TransferItemServiceImplTest {
             attributes
         );
 
-        assertEquals("1.0", result.getDatasetVersion());
+        assertEquals("1.0", result.getDataversePidVersion());
         assertEquals("id", result.getBagId());
         assertEquals("nbn", result.getNbn());
         assertEquals("otherId", result.getOtherId());
         assertEquals("otherIdVersion", result.getOtherIdVersion());
         assertEquals("swordToken", result.getSwordToken());
-        assertEquals("swordClient", result.getSwordClient());
+        assertEquals("swordClient", result.getDataSupplier());
         assertNull(result.getBagChecksum());
-        assertEquals("{}", result.getOaiOre());
+        assertEquals("{}", result.getMetadata());
         assertEquals("a  b", result.getPidMapping());
     }
 
@@ -307,13 +307,13 @@ class TransferItemServiceImplTest {
         var uuid = UUID.randomUUID().toString();
         var items = List.of(
             TransferItem.builder()
-                .doi("pid1")
+                .dataversePid("pid1")
                 .dveFilePath("path")
                 .creationTime(OffsetDateTime.now())
                 .transferStatus(TransferItem.TransferStatus.METADATA_EXTRACTED)
                 .build(),
             TransferItem.builder()
-                .doi("pid2")
+                .dataversePid("pid2")
                 .dveFilePath("path")
                 .creationTime(OffsetDateTime.now())
                 .transferStatus(TransferItem.TransferStatus.METADATA_EXTRACTED)
@@ -425,7 +425,7 @@ class TransferItemServiceImplTest {
 
         var transferItem = TransferItem.builder()
             .id(1L)
-            .doi("pid")
+            .dataversePid("pid")
             .dveFilePath("path")
             .build();
 
@@ -449,7 +449,7 @@ class TransferItemServiceImplTest {
 
         var transferItem = TransferItem.builder()
             .id(1L)
-            .doi("pid")
+            .dataversePid("pid")
             .dveFilePath("path")
             .build();
 
@@ -462,6 +462,6 @@ class TransferItemServiceImplTest {
     }
 
     TransferItemService getTransferItemService() {
-        return new TransferItemServiceImpl(transferItemDao, tarDAO, fileService);
+        return new TransferItemServiceImpl(transferItemDao, tarDAO);
     }
 }
