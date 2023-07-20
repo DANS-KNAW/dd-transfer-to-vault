@@ -16,7 +16,6 @@
 package nl.knaw.dans.ttv.core.service;
 
 import io.dropwizard.lifecycle.Managed;
-import nl.knaw.dans.ttv.core.InvalidTransferItemException;
 import org.apache.commons.io.monitor.FileAlterationListenerAdaptor;
 import org.apache.commons.io.monitor.FileAlterationMonitor;
 import org.apache.commons.io.monitor.FileAlterationObserver;
@@ -25,7 +24,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
 
@@ -42,7 +40,31 @@ public class InboxWatcher extends FileAlterationListenerAdaptor implements Manag
         this.path = Objects.requireNonNull(path, "InboxWatcher path must not be null");
         this.datastationName = datastationName;
         this.callback = Objects.requireNonNull(callback, "InboxWatcher callback must not be null");
-        this.interval = Objects.requireNonNullElse(interval, 500);
+        this.interval = interval;
+    }
+
+    @Override
+    public void start() throws Exception {
+        log.info("Starting InboxWatcher for path '{}'", this.path);
+
+        try {
+            log.info("Starting file alteration monitor for path '{}'", this.path);
+            startFileAlterationMonitor();
+        }
+        catch (IOException e) {
+            log.error(e.getMessage(), e);
+            throw e;
+        }
+    }
+
+    private void startFileAlterationMonitor() throws Exception {
+        var observer = new FileAlterationObserver(path.toFile());
+        observer.addListener(this);
+
+        monitor = new FileAlterationMonitor(this.interval);
+        monitor.start();
+        // adding the observer after starting the monitor makes it also include existing files
+        monitor.addObserver(observer);
     }
 
     @Override
@@ -58,35 +80,6 @@ public class InboxWatcher extends FileAlterationListenerAdaptor implements Manag
         }
 
         this.callback.onFileCreate(file, datastationName);
-    }
-
-    private void startFileAlterationMonitor() throws Exception {
-        FileAlterationObserver observer = new FileAlterationObserver(path.toFile());
-        observer.addListener(this);
-
-        monitor = new FileAlterationMonitor(this.interval);
-        monitor.addObserver(observer);
-        monitor.start();
-    }
-
-    @Override
-    public void start() throws Exception {
-        try {
-            // initial scan
-            log.info("Scanning path '{}' for first run", this.path);
-            scanExistingFiles();
-
-            log.info("Starting file alteration monitor for path '{}'", this.path);
-            startFileAlterationMonitor();
-        }
-        catch (IOException | InterruptedException e) {
-            log.error(e.getMessage(), e);
-            throw new InvalidTransferItemException(e.getMessage());
-        }
-    }
-
-    private void scanExistingFiles() throws IOException {
-        Files.list(this.path).forEach(f -> onFileCreate(f.toFile()));
     }
 
     @Override
@@ -106,4 +99,5 @@ public class InboxWatcher extends FileAlterationListenerAdaptor implements Manag
     public interface Callback {
         void onFileCreate(File file, String datastationName);
     }
+
 }
