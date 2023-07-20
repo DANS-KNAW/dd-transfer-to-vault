@@ -16,24 +16,20 @@
 package nl.knaw.dans.ttv.core.service;
 
 import io.dropwizard.lifecycle.Managed;
-import nl.knaw.dans.ttv.core.InvalidTransferItemException;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.apache.commons.io.filefilter.IOFileFilter;
 import org.apache.commons.io.monitor.FileAlterationListenerAdaptor;
 import org.apache.commons.io.monitor.FileAlterationMonitor;
 import org.apache.commons.io.monitor.FileAlterationObserver;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
 
+@Slf4j
 public class InboxWatcher extends FileAlterationListenerAdaptor implements Managed {
-
-    private static final Logger log = LoggerFactory.getLogger(InboxWatcher.class);
     private final Path path;
     private final Callback callback;
     private final int interval;
@@ -44,22 +40,30 @@ public class InboxWatcher extends FileAlterationListenerAdaptor implements Manag
         this.path = Objects.requireNonNull(path, "InboxWatcher path must not be null");
         this.datastationName = datastationName;
         this.callback = Objects.requireNonNull(callback, "InboxWatcher callback must not be null");
-        this.interval = Objects.requireNonNullElse(interval, 500);
+        this.interval = interval;
+    }
+
+    @Override
+    public void start() throws Exception {
+        log.info("Starting InboxWatcher for path '{}'", this.path);
+
+        try {
+            log.info("Starting file alteration monitor for path '{}'", this.path);
+            startFileAlterationMonitor();
+        }
+        catch (IOException e) {
+            log.error(e.getMessage(), e);
+            throw e;
+        }
+    }
+
+    @Override
+    public void stop() throws Exception {
+        monitor.stop();
     }
 
     @Override
     public void onFileCreate(File file) {
-        // see if file is a direct descendant of path
-        // if not, ignore it
-        var filePath = file.toPath().toAbsolutePath();
-
-        log.debug("Checking if file '{}' is a child of '{}'", filePath, this.path.toAbsolutePath());
-
-        if (!filePath.startsWith(this.path.toAbsolutePath())) {
-            log.warn("File found in non-root directory, ignoring");
-            return;
-        }
-
         this.callback.onFileCreate(file, datastationName);
     }
 
@@ -87,38 +91,6 @@ public class InboxWatcher extends FileAlterationListenerAdaptor implements Manag
         monitor = new FileAlterationMonitor(this.interval);
         monitor.addObserver(observer);
         monitor.start();
-
-        observer.checkAndNotify();
-    }
-
-    @Override
-    public void start() throws Exception {
-        try {
-            // initial scan
-            log.info("Scanning path '{}' for first run", this.path);
-            scanExistingFiles();
-
-            log.info("Starting file alteration monitor for path '{}'", this.path);
-            startFileAlterationMonitor();
-        }
-        catch (IOException | InterruptedException e) {
-            log.error(e.getMessage(), e);
-            throw new InvalidTransferItemException(e.getMessage());
-        }
-    }
-
-    private void scanExistingFiles() throws IOException {
-        try (var fileList = Files.list(this.path)) {
-            fileList
-                .filter(Files::isRegularFile)
-                .filter(item -> item.toAbsolutePath().getParent().equals(this.path.toAbsolutePath()))
-                .forEach(f -> onFileCreate(f.toFile()));
-        }
-    }
-
-    @Override
-    public void stop() throws Exception {
-        monitor.stop();
     }
 
     @Override
@@ -133,4 +105,5 @@ public class InboxWatcher extends FileAlterationListenerAdaptor implements Manag
     public interface Callback {
         void onFileCreate(File file, String datastationName);
     }
+
 }
