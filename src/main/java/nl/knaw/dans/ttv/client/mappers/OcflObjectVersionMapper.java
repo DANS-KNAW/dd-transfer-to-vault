@@ -33,8 +33,8 @@ public interface OcflObjectVersionMapper {
     OcflObjectVersionMapper INSTANCE = Mappers.getMapper(OcflObjectVersionMapper.class);
 
     @Mapping(source = "pidMapping", target = "filePidToLocalPath")
-    @Mapping(target = "skeletonRecord", constant = "false")
-    @Mapping(source = "bagDepositDate", target = "exportTimestamp")
+    @Mapping(source = "queueDate", target = "exportTimestamp")
+    @Mapping(constant = "false", target = "skeletonRecord")
     OcflObjectVersionParametersDto mapParameters(TransferItem transferItem);
 
     default Map<String, Object> mapMetadata(String value) {

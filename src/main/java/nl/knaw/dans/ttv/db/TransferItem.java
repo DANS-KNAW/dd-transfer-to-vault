@@ -106,8 +106,6 @@ public class TransferItem {
     @ManyToOne
     @JoinColumn(name = "tar_id")
     private Tar tar;
-    @Column(name = "bag_deposit_date")
-    private OffsetDateTime bagDepositDate;
 
     @Override
     public final boolean equals(Object o) {

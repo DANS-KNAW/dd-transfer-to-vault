@@ -141,7 +141,6 @@ class VaultCatalogAPIRepositoryTest {
             .metadata("{}")
             .pidMapping("a  b")
             .tarEntryName("aipTarEntryName")
-            .bagDepositDate(OffsetDateTime.now().minus(3, ChronoUnit.DAYS))
             .build();
 
         repo.registerOcflObjectVersion(transferItem);
@@ -166,7 +165,7 @@ class VaultCatalogAPIRepositoryTest {
             .ocflObjectPath("ab/cd/12/34-test")
             .metadata(Map.of())
             .filePidToLocalPath("a  b")
-            .exportTimestamp(transferItem.getBagDepositDate())
+            .exportTimestamp(transferItem.getQueueDate())
             .skeletonRecord(false);
 
         assertEquals(expected, argumentCaptor.getValue());
