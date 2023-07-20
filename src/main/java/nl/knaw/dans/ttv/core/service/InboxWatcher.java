@@ -24,7 +24,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
 
@@ -49,26 +48,12 @@ public class InboxWatcher extends FileAlterationListenerAdaptor implements Manag
         log.info("Starting InboxWatcher for path '{}'", this.path);
 
         try {
-            // initial scan
-            log.info("Scanning path '{}' for first run", this.path);
-            scanExistingFiles();
-        }
-        catch (IOException e) {
-            log.error("Unable to do initial scan on path '{}'", path, e);
-        }
-
-        try {
             log.info("Starting file alteration monitor for path '{}'", this.path);
             startFileAlterationMonitor();
         }
         catch (IOException e) {
             log.error(e.getMessage(), e);
-        }
-    }
-
-    private void scanExistingFiles() throws IOException {
-        try (var list = Files.list(this.path)) {
-            list.forEach(f -> onFileCreate(f.toFile()));
+            throw e;
         }
     }
 
@@ -77,8 +62,9 @@ public class InboxWatcher extends FileAlterationListenerAdaptor implements Manag
         observer.addListener(this);
 
         monitor = new FileAlterationMonitor(this.interval);
-        monitor.addObserver(observer);
         monitor.start();
+        // adding the observer after starting the monitor makes it also include existing files
+        monitor.addObserver(observer);
     }
 
     @Override
