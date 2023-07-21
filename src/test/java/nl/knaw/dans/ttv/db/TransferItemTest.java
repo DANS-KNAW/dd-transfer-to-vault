@@ -13,15 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ttv.core.domain;
+package nl.knaw.dans.ttv.db;
 
-import lombok.Value;
+import org.junit.jupiter.api.Test;
 
-import java.time.OffsetDateTime;
+import static org.assertj.core.api.Assertions.assertThat;
 
-@Value
-public class FilesystemAttributes {
-    OffsetDateTime creationTime;
-    long bagSize;
-    String checksum;
+class TransferItemTest {
+
+    @Test
+    void getCanonicalFilename_should_include_identifier_and_id() {
+        var item = TransferItem.builder()
+            .id(1L)
+            .datasetIdentifier("dans-bag-1")
+            .build();
+
+        assertThat(item.getCanonicalFilename()).isEqualTo("dans-bag-1-ttv1.zip");
+    }
 }

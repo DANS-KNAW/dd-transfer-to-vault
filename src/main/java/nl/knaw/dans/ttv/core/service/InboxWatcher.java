@@ -16,20 +16,20 @@
 package nl.knaw.dans.ttv.core.service;
 
 import io.dropwizard.lifecycle.Managed;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.filefilter.FileFilterUtils;
+import org.apache.commons.io.filefilter.IOFileFilter;
 import org.apache.commons.io.monitor.FileAlterationListenerAdaptor;
 import org.apache.commons.io.monitor.FileAlterationMonitor;
 import org.apache.commons.io.monitor.FileAlterationObserver;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Objects;
 
+@Slf4j
 public class InboxWatcher extends FileAlterationListenerAdaptor implements Managed {
-
-    private static final Logger log = LoggerFactory.getLogger(InboxWatcher.class);
     private final Path path;
     private final Callback callback;
     private final int interval;
@@ -57,34 +57,40 @@ public class InboxWatcher extends FileAlterationListenerAdaptor implements Manag
         }
     }
 
-    private void startFileAlterationMonitor() throws Exception {
-        var observer = new FileAlterationObserver(path.toFile());
-        observer.addListener(this);
-
-        monitor = new FileAlterationMonitor(this.interval);
-        monitor.start();
-        // adding the observer after starting the monitor makes it also include existing files
-        monitor.addObserver(observer);
+    @Override
+    public void stop() throws Exception {
+        monitor.stop();
     }
 
     @Override
     public void onFileCreate(File file) {
-        // see if file is a direct descendant of path
-        // if not, ignore it
-        var expected = Path.of(String.valueOf(this.path), file.getName());
-        log.debug("Comparing directories: '{}' vs '{}'", file.toPath(), expected);
-
-        if (!file.toPath().equals(expected)) {
-            log.warn("File found in non-root directory, ignoring");
-            return;
-        }
-
         this.callback.onFileCreate(file, datastationName);
     }
 
-    @Override
-    public void stop() throws Exception {
-        monitor.stop();
+    private void startFileAlterationMonitor() throws Exception {
+        var filters = FileFilterUtils.and(
+            FileFilterUtils.fileFileFilter(),
+            new IOFileFilter() {
+
+                @Override
+                public boolean accept(File file) {
+                    var filePath = file.toPath();
+                    return filePath.toAbsolutePath().getParent().equals(path.toAbsolutePath());
+                }
+
+                @Override
+                public boolean accept(File dir, String name) {
+                    return dir.toPath().toAbsolutePath().equals(path.toAbsolutePath());
+                }
+            }
+        );
+
+        var observer = new NonInitializedFileAlterationObserver(path.toFile(), filters);
+        observer.addListener(this);
+
+        monitor = new FileAlterationMonitor(this.interval);
+        monitor.addObserver(observer);
+        monitor.start();
     }
 
     @Override
@@ -100,4 +106,15 @@ public class InboxWatcher extends FileAlterationListenerAdaptor implements Manag
         void onFileCreate(File file, String datastationName);
     }
 
+    private static class NonInitializedFileAlterationObserver extends FileAlterationObserver {
+
+        public NonInitializedFileAlterationObserver(File file, IOFileFilter filters) {
+            super(file, filters);
+        }
+
+        @Override
+        public void initialize() {
+            // do nothing
+        }
+    }
 }

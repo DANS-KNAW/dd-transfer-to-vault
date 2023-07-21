@@ -28,39 +28,40 @@ class TransferItemValidatorImplTest {
     @Test
     void validateTransferItem() {
         var transferItem = TransferItem.builder()
-            .datasetPid("pid1")
+            .dataversePid("pid1")
             .dveFilePath("path/to1.zip")
             .creationTime(OffsetDateTime.now())
             .transferStatus(TransferItem.TransferStatus.COLLECTED)
             .build();
-        transferItem.setDatasetVersion("2.1");
+        transferItem.setDataversePidVersion("2.1");
         transferItem.setBagId("urn:uuid:1eb8d2fe-b8fa-4a15-9770-731cae6af9ac");
         transferItem.setNbn("urn:nbn:suffix");
         assertDoesNotThrow(() -> new TransferItemValidatorImpl().validateTransferItem(transferItem));
     }
 
     @Test
-    void validateInvalidTransferItemBecauseDatasetVersionIsNull() {
+    void validateTransferItem_should_accept_null_for_dataset_version() {
         var transferItem = TransferItem.builder()
-            .datasetPid("pid1")
+            .dataversePid("pid1")
             .dveFilePath("path/to1.zip")
             .creationTime(OffsetDateTime.now())
             .transferStatus(TransferItem.TransferStatus.COLLECTED)
             .build();
         transferItem.setBagId("urn:uuid:1eb8d2fe-b8fa-4a15-9770-731cae6af9ac");
         transferItem.setNbn("urn:nbn:suffix");
-        assertThrows(InvalidTransferItemException.class, () -> new TransferItemValidatorImpl().validateTransferItem(transferItem));
+
+        assertDoesNotThrow(() -> new TransferItemValidatorImpl().validateTransferItem(transferItem));
     }
 
     @Test
     void validateInvalidTransferItemBecauseBagIdIsInvalid() {
         var transferItem = TransferItem.builder()
-            .datasetPid("pid1")
+            .dataversePid("pid1")
             .dveFilePath("path/to1.zip")
             .creationTime(OffsetDateTime.now())
             .transferStatus(TransferItem.TransferStatus.COLLECTED)
             .build();
-        transferItem.setDatasetVersion("2.1");
+        transferItem.setDataversePidVersion("2.1");
         transferItem.setNbn("urn:nbn:suffix");
         assertThrows(InvalidTransferItemException.class, () -> new TransferItemValidatorImpl().validateTransferItem(transferItem));
     }
@@ -68,12 +69,12 @@ class TransferItemValidatorImplTest {
     @Test
     void validateInvalidTransferItemBecauseNbnIsInvalid() {
         var transferItem = TransferItem.builder()
-            .datasetPid("pid1")
+            .dataversePid("pid1")
             .dveFilePath("path/to1.zip")
             .creationTime(OffsetDateTime.now())
             .transferStatus(TransferItem.TransferStatus.COLLECTED)
             .build();
-        transferItem.setDatasetVersion("2.1");
+        transferItem.setDataversePidVersion("2.1");
         transferItem.setBagId("urn:uuid:1eb8d2fe-b8fa-4a15-9770-731cae6af9ac");
         assertThrows(InvalidTransferItemException.class, () -> new TransferItemValidatorImpl().validateTransferItem(transferItem));
     }
@@ -81,11 +82,11 @@ class TransferItemValidatorImplTest {
     @Test
     void validateInvalidTransferItemBecauseVersionIsIncorrect() {
         var transferItem = TransferItem.builder()
-            .datasetPid("pid1")
+            .dataversePid("pid1")
             .dveFilePath("path/to1.zip")
             .creationTime(OffsetDateTime.now())
             .transferStatus(TransferItem.TransferStatus.COLLECTED)
-            .datasetVersion("0.0")
+            .dataversePidVersion("0.0")
             .nbn("urn:nbn:suffix")
             .bagId("urn:uuid:1eb8d2fe-b8fa-4a15-9770-731cae6af9ac")
             .build();

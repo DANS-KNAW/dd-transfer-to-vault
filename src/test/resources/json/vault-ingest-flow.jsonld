@@ -1,0 +1,270 @@
+{
+  "@context" : [ "https://w3id.org/ore/context", {
+    "schema" : "https://schema.org/",
+    "ore" : "http://www.openarchives.org/ore/terms/",
+    "dvcore" : "https://dataverse.org/schema/core#",
+    "dansVLT" : "https://dar.dans.knaw.nl/schema/dansDataVaultMetadata#",
+    "dansRIG" : "https://dar.dans.knaw.nl/schema/2023.04/dansRights#",
+    "datacite" : "http://purl.org/spar/datacite/",
+    "dcterms" : "http://purl.org/dc/terms/",
+    "provo" : "https://www.w3.org/prov-o/#",
+    "dansTS" : "https://dar.dans.knaw.nl/schema/dansTemporalSpatial#",
+    "foaf" : "http://xmlns.com/foaf/0.1/",
+    "cit" : "https://dataverse.org/schema/citation/",
+    "dansREL" : "https://dar.dans.knaw.nl/schema/2023.04/dansRelationMetadata#"
+  } ],
+  "@graph" : [
+    {
+    "@id" : "urn:uuid:c169676f-5315-4d86-bde0-a62dbc915228",
+    "@type" : "ResourceMap",
+    "dcterms:creator" : {
+      "@id" : "_:b41",
+      "foaf:name" : "DANS Vault Service"
+    },
+    "dcterms:modified" : "2023-07-05T11:56:24.960103268+02:00",
+    "describes" : {
+      "@id" : "urn:nbn:nl:ui:13-d235a58d-84d5-4062-b008-40fec7ebcd83",
+      "@type" : "Aggregation",
+      "dcterms:alternative" : "DCTERMS title 1",
+      "dcterms:contributor" : [ {
+        "@id" : "_:b8",
+        "cit:contributorName" : "Contributing Org",
+        "cit:contributorType" : "Sponsor"
+      }, {
+        "@id" : "_:b19",
+        "cit:contributorName" : "CON van Tributor (Contributing Org)",
+        "cit:contributorType" : "ProjectMember"
+      } ],
+      "dcterms:isReferencedBy" : {
+        "@id" : "_:b1",
+        "datacite:ResourceIdentifier" : "0317-8471",
+        "datacite:ResourceIdentifierScheme" : "ISSN"
+      },
+      "dcterms:language" : [ "Basque", "Western Frisian", "Kalaallisut, Greenlandic" ],
+      "dcterms:subject" : [ "Chemistry", "Computer and Information Science" ],
+      "dcterms:title" : "A bag containing examples for each mapping rule",
+      "aggregates" : [ {
+        "@id" : "urn:uuid:65dab60d-754b-43d7-9eb2-fb5ccb45f8be",
+        "@type" : "AggregatedResource",
+        "dvcore:directoryLabel" : "data/random images",
+        "dvcore:restricted" : "false",
+        "schema:name" : "data/random images/image02.jpeg"
+      }, {
+        "@id" : "urn:uuid:2d7b65dc-3946-4b3a-9211-c1fcd7faa2ed",
+        "@type" : "AggregatedResource",
+        "dvcore:directoryLabel" : "data/random images",
+        "dvcore:restricted" : "false",
+        "schema:name" : "data/random images/image03.jpeg"
+      }, {
+        "@id" : "urn:uuid:0636f460-d9d5-4963-b48d-1b3f20cfb51c",
+        "@type" : "AggregatedResource",
+        "dvcore:directoryLabel" : "data/random images",
+        "dvcore:restricted" : "true",
+        "schema:description" : "This description will be archived, but not displayed anywhere in the Web-UI",
+        "schema:name" : "data/random images/image01.png"
+      }, {
+        "@id" : "urn:uuid:8274ce62-cb12-42f8-8601-a44aad7ee069",
+        "@type" : "AggregatedResource",
+        "dvcore:directoryLabel" : "data/a/deeper/path",
+        "dvcore:restricted" : "true",
+        "schema:name" : "data/a/deeper/path/With some file.txt"
+      } ],
+      "isDescribedBy" : [ ],
+      "dansREL:dansAudience" : [ "D16400", "D13400", "D16100", "D16500", "D16200", "E16000", "D16300" ],
+      "dansREL:dansCollection" : "https://vocabularies.dans.knaw.nl/collections/ssh/ce21b6fb-4283-4194-9369-b3ff4c3d76e7",
+      "dansREL:dansRelation" : [ {
+        "@id" : "_:b10",
+        "dansREL:dansRelationText" : "Test conforms to",
+        "dansREL:dansRelationType" : "conforms_to",
+        "dansREL:dansRelationURI" : "https://example.com/conformsTo"
+      }, {
+        "@id" : "_:b45",
+        "dansREL:dansRelationText" : "Test is required by",
+        "dansREL:dansRelationType" : "is_required_by",
+        "dansREL:dansRelationURI" : "https://example.com/isRequiredBy"
+      }, {
+        "@id" : "_:b14",
+        "dansREL:dansRelationText" : "Test is format of",
+        "dansREL:dansRelationType" : "is_format_of",
+        "dansREL:dansRelationURI" : "https://example.com/isFormatOf"
+      }, {
+        "@id" : "_:b15",
+        "dansREL:dansRelationText" : "Test is part of",
+        "dansREL:dansRelationType" : "is_part_of",
+        "dansREL:dansRelationURI" : "https://example.com/isPartOf"
+      }, {
+        "@id" : "_:b4",
+        "dansREL:dansRelationText" : "Test relation",
+        "dansREL:dansRelationType" : "relation",
+        "dansREL:dansRelationURI" : "https://example.com/relation"
+      }, {
+        "@id" : "_:b22",
+        "dansREL:dansRelationText" : "Test references",
+        "dansREL:dansRelationType" : "references",
+        "dansREL:dansRelationURI" : "https://example.com/references"
+      }, {
+        "@id" : "_:b26",
+        "dansREL:dansRelationText" : "Test is version of",
+        "dansREL:dansRelationType" : "is_version_of",
+        "dansREL:dansRelationURI" : "https://example.com/isVersionOf"
+      }, {
+        "@id" : "_:b27",
+        "dansREL:dansRelationText" : "Test requires",
+        "dansREL:dansRelationType" : "requires",
+        "dansREL:dansRelationURI" : "https://example.com/requires"
+      }, {
+        "@id" : "_:b6",
+        "dansREL:dansRelationText" : "Test has part",
+        "dansREL:dansRelationType" : "has_part",
+        "dansREL:dansRelationURI" : "https://example.com/hasPart"
+      }, {
+        "@id" : "_:b43",
+        "dansREL:dansRelationText" : "Test has version",
+        "dansREL:dansRelationType" : "has_version",
+        "dansREL:dansRelationURI" : "https://example.com/hasVersion"
+      }, {
+        "@id" : "_:b37",
+        "dansREL:dansRelationText" : "Test is referenced by",
+        "dansREL:dansRelationType" : "is_referenced_by",
+        "dansREL:dansRelationURI" : "https://example.com/isReferencedBy"
+      }, {
+        "@id" : "_:b39",
+        "dansREL:dansRelationText" : "Test replaces",
+        "dansREL:dansRelationType" : "replaces",
+        "dansREL:dansRelationURI" : "https://example.com/replaces"
+      }, {
+        "@id" : "_:b40",
+        "dansREL:dansRelationText" : "Test has format",
+        "dansREL:dansRelationType" : "has_format",
+        "dansREL:dansRelationURI" : "https://example.com/hasFormat"
+      } ],
+      "dansRIG:dansMetadataLanguage" : [ "English", "Haitian, Haitian Creole", "Georgian" ],
+      "dansRIG:dansPersonalDataPresent" : "Yes",
+      "dansRIG:dansRightsHolder" : "I Lastname",
+      "dansVLT:dansBagId" : "urn:uuid:0b9bb5ee-3187-4387-bb39-2c09536c79f7",
+      "dansVLT:dansDataSupplier" : "user001",
+      "dansVLT:dansNbn" : "urn:nbn:nl:ui:13-d235a58d-84d5-4062-b008-40fec7ebcd83",
+      "dansVLT:dansOtherId" : "10.17026/dans-z6y-5y2e",
+      "dansVLT:dansSwordToken" : "sword:0b9bb5ee-3187-4387-bb39-2c09536c79f7",
+      "dansTS:dansSpatialCoverageControlled" : [ "South Africa", "Japan" ],
+      "dansTS:dansSpatialCoverageText" : "Roman Empire",
+      "dansTS:dansTemporalCoverage" : [ "De Oudheid", "Het Romeinse Rijk" ],
+      "cit:author" : [ {
+        "@id" : "_:b13",
+        "datacite:AgentIdentifier" : "0000-0003-1415-9269",
+        "datacite:AgentIdentifierScheme" : "ORCID",
+        "cit:authorAffiliation" : "Example Org",
+        "cit:authorName" : "I Lastname"
+      }, {
+        "@id" : "_:b25",
+        "datacite:AgentIdentifier" : "123456789",
+        "datacite:AgentIdentifierScheme" : "VIAF",
+        "cit:authorName" : "Creator Organization"
+      }, {
+        "@id" : "_:b42",
+        "cit:authorName" : "Unformatted Creator"
+      } ],
+      "cit:dateOfCollection" : {
+        "@id" : "_:b35",
+        "cit:dateOfCollectionEnd" : "2016-12-31",
+        "cit:dateOfCollectionStart" : "2015-06-01"
+      },
+      "cit:distributionDate" : "2015-09-09",
+      "cit:distributor" : {
+        "@id" : "_:b3",
+        "cit:distributorName" : "D. I. Stributor"
+      },
+      "cit:dsDescription" : [ {
+        "@id" : "_:b9",
+        "cit:dsDescriptionValue" : "DCTERMS alt title 1"
+      }, {
+        "@id" : "_:b11",
+        "cit:dsDescriptionValue" : "This bags contains one or more examples of each mapping rule."
+      }, {
+        "@id" : "_:b16",
+        "cit:dsDescriptionValue" : "some date"
+      }, {
+        "@id" : "_:b34",
+        "cit:dsDescriptionValue" : "some coverage description"
+      }, {
+        "@id" : "_:b12",
+        "cit:dsDescriptionValue" : "Even more descriptions"
+      }, {
+        "@id" : "_:b29",
+        "cit:dsDescriptionValue" : "some validation date"
+      }, {
+        "@id" : "_:b23",
+        "cit:dsDescriptionValue" : "some acceptance date"
+      }, {
+        "@id" : "_:b30",
+        "cit:dsDescriptionValue" : "some submission date"
+      }, {
+        "@id" : "_:b5",
+        "cit:dsDescriptionValue" : "DCTERMS title 2"
+      }, {
+        "@id" : "_:b31",
+        "cit:dsDescriptionValue" : "A second description"
+      }, {
+        "@id" : "_:b33",
+        "cit:dsDescriptionValue" : "DCTERMS alt title 2"
+      }, {
+        "@id" : "_:b36",
+        "cit:dsDescriptionValue" : "some modified date"
+      }, {
+        "@id" : "_:b46",
+        "cit:dsDescriptionValue" : "some copyright date"
+      }, {
+        "@id" : "_:b38",
+        "cit:dsDescriptionValue" : "some issuing date"
+      } ],
+      "cit:keyword" : [ {
+        "@id" : "_:b44",
+        "cit:keywordValue" : "keyword2"
+      }, {
+        "@id" : "_:b17",
+        "cit:keywordValue" : "non-military uniform button",
+        "cit:keywordVocabulary" : "PAN thesaurus ideaaltypes",
+        "cit:keywordVocabularyURI" : "https://data.cultureelerfgoed.nl/term/id/pan/PAN"
+      }, {
+        "@id" : "_:b24",
+        "cit:keywordValue" : "Broader Match: buttons (fasteners)",
+        "cit:keywordVocabulary" : "Art and Architecture Thesaurus",
+        "cit:keywordVocabularyURI" : "http://vocab.getty.edu/aat/"
+      }, {
+        "@id" : "_:b7",
+        "cit:keywordValue" : "Old School Latin"
+      }, {
+        "@id" : "_:b2",
+        "cit:keywordValue" : "keyword1"
+      } ],
+      "cit:otherId" : [ {
+        "@id" : "_:b18",
+        "cit:otherIdValue" : "DCTERMS_ID003"
+      }, {
+        "@id" : "_:b20",
+        "cit:otherIdAgency" : "REPO1",
+        "cit:otherIdValue" : "1234"
+      }, {
+        "@id" : "_:b28",
+        "cit:otherIdValue" : "DCTERMS_ID002"
+      }, {
+        "@id" : "_:b32",
+        "cit:otherIdValue" : "DCTERMS_ID001"
+      } ],
+      "cit:productionDate" : "2015-09-09",
+      "dvcore:fileTermsOfAccess" : {
+        "@id" : "_:b0",
+        "dvcore:fileRequestAccess" : "No",
+        "dvcore:termsOfAccess" : "Restricted files accessible under the following conditions: ..."
+      },
+      "schema:license" : "http://opensource.org/licenses/MIT",
+      "schema:name" : "A bag containing examples for each mapping rule",
+      "schema:sponsor" : {
+        "@id" : "_:b21",
+        "cit:grantNumberAgency" : "NWO",
+        "cit:grantNumberValue" : "54321"
+      },
+      "provo:wasDerivedFrom" : [ "Source 3", "Source 2", "Sous an ayisyen" ]
+    }
+  } ]
+}

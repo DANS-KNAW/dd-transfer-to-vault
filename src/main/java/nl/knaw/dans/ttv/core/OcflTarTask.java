@@ -78,16 +78,13 @@ public class OcflTarTask implements Runnable {
         for (var transferItem : tar.getTransferItems()) {
             // if file is already in repo, just update the metadata
             // if file is not in repo, import it first
-            var objectId = ocflRepositoryService.getObjectIdForBagId(transferItem.getBagId());
-            log.trace("Checking repository status for {}", transferItem);
-            log.trace("Expected objectId is {}", objectId);
+            log.info("Importing {} into OCFL repository", transferItem);
+            var objectId = ocflRepositoryService.importTransferItem(ocflRepository, transferItem);
 
-            if (!ocflRepository.containsObject(objectId)) {
-                log.info("Importing {} into OCFL repository, objectId is {}", transferItem, objectId);
-                ocflRepositoryService.importTransferItem(ocflRepository, transferItem);
-            }
+            log.info("Imported {} into OCFL repository, object ID is {}", transferItem, objectId);
 
-            transferItem.setAipTarEntryName(objectId);
+            transferItem.setTarEntryName(objectId);
+            transferItem.setOcflObjectPath(objectId.replaceAll("urn:uuid:", ""));
         }
 
         log.debug("Saving TAR {}", tar);

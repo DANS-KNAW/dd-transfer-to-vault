@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Objects;
 
 public class CollectTask implements Runnable {
     private static final Logger log = LoggerFactory.getLogger(CollectTask.class);
@@ -66,47 +67,46 @@ public class CollectTask implements Runnable {
     }
 
     void processFile(Path path) throws IOException, InvalidTransferItemException {
-        var transferItem = createOrGetTransferItem(path);
-        log.info("Processing file '{}' with TransferItem {}", path, transferItem);
+        var filenameAttributes = metadataReader.getFilenameAttributes(path);
+        log.trace("Received filename attributes: {}", filenameAttributes);
 
-        if (transferItem.getTransferStatus() != TransferItem.TransferStatus.COLLECTED) {
-            throw new InvalidTransferItemException(
-                String.format("TransferItem exists already, but does not have expected status of COLLECTED: %s", transferItem)
-            );
+        var filesystemAttributes = metadataReader.getFilesystemAttributes(path);
+        log.trace("Received filesystem attributes: {}", filesystemAttributes);
+
+        var existingTransferItem = transferItemService.getTransferItemByFilenameAttributes(filenameAttributes)
+            // filter out items that have a different checksum, because they are different
+            .filter(item -> Objects.equals(item.getBagChecksum(), filesystemAttributes.getChecksum()));
+
+        // treat it as an existing TransferItem if either:
+        // - it has the same filename and it has the same checksum
+        // - there is an internal ID in the filename, and it matches a record in the database
+
+        // if it is an existing TransferItem, it should have status COLLECTED
+        if (existingTransferItem.isPresent()) {
+            var status = existingTransferItem.get().getTransferStatus();
+
+            if (!status.equals(TransferItem.TransferStatus.COLLECTED)) {
+                throw new InvalidTransferItemException(
+                    String.format("TransferItem exists already, but does not have expected status of COLLECTED: %s", existingTransferItem.get())
+                );
+            }
         }
+
+        var transferItem = existingTransferItem.isPresent()
+            ? existingTransferItem.get()
+            : transferItemService.createTransferItem(datastationName, filenameAttributes, filesystemAttributes, null);
 
         log.info("Moving file '{}' to outbox '{}'", path, this.outbox);
         moveFileToOutbox(transferItem, path, this.outbox);
     }
 
-    TransferItem createOrGetTransferItem(Path path) throws InvalidTransferItemException {
-        var filenameAttributes = metadataReader.getFilenameAttributes(path);
-        log.trace("Received filename attributes: {}", filenameAttributes);
-
-        var transferItem = transferItemService.getTransferItemByFilenameAttributes(filenameAttributes);
-        log.trace("TransferItem from database: {}", transferItem);
-
-        if (transferItem.isPresent()) {
-            log.debug("Existing TransferItem found: {}", transferItem.get());
-            return transferItem.get();
-        }
-
-        var filesystemAttributes = metadataReader.getFilesystemAttributes(path);
-
-        log.debug("No existing TransferItem found, creating new one with attributes {} and {}",
-            filenameAttributes, filesystemAttributes);
-
-        return transferItemService.createTransferItem(datastationName, filenameAttributes, filesystemAttributes);
-    }
-
     void moveFileToOutbox(TransferItem transferItem, Path filePath, Path outboxPath) throws IOException {
-        log.trace("filePath is '{}', outboxPath is '{}'", filePath, outboxPath);
-        var newPath = outboxPath.resolve(filePath.getFileName());
+        var newPath = outboxPath.resolve(transferItem.getCanonicalFilename());
+        log.trace("filePath is '{}', newPath is '{}'", filePath, newPath);
 
-        log.trace("Updating database state for item {} with new path '{}'", transferItem, newPath);
+        log.trace("Updating database state for item {} with new path '{}'", transferItem, outboxPath);
         transferItemService.moveTransferItem(transferItem, TransferItem.TransferStatus.COLLECTED, newPath);
 
-        log.info("Moving file '{}' to location '{}'", filePath, newPath);
         fileService.moveFileAtomically(filePath, newPath);
     }
 

@@ -49,7 +49,6 @@ public class ConfirmArchivedTask implements Runnable {
     @Override
     public void run() {
         log.info("Running confirm archive task {}", this);
-
         var tarId = tar.getTarUuid();
 
         try {

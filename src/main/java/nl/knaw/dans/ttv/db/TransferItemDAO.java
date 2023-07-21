@@ -16,17 +16,12 @@
 package nl.knaw.dans.ttv.db;
 
 import io.dropwizard.hibernate.AbstractDAO;
-import nl.knaw.dans.ttv.core.domain.Version;
 import org.hibernate.SessionFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Optional;
 
 public class TransferItemDAO extends AbstractDAO<TransferItem> {
-
-    private static final Logger log = LoggerFactory.getLogger(TransferItemDAO.class);
 
     public TransferItemDAO(SessionFactory sessionFactory) {
         super(sessionFactory);
@@ -41,7 +36,7 @@ public class TransferItemDAO extends AbstractDAO<TransferItem> {
     }
 
     public List<TransferItem> findAll() {
-        return currentSession().createQuery("from TransferItem", TransferItem.class).list();
+        return currentSession().createQuery("from TransferItem order by creationTime asc", TransferItem.class).list();
     }
 
     public void merge(TransferItem transferItem) {
@@ -55,16 +50,9 @@ public class TransferItemDAO extends AbstractDAO<TransferItem> {
         return query.list();
     }
 
-    public Optional<TransferItem> findByDatasetPidAndVersion(String datasetPid, Version version) {
-        return query(
-            "from TransferItem "
-                + "where datasetPid = :datasetPid "
-                + "and versionMajor = :versionMajor "
-                + "and versionMinor = :versionMinor "
-        )
-            .setParameter("datasetPid", datasetPid)
-            .setParameter("versionMajor", version.getMajor())
-            .setParameter("versionMinor", version.getMinor())
+    public Optional<TransferItem> findByIdentifier(String fileIdentifier) {
+        return query("from TransferItem where datasetIdentifier = :identifier")
+            .setParameter("identifier", fileIdentifier)
             .uniqueResultOptional();
 
     }

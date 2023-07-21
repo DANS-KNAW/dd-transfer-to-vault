@@ -22,6 +22,8 @@ import nl.knaw.dans.ttv.core.service.InboxWatcher;
 import nl.knaw.dans.ttv.core.service.InboxWatcherFactory;
 import nl.knaw.dans.ttv.core.service.TransferItemMetadataReader;
 import nl.knaw.dans.ttv.core.service.TransferItemService;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -87,7 +89,7 @@ public class CollectTaskManager implements Managed {
 
     public void onFileAdded(File file, String datastationName) {
         log.debug("Received file creation event for file '{}' and datastation name '{}'", file, datastationName);
-        if (file.isFile() && file.getName().toLowerCase(Locale.ROOT).endsWith(".zip")) {
+        if (FilenameUtils.getExtension(file.getName()).toLowerCase(Locale.ROOT).equals("zip")) {
             var collectTask = new CollectTask(
                 file.toPath(), outbox, datastationName, transferItemService, metadataReader, fileService
             );

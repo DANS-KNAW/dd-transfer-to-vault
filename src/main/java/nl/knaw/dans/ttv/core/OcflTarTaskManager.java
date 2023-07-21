@@ -22,6 +22,7 @@ import nl.knaw.dans.ttv.core.service.InboxWatcher;
 import nl.knaw.dans.ttv.core.service.InboxWatcherFactory;
 import nl.knaw.dans.ttv.core.service.OcflRepositoryService;
 import nl.knaw.dans.ttv.core.service.TarCommandRunner;
+import nl.knaw.dans.ttv.core.service.TransferItemMetadataReader;
 import nl.knaw.dans.ttv.core.service.TransferItemService;
 import nl.knaw.dans.ttv.db.Tar;
 import nl.knaw.dans.ttv.db.TransferItem;
@@ -63,13 +64,14 @@ public class OcflTarTaskManager implements Managed {
     private final List<Duration> retrySchedule;
     private final ArchiveMetadataService archiveMetadataService;
     private final VaultCatalogRepository vaultCatalogRepository;
+    private final TransferItemMetadataReader transferItemMetadataReader;
     private InboxWatcher inboxWatcher;
     private Scheduler retryScheduler;
 
     public OcflTarTaskManager(Path inboxPath, Path workDir, String vaultPath, long inboxThreshold, long pollingInterval, int maxRetries, Duration retryInterval, List<Duration> retrySchedule,
         ExecutorService executorService,
         InboxWatcherFactory inboxWatcherFactory, FileService fileService, OcflRepositoryService ocflRepositoryService, TransferItemService transferItemService, TarCommandRunner tarCommandRunner,
-        ArchiveMetadataService archiveMetadataService, VaultCatalogRepository vaultCatalogRepository) {
+        ArchiveMetadataService archiveMetadataService, VaultCatalogRepository vaultCatalogRepository, TransferItemMetadataReader transferItemMetadataReader) {
         this.vaultPath = vaultPath;
         this.retryInterval = retryInterval;
         this.executorService = executorService;
@@ -86,6 +88,7 @@ public class OcflTarTaskManager implements Managed {
         this.maxRetries = maxRetries;
         this.retrySchedule = retrySchedule;
         this.vaultCatalogRepository = vaultCatalogRepository;
+        this.transferItemMetadataReader = transferItemMetadataReader;
     }
 
     @Override
@@ -157,6 +160,16 @@ public class OcflTarTaskManager implements Managed {
         log.info("New item in inbox, filename is {}", file);
         log.info("Checking total size of inbox located at {}", inboxPath);
 
+        var path = file.toPath();
+
+        // validate it is registered in the database
+        try {
+            validateTransferItemExists(path);
+        }
+        catch (InvalidTransferItemException e) {
+            rejectFile(path, e);
+        }
+
         try {
             var totalSize = fileService.getPathSize(inboxPath);
             var uuid = UUID.randomUUID().toString();
@@ -173,6 +186,15 @@ public class OcflTarTaskManager implements Managed {
         }
     }
 
+    void rejectFile(Path path, Exception e) {
+        try {
+            fileService.rejectFile(path, e);
+        }
+        catch (IOException ex) {
+            log.error("Error rejecting file '{}'", path, ex);
+        }
+    }
+
     void startTarringTask(String uuid) {
         var repoPath = Path.of(workDir.toString(), uuid);
         var task = new OcflTarTask(transferItemService, uuid, repoPath, tarCommandRunner, archiveMetadataService, ocflRepositoryService, vaultCatalogRepository, maxRetries);
@@ -182,7 +204,7 @@ public class OcflTarTaskManager implements Managed {
     }
 
     void createTarArchive(String uuid) throws IOException {
-        // create a tar record with all COLLECTED TransferItem's in it
+        // create a tar record with all METADATA_EXTRACTED TransferItem's in it
         var tarArchive = transferItemService.createTarArchiveWithAllMetadataExtractedTransferItems(uuid, vaultPath);
 
         moveInboxFilesToWorkdir(tarArchive);
@@ -204,10 +226,13 @@ public class OcflTarTaskManager implements Managed {
             var expectedPath = inboxPath.resolve(filename);
             var targetPath = targetDirDve.resolve(filename);
 
+            log.info("Checking if file {} exists, then moving it to {}", expectedPath, targetPath);
+
             if (fileService.exists(expectedPath)) {
                 log.info("Moving DVE file '{}' to workdir location '{}'", expectedPath, tarArchive);
 
                 transferItemService.moveTransferItem(transferItem, TransferItem.TransferStatus.TARRING, targetPath);
+
                 fileService.moveFile(expectedPath, targetPath);
             }
             else {
@@ -218,5 +243,14 @@ public class OcflTarTaskManager implements Managed {
 
     Scheduler createScheduler() throws SchedulerException {
         return new StdSchedulerFactory().getScheduler();
+    }
+
+    private void validateTransferItemExists(Path path) throws InvalidTransferItemException {
+        var metadata = transferItemMetadataReader.getFilenameAttributes(path);
+        var transferItem = transferItemService.getTransferItemByFilenameAttributes(metadata);
+
+        if (transferItem.isEmpty()) {
+            throw new InvalidTransferItemException("TransferItem not found for file " + path);
+        }
     }
 }

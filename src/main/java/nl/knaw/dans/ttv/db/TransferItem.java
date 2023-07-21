@@ -21,7 +21,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import nl.knaw.dans.ttv.core.domain.Version;
 import org.hibernate.annotations.TypeDef;
 import org.hibernate.annotations.TypeDefs;
 import org.hibernate.proxy.HibernateProxy;
@@ -60,16 +59,14 @@ public class TransferItem {
     private Long id;
     @Column(name = "bag_id")
     private String bagId;
-    @Column(name = "version_major", nullable = false)
-    private int versionMajor;
-    @Column(name = "version_minor", nullable = false)
-    private int versionMinor;
     @Column(name = "ocfl_object_version")
     private Integer ocflObjectVersion;
-    @Column(name = "dataset_pid", nullable = false)
-    private String datasetPid;
-    @Column(name = "dataset_version")
-    private String datasetVersion;
+    @Column(name = "dataset_identifier", nullable = false)
+    private String datasetIdentifier;
+    @Column(name = "dataverse_pid")
+    private String dataversePid;
+    @Column(name = "dataverse_pid_version")
+    private String dataversePidVersion;
     @Column(name = "creation_time", nullable = false)
     private OffsetDateTime creationTime;
     @Column(name = "dve_file_path", nullable = false)
@@ -80,12 +77,12 @@ public class TransferItem {
     private String otherId;
     @Column(name = "other_id_version")
     private String otherIdVersion;
-    @Column(name = "sword_client")
-    private String swordClient;
+    @Column(name = "data_supplier")
+    private String dataSupplier;
     @Column(name = "sword_token")
     private String swordToken;
-    @Column(name = "dataset_dv_instance")
-    private String datasetDvInstance;
+    @Column(name = "datastation")
+    private String datastation;
     @Column(name = "bag_checksum")
     private String bagChecksum;
     @Column(name = "queue_date")
@@ -97,26 +94,18 @@ public class TransferItem {
     private TransferStatus transferStatus;
     @Column(name = "oai_ore")
     @ToString.Exclude
-    private String oaiOre;
+    private String metadata;
     @Column(name = "pid_mapping")
     @ToString.Exclude
     private String pidMapping;
     @Column(name = "aip_tar_entry_name")
-    private String aipTarEntryName;
+    private String tarEntryName;
+    // this is the tar entry name without the urn:uuid: prefix
+    @Column(name = "ocfl_object_path")
+    private String ocflObjectPath;
     @ManyToOne
     @JoinColumn(name = "tar_id")
     private Tar tar;
-    @Column(name = "bag_deposit_date")
-    private OffsetDateTime bagDepositDate;
-
-    public Version getVersion() {
-        return Version.of(versionMajor, versionMinor);
-    }
-
-    public void setVersion(Version version) {
-        this.versionMinor = version.getMinor();
-        this.versionMajor = version.getMajor();
-    }
 
     @Override
     public final boolean equals(Object o) {
@@ -135,6 +124,14 @@ public class TransferItem {
     @Override
     public final int hashCode() {
         return getClass().hashCode();
+    }
+
+    public String getCanonicalFilename() {
+        if (this.getId() == null || this.getDatasetIdentifier() == null) {
+            throw new IllegalStateException("Cannot create canonical filename for transfer item without id and dataset identifier");
+        }
+
+        return String.format("%s-ttv%s.zip", getDatasetIdentifier(), getId());
     }
 
     public enum TransferStatus {

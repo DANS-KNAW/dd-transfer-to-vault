@@ -22,6 +22,7 @@ import nl.knaw.dans.ttv.core.service.InboxWatcherFactory;
 import nl.knaw.dans.ttv.core.service.TransferItemMetadataReader;
 import nl.knaw.dans.ttv.core.service.TransferItemService;
 import nl.knaw.dans.ttv.core.service.TransferItemValidator;
+import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -72,7 +73,7 @@ public class ExtractMetadataTaskManager implements Managed {
 
     public void onFileAdded(File file, String datastationName) {
         log.debug("Received file creation event for file '{}'", file);
-        if (file.isFile() && file.getName().toLowerCase(Locale.ROOT).endsWith(".zip")) {
+        if (FilenameUtils.getExtension(file.getName()).toLowerCase(Locale.ROOT).equals("zip")) {
             var metadataTask = new ExtractMetadataTask(
                 file.toPath(), outbox, transferItemService, metadataReader, fileService,
                 transferItemValidator, vaultCatalogRepository);

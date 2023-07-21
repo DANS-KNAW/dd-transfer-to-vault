@@ -29,8 +29,8 @@ public class TransferItemValidatorImpl implements TransferItemValidator {
     public void validateTransferItem(TransferItem transferItem) throws InvalidTransferItemException {
 
         // check if datasetVersion is a valid version (eg 1.0)
-        if (!isValidVersion(transferItem.getDatasetVersion())) {
-            throw new InvalidTransferItemException(String.format("Dataset Version is invalid: '%s'", transferItem.getDatasetVersion()));
+        if (!isValidVersion(transferItem.getDataversePidVersion())) {
+            throw new InvalidTransferItemException(String.format("Dataset Version is invalid: '%s'", transferItem.getDataversePidVersion()));
         }
 
         if (!isValidBagId(transferItem.getBagId())) {
@@ -43,8 +43,9 @@ public class TransferItemValidatorImpl implements TransferItemValidator {
     }
 
     boolean isValidVersion(String version) {
+        // the dataverse will have a version, but the vaas bags won't
         if (version == null) {
-            return false;
+            return true;
         }
 
         var matches = VERSION_PATTERN.matcher(version);
