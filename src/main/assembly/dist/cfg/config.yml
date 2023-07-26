@@ -47,6 +47,8 @@ collect:
   inboxes: [ ]
   # polling interval in milliseconds
   pollingInterval: 500
+  # timeout for inbox health check in seconds
+  canReadTimeout: 5
   taskQueue:
     nameFormat: "collect-worker-%d"
     maxQueueSize: 5000

@@ -36,9 +36,12 @@ public class InboxHealthCheck extends HealthCheck {
     private final DdTransferToVaultConfiguration configuration;
     private final FileService fileService;
 
+    private final int canReadTimeout;
+
     public InboxHealthCheck(DdTransferToVaultConfiguration configuration, FileService fileService) {
         this.configuration = configuration;
         this.fileService = fileService;
+        this.canReadTimeout = configuration.getCollect().getCanReadTimeout();
     }
 
     @Override
@@ -51,12 +54,13 @@ public class InboxHealthCheck extends HealthCheck {
             } else {
                 var canRead = false;
                 try {
-                    canRead = fileService.canRead(inboxEntry.getPath(), 5);
+                    canRead = fileService.canRead(inboxEntry.getPath(), canReadTimeout);
                 } catch (TimeoutException e) {
-                    log.warn("Inbox path '{}' is not readable within 5 seconds", inboxEntry.getPath());
+                    log.warn("Inbox path '{}' is not readable within {} seconds", inboxEntry.getPath(), canReadTimeout);
                 }
                 if (!canRead) {
-                    problems.add(inboxEntry.getPath() + ": not readable or the NFS server is not responding within the timeout");
+                    problems.add(String.format("%s: not readable or the NFS server is not responding within the timeout (%d seconds)",
+                            inboxEntry.getPath(), canReadTimeout));
                 }
             }
         }
