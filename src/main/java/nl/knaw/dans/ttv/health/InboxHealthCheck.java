@@ -22,45 +22,54 @@ import nl.knaw.dans.ttv.core.service.FileService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
+
 public class InboxHealthCheck extends HealthCheck {
     private static final Logger log = LoggerFactory.getLogger(InboxHealthCheck.class);
 
     private final DdTransferToVaultConfiguration configuration;
     private final FileService fileService;
 
+    private final int canReadTimeout;
+
     public InboxHealthCheck(DdTransferToVaultConfiguration configuration, FileService fileService) {
         this.configuration = configuration;
         this.fileService = fileService;
+        this.canReadTimeout = configuration.getCollect().getCanReadTimeout();
     }
 
     @Override
     protected Result check() throws Exception {
-        var valid = true;
+        var problems = new ArrayList<String>();
 
         for (var inboxEntry : configuration.getCollect().getInboxes()) {
-            var exists = fileService.exists(inboxEntry.getPath());
-            var canRead = fileService.canRead(inboxEntry.getPath());
-
-            if (exists && canRead) {
-                log.debug("Inbox path '{}' exists and is readable", inboxEntry.getPath());
-            }
-            else {
-                valid = false;
-
-                if (!exists) {
-                    log.debug("Inbox path '{}' does not exist", inboxEntry.getPath());
+            if (!fileService.exists(inboxEntry.getPath())) {
+                problems.add(inboxEntry.getPath() + ": does not exist");
+            } else {
+                var canRead = false;
+                try {
+                    canRead = fileService.canRead(inboxEntry.getPath(), canReadTimeout);
+                } catch (TimeoutException e) {
+                    log.warn("Inbox path '{}' is not readable within {} seconds", inboxEntry.getPath(), canReadTimeout);
                 }
-                else {
-                    log.debug("Inbox path '{}' is not readable", inboxEntry.getPath());
+                if (!canRead) {
+                    problems.add(String.format("%s: not readable or the NFS server is not responding within the timeout (%d seconds)",
+                            inboxEntry.getPath(), canReadTimeout));
                 }
             }
         }
 
-        if (valid) {
+        if (problems.isEmpty()) {
             return Result.healthy();
-        }
-        else {
-            return Result.unhealthy("InboxPaths are not accessible");
+        } else {
+            return Result.unhealthy(String.format("The following inboxes are not accessible: %s",
+                    String.join(", ", problems)));
         }
     }
 }

@@ -1,3 +1,13 @@
+server:
+  applicationContextPath: /
+  adminContextPath: /
+  applicationConnectors:
+    - type: http
+      port: 20350
+  adminConnectors:
+    - type: http
+      port: 20351
+
 health:
   delayedShutdownHandlerEnabled: false
   initialOverallState: false
@@ -37,6 +47,8 @@ collect:
   inboxes: [ ]
   # polling interval in milliseconds
   pollingInterval: 500
+  # timeout for inbox health check in seconds
+  canReadTimeout: 5
   taskQueue:
     nameFormat: "collect-worker-%d"
     maxQueueSize: 5000

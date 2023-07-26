@@ -47,6 +47,8 @@ public class CollectConfiguration {
     @Min(1)
     private long pollingInterval;
 
+    private int canReadTimeout = 10;
+
     public long getPollingInterval() {
         return pollingInterval;
     }
@@ -70,6 +72,15 @@ public class CollectConfiguration {
     public void setTaskQueue(ExecutorServiceFactory taskQueue) {
         this.taskQueue = taskQueue;
     }
+
+    public void setCanReadTimeout(int canReadTimeout) {
+        this.canReadTimeout = canReadTimeout;
+    }
+
+    public int getCanReadTimeout() {
+        return canReadTimeout;
+    }
+
 
     public static class InboxEntry {
         @NotEmpty

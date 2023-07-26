@@ -31,10 +31,17 @@ import java.nio.file.FileStore;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.zip.ZipFile;
 
 public class FileServiceImpl implements FileService {
     private static final Logger log = LoggerFactory.getLogger(FileServiceImpl.class);
+
+    private ExecutorService executorService = Executors.newSingleThreadExecutor();
 
     @Override
     public Path moveFile(Path current, Path newPath) throws IOException {
@@ -80,7 +87,7 @@ public class FileServiceImpl implements FileService {
 
     /**
      * Moves a file to the rejected/ subfolder of where it was initially found If a file already exists, it will append a number to the filename.
-     *
+     * <p>
      * It also writes an error description inside a file which is named `filename`.error.txt (or `filename`.1.error.txt` if it already exists)
      *
      * @param path The path to the file to reject
@@ -131,6 +138,18 @@ public class FileServiceImpl implements FileService {
     @Override
     public boolean canRead(Path path) {
         return Files.isReadable(path);
+    }
+
+    @Override
+    public boolean canRead(Path path, int timeout) throws TimeoutException {
+        var future = executorService.submit(() -> Files.isReadable(path));
+        try {
+            return future.get(timeout, TimeUnit.SECONDS);
+        } catch (InterruptedException | ExecutionException e) {
+            throw new RuntimeException(e);
+        } finally {
+            future.cancel(true);
+        }
     }
 
     @Override
@@ -198,18 +217,17 @@ public class FileServiceImpl implements FileService {
 
         try (var files = Files.walk(path)) {
             return files
-                .filter(Files::isRegularFile)
-                .mapToLong(p -> {
-                    try {
-                        var size = getFileSize(p);
-                        log.trace("File size for file '{}' is {} bytes", p, size);
-                        return size;
-                    }
-                    catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                })
-                .sum();
+                    .filter(Files::isRegularFile)
+                    .mapToLong(p -> {
+                        try {
+                            var size = getFileSize(p);
+                            log.trace("File size for file '{}' is {} bytes", p, size);
+                            return size;
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    })
+                    .sum();
         }
     }
 
@@ -226,15 +244,14 @@ public class FileServiceImpl implements FileService {
         Objects.requireNonNull(path, "path cannot be null");
 
         var entryPath = Objects.requireNonNull(zipFile.stream()
-                .filter(e -> e.getName().endsWith(path.toString()))
-                .findFirst()
-                .orElse(null)
-            , String.format("no entries found for path '%s' in zip file %s", path, zipFile)
+                        .filter(e -> e.getName().endsWith(path.toString()))
+                        .findFirst()
+                        .orElse(null)
+                , String.format("no entries found for path '%s' in zip file %s", path, zipFile)
         );
 
         log.trace("Requested entry for path '{}', found match on '{}'", path, entryPath);
 
         return zipFile.getInputStream(entryPath);
     }
-
 }

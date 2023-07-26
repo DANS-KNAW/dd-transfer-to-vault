@@ -39,7 +39,7 @@ class InboxHealthCheckTest {
             new CollectConfiguration.InboxEntry("b", Path.of("b"))
         ));
 
-        Mockito.when(fileService.canRead(Mockito.any())).thenReturn(true);
+        Mockito.when(fileService.canRead(Mockito.any(), Mockito.anyInt())).thenReturn(true);
         Mockito.when(fileService.exists(Mockito.any())).thenReturn(true);
 
         var result = new InboxHealthCheck(config, fileService).check();
@@ -57,7 +57,7 @@ class InboxHealthCheckTest {
             new CollectConfiguration.InboxEntry("b", Path.of("b"))
         ));
 
-        Mockito.when(fileService.canRead(Mockito.any())).thenReturn(false).thenReturn(true);
+        Mockito.when(fileService.canRead(Mockito.any(), Mockito.anyInt())).thenReturn(false).thenReturn(true);
         Mockito.when(fileService.exists(Mockito.any())).thenReturn(true).thenReturn(false);
 
         var result = new InboxHealthCheck(config, fileService).check();

@@ -39,6 +39,7 @@ public class RemoteDmftarHealthCheck extends HealthCheck {
     protected Result check() throws Exception {
         log.debug("Checking if dmftar is available remotely");
         var healthy = true;
+        var reason = "";
 
         try {
             var result = tarCommandRunner.getDmftarVersion();
@@ -46,6 +47,7 @@ public class RemoteDmftarHealthCheck extends HealthCheck {
             if (result.getStatusCode() != 0) {
                 log.error("Return code for command 'dmftar --version' is {}, expected 0", result.getStatusCode());
                 healthy = false;
+                reason = "Return code for command 'dmftar --version' is " + result.getStatusCode() + ", expected 0";
             }
             else {
                 // do the version check
@@ -63,24 +65,27 @@ public class RemoteDmftarHealthCheck extends HealthCheck {
                         log.error("Remote dmftar version is incorrect, installed version is {}, expected {}",
                             version, expected);
                         healthy = false;
+                        reason = "Remote dmftar version is incorrect, installed version is " + version + ", expected " + expected;
                     }
                 }
                 catch (RuntimeException e) {
                     log.error("Unable to parse dmftar output", e);
                     healthy = false;
+                    reason = "Unable to parse dmftar output";
                 }
             }
         }
         catch (IOException | InterruptedException e) {
             log.error("Unable to run dmftar --version", e);
             healthy = false;
+            reason = "Unable to run dmftar --version";
         }
 
         if (healthy) {
             return Result.healthy();
         }
         else {
-            return Result.unhealthy("Command dmftar is not working as expected, or the version is incorrect");
+            return Result.unhealthy("Command dmftar is not working as expected: " + reason);
         }
     }
 }
