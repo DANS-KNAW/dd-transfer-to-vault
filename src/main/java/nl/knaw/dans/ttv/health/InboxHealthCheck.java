@@ -24,7 +24,10 @@ import org.slf4j.LoggerFactory;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 public class InboxHealthCheck extends HealthCheck {
@@ -40,34 +43,29 @@ public class InboxHealthCheck extends HealthCheck {
 
     @Override
     protected Result check() throws Exception {
-        var valid = true;
-        ArrayList<Path> nonAccessibleInboxes = new ArrayList<>();
+        Map<Path, String> nonAccessibleInboxes = new HashMap<>();
 
         for (var inboxEntry : configuration.getCollect().getInboxes()) {
-            var exists = fileService.exists(inboxEntry.getPath());
-
-            // FIXME: this will block indefinitely if the NFS server is down.
-            var canRead = fileService.canRead(inboxEntry.getPath());
-
-            if (exists && canRead) {
-                log.debug("Inbox path '{}' exists and is readable", inboxEntry.getPath());
+            if (!fileService.exists(inboxEntry.getPath())) {
+                nonAccessibleInboxes.put(inboxEntry.getPath(), "does not exist");
             } else {
-                valid = false;
-                nonAccessibleInboxes.add(inboxEntry.getPath());
-
-                if (!exists) {
-                    log.debug("Inbox path '{}' does not exist", inboxEntry.getPath());
-                } else {
-                    log.debug("Inbox path '{}' is not readable", inboxEntry.getPath());
+                var canRead = false;
+                try {
+                    canRead = fileService.canRead(inboxEntry.getPath(), 5);
+                } catch (TimeoutException e) {
+                    log.warn("Inbox path '{}' is not readable within 5 seconds", inboxEntry.getPath());
+                }
+                if (!canRead) {
+                    nonAccessibleInboxes.put(inboxEntry.getPath(), "not readable or the NFS server is not responding within the timeout");
                 }
             }
         }
 
-        if (valid) {
+        if (nonAccessibleInboxes.isEmpty()) {
             return Result.healthy();
         } else {
             return Result.unhealthy(String.format("The following inboxes are not accessible: %s",
-                    nonAccessibleInboxes.stream().map(Path::toString).collect(Collectors.joining(", "))));
+                    nonAccessibleInboxes.entrySet().stream().map((e) -> String.format("%s: %s", e.getKey(), e.getValue())).collect(Collectors.joining(", "))));
         }
     }
 }
