@@ -43,11 +43,11 @@ public class InboxHealthCheck extends HealthCheck {
 
     @Override
     protected Result check() throws Exception {
-        Map<Path, String> nonAccessibleInboxes = new HashMap<>();
+        var problems = new ArrayList<String>();
 
         for (var inboxEntry : configuration.getCollect().getInboxes()) {
             if (!fileService.exists(inboxEntry.getPath())) {
-                nonAccessibleInboxes.put(inboxEntry.getPath(), "does not exist");
+                problems.add(inboxEntry.getPath() + ": does not exist");
             } else {
                 var canRead = false;
                 try {
@@ -56,16 +56,16 @@ public class InboxHealthCheck extends HealthCheck {
                     log.warn("Inbox path '{}' is not readable within 5 seconds", inboxEntry.getPath());
                 }
                 if (!canRead) {
-                    nonAccessibleInboxes.put(inboxEntry.getPath(), "not readable or the NFS server is not responding within the timeout");
+                    problems.add(inboxEntry.getPath() + ": not readable or the NFS server is not responding within the timeout");
                 }
             }
         }
 
-        if (nonAccessibleInboxes.isEmpty()) {
+        if (problems.isEmpty()) {
             return Result.healthy();
         } else {
             return Result.unhealthy(String.format("The following inboxes are not accessible: %s",
-                    nonAccessibleInboxes.entrySet().stream().map((e) -> String.format("%s: %s", e.getKey(), e.getValue())).collect(Collectors.joining(", "))));
+                    String.join(", ", problems)));
         }
     }
 }

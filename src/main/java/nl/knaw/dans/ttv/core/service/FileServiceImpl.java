@@ -146,8 +146,9 @@ public class FileServiceImpl implements FileService {
         try {
             return future.get(timeout, TimeUnit.SECONDS);
         } catch (InterruptedException | ExecutionException e) {
-            future.cancel(true);
             throw new RuntimeException(e);
+        } finally {
+            future.cancel(true);
         }
     }
 
