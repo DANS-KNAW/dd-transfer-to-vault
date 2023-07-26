@@ -236,5 +236,4 @@ public class FileServiceImpl implements FileService {
 
         return zipFile.getInputStream(entryPath);
     }
-
 }

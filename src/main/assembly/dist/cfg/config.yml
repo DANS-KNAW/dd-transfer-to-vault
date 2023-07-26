@@ -1,3 +1,13 @@
+server:
+  applicationContextPath: /
+  adminContextPath: /
+  applicationConnectors:
+    - type: http
+      port: 20350
+  adminConnectors:
+    - type: http
+      port: 20351
+
 health:
   delayedShutdownHandlerEnabled: false
   initialOverallState: false

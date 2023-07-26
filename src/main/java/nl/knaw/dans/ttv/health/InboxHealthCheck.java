@@ -22,6 +22,11 @@ import nl.knaw.dans.ttv.core.service.FileService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
 public class InboxHealthCheck extends HealthCheck {
     private static final Logger log = LoggerFactory.getLogger(InboxHealthCheck.class);
 
@@ -36,21 +41,23 @@ public class InboxHealthCheck extends HealthCheck {
     @Override
     protected Result check() throws Exception {
         var valid = true;
+        ArrayList<Path> nonAccessibleInboxes = new ArrayList<>();
 
         for (var inboxEntry : configuration.getCollect().getInboxes()) {
             var exists = fileService.exists(inboxEntry.getPath());
+
+            // FIXME: this will block indefinitely if the NFS server is down.
             var canRead = fileService.canRead(inboxEntry.getPath());
 
             if (exists && canRead) {
                 log.debug("Inbox path '{}' exists and is readable", inboxEntry.getPath());
-            }
-            else {
+            } else {
                 valid = false;
+                nonAccessibleInboxes.add(inboxEntry.getPath());
 
                 if (!exists) {
                     log.debug("Inbox path '{}' does not exist", inboxEntry.getPath());
-                }
-                else {
+                } else {
                     log.debug("Inbox path '{}' is not readable", inboxEntry.getPath());
                 }
             }
@@ -58,9 +65,9 @@ public class InboxHealthCheck extends HealthCheck {
 
         if (valid) {
             return Result.healthy();
-        }
-        else {
-            return Result.unhealthy("InboxPaths are not accessible");
+        } else {
+            return Result.unhealthy(String.format("The following inboxes are not accessible: %s",
+                    nonAccessibleInboxes.stream().map(Path::toString).collect(Collectors.joining(", "))));
         }
     }
 }
