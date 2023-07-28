@@ -20,9 +20,7 @@ import nl.knaw.dans.ttv.core.oaiore.OaiOreMetadataReader;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
 import java.time.Instant;
@@ -30,7 +28,6 @@ import java.time.OffsetDateTime;
 import java.time.ZoneId;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -47,7 +44,22 @@ class TransferItemMetadataReaderImplTest {
             var path = Path.of("doi-10-5072-dar-kxteqtv1.0.zip");
             var attributes = service.getFilenameAttributes(path);
             assertEquals(path.toString(), attributes.getDveFilePath());
-            assertEquals("doi-10-5072-dar-kxteqtv1.0", attributes.getIdentifier());
+            assertEquals("doi-10-5072-dar-kxteqtv1.0.zip", attributes.getDveFilename());
+        }
+        catch (InvalidTransferItemException e) {
+            fail(e);
+        }
+    }
+
+    @Test
+    void getFilenameAttributes_with_version_should_not_include_version_in_result() {
+        var fileService = Mockito.mock(FileService.class);
+        var service = new TransferItemMetadataReaderImpl(fileService, oaiOreMetadataReader);
+        try {
+            var path = Path.of("doi-10-5072-dar-kxteqtv1.0-ttv3.zip");
+            var attributes = service.getFilenameAttributes(path);
+            assertEquals(path.toString(), attributes.getDveFilePath());
+            assertEquals("doi-10-5072-dar-kxteqtv1.0.zip", attributes.getDveFilename());
         }
         catch (InvalidTransferItemException e) {
             fail(e);
@@ -115,7 +127,6 @@ class TransferItemMetadataReaderImplTest {
             fail(e);
         }
     }
-
 
     /**
      * test that IOExceptions are propagated

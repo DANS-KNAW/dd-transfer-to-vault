@@ -18,7 +18,6 @@ package nl.knaw.dans.ttv.core.domain;
 import lombok.Builder;
 import lombok.Data;
 import lombok.ToString;
-import lombok.Value;
 
 @Data
 @Builder
@@ -30,7 +29,7 @@ public class FileContentAttributes {
     @ToString.Exclude
     private String metadata;
     @ToString.Exclude
-    private String filePidToLocalPath;
+    private String filepidToLocalPath;
     private String otherId;
     private String otherIdVersion;
     private String swordToken;

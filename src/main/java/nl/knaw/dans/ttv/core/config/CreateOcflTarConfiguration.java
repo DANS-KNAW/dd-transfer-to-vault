@@ -16,6 +16,7 @@
 package nl.knaw.dans.ttv.core.config;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import lombok.Data;
 import nl.knaw.dans.lib.util.ExecutorServiceFactory;
 import nl.knaw.dans.ttv.core.config.converter.StringByteSizeConverter;
 
@@ -26,8 +27,8 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.util.List;
 
+@Data
 public class CreateOcflTarConfiguration {
-
     @Valid
     @NotNull
     private Path inbox;
@@ -60,78 +61,7 @@ public class CreateOcflTarConfiguration {
     @NotNull
     private ExecutorServiceFactory taskQueue;
 
-    public DmfTarVersion getDmftarVersion() {
-        return dmftarVersion;
-    }
-
-    public void setDmftarVersion(DmfTarVersion dmftarVersion) {
-        this.dmftarVersion = dmftarVersion;
-    }
-
-    public Duration getRetryInterval() {
-        return retryInterval;
-    }
-
-    public void setRetryInterval(Duration retryInterval) {
-        this.retryInterval = retryInterval;
-    }
-
-    public List<Duration> getRetrySchedule() {
-        return retrySchedule;
-    }
-
-    public void setRetrySchedule(List<Duration> retrySchedule) {
-        this.retrySchedule = retrySchedule;
-    }
-
-    public int getMaxRetries() {
-        return maxRetries;
-    }
-
-    public void setMaxRetries(int maxRetries) {
-        this.maxRetries = maxRetries;
-    }
-
-    public long getPollingInterval() {
-        return pollingInterval;
-    }
-
-    public void setPollingInterval(long pollingInterval) {
-        this.pollingInterval = pollingInterval;
-    }
-
-    public Path getInbox() {
-        return inbox;
-    }
-
-    public void setInbox(Path inbox) {
-        this.inbox = inbox;
-    }
-
-    public Path getWorkDir() {
-        return workDir;
-    }
-
-    public void setWorkDir(Path workDir) {
-        this.workDir = workDir;
-    }
-
-    public long getInboxThreshold() {
-        return inboxThreshold;
-    }
-
-    public void setInboxThreshold(long inboxThreshold) {
-        this.inboxThreshold = inboxThreshold;
-    }
-
-    public ExecutorServiceFactory getTaskQueue() {
-        return taskQueue;
-    }
-
-    public void setTaskQueue(ExecutorServiceFactory taskQueue) {
-        this.taskQueue = taskQueue;
-    }
-
+    @Data
     public static class DmfTarVersion {
         @NotNull
         private String local;
@@ -144,22 +74,6 @@ public class CreateOcflTarConfiguration {
 
         public DmfTarVersion(String local, String remote) {
             this.local = local;
-            this.remote = remote;
-        }
-
-        public String getLocal() {
-            return local;
-        }
-
-        public void setLocal(String local) {
-            this.local = local;
-        }
-
-        public String getRemote() {
-            return remote;
-        }
-
-        public void setRemote(String remote) {
             this.remote = remote;
         }
     }

@@ -133,8 +133,8 @@ public class CollectTaskIntegrationTest {
             var records = transferItemDAO.findAll();
             assertThat(records)
                 .hasSize(1)
-                .extracting(TransferItem::getDatasetIdentifier)
-                .containsOnly("doi-10-5072-dar-vfspuqv1.0");
+                .extracting(TransferItem::getDveFilename)
+                .containsOnly("doi-10-5072-dar-vfspuqv1.0.zip");
 
             var dbId = records.get(0).getId();
             var allFiles = getAllFiles(filePath.getParent(), outboxPath);
@@ -171,8 +171,8 @@ public class CollectTaskIntegrationTest {
             var records = transferItemDAO.findAll();
             assertThat(records)
                 .hasSize(1)
-                .extracting(TransferItem::getDatasetIdentifier)
-                .containsOnly("vaas-ff723a0c-ef1e-45b2-a409-fbeb91e0aa20-v1");
+                .extracting(TransferItem::getDveFilename)
+                .containsOnly("vaas-ff723a0c-ef1e-45b2-a409-fbeb91e0aa20-v1.zip");
 
             var dbId = records.get(0).getId();
             var allFiles = getAllFiles(filePath.getParent(), outboxPath);
@@ -192,9 +192,9 @@ public class CollectTaskIntegrationTest {
             var outboxPath = fs.getPath("/outbox/");
 
             var existing = TransferItem.builder()
-                .datasetIdentifier("doi-10-5072-dar-vfspuqv1.0")
+                .dveFilename("doi-10-5072-dar-vfspuqv1.0.zip")
                 .transferStatus(TransferItem.TransferStatus.TARRING)
-                .bagChecksum("different-checksum-than-real-file")
+                .bagSha256Checksum("different-checksum-than-real-file")
                 .creationTime(OffsetDateTime.now())
                 .bagId("bagid")
                 .ocflObjectVersion(1)
@@ -221,8 +221,8 @@ public class CollectTaskIntegrationTest {
             var records = transferItemDAO.findAll();
             assertThat(records)
                 .hasSize(2)
-                .extracting(TransferItem::getDatasetIdentifier)
-                .containsOnly("doi-10-5072-dar-vfspuqv1.0");
+                .extracting(TransferItem::getDveFilename)
+                .containsOnly("doi-10-5072-dar-vfspuqv1.0.zip");
 
             var dbId = records.get(1).getId();
             var allFiles = getAllFiles(filePath.getParent(), outboxPath);
@@ -242,9 +242,9 @@ public class CollectTaskIntegrationTest {
             var outboxPath = fs.getPath("/outbox/");
 
             var existing = TransferItem.builder()
-                .datasetIdentifier("doi-10-5072-dar-vfspuqv1.0")
+                .dveFilename("doi-10-5072-dar-vfspuqv1.0.zip")
                 .transferStatus(TransferItem.TransferStatus.COLLECTED)
-                .bagChecksum(TEST_BAG_CHECKSUM)
+                .bagSha256Checksum(TEST_BAG_CHECKSUM)
                 .creationTime(OffsetDateTime.now())
                 .bagId("bagid")
                 .ocflObjectVersion(1)
@@ -271,8 +271,8 @@ public class CollectTaskIntegrationTest {
             var records = transferItemDAO.findAll();
             assertThat(records)
                 .hasSize(1)
-                .extracting(TransferItem::getDatasetIdentifier)
-                .containsOnly("doi-10-5072-dar-vfspuqv1.0");
+                .extracting(TransferItem::getDveFilename)
+                .containsOnly("doi-10-5072-dar-vfspuqv1.0.zip");
 
             var dbId = records.get(0).getId();
             var allFiles = getAllFiles(filePath.getParent(), outboxPath);
@@ -292,9 +292,9 @@ public class CollectTaskIntegrationTest {
             var outboxPath = fs.getPath("/outbox/");
 
             var existing = TransferItem.builder()
-                .datasetIdentifier("doi-10-5072-dar-vfspuqv1.0")
+                .dveFilename("doi-10-5072-dar-vfspuqv1.0.zip")
                 .transferStatus(TransferItem.TransferStatus.TARRING)
-                .bagChecksum(TEST_BAG_CHECKSUM)
+                .bagSha256Checksum(TEST_BAG_CHECKSUM)
                 .creationTime(OffsetDateTime.now())
                 .bagId("bagid")
                 .ocflObjectVersion(1)
@@ -321,8 +321,8 @@ public class CollectTaskIntegrationTest {
             var records = transferItemDAO.findAll();
             assertThat(records)
                 .hasSize(1)
-                .extracting(TransferItem::getDatasetIdentifier)
-                .containsOnly("doi-10-5072-dar-vfspuqv1.0");
+                .extracting(TransferItem::getDveFilename)
+                .containsOnly("doi-10-5072-dar-vfspuqv1.0.zip");
 
             var allFiles = getAllFiles(filePath.getParent(), outboxPath);
 
@@ -346,9 +346,9 @@ public class CollectTaskIntegrationTest {
             var outboxPath = fs.getPath("/outbox/");
 
             var existing = TransferItem.builder()
-                .datasetIdentifier("doi-10-5072-dar-vfspuqv1.0")
+                .dveFilename("doi-10-5072-dar-vfspuqv1.0.zip")
                 .transferStatus(TransferItem.TransferStatus.TARRING)
-                .bagChecksum(TEST_BAG_CHECKSUM)
+                .bagSha256Checksum(TEST_BAG_CHECKSUM)
                 .creationTime(OffsetDateTime.now())
                 .bagId("bagid")
                 .ocflObjectVersion(1)
@@ -413,8 +413,8 @@ public class CollectTaskIntegrationTest {
             var records = transferItemDAO.findAll();
             assertThat(records)
                 .hasSize(1)
-                .extracting(TransferItem::getDatasetIdentifier)
-                .containsOnly("doi-10-5072-dar-vfspuqv1.0");
+                .extracting(TransferItem::getDveFilename)
+                .containsOnly("doi-10-5072-dar-vfspuqv1.0.zip");
 
             // make sure we don't accidentally overwrite the dve file path
             assertThat(records)

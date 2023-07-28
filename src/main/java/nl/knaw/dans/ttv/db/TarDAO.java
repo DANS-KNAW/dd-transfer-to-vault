@@ -58,7 +58,7 @@ public class TarDAO extends AbstractDAO<Tar> {
     }
 
     public Tar save(Tar tar) {
-        return persist(tar);
+        return persist((Tar) currentSession().merge(tar));
     }
 
     public List<Tar> findByStatus(Tar.TarStatus status) {

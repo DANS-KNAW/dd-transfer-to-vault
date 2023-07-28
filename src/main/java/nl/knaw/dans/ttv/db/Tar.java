@@ -45,27 +45,36 @@ public class Tar {
     @Id
     @Column(name = "tar_uuid", nullable = false)
     private String tarUuid;
+
     @Column(name = "vault_path")
     private String vaultPath;
-    @Column(name = "datetime_created")
+
+    @Column(name = "created")
     private OffsetDateTime created;
-    @Column(name = "datetime_confirmed_archived")
-    private OffsetDateTime datetimeConfirmedArchived;
+
+    @Column(name = "archival_timestamp")
+    private OffsetDateTime archivalTimestamp;
+
     @OneToMany(mappedBy = "tar", cascade = CascadeType.ALL)
     @ToString.Exclude
     private List<TransferItem> transferItems = new ArrayList<>();
+
     @Column(name = "archive_in_progress")
     @ColumnDefault("false")
     private boolean archiveInProgress;
+
     @Column(name = "confirm_check_in_progress")
     @ColumnDefault("false")
     private boolean confirmCheckInProgress;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "tar_status")
     private TarStatus tarStatus;
+
     @OneToMany(mappedBy = "tar", cascade = CascadeType.ALL, orphanRemoval = true)
     @ToString.Exclude
     private List<TarPart> tarParts = new ArrayList<>();
+
     @Column(name = "transfer_attempt")
     @ColumnDefault("0")
     private int transferAttempt;

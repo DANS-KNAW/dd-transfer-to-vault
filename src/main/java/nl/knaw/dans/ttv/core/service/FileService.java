@@ -46,7 +46,7 @@ public interface FileService {
 
     void ensureDirectoryExists(Path path) throws IOException;
 
-    void rejectFile(Path path, Exception exception) throws IOException;
+    void rejectFile(Path path, Throwable exception) throws IOException;
 
     boolean exists(Path path);
 

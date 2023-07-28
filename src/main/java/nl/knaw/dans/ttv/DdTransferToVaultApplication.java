@@ -17,11 +17,13 @@
 package nl.knaw.dans.ttv;
 
 import io.dropwizard.Application;
+import io.dropwizard.client.JerseyClientBuilder;
 import io.dropwizard.db.PooledDataSourceFactory;
 import io.dropwizard.hibernate.HibernateBundle;
 import io.dropwizard.hibernate.UnitOfWorkAwareProxyFactory;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
+import nl.knaw.dans.ttv.client.ApiClient;
 import nl.knaw.dans.ttv.client.OcflObjectVersionApi;
 import nl.knaw.dans.ttv.client.TarApi;
 import nl.knaw.dans.ttv.client.VaultCatalogAPIRepository;
@@ -63,7 +65,7 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
 
         @Override
         public PooledDataSourceFactory getDataSourceFactory(DdTransferToVaultConfiguration configuration) {
-            return configuration.getDataSourceFactory();
+            return configuration.getDatabase();
         }
     };
 
@@ -115,7 +117,7 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
         environment.healthChecks().register("DmftarRemote", new RemoteDmftarHealthCheck(configuration, tarCommandRunner));
         environment.healthChecks().register("SSH", new SSHHealthCheck(tarCommandRunner));
 
-        final var vaultCatalogRepository = buildCatalogRepository(configuration.getConfirmArchived().getVaultServiceEndpoint());
+        final var vaultCatalogRepository = buildCatalogRepository(configuration, environment);
 
         // the Collect task, which listens to new files on the network-drive shares
         log.info("Creating CollectTaskManager");
@@ -154,12 +156,17 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
         environment.lifecycle().manage(confirmArchivedTaskManager);
     }
 
-    VaultCatalogRepository buildCatalogRepository(String baseUrl) {
-        var tarApi = new TarApi();
-        tarApi.setCustomBaseUrl(baseUrl);
+    VaultCatalogRepository buildCatalogRepository(DdTransferToVaultConfiguration configuration, Environment environment) {
+        var client = new JerseyClientBuilder(environment)
+            .using(configuration.getVaultCatalog().getHttpClient())
+            .build("vault-catalog");
 
-        var ocflObjectVersionApi = new OcflObjectVersionApi();
-        ocflObjectVersionApi.setCustomBaseUrl(baseUrl);
+        var apiClient = new ApiClient();
+        apiClient.setHttpClient(client);
+        apiClient.setBasePath(configuration.getVaultCatalog().getUrl().toString());
+
+        var tarApi = new TarApi(apiClient);
+        var ocflObjectVersionApi = new OcflObjectVersionApi(apiClient);
 
         return new VaultCatalogAPIRepository(tarApi, ocflObjectVersionApi);
     }

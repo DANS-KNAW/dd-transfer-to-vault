@@ -61,7 +61,7 @@ class TransferItemServiceImplTest {
         filenameAttributes = FilenameAttributes
             .builder()
             .dveFilePath("some/file.zip")
-            .identifier("pid")
+            .dveFilename("pid")
             .build();
 
         filesystemAttributes = new FilesystemAttributes(OffsetDateTime.now(), 1234L, "abc123");
@@ -70,7 +70,7 @@ class TransferItemServiceImplTest {
             .bagId("bag id")
             .nbn("nbn value")
             .metadata("{}")
-            .filePidToLocalPath("string\nline2\n")
+            .filepidToLocalPath("string\nline2\n")
             .dataversePidVersion("5.3")
             .build();
     }
@@ -87,18 +87,17 @@ class TransferItemServiceImplTest {
             var transferItem = transferItemService.createTransferItem("datastation name", filenameAttributes, filesystemAttributes, fileContentAttributes);
 
             Assertions.assertEquals(TransferItem.TransferStatus.COLLECTED, transferItem.getTransferStatus());
-            assertNotNull(transferItem.getQueueDate());
             assertEquals("datastation name", transferItem.getDatastation());
 
             assertEquals(filesystemAttributes.getCreationTime(), transferItem.getCreationTime());
-            assertEquals("abc123", transferItem.getBagChecksum());
+            assertEquals("abc123", transferItem.getBagSha256Checksum());
             assertEquals(1234L, transferItem.getBagSize());
 
             assertEquals("5.3", transferItem.getDataversePidVersion());
             assertEquals("bag id", transferItem.getBagId());
             assertEquals("nbn value", transferItem.getNbn());
             assertEquals("{}", transferItem.getMetadata());
-            assertEquals("string\nline2\n", transferItem.getPidMapping());
+            assertEquals("string\nline2\n", transferItem.getFilepidToLocalPath());
 
             Mockito.verify(transferItemDao).save(transferItem);
         }
@@ -121,17 +120,16 @@ class TransferItemServiceImplTest {
             );
 
             Assertions.assertEquals(TransferItem.TransferStatus.COLLECTED, transferItem.getTransferStatus());
-            assertNotNull(transferItem.getQueueDate());
             assertEquals("datastation name", transferItem.getDatastation());
             assertEquals(filesystemAttributes.getCreationTime(), transferItem.getCreationTime());
-            assertEquals("abc123", transferItem.getBagChecksum());
+            assertEquals("abc123", transferItem.getBagSha256Checksum());
             assertEquals(1234L, transferItem.getBagSize());
 
             assertNull(transferItem.getDataversePidVersion());
             assertNull(transferItem.getBagId());
             assertNull(transferItem.getNbn());
             assertNull(transferItem.getMetadata());
-            assertNull(transferItem.getPidMapping());
+            assertNull(transferItem.getFilepidToLocalPath());
 
             Mockito.verify(transferItemDao).save(transferItem);
         }
@@ -143,8 +141,8 @@ class TransferItemServiceImplTest {
     @Test
     void createDuplicateTransferItem() {
         var existing = TransferItem.builder()
-            .datasetIdentifier("pid")
-            .bagChecksum(filesystemAttributes.getChecksum())
+            .dveFilename("pid")
+            .bagSha256Checksum(filesystemAttributes.getChecksum())
             .build();
 
         Mockito.when(transferItemDao.findByIdentifier("pid"))
@@ -159,8 +157,8 @@ class TransferItemServiceImplTest {
     @Test
     void createDuplicateTransferItemPartial() {
         var existing = TransferItem.builder()
-            .datasetIdentifier("pid")
-            .bagChecksum(filesystemAttributes.getChecksum())
+            .dveFilename("pid")
+            .bagSha256Checksum(filesystemAttributes.getChecksum())
             .build();
 
         Mockito.when(transferItemDao.findByIdentifier("pid"))
@@ -179,7 +177,7 @@ class TransferItemServiceImplTest {
         var newStatus = TransferItem.TransferStatus.METADATA_EXTRACTED;
         var transferItem = TransferItem.builder()
             .id(5L)
-            .datasetIdentifier("pid")
+            .dveFilename("pid")
             .build();
 
         var newPath = Path.of("new/").resolve(transferItem.getCanonicalFilename());
@@ -256,7 +254,7 @@ class TransferItemServiceImplTest {
         var transferItemService = getTransferItemService();
         var attributes = FilenameAttributes.builder()
             .dveFilePath("path")
-            .identifier("pid")
+            .dveFilename("pid")
             .build();
 
         transferItemService.getTransferItemByFilenameAttributes(attributes);
@@ -272,7 +270,7 @@ class TransferItemServiceImplTest {
             .bagId("id")
             .nbn("nbn")
             .metadata("{}")
-            .filePidToLocalPath("a  b")
+            .filepidToLocalPath("a  b")
             .otherId("otherId")
             .otherIdVersion("otherIdVersion")
             .dataSupplier("swordClient")
@@ -296,9 +294,9 @@ class TransferItemServiceImplTest {
         assertEquals("otherIdVersion", result.getOtherIdVersion());
         assertEquals("swordToken", result.getSwordToken());
         assertEquals("swordClient", result.getDataSupplier());
-        assertNull(result.getBagChecksum());
+        assertNull(result.getBagSha256Checksum());
         assertEquals("{}", result.getMetadata());
-        assertEquals("a  b", result.getPidMapping());
+        assertEquals("a  b", result.getFilepidToLocalPath());
     }
 
     @Test
@@ -357,7 +355,7 @@ class TransferItemServiceImplTest {
 
         assertEquals(Tar.TarStatus.CONFIRMEDARCHIVED, tar.getTarStatus());
         assertFalse(tar.isConfirmCheckInProgress());
-        assertNotNull(tar.getDatetimeConfirmedArchived());
+        assertNotNull(tar.getArchivalTimestamp());
     }
 
     @Test
@@ -420,7 +418,7 @@ class TransferItemServiceImplTest {
         var attributes = FilenameAttributes.builder()
             .internalId(1L)
             .dveFilePath("path")
-            .identifier("pid")
+            .dveFilename("pid")
             .build();
 
         var transferItem = TransferItem.builder()
@@ -444,7 +442,7 @@ class TransferItemServiceImplTest {
         var transferItemService = getTransferItemService();
         var attributes = FilenameAttributes.builder()
             .dveFilePath("path")
-            .identifier("pid")
+            .dveFilename("pid")
             .build();
 
         var transferItem = TransferItem.builder()

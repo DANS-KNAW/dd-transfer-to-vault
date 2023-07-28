@@ -60,7 +60,7 @@ class CollectTaskTest {
 
         var transferItem = TransferItem.builder()
             .id(16L)
-            .datasetIdentifier("doi-10-5072-dar-kxteqtv1.0")
+            .dveFilename("doi-10-5072-dar-kxteqtv1.0")
             .dataversePid("pid1")
             .dveFilePath("path/to1.zip")
             .creationTime(OffsetDateTime.now())
@@ -95,7 +95,7 @@ class CollectTaskTest {
         var task = new CollectTask(filePath, outbox, datastationName, transferItemService, transferItemMetadataReader, fileService);
 
         var filenameAttributes = FilenameAttributes.builder()
-            .identifier("identifier")
+            .dveFilename("identifier")
             .dveFilePath(filePath.toString())
             .internalId(1L)
             .build();
@@ -104,9 +104,9 @@ class CollectTaskTest {
 
         var existingTransferItem = TransferItem.builder()
             .id(1L)
-            .datasetIdentifier("identifier")
+            .dveFilename("identifier")
             .transferStatus(TransferItem.TransferStatus.METADATA_EXTRACTED)
-            .bagChecksum("abc")
+            .bagSha256Checksum("abc")
             .build();
 
         Mockito.when(transferItemService.getTransferItemByFilenameAttributes(filenameAttributes))
@@ -132,7 +132,7 @@ class CollectTaskTest {
         var task = new CollectTask(filePath, outbox, datastationName, transferItemService, transferItemMetadataReader, fileService);
 
         var filenameAttributes = FilenameAttributes.builder()
-            .identifier("identifier")
+            .dveFilename("identifier")
             .dveFilePath(filePath.toString())
             .internalId(1L)
             .build();
@@ -141,9 +141,9 @@ class CollectTaskTest {
 
         var existingTransferItem = TransferItem.builder()
             .id(1L)
-            .datasetIdentifier("identifier")
+            .dveFilename("identifier")
             .transferStatus(TransferItem.TransferStatus.COLLECTED)
-            .bagChecksum("abc")
+            .bagSha256Checksum("abc")
             .build();
 
         Mockito.when(transferItemService.getTransferItemByFilenameAttributes(filenameAttributes))
@@ -209,7 +209,7 @@ class CollectTaskTest {
 
         var transferItem = TransferItem.builder()
             .id(15L)
-            .datasetIdentifier("doi-10-5072-dar-kxteqtv1.0")
+            .dveFilename("doi-10-5072-dar-kxteqtv1.0")
             .build();
 
         try {
@@ -236,12 +236,12 @@ class CollectTaskTest {
             .dataversePid("pid1")
             .dveFilePath("path/to1.zip")
             .creationTime(OffsetDateTime.now())
-            .bagChecksum("abc")
+            .bagSha256Checksum("abc")
             .transferStatus(TransferItem.TransferStatus.TARRING)
             .build();
 
         var filenameAttributes = FilenameAttributes.builder()
-            .identifier("identifier")
+            .dveFilename("identifier")
             .dveFilePath(filePath.toString())
             .internalId(1L)
             .build();

@@ -222,7 +222,7 @@ components:
       example:
         vaultPath: theVault
         tarUuid: e102df56-14ca-48a6-a74a-0fc1ae1c14de
-        archivalDate: 2023-05-02T18:56:51.582Z
+        archivalTimestamp: 2023-05-02T18:56:51.582Z
         tarParts: [ "part01", "part02" ]
         ocflObjectVersions: [ ]
       properties:
@@ -231,7 +231,7 @@ components:
         tarUuid:
           type: string
           format: "uuid"
-        archivalDate:
+        archivalTimestamp:
           type: string
           format: date-time
         tarParts:
@@ -253,7 +253,7 @@ components:
       example:
         vaultPath: theVault
         tarUuid: e102df56-14ca-48a6-a74a-0fc1ae1c14de
-        archivalDate: 2023-05-02T18:56:51.582Z
+        archivalTimestamp: 2023-05-02T18:56:51.582Z
         tarParts: [ "part01", "part02" ]
         ocflObjectVersions: [ ]
       properties:
@@ -262,7 +262,7 @@ components:
         tarUuid:
           type: string
           format: "uuid"
-        archivalDate:
+        archivalTimestamp:
           type: string
           format: date-time
         tarParts:
@@ -330,7 +330,9 @@ components:
         dataversePidVersion: V1.0
         otherId: REPO1:31998
         otherIdVersion: 3.2
-        exportTimestamp: 2023-04-09T11:56:58.607Z
+        deaccessioned: false
+        exporter: vault-catalog-service
+        exporterVersion: 1.2.3
       required:
         - bagId
         - objectVersion
@@ -353,6 +355,8 @@ components:
           type: string
         dataversePidVersion:
           type: string
+        datastation:
+          type: string
         otherId:
           type: string
         otherIdVersion:
@@ -363,11 +367,14 @@ components:
           type: object
           format: "json-ld"
           additionalProperties: true
-        filePidToLocalPath:
+        filepidToLocalPath:
           type: string
-        exportTimestamp:
+        deaccessioned:
+          type: boolean
+        exporter:
           type: string
-          format: date-time
+        exporterVersion:
+          type: string
         skeletonRecord:
           type: boolean
           default: false
@@ -386,10 +393,15 @@ components:
         otherId: REPO1:31998
         otherIdVersion: 3.2
         exportTimestamp: 2023-04-09T11:56:58.607Z
+        deaccessioned: false
+        exporter: vault-catalog-service
+        exporterVersion: 1.2.3
       properties:
         swordToken:
           type: string
         nbn:
+          type: string
+        datastation:
           type: string
         dataSupplier:
           type: string
@@ -407,14 +419,17 @@ components:
           type: object
           format: "json-ld"
           additionalProperties: true
-        filePidToLocalPath:
+        filepidToLocalPath:
           type: string
-        exportTimestamp:
-          type: string
-          format: date-time
         skeletonRecord:
           type: boolean
           default: false
+        deaccessioned:
+          type: boolean
+        exporter:
+          type: string
+        exporterVersion:
+          type: string
 
     OcflObjectVersionRef:
       type: object

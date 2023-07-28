@@ -134,13 +134,11 @@ class VaultCatalogAPIRepositoryTest {
             .swordToken("swordToken")
             .datastation("datasetDvInstance")
             .ocflObjectPath("ab/cd/12/34-test")
-            .bagChecksum("bagChecksum")
-            .queueDate(OffsetDateTime.now().minus(2, ChronoUnit.DAYS))
+            .bagSha256Checksum("bagChecksum")
             .bagSize(123L)
             .transferStatus(TransferItem.TransferStatus.COLLECTED)
             .metadata("{}")
-            .pidMapping("a  b")
-            .tarEntryName("aipTarEntryName")
+            .filepidToLocalPath("a  b")
             .build();
 
         repo.registerOcflObjectVersion(transferItem);
@@ -157,6 +155,7 @@ class VaultCatalogAPIRepositoryTest {
         var expected = new OcflObjectVersionParametersDto()
             .swordToken("swordToken")
             .nbn("nbn")
+            .datastation("datasetDvInstance")
             .dataSupplier("swordClient")
             .dataversePid("datasetPid")
             .dataversePidVersion("2.1")
@@ -164,8 +163,7 @@ class VaultCatalogAPIRepositoryTest {
             .otherIdVersion("otherIdVersion")
             .ocflObjectPath("ab/cd/12/34-test")
             .metadata(Map.of())
-            .filePidToLocalPath("a  b")
-            .exportTimestamp(transferItem.getQueueDate())
+            .filepidToLocalPath("a  b")
             .skeletonRecord(false);
 
         assertEquals(expected, argumentCaptor.getValue());
