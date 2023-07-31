@@ -40,8 +40,7 @@ start-service.sh
 
 ## Prepare and start an ingest
 
-Once the dependencies and services are started you can ingest a single deposit by moving
-(not copy) a deposit (such as a zip of `src/test/resources/bags`) into `inboxes` configured in  
+To start an ingest, copy a zipped bag (e.g. from `src/test/resources/bags`) into one of the `transfer-inboxes` configured in  
 
     dd-transfer-to-vault/etc/config.yml
 

@@ -68,7 +68,7 @@ createOcflTar:
 
 confirmArchived:
   cron: '0 0/15 * * * ?' # cron expression for triggering a polling round
-  vaultServiceEndpoint: http://localhost:20100/api
+  vaultServiceEndpoint: http://localhost:20010/api
   taskQueue:
     nameFormat: "confirm-thread-%d"
     maxQueueSize: 5000
