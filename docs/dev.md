@@ -9,11 +9,13 @@ some dependencies must first be started:
 
 ### Environment
 
-Open a separate terminal tab for `dd-transfer-to-vault` and one for `dd-vault-catalog`:
+Open a separate terminal tab for `dd-transfer-to-vault` and one for `dd-vault-catalog` and run:
 
 ```commandline
 start-env.sh
 ```
+
+### Database
 
 Change DB port (e.g. to 9002) for one of the services
 
@@ -22,17 +24,15 @@ Change DB port (e.g. to 9002) for one of the services
 | `etc/config.yml` | `url: jdbc:hsqldb:hsql://localhost:9002/dd-transfer-to-vault` |
 | `etc/db.properties` | `server.port=9002` |
 
-### HSQL database
-
-Open a separate terminal tab for dd-transfer-to-vault and one for dd-vault-catalog:
+Run in both terminals:
 
 ```commandline
 start-hsqldb-server.sh
 ```
 
-### start services
+### Start services
 
-Return to the terminals used under [Environment](#environment) do the following for each:
+Open new terminals for both services and run:
 
 ```commandline
 start-service.sh
