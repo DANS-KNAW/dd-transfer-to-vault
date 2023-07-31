@@ -23,6 +23,7 @@ repo_url: https://github.com/DANS-KNAW/dd-transfer-to-vault
 
 nav:
   - Manual: index.md
+  - Development: dev.md
   - ⇒ DANS Data Station Architecture: arch.md
 
 plugins:
