@@ -15,7 +15,7 @@ Open a separate terminal tab for `dd-transfer-to-vault` and one for `dd-vault-ca
 start-env.sh
 ```
 
-Change DB port (e.g. too 9002) for one of the services
+Change DB port (e.g. to 9002) for one of the services
 
 | file | value |
 |------|-------|
