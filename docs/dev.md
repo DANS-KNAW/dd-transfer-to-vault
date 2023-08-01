@@ -52,5 +52,6 @@ To start an ingest, copy a zipped bag (e.g. from `src/test/resources/bags`) into
     dd-transfer-to-vault/etc/config.yml
 
 The zip will reappear with `-ttv1.zip` in `ocfl-tar-inbox` and a row will be added to the table `transfer_queue`.
+To repeat with the same zip you will have to delete the row from the table.
 
 [dans-dev-tools]: https://github.com/DANS-KNAW/dans-dev-tools#dans-dev-tools
