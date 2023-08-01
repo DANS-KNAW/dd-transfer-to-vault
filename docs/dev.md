@@ -38,7 +38,7 @@ Open new terminals for both services and run:
 start-service.sh
 ```
 
-## Prepare and start an ingest
+## Start an ingest
 
 To start an ingest, copy a zipped bag (e.g. from `src/test/resources/bags`) into one of the `transfer-inboxes` configured in  
 
