@@ -24,7 +24,7 @@ Change DB port (e.g. to 9002) for one of the services
 | `etc/config.yml` | `url: jdbc:hsqldb:hsql://localhost:9002/dd-transfer-to-vault` |
 | `etc/db.properties` | `server.port=9002` |
 
-You may have to remove the directory `data/database` for a fresh up-to-date DB.
+Remove the directory `data/database` for a fresh up-to-date DB.
 
 Run in both terminals:
 
@@ -38,6 +38,9 @@ The names of the tables should appear in the tree view panel.
 
 
 ### Start services
+
+See: [connect to surf](https://github.com/DANS-KNAW/dd-dtap/blob/master/docs/connect-transfer-server-to-surf-data-archive.md),
+otherwise the transfer service will prompt for a password.
 
 Open new terminals for both services and run:
 
