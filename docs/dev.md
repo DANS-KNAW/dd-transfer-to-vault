@@ -7,7 +7,7 @@ Set-up
 This project can be used in combination with  [dans-dev-tools]{:target=_blank}. Before you can start it as a service
 some dependencies must first be started:
 
-### Environment
+### Initialize development environment
 
 This is only necessary once per project. If you execute this any existing configuration and data will be reset.
 
