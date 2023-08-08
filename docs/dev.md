@@ -19,14 +19,7 @@ start-env.sh
 
 ### Database
 
-Change DB port (e.g. to 9002) for one of the services
-
-| file | value |
-|------|-------|
-| `etc/config.yml` | `url: jdbc:hsqldb:hsql://localhost:9002/dd-transfer-to-vault` |
-| `etc/db.properties` | `server.port=9002` |
-
-Remove the directory `data/database` for a fresh up-to-date DB.
+Optionally remove the directory `data/database` for a fresh up-to-date DB.
 
 Run in both terminals:
 
@@ -35,7 +28,7 @@ start-hsqldb-server.sh
 ```
 
 To examine the database with a GUI you can run `start-hsqldb-client.sh`.
-Copy the url from the table above into `file` - `connect` - `url`
+Copy the url from `etc/config.yml` into the GUI dialog to open a connection: `file` - `connect` - `url`.
 The names of the tables should appear in the tree view panel.
 
 
