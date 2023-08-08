@@ -9,7 +9,9 @@ some dependencies must first be started:
 
 ### Environment
 
-Open a separate terminal tab for `dd-transfer-to-vault` and one for its dependency `dd-vault-catalog` and run:
+This is only necessary once per project. If you execute this any existing configuration and data will be reset.
+
+Open a separate terminal tab for `dd-transfer-to-vault` and one for its dependency `dd-vault-catalog` and in each one run:
 
 ```commandline
 start-env.sh
