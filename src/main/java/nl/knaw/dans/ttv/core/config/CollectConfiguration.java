@@ -16,6 +16,7 @@
 package nl.knaw.dans.ttv.core.config;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Data;
 import nl.knaw.dans.lib.util.ExecutorServiceFactory;
 import nl.knaw.dans.ttv.core.config.validation.UniqueInboxEntryNames;
 import nl.knaw.dans.ttv.core.config.validation.UniqueInboxEntryPaths;
@@ -28,6 +29,7 @@ import javax.validation.constraints.Size;
 import java.nio.file.Path;
 import java.util.List;
 
+@Data
 public class CollectConfiguration {
     @Valid
     @NotNull
@@ -49,39 +51,7 @@ public class CollectConfiguration {
 
     private int canReadTimeout = 10;
 
-    public long getPollingInterval() {
-        return pollingInterval;
-    }
-
-    public void setPollingInterval(long pollingInterval) {
-        this.pollingInterval = pollingInterval;
-    }
-
-    public List<InboxEntry> getInboxes() {
-        return inboxes;
-    }
-
-    public void setInboxes(List<InboxEntry> inboxes) {
-        this.inboxes = inboxes;
-    }
-
-    public ExecutorServiceFactory getTaskQueue() {
-        return taskQueue;
-    }
-
-    public void setTaskQueue(ExecutorServiceFactory taskQueue) {
-        this.taskQueue = taskQueue;
-    }
-
-    public void setCanReadTimeout(int canReadTimeout) {
-        this.canReadTimeout = canReadTimeout;
-    }
-
-    public int getCanReadTimeout() {
-        return canReadTimeout;
-    }
-
-
+    @Data
     public static class InboxEntry {
         @NotEmpty
         private String name;
@@ -95,27 +65,6 @@ public class CollectConfiguration {
         public InboxEntry(String name, Path path) {
             this.name = name;
             this.path = path;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public void setName(String name) {
-            this.name = name;
-        }
-
-        public Path getPath() {
-            return path;
-        }
-
-        public void setPath(Path path) {
-            this.path = path;
-        }
-
-        @Override
-        public String toString() {
-            return "InboxEntry{" + "name='" + name + '\'' + ", path='" + path + '\'' + '}';
         }
     }
 }

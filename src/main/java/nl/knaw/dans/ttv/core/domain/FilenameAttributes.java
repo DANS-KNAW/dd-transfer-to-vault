@@ -22,6 +22,6 @@ import lombok.Value;
 @Builder
 public class FilenameAttributes {
     String dveFilePath;
-    String identifier;
+    String dveFilename;
     Long internalId;
 }

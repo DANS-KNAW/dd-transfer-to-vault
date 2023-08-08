@@ -99,7 +99,7 @@ public class VaultCatalogAPIRepository implements VaultCatalogRepository {
         try {
             var params = new TarParameterDto()
                 .tarUuid(UUID.fromString(tar.getTarUuid()))
-                .archivalDate(tar.getDatetimeConfirmedArchived())
+                .archivalTimestamp(tar.getArchivalTimestamp())
                 .vaultPath(tar.getVaultPath())
                 .tarParts(tar.getTarParts().stream()
                     .map(p -> new TarPartParameterDto()

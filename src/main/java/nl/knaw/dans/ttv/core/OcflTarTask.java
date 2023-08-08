@@ -83,7 +83,6 @@ public class OcflTarTask implements Runnable {
 
             log.info("Imported {} into OCFL repository, object ID is {}", transferItem, objectId);
 
-            transferItem.setTarEntryName(objectId);
             transferItem.setOcflObjectPath(objectId.replaceAll("urn:uuid:", ""));
         }
 
@@ -146,6 +145,12 @@ public class OcflTarTask implements Runnable {
 
     private void registerTarWithVaultService(Tar tar) throws IOException {
         log.info("Registring TAR {} with vault catalog", tar.getTarUuid());
+
+        for (var transferItem : tar.getTransferItems()) {
+            log.info("Registering transfer item {} with vault catalog", transferItem);
+            vaultCatalogRepository.registerOcflObjectVersion(transferItem);
+        }
+
         vaultCatalogRepository.registerTar(tar);
     }
 

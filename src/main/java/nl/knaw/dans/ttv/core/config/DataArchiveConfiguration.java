@@ -15,9 +15,12 @@
  */
 package nl.knaw.dans.ttv.core.config;
 
+import lombok.Data;
+
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
+@Data
 public class DataArchiveConfiguration {
 
     @Valid
@@ -41,29 +44,4 @@ public class DataArchiveConfiguration {
         this.host = host;
         this.path = path;
     }
-
-    public String getUser() {
-        return user;
-    }
-
-    public void setUser(String user) {
-        this.user = user;
-    }
-
-    public String getHost() {
-        return host;
-    }
-
-    public void setHost(String host) {
-        this.host = host;
-    }
-
-    public String getPath() {
-        return path;
-    }
-
-    public void setPath(String path) {
-        this.path = path;
-    }
-
 }

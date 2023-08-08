@@ -32,8 +32,6 @@ public interface OcflObjectVersionMapper {
 
     OcflObjectVersionMapper INSTANCE = Mappers.getMapper(OcflObjectVersionMapper.class);
 
-    @Mapping(source = "pidMapping", target = "filePidToLocalPath")
-    @Mapping(source = "queueDate", target = "exportTimestamp")
     @Mapping(constant = "false", target = "skeletonRecord")
     OcflObjectVersionParametersDto mapParameters(TransferItem transferItem);
 

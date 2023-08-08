@@ -93,7 +93,7 @@ public class FileServiceImpl implements FileService {
      * @param path The path to the file to reject
      */
     @Override
-    public void rejectFile(Path path, Exception exception) throws IOException {
+    public void rejectFile(Path path, Throwable exception) throws IOException {
         Objects.requireNonNull(path, "path cannot be null");
         Objects.requireNonNull(exception, "exception cannot be null");
 
@@ -162,7 +162,7 @@ public class FileServiceImpl implements FileService {
         return Files.getFileStore(path);
     }
 
-    void writeExceptionToFile(Path errorReportName, Exception exception) throws IOException {
+    void writeExceptionToFile(Path errorReportName, Throwable exception) throws IOException {
         var writer = new StringWriter();
         var pw = new PrintWriter(writer);
         exception.printStackTrace(pw);

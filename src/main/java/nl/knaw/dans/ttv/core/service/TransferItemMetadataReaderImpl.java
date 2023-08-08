@@ -38,10 +38,11 @@ public class TransferItemMetadataReaderImpl implements TransferItemMetadataReade
     private static final Pattern DATAVERSE_PATTERN = Pattern.compile(
         "(?<doi>doi-10-[0-9]{4,}-[A-Za-z0-9]{2,}-[A-Za-z0-9]{6})-?" +
             "(?<schema>datacite)?.?" +
-            "v(?<major>[0-9]+).(?<minor>[0-9]+)"
+            "v(?<major>[0-9]+).(?<minor>[0-9]+)" +
+            "(\\.zip)"
     );
 
-    private static final Pattern VAAS_PATTERN = Pattern.compile("^vaas-[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}-v\\d+$");
+    private static final Pattern VAAS_PATTERN = Pattern.compile("^vaas-[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}-v\\d+(\\.zip)$");
     private static final List<Pattern> VALID_PATTERNS = List.of(
         // the dataverse output
         DATAVERSE_PATTERN,
@@ -71,12 +72,13 @@ public class TransferItemMetadataReaderImpl implements TransferItemMetadataReade
 
         return FilenameAttributes.builder()
             .dveFilePath(path.toString())
-            .identifier(filename)
+            .dveFilename(filename)
             .internalId(internalId)
             .build();
     }
 
     private String normalizeFilename(String filename) {
+        var extension = FilenameUtils.getExtension(filename);
         filename = FilenameUtils.removeExtension(filename);
 
         var suffixMatch = TTV_SUFFIX.matcher(filename);
@@ -85,7 +87,7 @@ public class TransferItemMetadataReaderImpl implements TransferItemMetadataReade
             filename = suffixMatch.group("identifier");
         }
 
-        return filename;
+        return filename + "." + extension;
     }
 
     private Long getInternalId(String filename) {
@@ -138,7 +140,7 @@ public class TransferItemMetadataReaderImpl implements TransferItemMetadataReade
             var fileContentAttributes = oaiOreMetadataReader.readMetadata(oaiOre);
 
             fileContentAttributes.setMetadata(oaiOre);
-            fileContentAttributes.setFilePidToLocalPath(pidMapping);
+            fileContentAttributes.setFilepidToLocalPath(pidMapping);
 
             return fileContentAttributes;
         }

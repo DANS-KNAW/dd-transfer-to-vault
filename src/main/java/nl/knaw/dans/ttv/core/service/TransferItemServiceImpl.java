@@ -58,17 +58,17 @@ public class TransferItemServiceImpl implements TransferItemService {
         var transferItem = new TransferItem();
 
         transferItem.setTransferStatus(TransferItem.TransferStatus.COLLECTED);
-        transferItem.setQueueDate(OffsetDateTime.now());
         transferItem.setDatastation(datastationName);
+        transferItem.setQueueTimestamp(OffsetDateTime.now());
 
         // filename attributes
         transferItem.setDveFilePath(filenameAttributes.getDveFilePath());
-        transferItem.setDatasetIdentifier(filenameAttributes.getIdentifier());
+        transferItem.setDveFilename(filenameAttributes.getDveFilename());
 
         // filesystem attributes
         transferItem.setCreationTime(filesystemAttributes.getCreationTime());
         transferItem.setBagSize(filesystemAttributes.getBagSize());
-        transferItem.setBagChecksum(filesystemAttributes.getChecksum());
+        transferItem.setBagSha256Checksum(filesystemAttributes.getChecksum());
 
         // file content attributes
         if (fileContentAttributes != null) {
@@ -76,17 +76,17 @@ public class TransferItemServiceImpl implements TransferItemService {
             transferItem.setBagId(fileContentAttributes.getBagId());
             transferItem.setNbn(fileContentAttributes.getNbn());
             transferItem.setMetadata(fileContentAttributes.getMetadata());
-            transferItem.setPidMapping(fileContentAttributes.getFilePidToLocalPath());
+            transferItem.setFilepidToLocalPath(fileContentAttributes.getFilepidToLocalPath());
         }
 
         // check if an item with this ID already exists
-        var existing = transferItemDAO.findByIdentifier(transferItem.getDatasetIdentifier())
-            .filter(item -> Objects.equals(item.getBagChecksum(), transferItem.getBagChecksum()));
+        var existing = transferItemDAO.findByIdentifier(transferItem.getDveFilename())
+            .filter(item -> Objects.equals(item.getBagSha256Checksum(), transferItem.getBagSha256Checksum()));
 
         if (existing.isPresent()) {
             throw new InvalidTransferItemException(
-                String.format("TransferItem with datasetIdentifier=%s and identical checksums already exists in database",
-                    transferItem.getDatasetIdentifier()
+                String.format("TransferItem with dveFilename=%s and identical checksums already exists in database",
+                    transferItem.getDveFilename()
                 )
             );
         }
@@ -199,7 +199,7 @@ public class TransferItemServiceImpl implements TransferItemService {
             return transferItemDAO.findById(filenameAttributes.getInternalId());
         }
 
-        return transferItemDAO.findByIdentifier(filenameAttributes.getIdentifier());
+        return transferItemDAO.findByIdentifier(filenameAttributes.getDveFilename());
     }
 
     @Override
@@ -214,7 +214,7 @@ public class TransferItemServiceImpl implements TransferItemService {
         transferItem.setBagId(fileContentAttributes.getBagId());
         transferItem.setNbn(fileContentAttributes.getNbn());
         transferItem.setMetadata(fileContentAttributes.getMetadata());
-        transferItem.setPidMapping(fileContentAttributes.getFilePidToLocalPath());
+        transferItem.setFilepidToLocalPath(fileContentAttributes.getFilepidToLocalPath());
         transferItem.setOtherId(fileContentAttributes.getOtherId());
         transferItem.setOtherIdVersion(fileContentAttributes.getOtherIdVersion());
         transferItem.setSwordToken(fileContentAttributes.getSwordToken());
@@ -264,6 +264,10 @@ public class TransferItemServiceImpl implements TransferItemService {
     @Override
     @UnitOfWork
     public Tar save(Tar tarArchive) {
+        for (var transferItem: tarArchive.getTransferItems()) {
+            transferItemDAO.merge(transferItem);
+        }
+
         return tarDAO.save(tarArchive);
     }
 
@@ -278,7 +282,7 @@ public class TransferItemServiceImpl implements TransferItemService {
     public void updateTarToArchived(Tar tar) {
         tar.setTarStatus(Tar.TarStatus.CONFIRMEDARCHIVED);
         tar.setConfirmCheckInProgress(false);
-        tar.setDatetimeConfirmedArchived(OffsetDateTime.now());
+        tar.setArchivalTimestamp(OffsetDateTime.now());
         save(tar);
     }
 

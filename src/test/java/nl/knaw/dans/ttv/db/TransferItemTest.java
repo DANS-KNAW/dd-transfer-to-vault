@@ -25,7 +25,7 @@ class TransferItemTest {
     void getCanonicalFilename_should_include_identifier_and_id() {
         var item = TransferItem.builder()
             .id(1L)
-            .datasetIdentifier("dans-bag-1")
+            .dveFilename("dans-bag-1.zip")
             .build();
 
         assertThat(item.getCanonicalFilename()).isEqualTo("dans-bag-1-ttv1.zip");

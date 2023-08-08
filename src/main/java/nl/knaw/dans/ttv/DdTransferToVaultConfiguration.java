@@ -16,18 +16,20 @@
 
 package nl.knaw.dans.ttv;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import io.dropwizard.Configuration;
 import io.dropwizard.db.DataSourceFactory;
+import lombok.Data;
 import nl.knaw.dans.ttv.core.config.CollectConfiguration;
 import nl.knaw.dans.ttv.core.config.ConfirmArchivedConfiguration;
 import nl.knaw.dans.ttv.core.config.CreateOcflTarConfiguration;
 import nl.knaw.dans.ttv.core.config.DataArchiveConfiguration;
 import nl.knaw.dans.ttv.core.config.ExtractMetadataConfiguration;
+import nl.knaw.dans.ttv.core.config.VaultCatalogConfiguration;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
+@Data
 public class DdTransferToVaultConfiguration extends Configuration {
 
     @Valid
@@ -48,63 +50,7 @@ public class DdTransferToVaultConfiguration extends Configuration {
     @Valid
     @NotNull
     private DataArchiveConfiguration dataArchive;
-
-    public DataSourceFactory getDatabase() {
-
-        return database;
-    }
-
-    public void setDatabase(DataSourceFactory database) {
-        this.database = database;
-    }
-
-    public DataArchiveConfiguration getDataArchive() {
-        return dataArchive;
-    }
-
-    public void setDataArchive(DataArchiveConfiguration dataArchive) {
-        this.dataArchive = dataArchive;
-    }
-
-    public CreateOcflTarConfiguration getCreateOcflTar() {
-        return createOcflTar;
-    }
-
-    public void setCreateOcflTar(CreateOcflTarConfiguration createOcflTar) {
-        this.createOcflTar = createOcflTar;
-    }
-
-    @JsonProperty("database")
-    public DataSourceFactory getDataSourceFactory() {
-        return database;
-    }
-
-    @JsonProperty("database")
-    public void setDataSourceFactory(DataSourceFactory dataSourceFactory) {
-        this.database = dataSourceFactory;
-    }
-
-    public CollectConfiguration getCollect() {
-        return collect;
-    }
-
-    public void setCollect(CollectConfiguration collect) {
-        this.collect = collect;
-    }
-
-    public ConfirmArchivedConfiguration getConfirmArchived() {
-        return confirmArchived;
-    }
-
-    public void setConfirmArchived(ConfirmArchivedConfiguration confirmArchived) {
-        this.confirmArchived = confirmArchived;
-    }
-
-    public ExtractMetadataConfiguration getExtractMetadata() {
-        return extractMetadata;
-    }
-
-    public void setExtractMetadata(ExtractMetadataConfiguration extractMetadata) {
-        this.extractMetadata = extractMetadata;
-    }
+    @Valid
+    @NotNull
+    private VaultCatalogConfiguration vaultCatalog;
 }

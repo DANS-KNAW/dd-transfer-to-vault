@@ -16,6 +16,7 @@
 package nl.knaw.dans.ttv.core.config;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Data;
 import nl.knaw.dans.lib.util.ExecutorServiceFactory;
 
 import javax.validation.Valid;
@@ -23,6 +24,7 @@ import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import java.nio.file.Path;
 
+@Data
 public class ExtractMetadataConfiguration {
     @Valid
     @NotNull
@@ -37,28 +39,4 @@ public class ExtractMetadataConfiguration {
     @NotNull
     @Min(1)
     private long pollingInterval;
-
-    public long getPollingInterval() {
-        return pollingInterval;
-    }
-
-    public void setPollingInterval(long pollingInterval) {
-        this.pollingInterval = pollingInterval;
-    }
-
-    public ExecutorServiceFactory getTaskQueue() {
-        return taskQueue;
-    }
-
-    public void setTaskQueue(ExecutorServiceFactory taskQueue) {
-        this.taskQueue = taskQueue;
-    }
-
-    public Path getInbox() {
-        return inbox;
-    }
-
-    public void setInbox(Path inbox) {
-        this.inbox = inbox;
-    }
 }

@@ -61,6 +61,16 @@ public class ExtractMetadataTask implements Runnable {
                 log.error("Unable to reject file", ex);
             }
         }
+        catch (Throwable e) {
+            log.error("Unexpected error while processing file '{}'", this.filePath, e);
+
+            try {
+                fileService.rejectFile(this.filePath, e);
+            }
+            catch (IOException ex) {
+                log.error("Unable to reject file", ex);
+            }
+        }
     }
 
     void processFile(Path path) throws IOException, InvalidTransferItemException {

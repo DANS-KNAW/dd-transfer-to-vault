@@ -21,6 +21,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import org.apache.commons.io.FilenameUtils;
 import org.hibernate.annotations.TypeDef;
 import org.hibernate.annotations.TypeDefs;
 import org.hibernate.proxy.HibernateProxy;
@@ -57,55 +58,83 @@ public class TransferItem {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     @Column(name = "bag_id")
     private String bagId;
+
     @Column(name = "ocfl_object_version")
     private Integer ocflObjectVersion;
-    @Column(name = "dataset_identifier", nullable = false)
-    private String datasetIdentifier;
-    @Column(name = "dataverse_pid")
-    private String dataversePid;
-    @Column(name = "dataverse_pid_version")
-    private String dataversePidVersion;
-    @Column(name = "creation_time", nullable = false)
-    private OffsetDateTime creationTime;
+
+    @Column(name = "dve_filename", nullable = false)
+    private String dveFilename;
+
     @Column(name = "dve_file_path", nullable = false)
     private String dveFilePath;
+
     @Column(name = "nbn")
     private String nbn;
-    @Column(name = "other_id")
-    private String otherId;
-    @Column(name = "other_id_version")
-    private String otherIdVersion;
-    @Column(name = "data_supplier")
-    private String dataSupplier;
+
     @Column(name = "sword_token")
     private String swordToken;
-    @Column(name = "datastation")
-    private String datastation;
-    @Column(name = "bag_checksum")
-    private String bagChecksum;
-    @Column(name = "queue_date")
-    private OffsetDateTime queueDate;
-    @Column(name = "bag_size")
-    private long bagSize;
-    @Enumerated(EnumType.STRING)
-    @Column(name = "transfer_status", nullable = false)
-    private TransferStatus transferStatus;
-    @Column(name = "oai_ore")
-    @ToString.Exclude
-    private String metadata;
-    @Column(name = "pid_mapping")
-    @ToString.Exclude
-    private String pidMapping;
-    @Column(name = "aip_tar_entry_name")
-    private String tarEntryName;
-    // this is the tar entry name without the urn:uuid: prefix
-    @Column(name = "ocfl_object_path")
-    private String ocflObjectPath;
+
+    @Column(name = "data_supplier")
+    private String dataSupplier;
+
     @ManyToOne
     @JoinColumn(name = "tar_id")
     private Tar tar;
+
+    // this is the tar entry name without the urn:uuid: prefix
+    @Column(name = "ocfl_object_path")
+    private String ocflObjectPath;
+
+    @Column(name = "datastation")
+    private String datastation;
+
+    @Column(name = "dataverse_pid")
+    private String dataversePid;
+
+    @Column(name = "dataverse_pid_version")
+    private String dataversePidVersion;
+
+    @Column(name = "other_id")
+    private String otherId;
+
+    @Column(name = "other_id_version")
+    private String otherIdVersion;
+
+    @Column(name = "metadata")
+    @ToString.Exclude
+    private String metadata;
+
+    @Column(name = "filepid_to_local_path")
+    @ToString.Exclude
+    private String filepidToLocalPath;
+
+    @Column
+    private String deaccessioned;
+
+    @Column
+    private String exporter;
+
+    @Column(name = "exporter_version")
+    private String exporterVersion;
+
+    @Column(name = "creation_time", nullable = false)
+    private OffsetDateTime creationTime;
+
+    @Column(name = "bag_sha256_checksum")
+    private String bagSha256Checksum;
+
+    @Column(name = "queue_timestamp")
+    private OffsetDateTime queueTimestamp;
+
+    @Column(name = "bag_size")
+    private long bagSize;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "transfer_status", nullable = false)
+    private TransferStatus transferStatus;
 
     @Override
     public final boolean equals(Object o) {
@@ -127,11 +156,13 @@ public class TransferItem {
     }
 
     public String getCanonicalFilename() {
-        if (this.getId() == null || this.getDatasetIdentifier() == null) {
+        if (this.getId() == null || this.getDveFilename() == null) {
             throw new IllegalStateException("Cannot create canonical filename for transfer item without id and dataset identifier");
         }
 
-        return String.format("%s-ttv%s.zip", getDatasetIdentifier(), getId());
+        var name = FilenameUtils.removeExtension(this.getDveFilename());
+
+        return String.format("%s-ttv%s.zip", name , getId());
     }
 
     public enum TransferStatus {

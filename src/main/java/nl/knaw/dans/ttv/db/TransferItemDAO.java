@@ -51,7 +51,7 @@ public class TransferItemDAO extends AbstractDAO<TransferItem> {
     }
 
     public Optional<TransferItem> findByIdentifier(String fileIdentifier) {
-        return query("from TransferItem where datasetIdentifier = :identifier")
+        return query("from TransferItem where dveFilename = :identifier")
             .setParameter("identifier", fileIdentifier)
             .uniqueResultOptional();
 

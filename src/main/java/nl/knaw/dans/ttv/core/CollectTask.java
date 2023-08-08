@@ -75,7 +75,7 @@ public class CollectTask implements Runnable {
 
         var existingTransferItem = transferItemService.getTransferItemByFilenameAttributes(filenameAttributes)
             // filter out items that have a different checksum, because they are different
-            .filter(item -> Objects.equals(item.getBagChecksum(), filesystemAttributes.getChecksum()));
+            .filter(item -> Objects.equals(item.getBagSha256Checksum(), filesystemAttributes.getChecksum()));
 
         // treat it as an existing TransferItem if either:
         // - it has the same filename and it has the same checksum
