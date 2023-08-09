@@ -68,7 +68,7 @@ createOcflTar:
 
 confirmArchived:
   cron: '0 0/15 * * * ?' # cron expression for triggering a polling round
-  vaultServiceEndpoint: http://localhost:20100/api
+  vaultServiceEndpoint: http://localhost:20305/api
   taskQueue:
     nameFormat: "confirm-thread-%d"
     maxQueueSize: 5000
@@ -96,7 +96,7 @@ vaultCatalog:
 
 database:
   driverClass: org.hsqldb.jdbcDriver
-  url: jdbc:hsqldb:hsql://localhost:9001/dd-transfer-to-vault
+  url: jdbc:hsqldb:hsql://localhost:9002/dd-transfer-to-vault
   logValidationErrors: true
   # See: https://stackoverflow.com/questions/10684244/dbcp-validationquery-for-different-databases
   validationQuery: SELECT * FROM INFORMATION_SCHEMA.SYSTEM_TABLES
