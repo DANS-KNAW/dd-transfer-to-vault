@@ -42,7 +42,7 @@ import java.time.OffsetDateTime;
 import java.util.Objects;
 
 @Entity
-@Table(name = "transfer_queue",
+@Table(name = "transfer_item",
        uniqueConstraints = { @UniqueConstraint(columnNames = { "bag_id", "ocfl_object_version" }) }
 )
 @TypeDefs({
