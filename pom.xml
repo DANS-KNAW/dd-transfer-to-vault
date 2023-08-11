@@ -22,7 +22,7 @@
     <parent>
         <groupId>nl.knaw.dans</groupId>
         <artifactId>dd-parent</artifactId>
-        <version>0.20.0</version>
+        <version>0.21.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>dd-transfer-to-vault</artifactId>
@@ -35,7 +35,6 @@
 
     <properties>
         <main-class>nl.knaw.dans.ttv.DdTransferToVaultApplication</main-class>
-        <dd-vault-catalog-api.version>0.0.1-SNAPSHOT</dd-vault-catalog-api.version>
     </properties>
 
     <scm>
@@ -228,10 +227,10 @@
                         <configuration>
                             <inputSpec>${project.build.directory}/openapi/dd-vault-catalog-api.yml</inputSpec>
                             <generatorName>java</generatorName>
+                            <apiPackage>nl.knaw.dans.vaultcatalog.client.resources</apiPackage>
+                            <modelPackage>nl.knaw.dans.vaultcatalog.client.api</modelPackage>
+                            <invokerPackage>nl.knaw.dans.vaultcatalog.client.invoker</invokerPackage>
                             <configOptions>
-                                <apiPackage>nl.knaw.dans.ttv.client</apiPackage>
-                                <modelPackage>nl.knaw.dans.ttv.api</modelPackage>
-                                <invokerPackage>nl.knaw.dans.ttv.client</invokerPackage>
                                 <!-- the client does not appear to need annotations so we can remove them -->
                                 <annotationLibrary>none</annotationLibrary>
                                 <!-- this generates jersey2 client -->
