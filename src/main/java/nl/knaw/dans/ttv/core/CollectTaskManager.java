@@ -22,7 +22,6 @@ import nl.knaw.dans.ttv.core.service.InboxWatcher;
 import nl.knaw.dans.ttv.core.service.InboxWatcherFactory;
 import nl.knaw.dans.ttv.core.service.TransferItemMetadataReader;
 import nl.knaw.dans.ttv.core.service.TransferItemService;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -18,8 +18,6 @@ package nl.knaw.dans.ttv.core.service;
 import lombok.extern.slf4j.Slf4j;
 import nl.knaw.dans.ttv.core.config.DataArchiveConfiguration;
 import nl.knaw.dans.ttv.core.domain.ArchiveMetadata;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Path;

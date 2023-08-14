@@ -108,6 +108,8 @@ createOcflTar:
 
 confirmArchived:
   cron: '0 0 * * * ?' # cron expression for triggering a polling round
+  # TODO: move complete vaultCatalog block to here, deduplicate definition of url.
+  vaultServiceEndpoint: http://localhost:20305
   taskQueue:
     nameFormat: "confirm-archived-worker-%d"
     maxQueueSize: 5000

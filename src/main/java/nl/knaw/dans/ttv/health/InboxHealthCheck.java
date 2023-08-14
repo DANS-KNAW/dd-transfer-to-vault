@@ -22,13 +22,8 @@ import nl.knaw.dans.ttv.core.service.FileService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.concurrent.TimeoutException;
-import java.util.stream.Collectors;
 
 public class InboxHealthCheck extends HealthCheck {
     private static final Logger log = LoggerFactory.getLogger(InboxHealthCheck.class);

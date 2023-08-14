@@ -26,4 +26,3 @@
 .classpath
 .settings
 .project
-!/src/main/java/nl/knaw/dans/ttv/TestOcfl.java

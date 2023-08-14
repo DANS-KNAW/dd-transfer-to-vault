@@ -17,14 +17,17 @@
 package nl.knaw.dans.ttv.client;
 
 import lombok.extern.slf4j.Slf4j;
-import nl.knaw.dans.ttv.api.OcflObjectVersionDto;
-import nl.knaw.dans.ttv.api.OcflObjectVersionRefDto;
-import nl.knaw.dans.ttv.api.TarParameterDto;
-import nl.knaw.dans.ttv.api.TarPartParameterDto;
 import nl.knaw.dans.ttv.client.mappers.OcflObjectVersionMapper;
 import nl.knaw.dans.ttv.core.VaultCatalogRepository;
 import nl.knaw.dans.ttv.db.Tar;
 import nl.knaw.dans.ttv.db.TransferItem;
+import nl.knaw.dans.vaultcatalog.client.api.OcflObjectVersionDto;
+import nl.knaw.dans.vaultcatalog.client.api.OcflObjectVersionRefDto;
+import nl.knaw.dans.vaultcatalog.client.api.TarParameterDto;
+import nl.knaw.dans.vaultcatalog.client.api.TarPartParameterDto;
+import nl.knaw.dans.vaultcatalog.client.invoker.ApiException;
+import nl.knaw.dans.vaultcatalog.client.resources.OcflObjectVersionApi;
+import nl.knaw.dans.vaultcatalog.client.resources.TarApi;
 
 import java.io.IOException;
 import java.util.Comparator;

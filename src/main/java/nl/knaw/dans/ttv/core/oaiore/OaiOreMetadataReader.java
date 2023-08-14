@@ -15,8 +15,6 @@
  */
 package nl.knaw.dans.ttv.core.oaiore;
 
-import lombok.Builder;
-import lombok.Value;
 import nl.knaw.dans.ttv.core.domain.FileContentAttributes;
 import nl.knaw.dans.ttv.core.oaiore.vocabulary.DVCitation;
 import nl.knaw.dans.ttv.core.oaiore.vocabulary.DansDVMetadata;
@@ -28,7 +26,6 @@ import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.sparql.vocabulary.FOAF;
 import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.RDF;
-import org.apache.jena.vocabulary.SchemaDO;
 
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
