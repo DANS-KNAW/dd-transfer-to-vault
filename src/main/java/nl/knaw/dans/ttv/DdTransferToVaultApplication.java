@@ -41,11 +41,11 @@ import nl.knaw.dans.ttv.core.service.TarCommandRunnerImpl;
 import nl.knaw.dans.ttv.core.service.TransferItemMetadataReaderImpl;
 import nl.knaw.dans.ttv.core.service.TransferItemServiceImpl;
 import nl.knaw.dans.ttv.core.service.TransferItemValidatorImpl;
-import nl.knaw.dans.ttv.db.Tar;
-import nl.knaw.dans.ttv.db.TarDAO;
-import nl.knaw.dans.ttv.db.TarPart;
-import nl.knaw.dans.ttv.db.TransferItem;
-import nl.knaw.dans.ttv.db.TransferItemDAO;
+import nl.knaw.dans.ttv.core.Tar;
+import nl.knaw.dans.ttv.db.TarDao;
+import nl.knaw.dans.ttv.core.TarPart;
+import nl.knaw.dans.ttv.core.TransferItem;
+import nl.knaw.dans.ttv.db.TransferItemDao;
 import nl.knaw.dans.ttv.health.FilesystemHealthCheck;
 import nl.knaw.dans.ttv.health.InboxHealthCheck;
 import nl.knaw.dans.ttv.health.LocalDmftarHealthCheck;
@@ -86,8 +86,8 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
     @Override
     public void run(final DdTransferToVaultConfiguration configuration, final Environment environment) {
         log.info("Creating required objects");
-        final var transferItemDAO = new TransferItemDAO(hibernateBundle.getSessionFactory());
-        final var tarDAO = new TarDAO(hibernateBundle.getSessionFactory());
+        final var transferItemDAO = new TransferItemDao(hibernateBundle.getSessionFactory());
+        final var tarDAO = new TarDao(hibernateBundle.getSessionFactory());
 
         final var transferItemValidator = new TransferItemValidatorImpl();
         final var collectExecutorService = configuration.getCollect().getTaskQueue().build(environment);
@@ -96,7 +96,7 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
         final var inboxWatcherFactory = new InboxWatcherFactoryImpl();
 
         final var transferItemService = new UnitOfWorkAwareProxyFactory(hibernateBundle)
-            .create(TransferItemServiceImpl.class, new Class[] { TransferItemDAO.class, TarDAO.class },
+            .create(TransferItemServiceImpl.class, new Class[] { TransferItemDao.class, TarDao.class },
                 new Object[] { transferItemDAO, tarDAO });
 
         final var oaiOreMetadataReader = new OaiOreMetadataReader();

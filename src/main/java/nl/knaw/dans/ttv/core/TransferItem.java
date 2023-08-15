@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ttv.db;
+package nl.knaw.dans.ttv.core;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

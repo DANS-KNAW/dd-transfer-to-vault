@@ -16,14 +16,15 @@
 package nl.knaw.dans.ttv.db;
 
 import io.dropwizard.hibernate.AbstractDAO;
+import nl.knaw.dans.ttv.core.TransferItem;
 import org.hibernate.SessionFactory;
 
 import java.util.List;
 import java.util.Optional;
 
-public class TransferItemDAO extends AbstractDAO<TransferItem> {
+public class TransferItemDao extends AbstractDAO<TransferItem> {
 
-    public TransferItemDAO(SessionFactory sessionFactory) {
+    public TransferItemDao(SessionFactory sessionFactory) {
         super(sessionFactory);
     }
 

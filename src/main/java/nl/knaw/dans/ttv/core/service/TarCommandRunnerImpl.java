@@ -15,7 +15,7 @@
  */
 package nl.knaw.dans.ttv.core.service;
 
-import nl.knaw.dans.ttv.core.config.DataArchiveConfiguration;
+import nl.knaw.dans.ttv.config.DataArchiveConfiguration;
 import nl.knaw.dans.ttv.core.domain.ProcessResult;
 
 import java.io.IOException;

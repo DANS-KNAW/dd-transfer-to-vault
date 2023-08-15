@@ -13,23 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ttv.core.config.validation;
+package nl.knaw.dans.ttv.core;
 
-import javax.validation.Constraint;
-import javax.validation.Payload;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import nl.knaw.dans.ttv.core.TransferItem;
+import org.junit.jupiter.api.Test;
 
-@Target({ ElementType.FIELD })
-@Retention(RetentionPolicy.RUNTIME)
-@Constraint(validatedBy = UniqueInboxEntryNamesValidator.class)
-public @interface UniqueInboxEntryNames {
+import static org.assertj.core.api.Assertions.assertThat;
 
-    String message() default "duplicate";
+class TransferItemTest {
 
-    Class<?>[] groups() default {};
+    @Test
+    void getCanonicalFilename_should_include_identifier_and_id() {
+        var item = TransferItem.builder()
+            .id(1L)
+            .dveFilename("dans-bag-1.zip")
+            .build();
 
-    Class<? extends Payload>[] payload() default {};
+        assertThat(item.getCanonicalFilename()).isEqualTo("dans-bag-1-ttv1.zip");
+    }
 }

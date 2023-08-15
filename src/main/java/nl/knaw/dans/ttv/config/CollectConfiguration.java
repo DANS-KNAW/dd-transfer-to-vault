@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ttv.core.config;
+package nl.knaw.dans.ttv.config;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import nl.knaw.dans.lib.util.ExecutorServiceFactory;
-import nl.knaw.dans.ttv.core.config.validation.UniqueInboxEntryNames;
-import nl.knaw.dans.ttv.core.config.validation.UniqueInboxEntryPaths;
+import nl.knaw.dans.ttv.config.validation.UniqueInboxEntryNames;
+import nl.knaw.dans.ttv.config.validation.UniqueInboxEntryPaths;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Min;

@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ttv.core.config;
+package nl.knaw.dans.ttv.config;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.Data;
 import nl.knaw.dans.lib.util.ExecutorServiceFactory;
-import nl.knaw.dans.ttv.core.config.converter.StringByteSizeConverter;
+import nl.knaw.dans.ttv.config.converter.StringByteSizeConverter;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Min;

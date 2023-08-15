@@ -19,12 +19,12 @@ package nl.knaw.dans.ttv;
 import io.dropwizard.Configuration;
 import io.dropwizard.db.DataSourceFactory;
 import lombok.Data;
-import nl.knaw.dans.ttv.core.config.CollectConfiguration;
-import nl.knaw.dans.ttv.core.config.ConfirmArchivedConfiguration;
-import nl.knaw.dans.ttv.core.config.CreateOcflTarConfiguration;
-import nl.knaw.dans.ttv.core.config.DataArchiveConfiguration;
-import nl.knaw.dans.ttv.core.config.ExtractMetadataConfiguration;
-import nl.knaw.dans.ttv.core.config.VaultCatalogConfiguration;
+import nl.knaw.dans.ttv.config.CollectConfiguration;
+import nl.knaw.dans.ttv.config.ConfirmArchivedConfiguration;
+import nl.knaw.dans.ttv.config.CreateOcflTarConfiguration;
+import nl.knaw.dans.ttv.config.DataArchiveConfiguration;
+import nl.knaw.dans.ttv.config.ExtractMetadataConfiguration;
+import nl.knaw.dans.ttv.config.VaultCatalogConfiguration;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;

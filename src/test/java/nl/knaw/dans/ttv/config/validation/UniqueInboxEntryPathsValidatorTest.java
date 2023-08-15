@@ -13,9 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ttv.core.config.validation;
+package nl.knaw.dans.ttv.config.validation;
 
-import nl.knaw.dans.ttv.core.config.CollectConfiguration;
+import nl.knaw.dans.ttv.config.CollectConfiguration;
+import nl.knaw.dans.ttv.config.validation.UniqueInboxEntryPathsValidator;
 import org.junit.jupiter.api.Test;
 
 import java.nio.file.Path;
@@ -24,11 +25,11 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class UniqueInboxEntryNamesValidatorTest {
+class UniqueInboxEntryPathsValidatorTest {
 
     @Test
     void testIsValid() {
-        var validator = new UniqueInboxEntryNamesValidator();
+        var validator = new UniqueInboxEntryPathsValidator();
         var entries = List.of(
             new CollectConfiguration.InboxEntry("name1", Path.of("tmp/folder1")),
             new CollectConfiguration.InboxEntry("name2", Path.of("tmp/folder2")),
@@ -42,11 +43,11 @@ class UniqueInboxEntryNamesValidatorTest {
 
     @Test
     void testIsInValid() {
-        var validator = new UniqueInboxEntryNamesValidator();
+        var validator = new UniqueInboxEntryPathsValidator();
         var entries = List.of(
             new CollectConfiguration.InboxEntry("name1", Path.of("tmp/folder1")),
             new CollectConfiguration.InboxEntry("name2", Path.of("tmp/folder2")),
-            new CollectConfiguration.InboxEntry("name1", Path.of("tmp/folder3"))
+            new CollectConfiguration.InboxEntry("name3", Path.of("tmp/folder1"))
         );
 
         var result = validator.isValid(entries, null);
@@ -55,15 +56,15 @@ class UniqueInboxEntryNamesValidatorTest {
     }
 
     /**
-     * this tests if it only checks the names, not the paths
+     * this tests if it only checks the paths, not the names
      */
     @Test
-    void testIsValidDespiteDuplicatePaths() {
-        var validator = new UniqueInboxEntryNamesValidator();
+    void testIsValidDespiteDuplicateNames() {
+        var validator = new UniqueInboxEntryPathsValidator();
         var entries = List.of(
-            new CollectConfiguration.InboxEntry("name1", Path.of("tmp/folder")),
-            new CollectConfiguration.InboxEntry("name2", Path.of("tmp/folder")),
-            new CollectConfiguration.InboxEntry("name3", Path.of("tmp/folder"))
+            new CollectConfiguration.InboxEntry("name", Path.of("tmp/folder1")),
+            new CollectConfiguration.InboxEntry("name", Path.of("tmp/folder2")),
+            new CollectConfiguration.InboxEntry("name", Path.of("tmp/folder3"))
         );
 
         var result = validator.isValid(entries, null);

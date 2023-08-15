@@ -15,7 +15,7 @@
  */
 package nl.knaw.dans.ttv.core.service;
 
-import nl.knaw.dans.ttv.core.config.DataArchiveConfiguration;
+import nl.knaw.dans.ttv.config.DataArchiveConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

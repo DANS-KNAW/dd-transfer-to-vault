@@ -13,22 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ttv.core.config;
+package nl.knaw.dans.ttv.config;
 
-import io.dropwizard.client.JerseyClientConfiguration;
 import lombok.Data;
+import nl.knaw.dans.lib.util.ExecutorServiceFactory;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
-import java.net.URI;
 
 @Data
-public class VaultCatalogConfiguration {
-    @NotNull
-    @Valid
-    private URI url;
-
+public class ConfirmArchivedConfiguration {
     @Valid
     @NotNull
-    private JerseyClientConfiguration httpClient = new JerseyClientConfiguration();
+    private String cron;
+    @Valid
+    @NotNull
+    private String vaultServiceEndpoint;
+    @Valid
+    @NotNull
+    private ExecutorServiceFactory taskQueue;
 }

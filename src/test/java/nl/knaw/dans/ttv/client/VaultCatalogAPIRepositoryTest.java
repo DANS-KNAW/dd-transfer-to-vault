@@ -15,7 +15,7 @@
  */
 package nl.knaw.dans.ttv.client;
 
-import nl.knaw.dans.ttv.db.TransferItem;
+import nl.knaw.dans.ttv.core.TransferItem;
 import nl.knaw.dans.vaultcatalog.client.api.OcflObjectVersionDto;
 import nl.knaw.dans.vaultcatalog.client.api.OcflObjectVersionParametersDto;
 import nl.knaw.dans.vaultcatalog.client.resources.OcflObjectVersionApi;

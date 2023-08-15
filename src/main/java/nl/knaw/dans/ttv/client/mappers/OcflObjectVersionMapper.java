@@ -18,7 +18,7 @@ package nl.knaw.dans.ttv.client.mappers;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import nl.knaw.dans.ttv.db.TransferItem;
+import nl.knaw.dans.ttv.core.TransferItem;
 import nl.knaw.dans.vaultcatalog.client.api.OcflObjectVersionParametersDto;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

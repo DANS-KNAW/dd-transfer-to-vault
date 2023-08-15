@@ -16,7 +16,7 @@
 package nl.knaw.dans.ttv.core.service;
 
 import lombok.extern.slf4j.Slf4j;
-import nl.knaw.dans.ttv.core.config.DataArchiveConfiguration;
+import nl.knaw.dans.ttv.config.DataArchiveConfiguration;
 import nl.knaw.dans.ttv.core.domain.ArchiveMetadata;
 
 import java.io.IOException;

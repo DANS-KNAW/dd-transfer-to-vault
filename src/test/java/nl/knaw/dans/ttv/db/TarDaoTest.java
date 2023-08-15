@@ -17,6 +17,9 @@ package nl.knaw.dans.ttv.db;
 
 import io.dropwizard.testing.junit5.DAOTestExtension;
 import io.dropwizard.testing.junit5.DropwizardExtensionsSupport;
+import nl.knaw.dans.ttv.core.Tar;
+import nl.knaw.dans.ttv.core.TarPart;
+import nl.knaw.dans.ttv.core.TransferItem;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,8 +32,8 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(DropwizardExtensionsSupport.class)
-class TarDAOTest {
-    private static final Logger log = LoggerFactory.getLogger(TarDAOTest.class);
+class TarDaoTest {
+    private static final Logger log = LoggerFactory.getLogger(TarDaoTest.class);
 
     private final DAOTestExtension daoTestRule = DAOTestExtension.newBuilder()
         .addEntityClass(TransferItem.class)
@@ -38,11 +41,11 @@ class TarDAOTest {
         .addEntityClass(TarPart.class)
         .build();
 
-    private TarDAO tarDAO;
+    private TarDao tarDAO;
 
     @BeforeEach
     void setUp() {
-        tarDAO = new TarDAO(daoTestRule.getSessionFactory());
+        tarDAO = new TarDao(daoTestRule.getSessionFactory());
     }
 
     @Test

@@ -16,7 +16,7 @@
 package nl.knaw.dans.ttv.core.service;
 
 import io.ocfl.api.OcflRepository;
-import nl.knaw.dans.ttv.db.TransferItem;
+import nl.knaw.dans.ttv.core.TransferItem;
 
 import java.io.IOException;
 import java.nio.file.Path;

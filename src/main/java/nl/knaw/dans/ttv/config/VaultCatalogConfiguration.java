@@ -13,21 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ttv.db;
+package nl.knaw.dans.ttv.config;
 
-import org.junit.jupiter.api.Test;
+import io.dropwizard.client.JerseyClientConfiguration;
+import lombok.Data;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
+import java.net.URI;
 
-class TransferItemTest {
+@Data
+public class VaultCatalogConfiguration {
+    @NotNull
+    @Valid
+    private URI url;
 
-    @Test
-    void getCanonicalFilename_should_include_identifier_and_id() {
-        var item = TransferItem.builder()
-            .id(1L)
-            .dveFilename("dans-bag-1.zip")
-            .build();
-
-        assertThat(item.getCanonicalFilename()).isEqualTo("dans-bag-1-ttv1.zip");
-    }
+    @Valid
+    @NotNull
+    private JerseyClientConfiguration httpClient = new JerseyClientConfiguration();
 }

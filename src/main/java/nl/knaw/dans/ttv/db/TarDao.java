@@ -16,15 +16,17 @@
 package nl.knaw.dans.ttv.db;
 
 import io.dropwizard.hibernate.AbstractDAO;
+import nl.knaw.dans.ttv.core.Tar;
+import nl.knaw.dans.ttv.core.TarPart;
 import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
 
 import java.util.List;
 import java.util.Optional;
 
-public class TarDAO extends AbstractDAO<Tar> {
+public class TarDao extends AbstractDAO<Tar> {
 
-    public TarDAO(SessionFactory sessionFactory) {
+    public TarDao(SessionFactory sessionFactory) {
         super(sessionFactory);
     }
 

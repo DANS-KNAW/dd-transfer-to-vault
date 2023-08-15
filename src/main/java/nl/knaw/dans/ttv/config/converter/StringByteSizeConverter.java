@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ttv.core.config.converter;
+package nl.knaw.dans.ttv.config.converter;
 
 import com.fasterxml.jackson.databind.util.StdConverter;
 

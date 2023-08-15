@@ -16,7 +16,7 @@
 package nl.knaw.dans.ttv.core;
 
 import io.dropwizard.lifecycle.Managed;
-import nl.knaw.dans.ttv.core.config.CollectConfiguration;
+import nl.knaw.dans.ttv.config.CollectConfiguration;
 import nl.knaw.dans.ttv.core.service.FileService;
 import nl.knaw.dans.ttv.core.service.InboxWatcher;
 import nl.knaw.dans.ttv.core.service.InboxWatcherFactory;

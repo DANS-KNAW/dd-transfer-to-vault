@@ -17,7 +17,7 @@ package nl.knaw.dans.ttv.health;
 
 import com.codahale.metrics.health.HealthCheck;
 import nl.knaw.dans.ttv.DdTransferToVaultConfiguration;
-import nl.knaw.dans.ttv.core.config.CreateOcflTarConfiguration;
+import nl.knaw.dans.ttv.config.CreateOcflTarConfiguration;
 import nl.knaw.dans.ttv.core.domain.ProcessResult;
 import nl.knaw.dans.ttv.core.service.ProcessRunner;
 import static org.junit.jupiter.api.Assertions.*;
