@@ -17,6 +17,10 @@ Open a separate terminal tab for `dd-transfer-to-vault` and one for its dependen
 start-env.sh
 ```
 
+To actually complete transfers, you will also need [dmftar](https://gitlab.com/surfsara/dmftar#installation), installation steps can also be found in 
+
+    dd-dtap/provisioning/roles/dd-transfer-to-vault/tasks/install.yml
+
 ### Database
 
 Optionally remove the directory `data/database` for a fresh up-to-date DB.
