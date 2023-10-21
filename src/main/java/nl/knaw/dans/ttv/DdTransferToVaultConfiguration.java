@@ -16,7 +16,7 @@
 
 package nl.knaw.dans.ttv;
 
-import io.dropwizard.Configuration;
+import io.dropwizard.core.Configuration;
 import io.dropwizard.db.DataSourceFactory;
 import lombok.Data;
 import nl.knaw.dans.ttv.core.config.CollectConfiguration;
