@@ -16,7 +16,7 @@
 package nl.knaw.dans.ttv.core;
 
 import io.dropwizard.lifecycle.Managed;
-import nl.knaw.dans.ttv.core.config.CollectConfiguration;
+import nl.knaw.dans.ttv.core.config.CollectConfig;
 import nl.knaw.dans.ttv.core.service.FileService;
 import nl.knaw.dans.ttv.core.service.InboxWatcher;
 import nl.knaw.dans.ttv.core.service.InboxWatcherFactory;
@@ -36,7 +36,7 @@ import java.util.stream.Collectors;
 
 public class CollectTaskManager implements Managed {
     private static final Logger log = LoggerFactory.getLogger(CollectTaskManager.class);
-    private final List<CollectConfiguration.InboxEntry> inboxes;
+    private final List<CollectConfig.InboxEntry> inboxes;
     private final Path outbox;
     private final long pollingInterval;
     private final ExecutorService executorService;
@@ -46,7 +46,7 @@ public class CollectTaskManager implements Managed {
     private final InboxWatcherFactory inboxWatcherFactory;
     private List<InboxWatcher> inboxWatchers;
 
-    public CollectTaskManager(List<CollectConfiguration.InboxEntry> inboxes, Path outbox, long pollingInterval, ExecutorService executorService,
+    public CollectTaskManager(List<CollectConfig.InboxEntry> inboxes, Path outbox, long pollingInterval, ExecutorService executorService,
         TransferItemService transferItemService, TransferItemMetadataReader metadataReader, FileService fileService, InboxWatcherFactory inboxWatcherFactory) {
 
         this.inboxes = Objects.requireNonNull(inboxes);

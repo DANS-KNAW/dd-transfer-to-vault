@@ -14,43 +14,39 @@
  * limitations under the License.
  */
 
-package nl.knaw.dans.ttv;
+package nl.knaw.dans.ttv.core.config;
 
 import io.dropwizard.core.Configuration;
 import io.dropwizard.db.DataSourceFactory;
 import lombok.Data;
-import nl.knaw.dans.ttv.core.config.CollectConfiguration;
-import nl.knaw.dans.ttv.core.config.ConfirmArchivedConfiguration;
-import nl.knaw.dans.ttv.core.config.CreateOcflTarConfiguration;
-import nl.knaw.dans.ttv.core.config.DataArchiveConfiguration;
-import nl.knaw.dans.ttv.core.config.ExtractMetadataConfiguration;
-import nl.knaw.dans.ttv.core.config.VaultCatalogConfiguration;
+import lombok.EqualsAndHashCode;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
 @Data
-public class DdTransferToVaultConfiguration extends Configuration {
+@EqualsAndHashCode(callSuper = true)
+public class DdTransferToVaultConfig extends Configuration {
 
     @Valid
     @NotNull
     private DataSourceFactory database = new DataSourceFactory();
     @Valid
     @NotNull
-    private CollectConfiguration collect;
+    private CollectConfig collect;
     @Valid
     @NotNull
-    private ExtractMetadataConfiguration extractMetadata;
+    private ExtractMetadataConfig extractMetadata;
     @Valid
     @NotNull
-    private CreateOcflTarConfiguration createOcflTar;
+    private CreateOcflTarConfig createOcflTar;
     @Valid
     @NotNull
-    private ConfirmArchivedConfiguration confirmArchived;
+    private ConfirmArchivedConfig confirmArchived;
     @Valid
     @NotNull
-    private DataArchiveConfiguration dataArchive;
+    private DataArchiveConfig dataArchive;
     @Valid
     @NotNull
-    private VaultCatalogConfiguration vaultCatalog;
+    private VaultCatalogConfig vaultCatalog;
 }

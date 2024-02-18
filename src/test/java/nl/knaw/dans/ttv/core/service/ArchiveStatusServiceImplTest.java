@@ -15,7 +15,7 @@
  */
 package nl.knaw.dans.ttv.core.service;
 
-import nl.knaw.dans.ttv.core.config.DataArchiveConfiguration;
+import nl.knaw.dans.ttv.core.config.DataArchiveConfig;
 import nl.knaw.dans.ttv.core.domain.ProcessResult;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 class ArchiveStatusServiceImplTest {
 
-    final DataArchiveConfiguration dataArchiveConfiguration = new DataArchiveConfiguration("username", "hostname", "");
+    final DataArchiveConfig dataArchiveConfig = new DataArchiveConfig("username", "hostname", "");
     ProcessRunner processRunner;
 
     @BeforeEach
@@ -43,7 +43,7 @@ class ArchiveStatusServiceImplTest {
             + "-r--r--r--  1 danstst0        85 2022-01-24 16:41 (N/A) ff99d9fd-53ef-48f2-8672-a40a2c91f1c6.dfmtar/0000/ff99d9fd-53ef-48f2-8672-a40a2c91f1c6.dfmtar.tar.chksum\n"
             + "-r--r--r--  1 danstst0      3011 2022-01-24 16:41 (REG) ff99d9fd-53ef-48f2-8672-a40a2c91f1c6.dfmtar/0000/ff99d9fd-53ef-48f2-8672-a40a2c91f1c6.dfmtar.tar.idx\n";
 
-        var service = new ArchiveStatusServiceImpl(dataArchiveConfiguration, processRunner);
+        var service = new ArchiveStatusServiceImpl(dataArchiveConfig, processRunner);
 
         try {
             Mockito.when(processRunner.run((String[]) Mockito.any()))
@@ -62,7 +62,7 @@ class ArchiveStatusServiceImplTest {
 
     @Test
     void getFileStatusWithError() {
-        var service = new ArchiveStatusServiceImpl(dataArchiveConfiguration, processRunner);
+        var service = new ArchiveStatusServiceImpl(dataArchiveConfig, processRunner);
 
         try {
             var output = "command does not exist";
@@ -83,7 +83,7 @@ class ArchiveStatusServiceImplTest {
     void unexpectedStatus() {
         var output = "-r--r--r--  1 danstst0    133120 2022-01-24 16:41 (ABC) ff99d9fd-53ef-48f2-8672-a40a2c91f1c6.dfmtar/0000/ff99d9fd-53ef-48f2-8672-a40a2c91f1c6.dfmtar.tar\n";
 
-        var service = new ArchiveStatusServiceImpl(dataArchiveConfiguration, processRunner);
+        var service = new ArchiveStatusServiceImpl(dataArchiveConfig, processRunner);
 
         try {
             Mockito.when(processRunner.run((String[]) Mockito.any()))

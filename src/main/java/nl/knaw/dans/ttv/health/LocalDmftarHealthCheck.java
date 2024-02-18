@@ -17,7 +17,7 @@
 package nl.knaw.dans.ttv.health;
 
 import com.codahale.metrics.health.HealthCheck;
-import nl.knaw.dans.ttv.DdTransferToVaultConfiguration;
+import nl.knaw.dans.ttv.core.config.DdTransferToVaultConfig;
 import nl.knaw.dans.ttv.core.service.ProcessRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,10 +27,10 @@ import java.io.IOException;
 public class LocalDmftarHealthCheck extends HealthCheck {
     private static final Logger log = LoggerFactory.getLogger(LocalDmftarHealthCheck.class);
 
-    private final DdTransferToVaultConfiguration configuration;
+    private final DdTransferToVaultConfig configuration;
     private final ProcessRunner processRunner;
 
-    public LocalDmftarHealthCheck(DdTransferToVaultConfiguration configuration, ProcessRunner processRunner) {
+    public LocalDmftarHealthCheck(DdTransferToVaultConfig configuration, ProcessRunner processRunner) {
         this.configuration = configuration;
         this.processRunner = processRunner;
     }

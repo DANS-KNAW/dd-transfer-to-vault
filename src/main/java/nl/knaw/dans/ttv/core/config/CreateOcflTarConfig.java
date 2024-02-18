@@ -15,28 +15,66 @@
  */
 package nl.knaw.dans.ttv.core.config;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.Data;
 import nl.knaw.dans.lib.util.ExecutorServiceFactory;
+import nl.knaw.dans.ttv.core.config.converter.StringByteSizeConverter;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import java.nio.file.Path;
+import java.time.Duration;
+import java.util.List;
 
 @Data
-public class ExtractMetadataConfiguration {
+public class CreateOcflTarConfig {
     @Valid
     @NotNull
     private Path inbox;
 
     @Valid
     @NotNull
-    @JsonProperty("taskQueue")
-    private ExecutorServiceFactory taskQueue;
-
+    private Path workDir;
+    @Valid
+    @NotNull
+    private DmfTarVersion dmftarVersion;
+    @Valid
+    @NotNull
+    @JsonDeserialize(converter = StringByteSizeConverter.class)
+    private long inboxThreshold;
     @Valid
     @NotNull
     @Min(1)
     private long pollingInterval;
+    @Valid
+    @NotNull
+    @Min(1)
+    private int maxRetries;
+    @Valid
+    @NotNull
+    private Duration retryInterval;
+    @Valid
+    @NotNull
+    private List<Duration> retrySchedule;
+    @Valid
+    @NotNull
+    private ExecutorServiceFactory taskQueue;
+
+    @Data
+    public static class DmfTarVersion {
+        @NotNull
+        private String local;
+        @NotNull
+        private String remote;
+
+        public DmfTarVersion() {
+
+        }
+
+        public DmfTarVersion(String local, String remote) {
+            this.local = local;
+            this.remote = remote;
+        }
+    }
 }

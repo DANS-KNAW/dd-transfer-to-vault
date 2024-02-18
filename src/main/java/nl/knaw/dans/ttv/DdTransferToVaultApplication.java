@@ -29,6 +29,7 @@ import nl.knaw.dans.ttv.core.ConfirmArchivedTaskManager;
 import nl.knaw.dans.ttv.core.ExtractMetadataTaskManager;
 import nl.knaw.dans.ttv.core.OcflTarTaskManager;
 import nl.knaw.dans.ttv.core.VaultCatalogRepository;
+import nl.knaw.dans.ttv.core.config.DdTransferToVaultConfig;
 import nl.knaw.dans.ttv.core.oaiore.OaiOreMetadataReader;
 import nl.knaw.dans.ttv.core.service.ArchiveMetadataServiceImpl;
 import nl.knaw.dans.ttv.core.service.ArchiveStatusServiceImpl;
@@ -58,13 +59,13 @@ import nl.knaw.dans.vaultcatalog.client.resources.TarApi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class DdTransferToVaultApplication extends Application<DdTransferToVaultConfiguration> {
+public class DdTransferToVaultApplication extends Application<DdTransferToVaultConfig> {
 
     private static final Logger log = LoggerFactory.getLogger(DdTransferToVaultApplication.class);
-    private final HibernateBundle<DdTransferToVaultConfiguration> hibernateBundle = new HibernateBundle<>(TransferItem.class, Tar.class, TarPart.class) {
+    private final HibernateBundle<DdTransferToVaultConfig> hibernateBundle = new HibernateBundle<>(TransferItem.class, Tar.class, TarPart.class) {
 
         @Override
-        public PooledDataSourceFactory getDataSourceFactory(DdTransferToVaultConfiguration configuration) {
+        public PooledDataSourceFactory getDataSourceFactory(DdTransferToVaultConfig configuration) {
             return configuration.getDatabase();
         }
     };
@@ -79,12 +80,12 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
     }
 
     @Override
-    public void initialize(final Bootstrap<DdTransferToVaultConfiguration> bootstrap) {
+    public void initialize(final Bootstrap<DdTransferToVaultConfig> bootstrap) {
         bootstrap.addBundle(hibernateBundle);
     }
 
     @Override
-    public void run(final DdTransferToVaultConfiguration configuration, final Environment environment) {
+    public void run(final DdTransferToVaultConfig configuration, final Environment environment) {
         log.info("Creating required objects");
         final var transferItemDAO = new TransferItemDAO(hibernateBundle.getSessionFactory());
         final var tarDAO = new TarDAO(hibernateBundle.getSessionFactory());
@@ -156,7 +157,7 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
         environment.lifecycle().manage(confirmArchivedTaskManager);
     }
 
-    VaultCatalogRepository buildCatalogRepository(DdTransferToVaultConfiguration configuration, Environment environment) {
+    VaultCatalogRepository buildCatalogRepository(DdTransferToVaultConfig configuration, Environment environment) {
         var client = new JerseyClientBuilder(environment)
             .using(configuration.getVaultCatalog().getHttpClient())
             .build("vault-catalog");

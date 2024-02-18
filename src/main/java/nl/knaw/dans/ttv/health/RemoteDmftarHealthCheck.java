@@ -17,7 +17,7 @@
 package nl.knaw.dans.ttv.health;
 
 import com.codahale.metrics.health.HealthCheck;
-import nl.knaw.dans.ttv.DdTransferToVaultConfiguration;
+import nl.knaw.dans.ttv.core.config.DdTransferToVaultConfig;
 import nl.knaw.dans.ttv.core.service.TarCommandRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,10 +27,10 @@ import java.io.IOException;
 public class RemoteDmftarHealthCheck extends HealthCheck {
     private static final Logger log = LoggerFactory.getLogger(RemoteDmftarHealthCheck.class);
 
-    private final DdTransferToVaultConfiguration configuration;
+    private final DdTransferToVaultConfig configuration;
     private final TarCommandRunner tarCommandRunner;
 
-    public RemoteDmftarHealthCheck(DdTransferToVaultConfiguration configuration, TarCommandRunner tarCommandRunner) {
+    public RemoteDmftarHealthCheck(DdTransferToVaultConfig configuration, TarCommandRunner tarCommandRunner) {
         this.configuration = configuration;
         this.tarCommandRunner = tarCommandRunner;
     }

@@ -15,7 +15,7 @@
  */
 package nl.knaw.dans.ttv.core.service;
 
-import nl.knaw.dans.ttv.core.config.DataArchiveConfiguration;
+import nl.knaw.dans.ttv.core.config.DataArchiveConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class TarCommandRunnerImplTest {
 
-    private final DataArchiveConfiguration dataArchiveConfiguration = new DataArchiveConfiguration("username", "hostname", "path");
+    private final DataArchiveConfig dataArchiveConfig = new DataArchiveConfig("username", "hostname", "path");
     private ProcessRunner processRunner;
 
     @BeforeEach
@@ -37,7 +37,7 @@ class TarCommandRunnerImplTest {
 
     @Test
     void tarDirectory() throws IOException, InterruptedException {
-        var runner = new TarCommandRunnerImpl(dataArchiveConfiguration, processRunner);
+        var runner = new TarCommandRunnerImpl(dataArchiveConfig, processRunner);
 
         runner.tarDirectory(Path.of("some/path/1"), "abc.dmftar");
         Mockito.verify(processRunner).run(new String[] {
@@ -51,7 +51,7 @@ class TarCommandRunnerImplTest {
 
     @Test
     void tarDirectoryWithNullArguments() {
-        var runner = new TarCommandRunnerImpl(dataArchiveConfiguration, processRunner);
+        var runner = new TarCommandRunnerImpl(dataArchiveConfig, processRunner);
 
         assertThrows(NullPointerException.class, () -> runner.tarDirectory(null, "user@account.com:path/1"));
 
@@ -60,7 +60,7 @@ class TarCommandRunnerImplTest {
 
     @Test
     void verifyDirectory() throws IOException, InterruptedException {
-        var runner = new TarCommandRunnerImpl(dataArchiveConfiguration, processRunner);
+        var runner = new TarCommandRunnerImpl(dataArchiveConfig, processRunner);
 
         runner.verifyPackage("abc.dmftar");
         Mockito.verify(processRunner).run(new String[] {

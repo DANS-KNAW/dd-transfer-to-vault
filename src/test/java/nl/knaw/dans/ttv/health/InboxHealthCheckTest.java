@@ -15,8 +15,8 @@
  */
 package nl.knaw.dans.ttv.health;
 
-import nl.knaw.dans.ttv.DdTransferToVaultConfiguration;
-import nl.knaw.dans.ttv.core.config.CollectConfiguration;
+import nl.knaw.dans.ttv.core.config.DdTransferToVaultConfig;
+import nl.knaw.dans.ttv.core.config.CollectConfig;
 import nl.knaw.dans.ttv.core.service.FileService;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -32,11 +32,11 @@ class InboxHealthCheckTest {
     @Test
     void checkValid() throws Exception {
         var fileService = Mockito.mock(FileService.class);
-        var config = new DdTransferToVaultConfiguration();
-        config.setCollect(new CollectConfiguration());
+        var config = new DdTransferToVaultConfig();
+        config.setCollect(new CollectConfig());
         config.getCollect().setInboxes(List.of(
-            new CollectConfiguration.InboxEntry("a", Path.of("a")),
-            new CollectConfiguration.InboxEntry("b", Path.of("b"))
+            new CollectConfig.InboxEntry("a", Path.of("a")),
+            new CollectConfig.InboxEntry("b", Path.of("b"))
         ));
 
         Mockito.when(fileService.canRead(Mockito.any(), Mockito.anyInt())).thenReturn(true);
@@ -50,11 +50,11 @@ class InboxHealthCheckTest {
     @Test
     void checkInvalid() throws Exception {
         var fileService = Mockito.mock(FileService.class);
-        var config = new DdTransferToVaultConfiguration();
-        config.setCollect(new CollectConfiguration());
+        var config = new DdTransferToVaultConfig();
+        config.setCollect(new CollectConfig());
         config.getCollect().setInboxes(List.of(
-            new CollectConfiguration.InboxEntry("a", Path.of("a")),
-            new CollectConfiguration.InboxEntry("b", Path.of("b"))
+            new CollectConfig.InboxEntry("a", Path.of("a")),
+            new CollectConfig.InboxEntry("b", Path.of("b"))
         ));
 
         Mockito.when(fileService.canRead(Mockito.any(), Mockito.anyInt())).thenReturn(false).thenReturn(true);

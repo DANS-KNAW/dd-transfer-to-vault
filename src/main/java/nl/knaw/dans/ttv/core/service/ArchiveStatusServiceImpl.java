@@ -15,7 +15,7 @@
  */
 package nl.knaw.dans.ttv.core.service;
 
-import nl.knaw.dans.ttv.core.config.DataArchiveConfiguration;
+import nl.knaw.dans.ttv.core.config.DataArchiveConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,20 +29,20 @@ public class ArchiveStatusServiceImpl implements ArchiveStatusService {
     private static final Logger log = LoggerFactory.getLogger(ArchiveStatusServiceImpl.class);
 
     private final ProcessRunner processRunner;
-    private final DataArchiveConfiguration dataArchiveConfiguration;
+    private final DataArchiveConfig dataArchiveConfig;
     private final Pattern linePattern = Pattern.compile(
         "^(?<perms>[a-zA-Z\\-]+) +(?<uid>\\d+) +(?<uname>[a-zA-Z0-9]+) +(?<filesize>\\d+) +(?<timestamp>[0-9\\- :]+\\d) +\\((?<status>[A-Z/]+)\\) +(?<filename>.*)");
 
-    public ArchiveStatusServiceImpl(DataArchiveConfiguration dataArchiveConfiguration, ProcessRunner processRunner) {
+    public ArchiveStatusServiceImpl(DataArchiveConfig dataArchiveConfig, ProcessRunner processRunner) {
         this.processRunner = processRunner;
-        this.dataArchiveConfiguration = dataArchiveConfiguration;
+        this.dataArchiveConfig = dataArchiveConfig;
     }
 
     @Override
     public Map<String, FileStatus> getFileStatus(String id) throws IOException, InterruptedException {
 
         var host = getSshHost();
-        var path = Path.of(dataArchiveConfiguration.getPath(), id + ".dmftar");
+        var path = Path.of(dataArchiveConfig.getPath(), id + ".dmftar");
 
         var command = new String[] {
             "ssh",
@@ -86,7 +86,7 @@ public class ArchiveStatusServiceImpl implements ArchiveStatusService {
     }
 
     private String getSshHost() {
-        return String.format("%s@%s", this.dataArchiveConfiguration.getUser(), this.dataArchiveConfiguration.getHost());
+        return String.format("%s@%s", this.dataArchiveConfig.getUser(), this.dataArchiveConfig.getHost());
     }
 
 }

@@ -15,7 +15,7 @@
  */
 package nl.knaw.dans.ttv.core;
 
-import nl.knaw.dans.ttv.core.config.CollectConfiguration;
+import nl.knaw.dans.ttv.core.config.CollectConfig;
 import nl.knaw.dans.ttv.core.service.FileService;
 import nl.knaw.dans.ttv.core.service.InboxWatcherFactory;
 import nl.knaw.dans.ttv.core.service.TransferItemMetadataReader;
@@ -38,7 +38,7 @@ class CollectTaskManagerTest {
     private FileService fileService;
     private ExecutorService executorService;
     private InboxWatcherFactory inboxWatcherFactory;
-    private List<CollectConfiguration.InboxEntry> inboxes;
+    private List<CollectConfig.InboxEntry> inboxes;
 
     @BeforeEach
     void setUp() {
@@ -55,8 +55,8 @@ class CollectTaskManagerTest {
 
     }
 
-    private CollectConfiguration.InboxEntry createInboxEntry(String name, String value) {
-        var entry = new CollectConfiguration.InboxEntry();
+    private CollectConfig.InboxEntry createInboxEntry(String name, String value) {
+        var entry = new CollectConfig.InboxEntry();
         entry.setName(name);
         entry.setPath(Path.of(value));
         return entry;

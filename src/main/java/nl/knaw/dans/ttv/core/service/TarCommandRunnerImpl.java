@@ -15,7 +15,7 @@
  */
 package nl.knaw.dans.ttv.core.service;
 
-import nl.knaw.dans.ttv.core.config.DataArchiveConfiguration;
+import nl.knaw.dans.ttv.core.config.DataArchiveConfig;
 import nl.knaw.dans.ttv.core.domain.ProcessResult;
 
 import java.io.IOException;
@@ -24,11 +24,11 @@ import java.util.Objects;
 
 public class TarCommandRunnerImpl implements TarCommandRunner {
     private final ProcessRunner processRunner;
-    private final DataArchiveConfiguration dataArchiveConfiguration;
+    private final DataArchiveConfig dataArchiveConfig;
 
-    public TarCommandRunnerImpl(DataArchiveConfiguration dataArchiveConfiguration, ProcessRunner processRunner) {
+    public TarCommandRunnerImpl(DataArchiveConfig dataArchiveConfig, ProcessRunner processRunner) {
         this.processRunner = processRunner;
-        this.dataArchiveConfiguration = dataArchiveConfiguration;
+        this.dataArchiveConfig = dataArchiveConfig;
     }
 
     @Override
@@ -36,7 +36,7 @@ public class TarCommandRunnerImpl implements TarCommandRunner {
         Objects.requireNonNull(path, "path cannot be null");
         Objects.requireNonNull(target, "target cannot be null");
 
-        var remotePath = Path.of(dataArchiveConfiguration.getPath(), target);
+        var remotePath = Path.of(dataArchiveConfig.getPath(), target);
         var command = new String[] {
             "dmftar",
             "-c",
@@ -52,7 +52,7 @@ public class TarCommandRunnerImpl implements TarCommandRunner {
     public ProcessResult verifyPackage(String path) throws IOException, InterruptedException {
         Objects.requireNonNull(path, "path cannot be null");
 
-        var remotePath = Path.of(dataArchiveConfiguration.getPath(), path);
+        var remotePath = Path.of(dataArchiveConfig.getPath(), path);
         var command = new String[] {
             "ssh",
             getSshHost(),
@@ -67,7 +67,7 @@ public class TarCommandRunnerImpl implements TarCommandRunner {
 
     @Override
     public ProcessResult deletePackage(String path) throws IOException, InterruptedException {
-        var remotePath = Path.of(dataArchiveConfiguration.getPath(), path);
+        var remotePath = Path.of(dataArchiveConfig.getPath(), path);
         var command = new String[] {
             "ssh",
             getSshHost(),
@@ -94,6 +94,6 @@ public class TarCommandRunnerImpl implements TarCommandRunner {
     }
 
     private String getSshHost() {
-        return String.format("%s@%s", this.dataArchiveConfiguration.getUser(), this.dataArchiveConfiguration.getHost());
+        return String.format("%s@%s", this.dataArchiveConfig.getUser(), this.dataArchiveConfig.getHost());
     }
 }

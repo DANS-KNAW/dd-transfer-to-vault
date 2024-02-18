@@ -16,7 +16,7 @@
 package nl.knaw.dans.ttv.core.service;
 
 import lombok.extern.slf4j.Slf4j;
-import nl.knaw.dans.ttv.core.config.DataArchiveConfiguration;
+import nl.knaw.dans.ttv.core.config.DataArchiveConfig;
 import nl.knaw.dans.ttv.core.domain.ArchiveMetadata;
 
 import java.io.IOException;
@@ -27,19 +27,19 @@ import java.util.regex.Pattern;
 public class ArchiveMetadataServiceImpl implements ArchiveMetadataService {
 
     private final ProcessRunner processRunner;
-    private final DataArchiveConfiguration dataArchiveConfiguration;
+    private final DataArchiveConfig dataArchiveConfig;
     private final Pattern linePattern = Pattern.compile(
         "^.*\\.dmftar/(?<part>\\d+)/.*::: (?<algorithm>[a-zA-Z0-9_]+) (?<checksum>[^ ]+).*");
 
-    public ArchiveMetadataServiceImpl(DataArchiveConfiguration dataArchiveConfiguration, ProcessRunner processRunner) {
+    public ArchiveMetadataServiceImpl(DataArchiveConfig dataArchiveConfig, ProcessRunner processRunner) {
         this.processRunner = processRunner;
-        this.dataArchiveConfiguration = dataArchiveConfiguration;
+        this.dataArchiveConfig = dataArchiveConfig;
     }
 
     @Override
     public ArchiveMetadata getArchiveMetadata(String id) throws IOException, InterruptedException {
         var path = id + ".dmftar";
-        var remotePath = Path.of(dataArchiveConfiguration.getPath(), path);
+        var remotePath = Path.of(dataArchiveConfig.getPath(), path);
         var command = new String[] {
             "ssh",
             getSshHost(),
@@ -85,6 +85,6 @@ public class ArchiveMetadataServiceImpl implements ArchiveMetadataService {
     }
 
     private String getSshHost() {
-        return String.format("%s@%s", this.dataArchiveConfiguration.getUser(), this.dataArchiveConfiguration.getHost());
+        return String.format("%s@%s", this.dataArchiveConfig.getUser(), this.dataArchiveConfig.getHost());
     }
 }

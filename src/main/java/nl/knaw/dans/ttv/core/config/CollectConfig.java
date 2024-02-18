@@ -30,7 +30,7 @@ import java.nio.file.Path;
 import java.util.List;
 
 @Data
-public class CollectConfiguration {
+public class CollectConfig {
     @Valid
     @NotNull
     @JsonProperty("inboxes")

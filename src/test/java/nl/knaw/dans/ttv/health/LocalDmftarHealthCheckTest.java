@@ -16,8 +16,8 @@
 package nl.knaw.dans.ttv.health;
 
 import com.codahale.metrics.health.HealthCheck;
-import nl.knaw.dans.ttv.DdTransferToVaultConfiguration;
-import nl.knaw.dans.ttv.core.config.CreateOcflTarConfiguration;
+import nl.knaw.dans.ttv.core.config.DdTransferToVaultConfig;
+import nl.knaw.dans.ttv.core.config.CreateOcflTarConfig;
 import nl.knaw.dans.ttv.core.domain.ProcessResult;
 import nl.knaw.dans.ttv.core.service.ProcessRunner;
 import static org.junit.jupiter.api.Assertions.*;
@@ -29,9 +29,9 @@ class LocalDmftarHealthCheckTest {
     @Test
     void testCommandExists() throws Exception {
         var processRunner = Mockito.mock(ProcessRunner.class);
-        var config = new DdTransferToVaultConfiguration();
-        config.setCreateOcflTar(new CreateOcflTarConfiguration());
-        config.getCreateOcflTar().setDmftarVersion(new CreateOcflTarConfiguration.DmfTarVersion("2.0", "2.0"));
+        var config = new DdTransferToVaultConfig();
+        config.setCreateOcflTar(new CreateOcflTarConfig());
+        config.getCreateOcflTar().setDmftarVersion(new CreateOcflTarConfig.DmfTarVersion("2.0", "2.0"));
 
         Mockito.when(processRunner.run(Mockito.any()))
             .thenReturn(new ProcessResult(0, "dmftar version 2.0\ncopyright"));
@@ -46,9 +46,9 @@ class LocalDmftarHealthCheckTest {
     @Test
     void testCommandDoesNotExists() throws Exception {
         var processRunner = Mockito.mock(ProcessRunner.class);
-        var config = new DdTransferToVaultConfiguration();
-        config.setCreateOcflTar(new CreateOcflTarConfiguration());
-        config.getCreateOcflTar().setDmftarVersion(new CreateOcflTarConfiguration.DmfTarVersion("2.0", "2.0"));
+        var config = new DdTransferToVaultConfig();
+        config.setCreateOcflTar(new CreateOcflTarConfig());
+        config.getCreateOcflTar().setDmftarVersion(new CreateOcflTarConfig.DmfTarVersion("2.0", "2.0"));
 
         Mockito.when(processRunner.run(Mockito.any()))
             .thenReturn(new ProcessResult(255, "dmftar version 2.0\ncopyright"));
@@ -61,9 +61,9 @@ class LocalDmftarHealthCheckTest {
     @Test
     void testCommandHasWrongVersion() throws Exception {
         var processRunner = Mockito.mock(ProcessRunner.class);
-        var config = new DdTransferToVaultConfiguration();
-        config.setCreateOcflTar(new CreateOcflTarConfiguration());
-        config.getCreateOcflTar().setDmftarVersion(new CreateOcflTarConfiguration.DmfTarVersion("3.0", "3.0"));
+        var config = new DdTransferToVaultConfig();
+        config.setCreateOcflTar(new CreateOcflTarConfig());
+        config.getCreateOcflTar().setDmftarVersion(new CreateOcflTarConfig.DmfTarVersion("3.0", "3.0"));
 
         Mockito.when(processRunner.run(Mockito.any()))
             .thenReturn(new ProcessResult(0, "dmftar version 2.0\ncopyright"));

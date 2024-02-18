@@ -15,9 +15,9 @@
  */
 package nl.knaw.dans.ttv.health;
 
-import nl.knaw.dans.ttv.DdTransferToVaultConfiguration;
-import nl.knaw.dans.ttv.core.config.CreateOcflTarConfiguration;
-import nl.knaw.dans.ttv.core.config.ExtractMetadataConfiguration;
+import nl.knaw.dans.ttv.core.config.DdTransferToVaultConfig;
+import nl.knaw.dans.ttv.core.config.CreateOcflTarConfig;
+import nl.knaw.dans.ttv.core.config.ExtractMetadataConfig;
 import nl.knaw.dans.ttv.core.service.FileService;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -32,11 +32,11 @@ class FilesystemHealthCheckTest {
     @Test
     void checkAllWriteable() throws Exception {
         var fileService = Mockito.mock(FileService.class);
-        var config = new DdTransferToVaultConfiguration();
-        config.setCreateOcflTar(new CreateOcflTarConfiguration());
+        var config = new DdTransferToVaultConfig();
+        config.setCreateOcflTar(new CreateOcflTarConfig());
         config.getCreateOcflTar().setInbox(Path.of("ocfl-inbox"));
         config.getCreateOcflTar().setWorkDir(Path.of("ocfl-workdir"));
-        config.setExtractMetadata(new ExtractMetadataConfiguration());
+        config.setExtractMetadata(new ExtractMetadataConfig());
         config.getExtractMetadata().setInbox(Path.of("data-inbox"));
 
         Mockito.when(fileService.canRead(Mockito.any())).thenReturn(true);
@@ -50,11 +50,11 @@ class FilesystemHealthCheckTest {
     @Test
     void checkSomeWrong() throws Exception {
         var fileService = Mockito.mock(FileService.class);
-        var config = new DdTransferToVaultConfiguration();
-        config.setCreateOcflTar(new CreateOcflTarConfiguration());
+        var config = new DdTransferToVaultConfig();
+        config.setCreateOcflTar(new CreateOcflTarConfig());
         config.getCreateOcflTar().setInbox(Path.of("ocfl-inbox"));
         config.getCreateOcflTar().setWorkDir(Path.of("ocfl-workdir"));
-        config.setExtractMetadata(new ExtractMetadataConfiguration());
+        config.setExtractMetadata(new ExtractMetadataConfig());
         config.getExtractMetadata().setInbox(Path.of("data-inbox"));
 
         Mockito.when(fileService.canRead(Mockito.any())).thenReturn(false).thenReturn(true);

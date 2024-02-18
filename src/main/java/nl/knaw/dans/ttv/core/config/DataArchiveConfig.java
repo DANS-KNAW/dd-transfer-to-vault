@@ -21,7 +21,7 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
 @Data
-public class DataArchiveConfiguration {
+public class DataArchiveConfig {
 
     @Valid
     @NotNull
@@ -35,11 +35,11 @@ public class DataArchiveConfiguration {
     @NotNull
     private String path;
 
-    public DataArchiveConfiguration() {
+    public DataArchiveConfig() {
 
     }
 
-    public DataArchiveConfiguration(String user, String host, String path) {
+    public DataArchiveConfig(String user, String host, String path) {
         this.user = user;
         this.host = host;
         this.path = path;

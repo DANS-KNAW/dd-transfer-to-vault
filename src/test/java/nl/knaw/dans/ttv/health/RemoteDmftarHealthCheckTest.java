@@ -16,8 +16,8 @@
 package nl.knaw.dans.ttv.health;
 
 import com.codahale.metrics.health.HealthCheck;
-import nl.knaw.dans.ttv.DdTransferToVaultConfiguration;
-import nl.knaw.dans.ttv.core.config.CreateOcflTarConfiguration;
+import nl.knaw.dans.ttv.core.config.DdTransferToVaultConfig;
+import nl.knaw.dans.ttv.core.config.CreateOcflTarConfig;
 import nl.knaw.dans.ttv.core.domain.ProcessResult;
 import nl.knaw.dans.ttv.core.service.TarCommandRunner;
 import org.junit.jupiter.api.Test;
@@ -31,9 +31,9 @@ class RemoteDmftarHealthCheckTest {
     @Test
     void testCommandExists() throws Exception {
         var tarCommandRunner = Mockito.mock(TarCommandRunner.class);
-        var config = new DdTransferToVaultConfiguration();
-        config.setCreateOcflTar(new CreateOcflTarConfiguration());
-        config.getCreateOcflTar().setDmftarVersion(new CreateOcflTarConfiguration.DmfTarVersion("2.0", "2.2"));
+        var config = new DdTransferToVaultConfig();
+        config.setCreateOcflTar(new CreateOcflTarConfig());
+        config.getCreateOcflTar().setDmftarVersion(new CreateOcflTarConfig.DmfTarVersion("2.0", "2.2"));
 
         Mockito.when(tarCommandRunner.getDmftarVersion())
                 .thenReturn(new ProcessResult(0, "dmftar version 2.2\n"
@@ -49,9 +49,9 @@ class RemoteDmftarHealthCheckTest {
     void testCommandDoesNotExists() throws Exception {
         var tarCommandRunner = Mockito.mock(TarCommandRunner.class);
 
-        var config = new DdTransferToVaultConfiguration();
-        config.setCreateOcflTar(new CreateOcflTarConfiguration());
-        config.getCreateOcflTar().setDmftarVersion(new CreateOcflTarConfiguration.DmfTarVersion("2.0", "2.2"));
+        var config = new DdTransferToVaultConfig();
+        config.setCreateOcflTar(new CreateOcflTarConfig());
+        config.getCreateOcflTar().setDmftarVersion(new CreateOcflTarConfig.DmfTarVersion("2.0", "2.2"));
 
         Mockito.when(tarCommandRunner.getDmftarVersion())
             .thenReturn(new ProcessResult(255, "dmftar version 2.2\n"
@@ -66,9 +66,9 @@ class RemoteDmftarHealthCheckTest {
     @Test
     void testCommandHasWrongVersion() throws Exception {
         var tarCommandRunner = Mockito.mock(TarCommandRunner.class);
-        var config = new DdTransferToVaultConfiguration();
-        config.setCreateOcflTar(new CreateOcflTarConfiguration());
-        config.getCreateOcflTar().setDmftarVersion(new CreateOcflTarConfiguration.DmfTarVersion("3.0", "3.0"));
+        var config = new DdTransferToVaultConfig();
+        config.setCreateOcflTar(new CreateOcflTarConfig());
+        config.getCreateOcflTar().setDmftarVersion(new CreateOcflTarConfig.DmfTarVersion("3.0", "3.0"));
 
         Mockito.when(tarCommandRunner.getDmftarVersion())
             .thenReturn(new ProcessResult(0, "dmftar version 2.2\n"
