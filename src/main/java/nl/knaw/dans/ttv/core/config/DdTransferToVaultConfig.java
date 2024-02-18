@@ -39,13 +39,7 @@ public class DdTransferToVaultConfig extends Configuration {
     private ExtractMetadataConfig extractMetadata;
     @Valid
     @NotNull
-    private CreateOcflTarConfig createOcflTar;
-    @Valid
-    @NotNull
     private ConfirmArchivedConfig confirmArchived;
-    @Valid
-    @NotNull
-    private DataArchiveConfig dataArchive;
     @Valid
     @NotNull
     private VaultCatalogConfig vaultCatalog;

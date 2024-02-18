@@ -25,33 +25,22 @@ import io.dropwizard.hibernate.HibernateBundle;
 import io.dropwizard.hibernate.UnitOfWorkAwareProxyFactory;
 import nl.knaw.dans.ttv.client.VaultCatalogClientImpl;
 import nl.knaw.dans.ttv.core.CollectTaskManager;
-import nl.knaw.dans.ttv.core.ConfirmArchivedTaskManager;
 import nl.knaw.dans.ttv.core.ExtractMetadataTaskManager;
-import nl.knaw.dans.ttv.core.OcflTarTaskManager;
+import nl.knaw.dans.ttv.core.Tar;
+import nl.knaw.dans.ttv.core.TarPart;
+import nl.knaw.dans.ttv.core.TransferItem;
 import nl.knaw.dans.ttv.core.config.DdTransferToVaultConfig;
 import nl.knaw.dans.ttv.core.oaiore.OaiOreMetadataReader;
-import nl.knaw.dans.ttv.core.service.ArchiveMetadataServiceImpl;
-import nl.knaw.dans.ttv.core.service.ArchiveStatusServiceImpl;
 import nl.knaw.dans.ttv.core.service.FileServiceImpl;
 import nl.knaw.dans.ttv.core.service.InboxWatcherFactoryImpl;
-import nl.knaw.dans.ttv.core.service.OcflRepositoryFactory;
-import nl.knaw.dans.ttv.core.service.OcflRepositoryServiceImpl;
-import nl.knaw.dans.ttv.core.service.ProcessRunnerImpl;
-import nl.knaw.dans.ttv.core.service.TarCommandRunnerImpl;
 import nl.knaw.dans.ttv.core.service.TransferItemMetadataReaderImpl;
 import nl.knaw.dans.ttv.core.service.TransferItemServiceImpl;
 import nl.knaw.dans.ttv.core.service.TransferItemValidatorImpl;
-import nl.knaw.dans.ttv.core.Tar;
 import nl.knaw.dans.ttv.db.TarDao;
-import nl.knaw.dans.ttv.core.TarPart;
-import nl.knaw.dans.ttv.core.TransferItem;
 import nl.knaw.dans.ttv.db.TransferItemDao;
 import nl.knaw.dans.ttv.health.FilesystemHealthCheck;
 import nl.knaw.dans.ttv.health.InboxHealthCheck;
-import nl.knaw.dans.ttv.health.LocalDmftarHealthCheck;
 import nl.knaw.dans.ttv.health.PartitionHealthCheck;
-import nl.knaw.dans.ttv.health.RemoteDmftarHealthCheck;
-import nl.knaw.dans.ttv.health.SSHHealthCheck;
 import nl.knaw.dans.vaultcatalog.client.invoker.ApiClient;
 import nl.knaw.dans.vaultcatalog.client.resources.OcflObjectVersionApi;
 import nl.knaw.dans.vaultcatalog.client.resources.TarApi;
@@ -100,19 +89,10 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
 
         final var oaiOreMetadataReader = new OaiOreMetadataReader();
         final var metadataReader = new TransferItemMetadataReaderImpl(fileService, oaiOreMetadataReader);
-        final var ocflRepositoryFactory = new OcflRepositoryFactory();
-        final var ocflRepositoryService = new OcflRepositoryServiceImpl(fileService, ocflRepositoryFactory);
-        final var processRunner = new ProcessRunnerImpl();
-        final var tarCommandRunner = new TarCommandRunnerImpl(configuration.getDataArchive(), processRunner);
-        final var archiveMetadataService = new ArchiveMetadataServiceImpl(configuration.getDataArchive(), processRunner);
-        final var createTarExecutorService = configuration.getCreateOcflTar().getTaskQueue().build(environment);
 
         environment.healthChecks().register("Inbox", new InboxHealthCheck(configuration, fileService));
         environment.healthChecks().register("Filesystem", new FilesystemHealthCheck(configuration, fileService));
         environment.healthChecks().register("Partitions", new PartitionHealthCheck(configuration, fileService));
-        environment.healthChecks().register("DmftarLocal", new LocalDmftarHealthCheck(configuration, processRunner));
-        environment.healthChecks().register("DmftarRemote", new RemoteDmftarHealthCheck(configuration, tarCommandRunner));
-        environment.healthChecks().register("SSH", new SSHHealthCheck(tarCommandRunner));
 
         final var vaultCatalogRepository = buildCatalogRepository(configuration, environment);
 
@@ -127,30 +107,11 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
         // and then moves it to the tar inbox
         log.info("Creating ExtractMetadataTaskManager");
         final var extractMetadataExecutorService = configuration.getExtractMetadata().getTaskQueue().build(environment);
-        final var extractMetadataTaskManager = new ExtractMetadataTaskManager(configuration.getExtractMetadata().getInbox(), configuration.getCreateOcflTar().getInbox(),
+        // TODO: set outbox to inbox of the send to vault task
+        final var extractMetadataTaskManager = new ExtractMetadataTaskManager(configuration.getExtractMetadata().getInbox(), null,
             configuration.getExtractMetadata().getPollingInterval(), extractMetadataExecutorService, transferItemService, metadataReader, fileService, inboxWatcherFactory, transferItemValidator,
             vaultCatalogRepository);
         environment.lifecycle().manage(extractMetadataTaskManager);
-
-        log.info("Creating TarTaskManager");
-        final var ocflTarTaskManager = new OcflTarTaskManager(configuration.getCreateOcflTar().getInbox(), configuration.getCreateOcflTar().getWorkDir(), configuration.getDataArchive().getPath(),
-            configuration.getCreateOcflTar().getInboxThreshold(), configuration.getCreateOcflTar().getPollingInterval(), configuration.getCreateOcflTar().getMaxRetries(),
-            configuration.getCreateOcflTar().getRetryInterval(), configuration.getCreateOcflTar().getRetrySchedule(), createTarExecutorService, inboxWatcherFactory, fileService, ocflRepositoryService,
-            transferItemService, tarCommandRunner, archiveMetadataService, vaultCatalogRepository, metadataReader);
-
-        environment.lifecycle().manage(ocflTarTaskManager);
-
-        // the process that checks the archiving service for status
-        final var confirmArchivedExecutorService = configuration.getConfirmArchived().getTaskQueue().build(environment);
-        final var confirmConfig = configuration.getConfirmArchived();
-
-        final var archiveStatusService = new ArchiveStatusServiceImpl(configuration.getDataArchive(), processRunner);
-
-        log.info("Creating ConfirmArchivedTaskManager");
-        final var confirmArchivedTaskManager = new ConfirmArchivedTaskManager(confirmConfig.getCron(), configuration.getCreateOcflTar().getWorkDir(), confirmArchivedExecutorService,
-            transferItemService, archiveStatusService, fileService, vaultCatalogRepository);
-
-        environment.lifecycle().manage(confirmArchivedTaskManager);
     }
 
     VaultCatalogClientImpl buildCatalogRepository(DdTransferToVaultConfig configuration, Environment environment) {

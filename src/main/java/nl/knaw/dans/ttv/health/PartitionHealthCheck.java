@@ -44,8 +44,6 @@ public class PartitionHealthCheck extends HealthCheck {
         var healthy = true;
         var paths = new ArrayList<Path>();
         paths.add(configuration.getExtractMetadata().getInbox());
-        paths.add(configuration.getCreateOcflTar().getInbox());
-        paths.add(configuration.getCreateOcflTar().getWorkDir());
 
         log.debug("Checking if all paths are on the same partition");
         var fileSystems = new HashSet<FileStore>();

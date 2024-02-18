@@ -42,8 +42,6 @@ public class FilesystemHealthCheck extends HealthCheck {
         var healthy = true;
         var paths = new ArrayList<Path>();
         paths.add(configuration.getExtractMetadata().getInbox());
-        paths.add(configuration.getCreateOcflTar().getInbox());
-        paths.add(configuration.getCreateOcflTar().getWorkDir());
 
         for (var path : paths) {
             var canRead = fileService.canRead(path);

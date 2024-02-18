@@ -16,8 +16,7 @@
 package nl.knaw.dans.ttv.core;
 
 import io.dropwizard.lifecycle.Managed;
-import nl.knaw.dans.ttv.core.service.ArchiveStatusService;
-import nl.knaw.dans.ttv.core.service.FileService;
+import lombok.AllArgsConstructor;
 import nl.knaw.dans.ttv.core.service.TransferItemService;
 import org.quartz.CronScheduleBuilder;
 import org.quartz.JobBuilder;
@@ -29,33 +28,17 @@ import org.quartz.impl.StdSchedulerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.nio.file.Path;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 
+@AllArgsConstructor
 public class ConfirmArchivedTaskManager implements Managed {
     private static final Logger log = LoggerFactory.getLogger(ConfirmArchivedTaskManager.class);
     private final String schedule;
-    private final Path workingDir;
     private final ExecutorService executorService;
     private final TransferItemService transferItemService;
-    private final ArchiveStatusService archiveStatusService;
-    private final FileService fileService;
     private final VaultCatalogClient vaultCatalogClient;
     private Scheduler scheduler;
-
-    public ConfirmArchivedTaskManager(String schedule, Path workingDir,
-        ExecutorService executorService, TransferItemService transferItemService, ArchiveStatusService archiveStatusService, FileService fileService,
-        VaultCatalogClient vaultCatalogClient) {
-
-        this.workingDir = workingDir;
-        this.executorService = executorService;
-        this.schedule = schedule;
-        this.transferItemService = transferItemService;
-        this.archiveStatusService = archiveStatusService;
-        this.fileService = fileService;
-        this.vaultCatalogClient = vaultCatalogClient;
-    }
 
     @Override
     public void start() throws Exception {
@@ -66,7 +49,7 @@ public class ConfirmArchivedTaskManager implements Managed {
 
         log.debug("Configuring JobDataMap for cron-based tasks");
         var params = new ConfirmArchivedTaskCreator.ConfirmArchivedTaskCreatorParameters(
-            transferItemService, workingDir, archiveStatusService, fileService, executorService,
+            transferItemService, executorService,
             vaultCatalogClient);
         var jobData = new JobDataMap(Map.of("params", params));
 

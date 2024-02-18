@@ -15,94 +15,23 @@
  */
 package nl.knaw.dans.ttv.core;
 
-import nl.knaw.dans.ttv.core.service.ArchiveStatusService;
-import nl.knaw.dans.ttv.core.service.FileService;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import nl.knaw.dans.ttv.core.service.TransferItemService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Map;
 
+@Slf4j
+@AllArgsConstructor
 public class ConfirmArchivedTask implements Runnable {
-    private static final Logger log = LoggerFactory.getLogger(ConfirmArchivedTask.class);
-
     private final Tar tar;
     private final TransferItemService transferItemService;
-    private final ArchiveStatusService archiveStatusService;
-    private final FileService fileService;
-    private final Path workingDir;
     private final VaultCatalogClient vaultCatalogClient;
-
-    public ConfirmArchivedTask(Tar tar, TransferItemService transferItemService, ArchiveStatusService archiveStatusService, FileService fileService,
-        Path workingDir, VaultCatalogClient vaultCatalogClient) {
-        this.transferItemService = transferItemService;
-        this.archiveStatusService = archiveStatusService;
-        this.fileService = fileService;
-        this.workingDir = workingDir;
-        this.tar = tar;
-        this.vaultCatalogClient = vaultCatalogClient;
-    }
 
     @Override
     public void run() {
-        log.info("Running confirm archive task {}", this);
-        var tarId = tar.getTarUuid();
-
-        try {
-            var fileStatus = archiveStatusService.getFileStatus(tarId);
-            var completelyArchived = isCompletelyArchived(fileStatus);
-
-            if (completelyArchived) {
-                log.info("All files in tar archive '{}' have been archived to tape", tarId);
-                transferItemService.updateTarToArchived(tar);
-
-                log.info("Updating TAR {} in vault catalog", tarId);
-                vaultCatalogClient.registerTar(tar);
-
-                try {
-                    log.info("Cleaning workdir files and folders for tar archive '{}'", tarId);
-                    var targetPath = workingDir.resolve(tarId);
-                    fileService.deleteDirectory(targetPath);
-                }
-                catch (IOException e) {
-                    log.error("Unable to cleanup TAR OCFL repository in directory '{}/{}'", workingDir, tarId, e);
-                }
-            }
-            else {
-                log.info("Some files in tar archive '{}' have not yet been archived to tape", tarId);
-                transferItemService.resetTarToArchiving(tar);
-            }
-        }
-        catch (IOException | InterruptedException e) {
-            log.error("An error occurred while checking archiving status", e);
-
-            // in case it fails to check, still set the transfer status to OCFLTARCREATED and reset the checking flag
-            transferItemService.resetTarToArchiving(tar);
-        }
-    }
-
-    public boolean isCompletelyArchived(Map<String, ArchiveStatusService.FileStatus> statusMap) {
-        for (var entry : statusMap.entrySet()) {
-            log.debug("File entry '{}' has status {}", entry.getKey(), entry.getValue());
-
-            var archived = entry.getValue().equals(ArchiveStatusService.FileStatus.OFFLINE)
-                || entry.getValue().equals(ArchiveStatusService.FileStatus.DUAL);
-
-            if (!archived) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    @Override
-    public String toString() {
-        return "ConfirmArchiveTask{" +
-            "tarId='" + tar.getTarUuid() + '\'' +
-            ", workingDir='" + workingDir + '\'' +
-            '}';
+        // TODO: implement to retrieve status from dd-data-vault
     }
 }
