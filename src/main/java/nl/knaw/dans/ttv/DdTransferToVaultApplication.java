@@ -23,12 +23,11 @@ import io.dropwizard.core.setup.Environment;
 import io.dropwizard.db.PooledDataSourceFactory;
 import io.dropwizard.hibernate.HibernateBundle;
 import io.dropwizard.hibernate.UnitOfWorkAwareProxyFactory;
-import nl.knaw.dans.ttv.client.VaultCatalogAPIRepository;
+import nl.knaw.dans.ttv.client.VaultCatalogClientImpl;
 import nl.knaw.dans.ttv.core.CollectTaskManager;
 import nl.knaw.dans.ttv.core.ConfirmArchivedTaskManager;
 import nl.knaw.dans.ttv.core.ExtractMetadataTaskManager;
 import nl.knaw.dans.ttv.core.OcflTarTaskManager;
-import nl.knaw.dans.ttv.core.VaultCatalogRepository;
 import nl.knaw.dans.ttv.core.config.DdTransferToVaultConfig;
 import nl.knaw.dans.ttv.core.oaiore.OaiOreMetadataReader;
 import nl.knaw.dans.ttv.core.service.ArchiveMetadataServiceImpl;
@@ -86,9 +85,8 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
 
     @Override
     public void run(final DdTransferToVaultConfig configuration, final Environment environment) {
-        log.info("Creating required objects");
-        final var transferItemDAO = new TransferItemDao(hibernateBundle.getSessionFactory());
-        final var tarDAO = new TarDao(hibernateBundle.getSessionFactory());
+        final var transferItemDao = new TransferItemDao(hibernateBundle.getSessionFactory());
+        final var tarDao = new TarDao(hibernateBundle.getSessionFactory());
 
         final var transferItemValidator = new TransferItemValidatorImpl();
         final var collectExecutorService = configuration.getCollect().getTaskQueue().build(environment);
@@ -98,12 +96,10 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
 
         final var transferItemService = new UnitOfWorkAwareProxyFactory(hibernateBundle)
             .create(TransferItemServiceImpl.class, new Class[] { TransferItemDao.class, TarDao.class },
-                new Object[] { transferItemDAO, tarDAO });
+                new Object[] { transferItemDao, tarDao });
 
         final var oaiOreMetadataReader = new OaiOreMetadataReader();
         final var metadataReader = new TransferItemMetadataReaderImpl(fileService, oaiOreMetadataReader);
-        // the process that looks for new files in the tar-inbox, and when reaching a certain combined size, tars them
-        // and sends it to the archiving service
         final var ocflRepositoryFactory = new OcflRepositoryFactory();
         final var ocflRepositoryService = new OcflRepositoryServiceImpl(fileService, ocflRepositoryFactory);
         final var processRunner = new ProcessRunnerImpl();
@@ -157,7 +153,7 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
         environment.lifecycle().manage(confirmArchivedTaskManager);
     }
 
-    VaultCatalogRepository buildCatalogRepository(DdTransferToVaultConfig configuration, Environment environment) {
+    VaultCatalogClientImpl buildCatalogRepository(DdTransferToVaultConfig configuration, Environment environment) {
         var client = new JerseyClientBuilder(environment)
             .using(configuration.getVaultCatalog().getHttpClient())
             .build("vault-catalog");
@@ -169,6 +165,6 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
         var tarApi = new TarApi(apiClient);
         var ocflObjectVersionApi = new OcflObjectVersionApi(apiClient);
 
-        return new VaultCatalogAPIRepository(tarApi, ocflObjectVersionApi);
+        return new VaultCatalogClientImpl(tarApi, ocflObjectVersionApi);
     }
 }

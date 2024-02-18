@@ -18,7 +18,7 @@ package nl.knaw.dans.ttv.client;
 
 import lombok.extern.slf4j.Slf4j;
 import nl.knaw.dans.ttv.client.mappers.OcflObjectVersionMapper;
-import nl.knaw.dans.ttv.core.VaultCatalogRepository;
+import nl.knaw.dans.ttv.core.VaultCatalogClient;
 import nl.knaw.dans.ttv.core.Tar;
 import nl.knaw.dans.ttv.core.TransferItem;
 import nl.knaw.dans.vaultcatalog.client.api.OcflObjectVersionDto;
@@ -35,12 +35,13 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class VaultCatalogAPIRepository implements VaultCatalogRepository {
+public class VaultCatalogClientImpl implements VaultCatalogClient
+{
 
     private final TarApi tarApi;
     private final OcflObjectVersionApi ocflObjectVersionApi;
 
-    public VaultCatalogAPIRepository(TarApi tarApi, OcflObjectVersionApi ocflObjectVersionApi) {
+    public VaultCatalogClientImpl(TarApi tarApi, OcflObjectVersionApi ocflObjectVersionApi) {
         this.tarApi = tarApi;
         this.ocflObjectVersionApi = ocflObjectVersionApi;
     }

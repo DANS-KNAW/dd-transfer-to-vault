@@ -38,7 +38,7 @@ class OcflTarRetryTaskCreatorTest {
     private TarCommandRunner tarCommandRunner;
     private ArchiveMetadataService archiveMetadataService;
     private OcflRepositoryService ocflRepositoryService;
-    private VaultCatalogRepository vaultCatalogRepository;
+    private VaultCatalogClient vaultCatalogClient;
     private Path workDir;
 
     @BeforeEach
@@ -49,7 +49,7 @@ class OcflTarRetryTaskCreatorTest {
         this.archiveMetadataService = Mockito.mock(ArchiveMetadataService.class);
         this.workDir = Path.of("workdir");
         this.ocflRepositoryService = Mockito.mock(OcflRepositoryService.class);
-        this.vaultCatalogRepository = Mockito.mock(VaultCatalogRepository.class);
+        this.vaultCatalogClient = Mockito.mock(VaultCatalogClient.class);
     }
 
     @Test
@@ -61,7 +61,7 @@ class OcflTarRetryTaskCreatorTest {
         );
         var params = new OcflTarRetryTaskCreator.TaskRetryTaskCreatorParameters(
             transferItemService, workDir, tarCommandRunner, archiveMetadataService, executorService, 5, intervals, ocflRepositoryService,
-            vaultCatalogRepository);
+            vaultCatalogClient);
 
         var tar = new Tar();
         tar.setCreated(OffsetDateTime.now().minus(20, ChronoUnit.HOURS));
@@ -86,7 +86,7 @@ class OcflTarRetryTaskCreatorTest {
         );
         var params = new OcflTarRetryTaskCreator.TaskRetryTaskCreatorParameters(
             transferItemService, workDir, tarCommandRunner, archiveMetadataService, executorService, 5, intervals, ocflRepositoryService,
-            vaultCatalogRepository);
+            vaultCatalogClient);
 
         var tar = new Tar();
         tar.setCreated(OffsetDateTime.now().minus(20, ChronoUnit.HOURS));

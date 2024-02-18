@@ -32,7 +32,7 @@ class ConfirmArchivedTaskManagerTest {
     private ExecutorService executorService;
     private FileService fileService;
     private ArchiveStatusService archiveStatusService;
-    private VaultCatalogRepository vaultCatalogRepository;
+    private VaultCatalogClient vaultCatalogClient;
 
     @BeforeEach
     void setUp() {
@@ -40,7 +40,7 @@ class ConfirmArchivedTaskManagerTest {
         this.executorService = Mockito.mock(ExecutorService.class);
         this.fileService = Mockito.mock(FileService.class);
         this.archiveStatusService = Mockito.mock(ArchiveStatusService.class);
-        this.vaultCatalogRepository = Mockito.mock(VaultCatalogRepository.class);
+        this.vaultCatalogClient = Mockito.mock(VaultCatalogClient.class);
     }
 
     @Test
@@ -52,7 +52,7 @@ class ConfirmArchivedTaskManagerTest {
             transferItemService,
             archiveStatusService,
             fileService,
-            vaultCatalogRepository));
+            vaultCatalogClient));
 
         var scheduler = Mockito.mock(Scheduler.class);
         Mockito.when(manager.createScheduler()).thenReturn(scheduler);
@@ -73,7 +73,7 @@ class ConfirmArchivedTaskManagerTest {
             transferItemService,
             archiveStatusService,
             fileService,
-            vaultCatalogRepository));
+            vaultCatalogClient));
 
         var tar = new Tar();
 

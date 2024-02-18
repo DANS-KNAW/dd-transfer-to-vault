@@ -37,14 +37,14 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class ExtractMetadataTaskTest {
 
     private TransferItemService transferItemService;
-    private VaultCatalogRepository vaultCatalogRepository;
+    private VaultCatalogClient vaultCatalogClient;
     private FileService fileService;
     private TransferItemValidator transferItemValidator;
 
     @BeforeEach
     void setUp() {
         this.transferItemService = Mockito.mock(TransferItemService.class);
-        this.vaultCatalogRepository = Mockito.mock(VaultCatalogRepository.class);
+        this.vaultCatalogClient = Mockito.mock(VaultCatalogClient.class);
         this.fileService = Mockito.mock(FileService.class);
         this.transferItemValidator = Mockito.mock(TransferItemValidator.class);
     }
@@ -60,7 +60,7 @@ class ExtractMetadataTaskTest {
             FileContentAttributes.builder().build()
         );
 
-        var task = new ExtractMetadataTask(filePath, outbox, transferItemService, metadataReader, fileService, transferItemValidator, vaultCatalogRepository);
+        var task = new ExtractMetadataTask(filePath, outbox, transferItemService, metadataReader, fileService, transferItemValidator, vaultCatalogClient);
         var transferItem = TransferItem.builder()
             .id(123L)
             .dveFilename("identifier")
@@ -92,7 +92,7 @@ class ExtractMetadataTaskTest {
             FileContentAttributes.builder().build()
         );
 
-        var task = new ExtractMetadataTask(filePath, outbox, transferItemService, metadataReader, fileService, transferItemValidator, vaultCatalogRepository);
+        var task = new ExtractMetadataTask(filePath, outbox, transferItemService, metadataReader, fileService, transferItemValidator, vaultCatalogClient);
         var transferItem = TransferItem.builder()
             .id(1L)
             .dveFilename("identifier")
@@ -131,7 +131,7 @@ class ExtractMetadataTaskTest {
             new FilesystemAttributes(OffsetDateTime.now(), 1234L, "abc"),
             FileContentAttributes.builder().build()
         );
-        var task = new ExtractMetadataTask(filePath, outbox, transferItemService, metadataReader, fileService, transferItemValidator, vaultCatalogRepository);
+        var task = new ExtractMetadataTask(filePath, outbox, transferItemService, metadataReader, fileService, transferItemValidator, vaultCatalogClient);
         var transferItem = TransferItem.builder()
             .id(1L)
             .dveFilename("identifier")
@@ -171,7 +171,7 @@ class ExtractMetadataTaskTest {
             null, null, null
         );
 
-        var task = new ExtractMetadataTask(filePath, outbox, transferItemService, metadataReader, fileService, transferItemValidator, vaultCatalogRepository);
+        var task = new ExtractMetadataTask(filePath, outbox, transferItemService, metadataReader, fileService, transferItemValidator, vaultCatalogClient);
         var transferItem = TransferItem.builder()
             .dataversePid("pid")
             .dveFilePath("path")
@@ -196,7 +196,7 @@ class ExtractMetadataTaskTest {
             null, null, null
         );
 
-        var task = new ExtractMetadataTask(filePath, outbox, transferItemService, metadataReader, fileService, transferItemValidator, vaultCatalogRepository);
+        var task = new ExtractMetadataTask(filePath, outbox, transferItemService, metadataReader, fileService, transferItemValidator, vaultCatalogClient);
         var transferItem = TransferItem.builder()
             .dataversePid("pid")
             .dveFilePath("path")

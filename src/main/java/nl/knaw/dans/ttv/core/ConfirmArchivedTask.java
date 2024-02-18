@@ -33,16 +33,16 @@ public class ConfirmArchivedTask implements Runnable {
     private final ArchiveStatusService archiveStatusService;
     private final FileService fileService;
     private final Path workingDir;
-    private final VaultCatalogRepository vaultCatalogRepository;
+    private final VaultCatalogClient vaultCatalogClient;
 
     public ConfirmArchivedTask(Tar tar, TransferItemService transferItemService, ArchiveStatusService archiveStatusService, FileService fileService,
-        Path workingDir, VaultCatalogRepository vaultCatalogRepository) {
+        Path workingDir, VaultCatalogClient vaultCatalogClient) {
         this.transferItemService = transferItemService;
         this.archiveStatusService = archiveStatusService;
         this.fileService = fileService;
         this.workingDir = workingDir;
         this.tar = tar;
-        this.vaultCatalogRepository = vaultCatalogRepository;
+        this.vaultCatalogClient = vaultCatalogClient;
     }
 
     @Override
@@ -59,7 +59,7 @@ public class ConfirmArchivedTask implements Runnable {
                 transferItemService.updateTarToArchived(tar);
 
                 log.info("Updating TAR {} in vault catalog", tarId);
-                vaultCatalogRepository.registerTar(tar);
+                vaultCatalogClient.registerTar(tar);
 
                 try {
                     log.info("Cleaning workdir files and folders for tar archive '{}'", tarId);

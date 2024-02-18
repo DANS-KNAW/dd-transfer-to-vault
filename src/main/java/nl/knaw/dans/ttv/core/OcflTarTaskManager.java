@@ -61,7 +61,7 @@ public class OcflTarTaskManager implements Managed {
     private final Duration retryInterval;
     private final List<Duration> retrySchedule;
     private final ArchiveMetadataService archiveMetadataService;
-    private final VaultCatalogRepository vaultCatalogRepository;
+    private final VaultCatalogClient vaultCatalogClient;
     private final TransferItemMetadataReader transferItemMetadataReader;
     private InboxWatcher inboxWatcher;
     private Scheduler retryScheduler;
@@ -69,7 +69,7 @@ public class OcflTarTaskManager implements Managed {
     public OcflTarTaskManager(Path inboxPath, Path workDir, String vaultPath, long inboxThreshold, long pollingInterval, int maxRetries, Duration retryInterval, List<Duration> retrySchedule,
         ExecutorService executorService,
         InboxWatcherFactory inboxWatcherFactory, FileService fileService, OcflRepositoryService ocflRepositoryService, TransferItemService transferItemService, TarCommandRunner tarCommandRunner,
-        ArchiveMetadataService archiveMetadataService, VaultCatalogRepository vaultCatalogRepository, TransferItemMetadataReader transferItemMetadataReader) {
+        ArchiveMetadataService archiveMetadataService, VaultCatalogClient vaultCatalogClient, TransferItemMetadataReader transferItemMetadataReader) {
         this.vaultPath = vaultPath;
         this.retryInterval = retryInterval;
         this.executorService = executorService;
@@ -85,7 +85,7 @@ public class OcflTarTaskManager implements Managed {
         this.archiveMetadataService = archiveMetadataService;
         this.maxRetries = maxRetries;
         this.retrySchedule = retrySchedule;
-        this.vaultCatalogRepository = vaultCatalogRepository;
+        this.vaultCatalogClient = vaultCatalogClient;
         this.transferItemMetadataReader = transferItemMetadataReader;
     }
 
@@ -131,7 +131,7 @@ public class OcflTarTaskManager implements Managed {
         log.info("Configuring JobDataMap for cron-based tasks");
         var jobParams = new OcflTarRetryTaskCreator.TaskRetryTaskCreatorParameters(
             transferItemService, workDir, tarCommandRunner, archiveMetadataService, executorService, maxRetries, retrySchedule, ocflRepositoryService,
-            vaultCatalogRepository);
+            vaultCatalogClient);
         var jobData = new JobDataMap(Map.of("params", jobParams));
 
         var job = JobBuilder.newJob(OcflTarRetryTaskCreator.class)
@@ -195,7 +195,7 @@ public class OcflTarTaskManager implements Managed {
 
     void startTarringTask(String uuid) {
         var repoPath = Path.of(workDir.toString(), uuid);
-        var task = new OcflTarTask(transferItemService, uuid, repoPath, tarCommandRunner, archiveMetadataService, ocflRepositoryService, vaultCatalogRepository, maxRetries);
+        var task = new OcflTarTask(transferItemService, uuid, repoPath, tarCommandRunner, archiveMetadataService, ocflRepositoryService, vaultCatalogClient, maxRetries);
 
         log.info("Starting OcflTarTask {}", task);
         executorService.execute(task);

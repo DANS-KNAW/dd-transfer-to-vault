@@ -48,7 +48,7 @@ class OcflTarTaskManagerTest {
     private OcflRepositoryService ocflRepositoryService;
     private TarCommandRunner tarCommandRunner;
     private ArchiveMetadataService archiveMetadataService;
-    private VaultCatalogRepository vaultCatalogRepository;
+    private VaultCatalogClient vaultCatalogClient;
     private TransferItemMetadataReader transferItemMetadataReader;
 
 
@@ -61,7 +61,7 @@ class OcflTarTaskManagerTest {
         this.ocflRepositoryService = Mockito.mock(OcflRepositoryService.class);
         this.tarCommandRunner = Mockito.mock(TarCommandRunner.class);
         this.archiveMetadataService = Mockito.mock(ArchiveMetadataService.class);
-        this.vaultCatalogRepository = Mockito.mock(VaultCatalogRepository.class);
+        this.vaultCatalogClient = Mockito.mock(VaultCatalogClient.class);
         this.transferItemMetadataReader = new TestTransferItemMetadataReader(null, null, null);
     }
 
@@ -73,7 +73,7 @@ class OcflTarTaskManagerTest {
         var manager = Mockito.spy(new OcflTarTaskManager(
             Path.of("data/inbox"), Path.of("data/workdir"), "some-path", 50, 100L, 10, Duration.ofMinutes(1), List.of(),
             executorService, inboxWatcherFactory, fileService, ocflRepositoryService, transferItemService,
-            tarCommandRunner, archiveMetadataService, vaultCatalogRepository, transferItemMetadataReader));
+            tarCommandRunner, archiveMetadataService, vaultCatalogClient, transferItemMetadataReader));
 
         var transferItems = List.of(
             TransferItem.builder()
@@ -115,7 +115,7 @@ class OcflTarTaskManagerTest {
         var manager = Mockito.spy(new OcflTarTaskManager(
             Path.of("data/inbox"), Path.of("data/workdir"), "some-path", 50, 100L, 10, Duration.ofMinutes(1), List.of(),
             executorService, inboxWatcherFactory, fileService, ocflRepositoryService, transferItemService,
-            tarCommandRunner, archiveMetadataService, vaultCatalogRepository, transferItemMetadataReader));
+            tarCommandRunner, archiveMetadataService, vaultCatalogClient, transferItemMetadataReader));
 
         var transferItems = List.of(
             TransferItem.builder()
@@ -152,7 +152,7 @@ class OcflTarTaskManagerTest {
         var manager = Mockito.spy(new OcflTarTaskManager(
             Path.of("data/inbox"), Path.of("data/workdir"), "some-path", 50, 100L, 10, Duration.ofMinutes(1), List.of(),
             executorService, inboxWatcherFactory, fileService, ocflRepositoryService, transferItemService,
-            tarCommandRunner, archiveMetadataService, vaultCatalogRepository, transferItemMetadataReader));
+            tarCommandRunner, archiveMetadataService, vaultCatalogClient, transferItemMetadataReader));
 
         var scheduler = Mockito.mock(Scheduler.class);
         Mockito.when(manager.createScheduler()).thenReturn(scheduler);
@@ -204,7 +204,7 @@ class OcflTarTaskManagerTest {
         var manager = Mockito.spy(new OcflTarTaskManager(
             Path.of("data/inbox"), Path.of("data/workdir"), "some-path", 50, 100L, 10, Duration.ofMinutes(1), List.of(),
             executorService, inboxWatcherFactory, fileService, ocflRepositoryService, transferItemService,
-            tarCommandRunner, archiveMetadataService, vaultCatalogRepository, transferItemMetadataReader));
+            tarCommandRunner, archiveMetadataService, vaultCatalogClient, transferItemMetadataReader));
 
         var scheduler = Mockito.mock(Scheduler.class);
         Mockito.when(manager.createScheduler()).thenReturn(scheduler);

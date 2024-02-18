@@ -60,20 +60,20 @@ public class ConfirmArchivedTaskCreator implements Job {
         private final ArchiveStatusService archiveStatusService;
         private final FileService fileService;
         private final ExecutorService executorService;
-        private final VaultCatalogRepository vaultCatalogRepository;
+        private final VaultCatalogClient vaultCatalogClient;
 
         public ConfirmArchivedTaskCreatorParameters(TransferItemService transferItemService, Path workingDir, ArchiveStatusService archiveStatusService,
-            FileService fileService, ExecutorService executorService, VaultCatalogRepository vaultCatalogRepository) {
+            FileService fileService, ExecutorService executorService, VaultCatalogClient vaultCatalogClient) {
             this.transferItemService = transferItemService;
             this.workingDir = workingDir;
             this.archiveStatusService = archiveStatusService;
             this.fileService = fileService;
             this.executorService = executorService;
-            this.vaultCatalogRepository = vaultCatalogRepository;
+            this.vaultCatalogClient = vaultCatalogClient;
         }
 
-        public VaultCatalogRepository getVaultCatalogService() {
-            return vaultCatalogRepository;
+        public VaultCatalogClient getVaultCatalogService() {
+            return vaultCatalogClient;
         }
 
         public TransferItemService getTransferItemService() {

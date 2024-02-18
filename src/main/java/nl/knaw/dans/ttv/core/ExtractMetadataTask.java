@@ -32,17 +32,17 @@ public class ExtractMetadataTask implements Runnable {
     private final TransferItemMetadataReader metadataReader;
     private final FileService fileService;
     private final TransferItemValidator transferItemValidator;
-    private final VaultCatalogRepository vaultCatalogRepository;
+    private final VaultCatalogClient vaultCatalogClient;
 
     public ExtractMetadataTask(Path filePath, Path outbox, TransferItemService transferItemService,
-        TransferItemMetadataReader metadataReader, FileService fileService, TransferItemValidator transferItemValidator, VaultCatalogRepository vaultCatalogRepository) {
+        TransferItemMetadataReader metadataReader, FileService fileService, TransferItemValidator transferItemValidator, VaultCatalogClient vaultCatalogClient) {
         this.filePath = filePath;
         this.outbox = outbox;
         this.transferItemService = transferItemService;
         this.metadataReader = metadataReader;
         this.fileService = fileService;
         this.transferItemValidator = transferItemValidator;
-        this.vaultCatalogRepository = vaultCatalogRepository;
+        this.vaultCatalogClient = vaultCatalogClient;
     }
 
     @Override
@@ -94,7 +94,7 @@ public class ExtractMetadataTask implements Runnable {
 
         var newPath = outbox.resolve(transferItem.getCanonicalFilename());
 
-        vaultCatalogRepository.registerOcflObjectVersion(transferItem);
+        vaultCatalogClient.registerOcflObjectVersion(transferItem);
 
         log.info("Updated file metadata, moving file '{}' to '{}'", path, newPath);
         transferItemService.moveTransferItem(transferItem, TransferItem.TransferStatus.METADATA_EXTRACTED, newPath);

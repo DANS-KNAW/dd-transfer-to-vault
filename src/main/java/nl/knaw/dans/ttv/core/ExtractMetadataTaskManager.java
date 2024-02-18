@@ -43,12 +43,12 @@ public class ExtractMetadataTaskManager implements Managed {
     private final FileService fileService;
     private final InboxWatcherFactory inboxWatcherFactory;
     private final TransferItemValidator transferItemValidator;
-    private final VaultCatalogRepository vaultCatalogRepository;
+    private final VaultCatalogClient vaultCatalogClient;
     private InboxWatcher inboxWatcher;
 
     public ExtractMetadataTaskManager(Path inbox, Path outbox, long pollingInterval, ExecutorService executorService,
         TransferItemService transferItemService, TransferItemMetadataReader metadataReader, FileService fileService, InboxWatcherFactory inboxWatcherFactory,
-        TransferItemValidator transferItemValidator, VaultCatalogRepository vaultCatalogRepository) {
+        TransferItemValidator transferItemValidator, VaultCatalogClient vaultCatalogClient) {
 
         this.inbox = Objects.requireNonNull(inbox);
         this.outbox = Objects.requireNonNull(outbox);
@@ -59,7 +59,7 @@ public class ExtractMetadataTaskManager implements Managed {
         this.fileService = Objects.requireNonNull(fileService);
         this.inboxWatcherFactory = Objects.requireNonNull(inboxWatcherFactory);
         this.transferItemValidator = transferItemValidator;
-        this.vaultCatalogRepository = vaultCatalogRepository;
+        this.vaultCatalogClient = vaultCatalogClient;
     }
 
     @Override
@@ -76,7 +76,7 @@ public class ExtractMetadataTaskManager implements Managed {
         if (FilenameUtils.getExtension(file.getName()).toLowerCase(Locale.ROOT).equals("zip")) {
             var metadataTask = new ExtractMetadataTask(
                 file.toPath(), outbox, transferItemService, metadataReader, fileService,
-                transferItemValidator, vaultCatalogRepository);
+                transferItemValidator, vaultCatalogClient);
 
             log.debug("Executing task {}", metadataTask);
             executorService.execute(metadataTask);

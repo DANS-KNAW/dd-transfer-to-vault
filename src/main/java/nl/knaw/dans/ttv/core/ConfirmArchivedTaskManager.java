@@ -41,12 +41,12 @@ public class ConfirmArchivedTaskManager implements Managed {
     private final TransferItemService transferItemService;
     private final ArchiveStatusService archiveStatusService;
     private final FileService fileService;
-    private final VaultCatalogRepository vaultCatalogRepository;
+    private final VaultCatalogClient vaultCatalogClient;
     private Scheduler scheduler;
 
     public ConfirmArchivedTaskManager(String schedule, Path workingDir,
         ExecutorService executorService, TransferItemService transferItemService, ArchiveStatusService archiveStatusService, FileService fileService,
-        VaultCatalogRepository vaultCatalogRepository) {
+        VaultCatalogClient vaultCatalogClient) {
 
         this.workingDir = workingDir;
         this.executorService = executorService;
@@ -54,7 +54,7 @@ public class ConfirmArchivedTaskManager implements Managed {
         this.transferItemService = transferItemService;
         this.archiveStatusService = archiveStatusService;
         this.fileService = fileService;
-        this.vaultCatalogRepository = vaultCatalogRepository;
+        this.vaultCatalogClient = vaultCatalogClient;
     }
 
     @Override
@@ -67,7 +67,7 @@ public class ConfirmArchivedTaskManager implements Managed {
         log.debug("Configuring JobDataMap for cron-based tasks");
         var params = new ConfirmArchivedTaskCreator.ConfirmArchivedTaskCreatorParameters(
             transferItemService, workingDir, archiveStatusService, fileService, executorService,
-            vaultCatalogRepository);
+            vaultCatalogClient);
         var jobData = new JobDataMap(Map.of("params", params));
 
         var job = JobBuilder.newJob(ConfirmArchivedTaskCreator.class)

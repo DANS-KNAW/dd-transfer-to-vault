@@ -32,21 +32,21 @@ class ConfirmArchivedTaskTest {
     private TransferItemService transferItemService;
     private ArchiveStatusService archiveStatusService;
     private FileService fileService;
-    private VaultCatalogRepository vaultCatalogRepository;
+    private VaultCatalogClient vaultCatalogClient;
 
     @BeforeEach
     void setUp() {
         this.transferItemService = Mockito.mock(TransferItemService.class);
         this.archiveStatusService = Mockito.mock(ArchiveStatusService.class);
         this.fileService = Mockito.mock(FileService.class);
-        this.vaultCatalogRepository = Mockito.mock(VaultCatalogRepository.class);
+        this.vaultCatalogClient = Mockito.mock(VaultCatalogClient.class);
     }
 
     @Test
     void testCompletelyArchived() throws IOException, InterruptedException {
         var tar = new Tar("test1", Tar.TarStatus.OCFLTARCREATED, false);
         var path = Path.of("workingdir");
-        var task = new ConfirmArchivedTask(tar, transferItemService, archiveStatusService, fileService, path, vaultCatalogRepository);
+        var task = new ConfirmArchivedTask(tar, transferItemService, archiveStatusService, fileService, path, vaultCatalogClient);
 
         var fileStatus = Map.of(
             "file1", ArchiveStatusService.FileStatus.DUAL,
@@ -60,14 +60,14 @@ class ConfirmArchivedTaskTest {
 
         Mockito.verify(transferItemService).updateTarToArchived(Mockito.any());
         Mockito.verify(fileService).deleteDirectory(Path.of("workingdir", "test1"));
-        Mockito.verify(vaultCatalogRepository).registerTar(Mockito.any());
+        Mockito.verify(vaultCatalogClient).registerTar(Mockito.any());
     }
 
     @Test
     void testPartiallyArchived() throws IOException, InterruptedException {
         var tar = new Tar("test1", Tar.TarStatus.OCFLTARCREATED, false);
         var path = Path.of("workingdir");
-        var task = new ConfirmArchivedTask(tar, transferItemService, archiveStatusService, fileService, path, vaultCatalogRepository);
+        var task = new ConfirmArchivedTask(tar, transferItemService, archiveStatusService, fileService, path, vaultCatalogClient);
 
         var fileStatus = Map.of(
             "file1", ArchiveStatusService.FileStatus.DUAL,
@@ -82,14 +82,14 @@ class ConfirmArchivedTaskTest {
         Mockito.verify(transferItemService).resetTarToArchiving(Mockito.any());
         Mockito.verify(fileService, Mockito.times(0))
             .deleteDirectory(Mockito.any());
-        Mockito.verifyNoInteractions(vaultCatalogRepository);
+        Mockito.verifyNoInteractions(vaultCatalogClient);
     }
 
     @Test
     void testOnError() throws IOException, InterruptedException {
         var tar = new Tar("test1", Tar.TarStatus.OCFLTARCREATED, false);
         var path = Path.of("workingdir");
-        var task = new ConfirmArchivedTask(tar, transferItemService, archiveStatusService, fileService, path, vaultCatalogRepository);
+        var task = new ConfirmArchivedTask(tar, transferItemService, archiveStatusService, fileService, path, vaultCatalogClient);
 
         Mockito.when(archiveStatusService.getFileStatus("test1"))
             .thenThrow(IOException.class);
@@ -100,14 +100,14 @@ class ConfirmArchivedTaskTest {
         Mockito.verify(fileService, Mockito.times(0))
             .deleteDirectory(Mockito.any());
 
-        Mockito.verifyNoInteractions(vaultCatalogRepository);
+        Mockito.verifyNoInteractions(vaultCatalogClient);
     }
 
     @Test
     void testOnCleanupErrorShouldNotThrowErrors() throws IOException, InterruptedException {
         var tar = new Tar("test1", Tar.TarStatus.OCFLTARCREATED, false);
         var path = Path.of("workingdir");
-        var task = new ConfirmArchivedTask(tar, transferItemService, archiveStatusService, fileService, path, vaultCatalogRepository);
+        var task = new ConfirmArchivedTask(tar, transferItemService, archiveStatusService, fileService, path, vaultCatalogClient);
 
         var fileStatus = Map.of(
             "file1", ArchiveStatusService.FileStatus.DUAL,

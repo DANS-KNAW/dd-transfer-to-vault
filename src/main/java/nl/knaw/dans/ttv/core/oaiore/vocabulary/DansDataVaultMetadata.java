@@ -19,7 +19,7 @@ import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Property;
 
-public class DansDVMetadata {
+public class DansDataVaultMetadata {
     public static final String NS = "https://dar.dans.knaw.nl/schema/dansDataVaultMetadata#";
     private static final Model m = ModelFactory.createDefaultModel();
     public static final Property dansDataversePid = m.createProperty(NS, "dansDataversePid");

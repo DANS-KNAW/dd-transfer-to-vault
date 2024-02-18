@@ -35,18 +35,18 @@ public class OcflTarTask implements Runnable {
     private final TarCommandRunner tarCommandRunner;
     private final ArchiveMetadataService archiveMetadataService;
     private final OcflRepositoryService ocflRepositoryService;
-    private final VaultCatalogRepository vaultCatalogRepository;
+    private final VaultCatalogClient vaultCatalogClient;
     private final int maxRetries;
 
     public OcflTarTask(TransferItemService transferItemService, String uuid, Path inboxPath, TarCommandRunner tarCommandRunner, ArchiveMetadataService archiveMetadataService,
-        OcflRepositoryService ocflRepositoryService, VaultCatalogRepository vaultCatalogRepository, int maxRetries) {
+        OcflRepositoryService ocflRepositoryService, VaultCatalogClient vaultCatalogClient, int maxRetries) {
         this.transferItemService = transferItemService;
         this.inboxPath = inboxPath;
         this.uuid = uuid;
         this.tarCommandRunner = tarCommandRunner;
         this.archiveMetadataService = archiveMetadataService;
         this.ocflRepositoryService = ocflRepositoryService;
-        this.vaultCatalogRepository = vaultCatalogRepository;
+        this.vaultCatalogClient = vaultCatalogClient;
         this.maxRetries = maxRetries;
     }
 
@@ -147,10 +147,10 @@ public class OcflTarTask implements Runnable {
 
         for (var transferItem : tar.getTransferItems()) {
             log.info("Registering transfer item {} with vault catalog", transferItem);
-            vaultCatalogRepository.registerOcflObjectVersion(transferItem);
+            vaultCatalogClient.registerOcflObjectVersion(transferItem);
         }
 
-        vaultCatalogRepository.registerTar(tar);
+        vaultCatalogClient.registerTar(tar);
     }
 
     /**

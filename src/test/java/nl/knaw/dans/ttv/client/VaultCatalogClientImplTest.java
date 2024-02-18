@@ -32,13 +32,13 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class VaultCatalogAPIRepositoryTest {
+class VaultCatalogClientImplTest {
 
     @Test
     void registerOcflObjectVersion_should_set_version_to_1_if_no_records_exist() throws Exception {
         var tarApi = Mockito.mock(TarApi.class);
         var ocflObjectVersionApi = Mockito.mock(OcflObjectVersionApi.class);
-        var repo = new VaultCatalogAPIRepository(tarApi, ocflObjectVersionApi);
+        var repo = new VaultCatalogClientImpl(tarApi, ocflObjectVersionApi);
 
         var transferItem = TransferItem.builder()
             .bagId("urn:uuid:" + UUID.randomUUID())
@@ -53,7 +53,7 @@ class VaultCatalogAPIRepositoryTest {
     void registerOcflObjectVersion_should_set_version_to_2_if_one_record_exists() throws Exception {
         var tarApi = Mockito.mock(TarApi.class);
         var ocflObjectVersionApi = Mockito.mock(OcflObjectVersionApi.class);
-        var repo = new VaultCatalogAPIRepository(tarApi, ocflObjectVersionApi);
+        var repo = new VaultCatalogClientImpl(tarApi, ocflObjectVersionApi);
 
         var transferItem = TransferItem.builder()
             .bagId("urn:uuid:" + UUID.randomUUID())
@@ -75,7 +75,7 @@ class VaultCatalogAPIRepositoryTest {
     void registerOcflObjectVersion_should_set_version_to_3_if_one_record_exists_but_it_is_a_SkeletonRecord() throws Exception {
         var tarApi = Mockito.mock(TarApi.class);
         var ocflObjectVersionApi = Mockito.mock(OcflObjectVersionApi.class);
-        var repo = new VaultCatalogAPIRepository(tarApi, ocflObjectVersionApi);
+        var repo = new VaultCatalogClientImpl(tarApi, ocflObjectVersionApi);
 
         var transferItem = TransferItem.builder()
             .bagId("urn:uuid:" + UUID.randomUUID())
@@ -97,7 +97,7 @@ class VaultCatalogAPIRepositoryTest {
     void registerOcflObjectVersion_should_not_change_version_if_already_set() throws Exception {
         var tarApi = Mockito.mock(TarApi.class);
         var ocflObjectVersionApi = Mockito.mock(OcflObjectVersionApi.class);
-        var repo = new VaultCatalogAPIRepository(tarApi, ocflObjectVersionApi);
+        var repo = new VaultCatalogClientImpl(tarApi, ocflObjectVersionApi);
 
         var transferItem = TransferItem.builder()
             .bagId("urn:uuid:" + UUID.randomUUID())
@@ -120,7 +120,7 @@ class VaultCatalogAPIRepositoryTest {
     void registerOcflObjectVersion_should_fully_map_TransferItem_to_OcflObjectVersionDto() throws Exception {
         var tarApi = Mockito.mock(TarApi.class);
         var ocflObjectVersionApi = Mockito.mock(OcflObjectVersionApi.class);
-        var repo = new VaultCatalogAPIRepository(tarApi, ocflObjectVersionApi);
+        var repo = new VaultCatalogClientImpl(tarApi, ocflObjectVersionApi);
 
         var transferItem = TransferItem.builder()
             .bagId("urn:uuid:" + UUID.randomUUID())

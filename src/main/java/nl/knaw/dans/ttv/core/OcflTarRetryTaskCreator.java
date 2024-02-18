@@ -102,13 +102,13 @@ public class OcflTarRetryTaskCreator implements Job {
         private ArchiveMetadataService archiveMetadataService;
         private ExecutorService executorService;
         private OcflRepositoryService ocflRepositoryService;
-        private VaultCatalogRepository vaultCatalogRepository;
+        private VaultCatalogClient vaultCatalogClient;
         private int maxRetries;
         private List<Duration> retryIntervals;
 
         public TaskRetryTaskCreatorParameters(TransferItemService transferItemService, Path workDir, TarCommandRunner tarCommandRunner,
             ArchiveMetadataService archiveMetadataService, ExecutorService executorService, int maxRetries, List<Duration> retryIntervals, OcflRepositoryService ocflRepositoryService,
-            VaultCatalogRepository vaultCatalogRepository) {
+            VaultCatalogClient vaultCatalogClient) {
             this.transferItemService = transferItemService;
             this.workDir = workDir;
             this.tarCommandRunner = tarCommandRunner;
@@ -117,15 +117,15 @@ public class OcflTarRetryTaskCreator implements Job {
             this.maxRetries = maxRetries;
             this.retryIntervals = retryIntervals;
             this.ocflRepositoryService = ocflRepositoryService;
-            this.vaultCatalogRepository = vaultCatalogRepository;
+            this.vaultCatalogClient = vaultCatalogClient;
         }
 
-        public VaultCatalogRepository getVaultCatalogService() {
-            return vaultCatalogRepository;
+        public VaultCatalogClient getVaultCatalogService() {
+            return vaultCatalogClient;
         }
 
-        public void setVaultCatalogService(VaultCatalogRepository vaultCatalogRepository) {
-            this.vaultCatalogRepository = vaultCatalogRepository;
+        public void setVaultCatalogService(VaultCatalogClient vaultCatalogClient) {
+            this.vaultCatalogClient = vaultCatalogClient;
         }
 
         public OcflRepositoryService getOcflRepositoryService() {

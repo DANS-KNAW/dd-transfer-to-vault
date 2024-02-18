@@ -17,7 +17,10 @@ package nl.knaw.dans.ttv.core;
 
 import java.io.IOException;
 
-public interface VaultCatalogRepository {
+/**
+ * Client for the Vault Catalog API.
+ */
+public interface VaultCatalogClient {
 
     void registerOcflObjectVersion(TransferItem transferItem) throws IOException;
 

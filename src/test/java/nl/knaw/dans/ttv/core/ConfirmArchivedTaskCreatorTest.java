@@ -31,7 +31,7 @@ class ConfirmArchivedTaskCreatorTest {
     private ExecutorService executorService;
     private FileService fileService;
     private ArchiveStatusService archiveStatusService;
-    private VaultCatalogRepository vaultCatalogRepository;
+    private VaultCatalogClient vaultCatalogClient;
 
     @BeforeEach
     void setUp() {
@@ -39,14 +39,14 @@ class ConfirmArchivedTaskCreatorTest {
         this.executorService = Mockito.mock(ExecutorService.class);
         this.fileService = Mockito.mock(FileService.class);
         this.archiveStatusService = Mockito.mock(ArchiveStatusService.class);
-        this.vaultCatalogRepository = Mockito.mock(VaultCatalogRepository.class);
+        this.vaultCatalogClient = Mockito.mock(VaultCatalogClient.class);
     }
 
     @Test
     void run() {
         var params = new ConfirmArchivedTaskCreator.ConfirmArchivedTaskCreatorParameters(
             transferItemService, Path.of("workingdir"), archiveStatusService, fileService, executorService,
-            vaultCatalogRepository);
+            vaultCatalogClient);
 
         Mockito.when(transferItemService.stageAllTarsToBeConfirmed())
             .thenReturn(List.of(new Tar()));

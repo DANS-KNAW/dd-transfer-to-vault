@@ -20,7 +20,7 @@ import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.Resource;
 
-public class ORE {
+public class OaiOreMetadata {
     public static final String NS = "http://www.openarchives.org/ore/terms/";
     private static final Model m = ModelFactory.createDefaultModel();
     public static final Property describes = m.createProperty(NS, "describes");
