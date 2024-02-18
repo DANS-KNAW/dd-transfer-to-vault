@@ -20,7 +20,6 @@ import nl.knaw.dans.ttv.core.domain.FilesystemAttributes;
 import nl.knaw.dans.ttv.core.service.FileService;
 import nl.knaw.dans.ttv.core.service.TransferItemService;
 import nl.knaw.dans.ttv.core.service.TransferItemValidator;
-import nl.knaw.dans.ttv.db.TransferItem;
 import nl.knaw.dans.ttv.util.TestTransferItemMetadataReader;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

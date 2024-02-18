@@ -20,7 +20,6 @@ import nl.knaw.dans.ttv.core.service.FileService;
 import nl.knaw.dans.ttv.core.service.TransferItemMetadataReader;
 import nl.knaw.dans.ttv.core.service.TransferItemService;
 import nl.knaw.dans.ttv.core.service.TransferItemValidator;
-import nl.knaw.dans.ttv.db.TransferItem;
 
 import java.io.IOException;
 import java.nio.file.Path;

@@ -22,11 +22,11 @@ import nl.knaw.dans.ttv.core.domain.ArchiveMetadata;
 import nl.knaw.dans.ttv.core.domain.FileContentAttributes;
 import nl.knaw.dans.ttv.core.domain.FilenameAttributes;
 import nl.knaw.dans.ttv.core.domain.FilesystemAttributes;
-import nl.knaw.dans.ttv.db.Tar;
-import nl.knaw.dans.ttv.db.TarDAO;
-import nl.knaw.dans.ttv.db.TarPart;
-import nl.knaw.dans.ttv.db.TransferItem;
-import nl.knaw.dans.ttv.db.TransferItemDAO;
+import nl.knaw.dans.ttv.core.Tar;
+import nl.knaw.dans.ttv.db.TarDao;
+import nl.knaw.dans.ttv.core.TarPart;
+import nl.knaw.dans.ttv.core.TransferItem;
+import nl.knaw.dans.ttv.db.TransferItemDao;
 import org.hibernate.Hibernate;
 import org.hibernate.ObjectNotFoundException;
 
@@ -39,10 +39,10 @@ import java.util.stream.Collectors;
 
 @Slf4j
 public class TransferItemServiceImpl implements TransferItemService {
-    private final TransferItemDAO transferItemDAO;
-    private final TarDAO tarDAO;
+    private final TransferItemDao transferItemDAO;
+    private final TarDao tarDAO;
 
-    public TransferItemServiceImpl(TransferItemDAO transferItemDAO, TarDAO tarDAO) {
+    public TransferItemServiceImpl(TransferItemDao transferItemDAO, TarDao tarDAO) {
         this.transferItemDAO = transferItemDAO;
         this.tarDAO = tarDAO;
     }

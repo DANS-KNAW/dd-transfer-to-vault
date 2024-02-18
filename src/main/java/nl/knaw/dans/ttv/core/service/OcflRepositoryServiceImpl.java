@@ -19,7 +19,7 @@ import io.ocfl.api.OcflOption;
 import io.ocfl.api.OcflRepository;
 import io.ocfl.api.model.ObjectVersionId;
 import io.ocfl.api.model.VersionInfo;
-import nl.knaw.dans.ttv.db.TransferItem;
+import nl.knaw.dans.ttv.core.TransferItem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

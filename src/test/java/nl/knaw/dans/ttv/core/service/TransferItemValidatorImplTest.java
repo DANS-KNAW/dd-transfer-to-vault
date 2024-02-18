@@ -16,7 +16,7 @@
 package nl.knaw.dans.ttv.core.service;
 
 import nl.knaw.dans.ttv.core.InvalidTransferItemException;
-import nl.knaw.dans.ttv.db.TransferItem;
+import nl.knaw.dans.ttv.core.TransferItem;
 import org.junit.jupiter.api.Test;
 
 import java.time.OffsetDateTime;

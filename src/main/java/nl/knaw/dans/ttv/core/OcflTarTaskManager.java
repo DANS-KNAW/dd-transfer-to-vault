@@ -24,8 +24,6 @@ import nl.knaw.dans.ttv.core.service.OcflRepositoryService;
 import nl.knaw.dans.ttv.core.service.TarCommandRunner;
 import nl.knaw.dans.ttv.core.service.TransferItemMetadataReader;
 import nl.knaw.dans.ttv.core.service.TransferItemService;
-import nl.knaw.dans.ttv.db.Tar;
-import nl.knaw.dans.ttv.db.TransferItem;
 import org.quartz.JobBuilder;
 import org.quartz.JobDataMap;
 import org.quartz.Scheduler;

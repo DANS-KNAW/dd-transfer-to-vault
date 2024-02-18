@@ -20,8 +20,8 @@ import nl.knaw.dans.ttv.core.domain.ArchiveMetadata;
 import nl.knaw.dans.ttv.core.domain.FileContentAttributes;
 import nl.knaw.dans.ttv.core.domain.FilenameAttributes;
 import nl.knaw.dans.ttv.core.domain.FilesystemAttributes;
-import nl.knaw.dans.ttv.db.Tar;
-import nl.knaw.dans.ttv.db.TransferItem;
+import nl.knaw.dans.ttv.core.Tar;
+import nl.knaw.dans.ttv.core.TransferItem;
 
 import java.io.IOException;
 import java.nio.file.Path;

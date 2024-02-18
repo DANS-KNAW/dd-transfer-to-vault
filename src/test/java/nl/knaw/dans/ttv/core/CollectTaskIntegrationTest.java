@@ -25,11 +25,8 @@ import nl.knaw.dans.ttv.core.service.TransferItemMetadataReader;
 import nl.knaw.dans.ttv.core.service.TransferItemMetadataReaderImpl;
 import nl.knaw.dans.ttv.core.service.TransferItemService;
 import nl.knaw.dans.ttv.core.service.TransferItemServiceImpl;
-import nl.knaw.dans.ttv.db.Tar;
-import nl.knaw.dans.ttv.db.TarDAO;
-import nl.knaw.dans.ttv.db.TarPart;
-import nl.knaw.dans.ttv.db.TransferItem;
-import nl.knaw.dans.ttv.db.TransferItemDAO;
+import nl.knaw.dans.ttv.db.TarDao;
+import nl.knaw.dans.ttv.db.TransferItemDao;
 import org.apache.commons.io.FilenameUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -61,13 +58,13 @@ public class CollectTaskIntegrationTest {
     private TransferItemService transferItemService;
     private TransferItemMetadataReader transferItemMetadataReader;
     private FileService fileService;
-    private TarDAO tarDAO;
-    private TransferItemDAO transferItemDAO;
+    private TarDao tarDAO;
+    private TransferItemDao transferItemDAO;
 
     @BeforeEach
     void setUp() {
-        tarDAO = new TarDAO(database.getSessionFactory());
-        transferItemDAO = new TransferItemDAO(database.getSessionFactory());
+        tarDAO = new TarDao(database.getSessionFactory());
+        transferItemDAO = new TransferItemDao(database.getSessionFactory());
         fileService = new FileServiceImpl();
 
         transferItemService = new TransferItemServiceImpl(
