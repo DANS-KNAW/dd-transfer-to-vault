@@ -16,14 +16,14 @@
 package nl.knaw.dans.ttv.core.service;
 
 import nl.knaw.dans.ttv.core.InvalidTransferItemException;
+import nl.knaw.dans.ttv.core.Tar;
+import nl.knaw.dans.ttv.core.TransferItem;
 import nl.knaw.dans.ttv.core.domain.ArchiveMetadata;
 import nl.knaw.dans.ttv.core.domain.FileContentAttributes;
 import nl.knaw.dans.ttv.core.domain.FilenameAttributes;
 import nl.knaw.dans.ttv.core.domain.FilesystemAttributes;
-import nl.knaw.dans.ttv.db.Tar;
-import nl.knaw.dans.ttv.db.TarDAO;
-import nl.knaw.dans.ttv.db.TransferItem;
-import nl.knaw.dans.ttv.db.TransferItemDAO;
+import nl.knaw.dans.ttv.db.TarDao;
+import nl.knaw.dans.ttv.db.TransferItemDao;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -45,8 +45,8 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 class TransferItemServiceImplTest {
 
-    TransferItemDAO transferItemDao;
-    TarDAO tarDAO;
+    TransferItemDao transferItemDao;
+    TarDao tarDAO;
     FileService fileService;
     FilenameAttributes filenameAttributes;
     FilesystemAttributes filesystemAttributes;
@@ -54,8 +54,8 @@ class TransferItemServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        transferItemDao = Mockito.mock(TransferItemDAO.class);
-        tarDAO = Mockito.mock(TarDAO.class);
+        transferItemDao = Mockito.mock(TransferItemDao.class);
+        tarDAO = Mockito.mock(TarDao.class);
         fileService = Mockito.mock(FileService.class);
 
         filenameAttributes = FilenameAttributes

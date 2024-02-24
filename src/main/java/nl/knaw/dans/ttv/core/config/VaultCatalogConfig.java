@@ -13,12 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ttv.core.service;
+package nl.knaw.dans.ttv.core.config;
 
-import nl.knaw.dans.ttv.core.InvalidTransferItemException;
-import nl.knaw.dans.ttv.core.TransferItem;
+import io.dropwizard.client.JerseyClientConfiguration;
+import lombok.Data;
 
-public interface TransferItemValidator {
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
+import java.net.URI;
 
-    void validateTransferItem(TransferItem transferItem) throws InvalidTransferItemException;
+@Data
+public class VaultCatalogConfig {
+    @NotNull
+    @Valid
+    private URI url;
+
+    @Valid
+    @NotNull
+    private JerseyClientConfiguration httpClient = new JerseyClientConfiguration();
 }

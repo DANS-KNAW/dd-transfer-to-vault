@@ -17,7 +17,7 @@
 package nl.knaw.dans.ttv.health;
 
 import com.codahale.metrics.health.HealthCheck;
-import nl.knaw.dans.ttv.DdTransferToVaultConfiguration;
+import nl.knaw.dans.ttv.core.config.DdTransferToVaultConfig;
 import nl.knaw.dans.ttv.core.service.FileService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,10 +31,10 @@ import java.util.HashSet;
 public class PartitionHealthCheck extends HealthCheck {
     private static final Logger log = LoggerFactory.getLogger(PartitionHealthCheck.class);
 
-    private final DdTransferToVaultConfiguration configuration;
+    private final DdTransferToVaultConfig configuration;
     private final FileService fileService;
 
-    public PartitionHealthCheck(DdTransferToVaultConfiguration configuration, FileService fileService) {
+    public PartitionHealthCheck(DdTransferToVaultConfig configuration, FileService fileService) {
         this.configuration = configuration;
         this.fileService = fileService;
     }
@@ -44,8 +44,6 @@ public class PartitionHealthCheck extends HealthCheck {
         var healthy = true;
         var paths = new ArrayList<Path>();
         paths.add(configuration.getExtractMetadata().getInbox());
-        paths.add(configuration.getCreateOcflTar().getInbox());
-        paths.add(configuration.getCreateOcflTar().getWorkDir());
 
         log.debug("Checking if all paths are on the same partition");
         var fileSystems = new HashSet<FileStore>();

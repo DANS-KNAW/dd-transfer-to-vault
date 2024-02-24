@@ -15,15 +15,13 @@
  */
 package nl.knaw.dans.ttv.core;
 
-import nl.knaw.dans.ttv.core.service.ArchiveStatusService;
-import nl.knaw.dans.ttv.core.service.FileService;
+import lombok.Data;
 import nl.knaw.dans.ttv.core.service.TransferItemService;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.nio.file.Path;
 import java.util.concurrent.ExecutorService;
 
 public class ConfirmArchivedTaskCreator implements Job {
@@ -39,62 +37,22 @@ public class ConfirmArchivedTaskCreator implements Job {
 
     void run(ConfirmArchivedTaskCreatorParameters params) {
         var transferItemService = params.getTransferItemService();
-        var workingDir = params.getWorkingDir();
-        var archiveStatusService = params.getArchiveStatusService();
-        var fileService = params.getFileService();
         var executorService = params.getExecutorService();
-        var vaultCatalogService = params.getVaultCatalogService();
+        var vaultCatalogService = params.getVaultCatalogClient();
 
         var tars = transferItemService.stageAllTarsToBeConfirmed();
 
         for (var tar : tars) {
-            var task = new ConfirmArchivedTask(tar, transferItemService, archiveStatusService, fileService, workingDir, vaultCatalogService);
+            var task = new ConfirmArchivedTask(tar, transferItemService, vaultCatalogService);
             log.debug("Executing task {}", task);
             executorService.execute(task);
         }
     }
 
+    @Data
     public static class ConfirmArchivedTaskCreatorParameters {
         private final TransferItemService transferItemService;
-        private final Path workingDir;
-        private final ArchiveStatusService archiveStatusService;
-        private final FileService fileService;
         private final ExecutorService executorService;
-        private final VaultCatalogRepository vaultCatalogRepository;
-
-        public ConfirmArchivedTaskCreatorParameters(TransferItemService transferItemService, Path workingDir, ArchiveStatusService archiveStatusService,
-            FileService fileService, ExecutorService executorService, VaultCatalogRepository vaultCatalogRepository) {
-            this.transferItemService = transferItemService;
-            this.workingDir = workingDir;
-            this.archiveStatusService = archiveStatusService;
-            this.fileService = fileService;
-            this.executorService = executorService;
-            this.vaultCatalogRepository = vaultCatalogRepository;
-        }
-
-        public VaultCatalogRepository getVaultCatalogService() {
-            return vaultCatalogRepository;
-        }
-
-        public TransferItemService getTransferItemService() {
-            return transferItemService;
-        }
-
-        public Path getWorkingDir() {
-            return workingDir;
-        }
-
-        public ArchiveStatusService getArchiveStatusService() {
-            return archiveStatusService;
-        }
-
-        public FileService getFileService() {
-            return fileService;
-        }
-
-        public ExecutorService getExecutorService() {
-            return executorService;
-        }
-
+        private final VaultCatalogClient vaultCatalogClient;
     }
 }

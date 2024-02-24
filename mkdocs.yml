@@ -22,9 +22,13 @@ repo_name: DANS-KNAW/dd-transfer-to-vault
 repo_url: https://github.com/DANS-KNAW/dd-transfer-to-vault
 
 nav:
-  - Manual: index.md
+  - Manual:
+    - Synopsis: index.md
+    - Description: description.md
+    - Installation & building: installation.md
   - Development: dev.md
-  - ⇒ DANS Data Station Architecture: arch.md
+  - Context:
+    - ⇒ DANS Data Station Architecture: arch.md
 
 plugins:
   - markdownextradata

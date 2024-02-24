@@ -15,7 +15,7 @@
  */
 package nl.knaw.dans.ttv.core.config.validation;
 
-import nl.knaw.dans.ttv.core.config.CollectConfiguration;
+import nl.knaw.dans.ttv.core.config.CollectConfig;
 
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
@@ -23,14 +23,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class UniqueInboxEntryNamesValidator implements ConstraintValidator<UniqueInboxEntryNames, List<CollectConfiguration.InboxEntry>> {
+public class UniqueInboxEntryNamesValidator implements ConstraintValidator<UniqueInboxEntryNames, List<CollectConfig.InboxEntry>> {
 
     @Override
-    public boolean isValid(List<CollectConfiguration.InboxEntry> inboxEntries, ConstraintValidatorContext constraintValidatorContext) {
+    public boolean isValid(List<CollectConfig.InboxEntry> inboxEntries, ConstraintValidatorContext constraintValidatorContext) {
         // This groups by the name property and checks if there are more than 1 entries for that.
         // Only unique names are allowed, so duplicates will make it return false
         var inboxNames = inboxEntries.stream()
-            .collect(Collectors.groupingBy(CollectConfiguration.InboxEntry::getName))
+            .collect(Collectors.groupingBy(CollectConfig.InboxEntry::getName))
             .entrySet()
             .stream().filter(e -> e.getValue().size() > 1)
             .map(Map.Entry::getKey)

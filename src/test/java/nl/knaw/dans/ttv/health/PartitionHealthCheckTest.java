@@ -15,9 +15,8 @@
  */
 package nl.knaw.dans.ttv.health;
 
-import nl.knaw.dans.ttv.DdTransferToVaultConfiguration;
-import nl.knaw.dans.ttv.core.config.CreateOcflTarConfiguration;
-import nl.knaw.dans.ttv.core.config.ExtractMetadataConfiguration;
+import nl.knaw.dans.ttv.core.config.DdTransferToVaultConfig;
+import nl.knaw.dans.ttv.core.config.ExtractMetadataConfig;
 import nl.knaw.dans.ttv.core.service.FileService;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -33,12 +32,9 @@ class PartitionHealthCheckTest {
     @Test
     void onSamePartition() throws Exception {
         var fileService = Mockito.mock(FileService.class);
-        var config = new DdTransferToVaultConfiguration();
-        config.setExtractMetadata(new ExtractMetadataConfiguration());
+        var config = new DdTransferToVaultConfig();
+        config.setExtractMetadata(new ExtractMetadataConfig());
         config.getExtractMetadata().setInbox(Path.of("metadata"));
-        config.setCreateOcflTar(new CreateOcflTarConfiguration());
-        config.getCreateOcflTar().setInbox(Path.of("ocfl-inbox"));
-        config.getCreateOcflTar().setWorkDir(Path.of("ocfl-workdir"));
 
         var fs1 = Mockito.mock(FileStore.class);
         var fs2 = Mockito.mock(FileStore.class);
@@ -49,27 +45,5 @@ class PartitionHealthCheckTest {
         var result = new PartitionHealthCheck(config, fileService).check();
 
         assertTrue(result.isHealthy());
-    }
-
-    @Test
-    void onDifferentPartition() throws Exception {
-        var fileService = Mockito.mock(FileService.class);
-        var config = new DdTransferToVaultConfiguration();
-        config.setExtractMetadata(new ExtractMetadataConfiguration());
-        config.getExtractMetadata().setInbox(Path.of("metadata"));
-        config.setCreateOcflTar(new CreateOcflTarConfiguration());
-        config.getCreateOcflTar().setInbox(Path.of("ocfl-inbox"));
-        config.getCreateOcflTar().setWorkDir(Path.of("ocfl-workdir"));
-
-        var fs1 = Mockito.mock(FileStore.class);
-        var fs2 = Mockito.mock(FileStore.class);
-
-        Mockito.when(fileService.getFileStore(Mockito.any()))
-            .thenReturn(fs1)
-            .thenReturn(fs2);
-
-        var result = new PartitionHealthCheck(config, fileService).check();
-
-        assertFalse(result.isHealthy());
     }
 }

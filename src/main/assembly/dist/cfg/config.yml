@@ -27,21 +27,6 @@ health:
       initialState: false
       schedule:
         checkInterval: 60s
-    - name: DmftarLocal
-      critical: false
-      initialState: false
-      schedule:
-        checkInterval: 300s
-    - name: DmftarRemote
-      critical: false
-      initialState: false
-      schedule:
-        checkInterval: 300s
-    - name: SSH
-      critical: false
-      initialState: false
-      schedule:
-        checkInterval: 300s
 
 collect:
   inboxes: [ ]
@@ -65,39 +50,6 @@ extractMetadata:
   pollingInterval: 500
   taskQueue:
     nameFormat: "extract-metadata-worker-%d"
-    maxQueueSize: 5000
-    # Number of threads will be increased when maxQueueSize is exceeded.
-    minThreads: 1
-    # No more than maxThreads will be created though
-    maxThreads: 10
-    # Threads will die after 60 seconds of idleness
-    keepAliveTime: 60 seconds
-
-dataArchive:
-  user: 'danstst0'
-  host: 'archive.surfsara.nl'
-  path: 'dans-vault'
-
-createOcflTar:
-  inbox: /var/opt/dans.knaw.nl/tmp/ocfl-tar/inbox
-  workDir: /var/opt/dans.knaw.nl/tmp/ocfl-tar/workdirs
-  inboxThreshold: 2G
-  dmftarVersion:
-    local: 2.2
-    remote: 2.2
-  # polling interval in milliseconds
-  pollingInterval: 500
-  maxRetries: 6
-  # retry interval according to ISO-8601 standard
-  retryInterval: PT5M
-  # retry schedule durations according to ISO-8601 standard
-  retrySchedule:
-    - PT5M
-    - PT1H
-    - PT8H
-    - PT24H
-  taskQueue:
-    nameFormat: "ocfl-tar-worker-%d"
     maxQueueSize: 5000
     # Number of threads will be increased when maxQueueSize is exceeded.
     minThreads: 1

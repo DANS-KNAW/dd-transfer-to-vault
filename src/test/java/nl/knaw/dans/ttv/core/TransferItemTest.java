@@ -13,12 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ttv.core.service;
+package nl.knaw.dans.ttv.core;
 
-import nl.knaw.dans.ttv.core.InvalidTransferItemException;
-import nl.knaw.dans.ttv.core.TransferItem;
+import org.junit.jupiter.api.Test;
 
-public interface TransferItemValidator {
+import static org.assertj.core.api.Assertions.assertThat;
 
-    void validateTransferItem(TransferItem transferItem) throws InvalidTransferItemException;
+class TransferItemTest {
+
+    @Test
+    void getCanonicalFilename_should_include_identifier_and_id() {
+        var item = TransferItem.builder()
+            .id(1L)
+            .dveFilename("dans-bag-1.zip")
+            .build();
+
+        assertThat(item.getCanonicalFilename()).isEqualTo("dans-bag-1-ttv1.zip");
+    }
 }

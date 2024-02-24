@@ -13,12 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ttv.core.service;
+package nl.knaw.dans.ttv.core.config;
 
-import nl.knaw.dans.ttv.core.InvalidTransferItemException;
-import nl.knaw.dans.ttv.core.TransferItem;
+import lombok.Data;
+import nl.knaw.dans.lib.util.ExecutorServiceFactory;
 
-public interface TransferItemValidator {
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 
-    void validateTransferItem(TransferItem transferItem) throws InvalidTransferItemException;
+@Data
+public class ConfirmArchivedConfig {
+    @Valid
+    @NotNull
+    private String cron;
+    @Valid
+    @NotNull
+    private String vaultServiceEndpoint;
+    @Valid
+    @NotNull
+    private ExecutorServiceFactory taskQueue;
 }

@@ -13,12 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ttv.core.service;
+package nl.knaw.dans.ttv.core;
 
-import nl.knaw.dans.ttv.core.InvalidTransferItemException;
-import nl.knaw.dans.ttv.core.TransferItem;
+import java.io.IOException;
 
-public interface TransferItemValidator {
+/**
+ * Client for the Vault Catalog API.
+ */
+public interface VaultCatalogClient {
 
-    void validateTransferItem(TransferItem transferItem) throws InvalidTransferItemException;
+    void registerOcflObjectVersion(TransferItem transferItem) throws IOException;
+
+    void registerTar(Tar tar) throws IOException;
+
 }

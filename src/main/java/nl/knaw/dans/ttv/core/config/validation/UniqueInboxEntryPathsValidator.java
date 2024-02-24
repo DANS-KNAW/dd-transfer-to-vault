@@ -15,18 +15,18 @@
  */
 package nl.knaw.dans.ttv.core.config.validation;
 
-import nl.knaw.dans.ttv.core.config.CollectConfiguration;
+import nl.knaw.dans.ttv.core.config.CollectConfig;
 
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class UniqueInboxEntryPathsValidator implements ConstraintValidator<UniqueInboxEntryPaths, List<CollectConfiguration.InboxEntry>> {
+public class UniqueInboxEntryPathsValidator implements ConstraintValidator<UniqueInboxEntryPaths, List<CollectConfig.InboxEntry>> {
     @Override
-    public boolean isValid(List<CollectConfiguration.InboxEntry> inboxEntries, ConstraintValidatorContext constraintValidatorContext) {
+    public boolean isValid(List<CollectConfig.InboxEntry> inboxEntries, ConstraintValidatorContext constraintValidatorContext) {
         var inboxPaths = inboxEntries.stream()
-            .collect(Collectors.groupingBy(CollectConfiguration.InboxEntry::getPath))
+            .collect(Collectors.groupingBy(CollectConfig.InboxEntry::getPath))
             .values()
             .stream().filter(entries -> entries.size() > 1)
             .collect(Collectors.toList());

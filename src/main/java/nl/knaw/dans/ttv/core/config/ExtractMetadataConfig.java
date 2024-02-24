@@ -13,12 +13,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ttv.core.service;
+package nl.knaw.dans.ttv.core.config;
 
-import nl.knaw.dans.ttv.core.InvalidTransferItemException;
-import nl.knaw.dans.ttv.core.TransferItem;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Data;
+import nl.knaw.dans.lib.util.ExecutorServiceFactory;
 
-public interface TransferItemValidator {
+import javax.validation.Valid;
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotNull;
+import java.nio.file.Path;
 
-    void validateTransferItem(TransferItem transferItem) throws InvalidTransferItemException;
+@Data
+public class ExtractMetadataConfig {
+    @Valid
+    @NotNull
+    private Path inbox;
+
+    @Valid
+    @NotNull
+    @JsonProperty("taskQueue")
+    private ExecutorServiceFactory taskQueue;
+
+    @Valid
+    @NotNull
+    @Min(1)
+    private long pollingInterval;
 }

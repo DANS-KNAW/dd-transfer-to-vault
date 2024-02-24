@@ -15,7 +15,7 @@
  */
 package nl.knaw.dans.ttv.core.config.validation;
 
-import nl.knaw.dans.ttv.core.config.CollectConfiguration;
+import nl.knaw.dans.ttv.core.config.CollectConfig;
 import org.junit.jupiter.api.Test;
 
 import java.nio.file.Path;
@@ -30,9 +30,9 @@ class UniqueInboxEntryPathsValidatorTest {
     void testIsValid() {
         var validator = new UniqueInboxEntryPathsValidator();
         var entries = List.of(
-            new CollectConfiguration.InboxEntry("name1", Path.of("tmp/folder1")),
-            new CollectConfiguration.InboxEntry("name2", Path.of("tmp/folder2")),
-            new CollectConfiguration.InboxEntry("name3", Path.of("tmp/folder3"))
+            new CollectConfig.InboxEntry("name1", Path.of("tmp/folder1")),
+            new CollectConfig.InboxEntry("name2", Path.of("tmp/folder2")),
+            new CollectConfig.InboxEntry("name3", Path.of("tmp/folder3"))
         );
 
         var result = validator.isValid(entries, null);
@@ -44,9 +44,9 @@ class UniqueInboxEntryPathsValidatorTest {
     void testIsInValid() {
         var validator = new UniqueInboxEntryPathsValidator();
         var entries = List.of(
-            new CollectConfiguration.InboxEntry("name1", Path.of("tmp/folder1")),
-            new CollectConfiguration.InboxEntry("name2", Path.of("tmp/folder2")),
-            new CollectConfiguration.InboxEntry("name3", Path.of("tmp/folder1"))
+            new CollectConfig.InboxEntry("name1", Path.of("tmp/folder1")),
+            new CollectConfig.InboxEntry("name2", Path.of("tmp/folder2")),
+            new CollectConfig.InboxEntry("name3", Path.of("tmp/folder1"))
         );
 
         var result = validator.isValid(entries, null);
@@ -61,9 +61,9 @@ class UniqueInboxEntryPathsValidatorTest {
     void testIsValidDespiteDuplicateNames() {
         var validator = new UniqueInboxEntryPathsValidator();
         var entries = List.of(
-            new CollectConfiguration.InboxEntry("name", Path.of("tmp/folder1")),
-            new CollectConfiguration.InboxEntry("name", Path.of("tmp/folder2")),
-            new CollectConfiguration.InboxEntry("name", Path.of("tmp/folder3"))
+            new CollectConfig.InboxEntry("name", Path.of("tmp/folder1")),
+            new CollectConfig.InboxEntry("name", Path.of("tmp/folder2")),
+            new CollectConfig.InboxEntry("name", Path.of("tmp/folder3"))
         );
 
         var result = validator.isValid(entries, null);

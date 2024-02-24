@@ -15,7 +15,7 @@
  */
 package nl.knaw.dans.ttv.core;
 
-import nl.knaw.dans.ttv.core.config.CollectConfiguration;
+import nl.knaw.dans.ttv.core.config.CollectConfig;
 import nl.knaw.dans.ttv.core.service.FileService;
 import nl.knaw.dans.ttv.core.service.InboxWatcherFactory;
 import nl.knaw.dans.ttv.core.service.TransferItemMetadataReader;
@@ -33,19 +33,19 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 class CollectTaskManagerTest {
     private TransferItemService transferItemService;
-    private VaultCatalogRepository vaultCatalogRepository;
+    private VaultCatalogClient vaultCatalogClient;
     private TransferItemMetadataReader transferItemMetadataReader;
     private FileService fileService;
     private ExecutorService executorService;
     private InboxWatcherFactory inboxWatcherFactory;
-    private List<CollectConfiguration.InboxEntry> inboxes;
+    private List<CollectConfig.InboxEntry> inboxes;
 
     @BeforeEach
     void setUp() {
         this.transferItemService = Mockito.mock(TransferItemService.class);
         this.transferItemMetadataReader = Mockito.mock(TransferItemMetadataReader.class);
         this.fileService = Mockito.mock(FileService.class);
-        this.vaultCatalogRepository = Mockito.mock(VaultCatalogRepository.class);
+        this.vaultCatalogClient = Mockito.mock(VaultCatalogClient.class);
         this.executorService = Mockito.mock(ExecutorService.class);
         this.inboxWatcherFactory = Mockito.mock(InboxWatcherFactory.class);
         this.inboxes = List.of(
@@ -55,8 +55,8 @@ class CollectTaskManagerTest {
 
     }
 
-    private CollectConfiguration.InboxEntry createInboxEntry(String name, String value) {
-        var entry = new CollectConfiguration.InboxEntry();
+    private CollectConfig.InboxEntry createInboxEntry(String name, String value) {
+        var entry = new CollectConfig.InboxEntry();
         entry.setName(name);
         entry.setPath(Path.of(value));
         return entry;

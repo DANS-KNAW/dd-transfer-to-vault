@@ -17,7 +17,7 @@
 package nl.knaw.dans.ttv.health;
 
 import com.codahale.metrics.health.HealthCheck;
-import nl.knaw.dans.ttv.DdTransferToVaultConfiguration;
+import nl.knaw.dans.ttv.core.config.DdTransferToVaultConfig;
 import nl.knaw.dans.ttv.core.service.FileService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,12 +28,12 @@ import java.util.concurrent.TimeoutException;
 public class InboxHealthCheck extends HealthCheck {
     private static final Logger log = LoggerFactory.getLogger(InboxHealthCheck.class);
 
-    private final DdTransferToVaultConfiguration configuration;
+    private final DdTransferToVaultConfig configuration;
     private final FileService fileService;
 
     private final int canReadTimeout;
 
-    public InboxHealthCheck(DdTransferToVaultConfiguration configuration, FileService fileService) {
+    public InboxHealthCheck(DdTransferToVaultConfig configuration, FileService fileService) {
         this.configuration = configuration;
         this.fileService = fileService;
         this.canReadTimeout = configuration.getCollect().getCanReadTimeout();

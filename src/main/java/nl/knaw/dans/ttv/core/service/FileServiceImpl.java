@@ -41,7 +41,7 @@ import java.util.zip.ZipFile;
 public class FileServiceImpl implements FileService {
     private static final Logger log = LoggerFactory.getLogger(FileServiceImpl.class);
 
-    private ExecutorService executorService = Executors.newSingleThreadExecutor();
+    private final ExecutorService executorService = Executors.newSingleThreadExecutor();
 
     @Override
     public Path moveFile(Path current, Path newPath) throws IOException {

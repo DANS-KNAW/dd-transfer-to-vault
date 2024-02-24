@@ -23,48 +23,37 @@ import io.dropwizard.core.setup.Environment;
 import io.dropwizard.db.PooledDataSourceFactory;
 import io.dropwizard.hibernate.HibernateBundle;
 import io.dropwizard.hibernate.UnitOfWorkAwareProxyFactory;
-import nl.knaw.dans.ttv.client.VaultCatalogAPIRepository;
+import nl.knaw.dans.ttv.client.VaultCatalogClientImpl;
 import nl.knaw.dans.ttv.core.CollectTaskManager;
-import nl.knaw.dans.ttv.core.ConfirmArchivedTaskManager;
 import nl.knaw.dans.ttv.core.ExtractMetadataTaskManager;
-import nl.knaw.dans.ttv.core.OcflTarTaskManager;
-import nl.knaw.dans.ttv.core.VaultCatalogRepository;
+import nl.knaw.dans.ttv.core.Tar;
+import nl.knaw.dans.ttv.core.TarPart;
+import nl.knaw.dans.ttv.core.TransferItem;
+import nl.knaw.dans.ttv.core.config.DdTransferToVaultConfig;
 import nl.knaw.dans.ttv.core.oaiore.OaiOreMetadataReader;
-import nl.knaw.dans.ttv.core.service.ArchiveMetadataServiceImpl;
-import nl.knaw.dans.ttv.core.service.ArchiveStatusServiceImpl;
 import nl.knaw.dans.ttv.core.service.FileServiceImpl;
 import nl.knaw.dans.ttv.core.service.InboxWatcherFactoryImpl;
-import nl.knaw.dans.ttv.core.service.OcflRepositoryFactory;
-import nl.knaw.dans.ttv.core.service.OcflRepositoryServiceImpl;
-import nl.knaw.dans.ttv.core.service.ProcessRunnerImpl;
-import nl.knaw.dans.ttv.core.service.TarCommandRunnerImpl;
 import nl.knaw.dans.ttv.core.service.TransferItemMetadataReaderImpl;
 import nl.knaw.dans.ttv.core.service.TransferItemServiceImpl;
 import nl.knaw.dans.ttv.core.service.TransferItemValidatorImpl;
-import nl.knaw.dans.ttv.db.Tar;
-import nl.knaw.dans.ttv.db.TarDAO;
-import nl.knaw.dans.ttv.db.TarPart;
-import nl.knaw.dans.ttv.db.TransferItem;
-import nl.knaw.dans.ttv.db.TransferItemDAO;
+import nl.knaw.dans.ttv.db.TarDao;
+import nl.knaw.dans.ttv.db.TransferItemDao;
 import nl.knaw.dans.ttv.health.FilesystemHealthCheck;
 import nl.knaw.dans.ttv.health.InboxHealthCheck;
-import nl.knaw.dans.ttv.health.LocalDmftarHealthCheck;
 import nl.knaw.dans.ttv.health.PartitionHealthCheck;
-import nl.knaw.dans.ttv.health.RemoteDmftarHealthCheck;
-import nl.knaw.dans.ttv.health.SSHHealthCheck;
 import nl.knaw.dans.vaultcatalog.client.invoker.ApiClient;
 import nl.knaw.dans.vaultcatalog.client.resources.OcflObjectVersionApi;
 import nl.knaw.dans.vaultcatalog.client.resources.TarApi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class DdTransferToVaultApplication extends Application<DdTransferToVaultConfiguration> {
+public class DdTransferToVaultApplication extends Application<DdTransferToVaultConfig> {
 
     private static final Logger log = LoggerFactory.getLogger(DdTransferToVaultApplication.class);
-    private final HibernateBundle<DdTransferToVaultConfiguration> hibernateBundle = new HibernateBundle<>(TransferItem.class, Tar.class, TarPart.class) {
+    private final HibernateBundle<DdTransferToVaultConfig> hibernateBundle = new HibernateBundle<>(TransferItem.class, Tar.class, TarPart.class) {
 
         @Override
-        public PooledDataSourceFactory getDataSourceFactory(DdTransferToVaultConfiguration configuration) {
+        public PooledDataSourceFactory getDataSourceFactory(DdTransferToVaultConfig configuration) {
             return configuration.getDatabase();
         }
     };
@@ -79,15 +68,14 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
     }
 
     @Override
-    public void initialize(final Bootstrap<DdTransferToVaultConfiguration> bootstrap) {
+    public void initialize(final Bootstrap<DdTransferToVaultConfig> bootstrap) {
         bootstrap.addBundle(hibernateBundle);
     }
 
     @Override
-    public void run(final DdTransferToVaultConfiguration configuration, final Environment environment) {
-        log.info("Creating required objects");
-        final var transferItemDAO = new TransferItemDAO(hibernateBundle.getSessionFactory());
-        final var tarDAO = new TarDAO(hibernateBundle.getSessionFactory());
+    public void run(final DdTransferToVaultConfig configuration, final Environment environment) {
+        final var transferItemDao = new TransferItemDao(hibernateBundle.getSessionFactory());
+        final var tarDao = new TarDao(hibernateBundle.getSessionFactory());
 
         final var transferItemValidator = new TransferItemValidatorImpl();
         final var collectExecutorService = configuration.getCollect().getTaskQueue().build(environment);
@@ -96,26 +84,15 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
         final var inboxWatcherFactory = new InboxWatcherFactoryImpl();
 
         final var transferItemService = new UnitOfWorkAwareProxyFactory(hibernateBundle)
-            .create(TransferItemServiceImpl.class, new Class[] { TransferItemDAO.class, TarDAO.class },
-                new Object[] { transferItemDAO, tarDAO });
+            .create(TransferItemServiceImpl.class, new Class[] { TransferItemDao.class, TarDao.class },
+                new Object[] { transferItemDao, tarDao });
 
         final var oaiOreMetadataReader = new OaiOreMetadataReader();
         final var metadataReader = new TransferItemMetadataReaderImpl(fileService, oaiOreMetadataReader);
-        // the process that looks for new files in the tar-inbox, and when reaching a certain combined size, tars them
-        // and sends it to the archiving service
-        final var ocflRepositoryFactory = new OcflRepositoryFactory();
-        final var ocflRepositoryService = new OcflRepositoryServiceImpl(fileService, ocflRepositoryFactory);
-        final var processRunner = new ProcessRunnerImpl();
-        final var tarCommandRunner = new TarCommandRunnerImpl(configuration.getDataArchive(), processRunner);
-        final var archiveMetadataService = new ArchiveMetadataServiceImpl(configuration.getDataArchive(), processRunner);
-        final var createTarExecutorService = configuration.getCreateOcflTar().getTaskQueue().build(environment);
 
         environment.healthChecks().register("Inbox", new InboxHealthCheck(configuration, fileService));
         environment.healthChecks().register("Filesystem", new FilesystemHealthCheck(configuration, fileService));
         environment.healthChecks().register("Partitions", new PartitionHealthCheck(configuration, fileService));
-        environment.healthChecks().register("DmftarLocal", new LocalDmftarHealthCheck(configuration, processRunner));
-        environment.healthChecks().register("DmftarRemote", new RemoteDmftarHealthCheck(configuration, tarCommandRunner));
-        environment.healthChecks().register("SSH", new SSHHealthCheck(tarCommandRunner));
 
         final var vaultCatalogRepository = buildCatalogRepository(configuration, environment);
 
@@ -130,33 +107,14 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
         // and then moves it to the tar inbox
         log.info("Creating ExtractMetadataTaskManager");
         final var extractMetadataExecutorService = configuration.getExtractMetadata().getTaskQueue().build(environment);
-        final var extractMetadataTaskManager = new ExtractMetadataTaskManager(configuration.getExtractMetadata().getInbox(), configuration.getCreateOcflTar().getInbox(),
+        // TODO: set outbox to inbox of the send to vault task
+        final var extractMetadataTaskManager = new ExtractMetadataTaskManager(configuration.getExtractMetadata().getInbox(), null,
             configuration.getExtractMetadata().getPollingInterval(), extractMetadataExecutorService, transferItemService, metadataReader, fileService, inboxWatcherFactory, transferItemValidator,
             vaultCatalogRepository);
         environment.lifecycle().manage(extractMetadataTaskManager);
-
-        log.info("Creating TarTaskManager");
-        final var ocflTarTaskManager = new OcflTarTaskManager(configuration.getCreateOcflTar().getInbox(), configuration.getCreateOcflTar().getWorkDir(), configuration.getDataArchive().getPath(),
-            configuration.getCreateOcflTar().getInboxThreshold(), configuration.getCreateOcflTar().getPollingInterval(), configuration.getCreateOcflTar().getMaxRetries(),
-            configuration.getCreateOcflTar().getRetryInterval(), configuration.getCreateOcflTar().getRetrySchedule(), createTarExecutorService, inboxWatcherFactory, fileService, ocflRepositoryService,
-            transferItemService, tarCommandRunner, archiveMetadataService, vaultCatalogRepository, metadataReader);
-
-        environment.lifecycle().manage(ocflTarTaskManager);
-
-        // the process that checks the archiving service for status
-        final var confirmArchivedExecutorService = configuration.getConfirmArchived().getTaskQueue().build(environment);
-        final var confirmConfig = configuration.getConfirmArchived();
-
-        final var archiveStatusService = new ArchiveStatusServiceImpl(configuration.getDataArchive(), processRunner);
-
-        log.info("Creating ConfirmArchivedTaskManager");
-        final var confirmArchivedTaskManager = new ConfirmArchivedTaskManager(confirmConfig.getCron(), configuration.getCreateOcflTar().getWorkDir(), confirmArchivedExecutorService,
-            transferItemService, archiveStatusService, fileService, vaultCatalogRepository);
-
-        environment.lifecycle().manage(confirmArchivedTaskManager);
     }
 
-    VaultCatalogRepository buildCatalogRepository(DdTransferToVaultConfiguration configuration, Environment environment) {
+    VaultCatalogClientImpl buildCatalogRepository(DdTransferToVaultConfig configuration, Environment environment) {
         var client = new JerseyClientBuilder(environment)
             .using(configuration.getVaultCatalog().getHttpClient())
             .build("vault-catalog");
@@ -168,6 +126,6 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
         var tarApi = new TarApi(apiClient);
         var ocflObjectVersionApi = new OcflObjectVersionApi(apiClient);
 
-        return new VaultCatalogAPIRepository(tarApi, ocflObjectVersionApi);
+        return new VaultCatalogClientImpl(tarApi, ocflObjectVersionApi);
     }
 }

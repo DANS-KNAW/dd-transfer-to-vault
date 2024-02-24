@@ -16,9 +16,9 @@
 package nl.knaw.dans.ttv.core.oaiore;
 
 import nl.knaw.dans.ttv.core.domain.FileContentAttributes;
-import nl.knaw.dans.ttv.core.oaiore.vocabulary.DVCitation;
-import nl.knaw.dans.ttv.core.oaiore.vocabulary.DansDVMetadata;
-import nl.knaw.dans.ttv.core.oaiore.vocabulary.ORE;
+import nl.knaw.dans.ttv.core.oaiore.vocabulary.DataverseCitationMetadata;
+import nl.knaw.dans.ttv.core.oaiore.vocabulary.DansDataVaultMetadata;
+import nl.knaw.dans.ttv.core.oaiore.vocabulary.OaiOreMetadata;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Property;
@@ -39,22 +39,22 @@ public class OaiOreMetadataReader {
         model.read(new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8)), null, "JSON-LD");
 
         var builder = FileContentAttributes.builder();
-        var aggregations = model.listStatements(null, RDF.type, ORE.Aggregation);
+        var aggregations = model.listStatements(null, RDF.type, OaiOreMetadata.Aggregation);
 
         if (aggregations.hasNext()) {
             var resource = aggregations.next().getSubject();
 
-            builder.bagId(getRDFProperty(resource, DansDVMetadata.dansBagId));
-            builder.nbn(getRDFProperty(resource, DansDVMetadata.dansNbn));
-            builder.swordToken(getRDFProperty(resource, DansDVMetadata.dansSwordToken));
-            builder.dataSupplier(getRDFProperty(resource, DansDVMetadata.dansDataSupplier));
-            builder.dataversePid(getRDFProperty(resource, DansDVMetadata.dansDataversePid));
-            builder.dataversePidVersion(getRDFProperty(resource, DansDVMetadata.dansDataversePidVersion));
-            builder.otherId(getEmbeddedRDFProperty(resource, DVCitation.otherId, DVCitation.otherIdValue));
-            builder.otherIdVersion(getRDFProperty(resource, DansDVMetadata.dansOtherIdVersion));
+            builder.bagId(getRDFProperty(resource, DansDataVaultMetadata.dansBagId));
+            builder.nbn(getRDFProperty(resource, DansDataVaultMetadata.dansNbn));
+            builder.swordToken(getRDFProperty(resource, DansDataVaultMetadata.dansSwordToken));
+            builder.dataSupplier(getRDFProperty(resource, DansDataVaultMetadata.dansDataSupplier));
+            builder.dataversePid(getRDFProperty(resource, DansDataVaultMetadata.dansDataversePid));
+            builder.dataversePidVersion(getRDFProperty(resource, DansDataVaultMetadata.dansDataversePidVersion));
+            builder.otherId(getEmbeddedRDFProperty(resource, DataverseCitationMetadata.otherId, DataverseCitationMetadata.otherIdValue));
+            builder.otherIdVersion(getRDFProperty(resource, DansDataVaultMetadata.dansOtherIdVersion));
         }
 
-        var resourceMap = model.listStatements(null, RDF.type, ORE.ResourceMap);
+        var resourceMap = model.listStatements(null, RDF.type, OaiOreMetadata.ResourceMap);
 
         if (resourceMap.hasNext()) {
             var resource = resourceMap.next().getSubject();
