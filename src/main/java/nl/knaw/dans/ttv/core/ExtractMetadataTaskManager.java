@@ -16,6 +16,10 @@
 package nl.knaw.dans.ttv.core;
 
 import io.dropwizard.lifecycle.Managed;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import nl.knaw.dans.ttv.client.VaultCatalogClient;
 import nl.knaw.dans.ttv.core.service.FileService;
 import nl.knaw.dans.ttv.core.service.InboxWatcher;
 import nl.knaw.dans.ttv.core.service.InboxWatcherFactory;
@@ -23,48 +27,48 @@ import nl.knaw.dans.ttv.core.service.TransferItemMetadataReader;
 import nl.knaw.dans.ttv.core.service.TransferItemService;
 import nl.knaw.dans.ttv.core.service.TransferItemValidator;
 import org.apache.commons.io.FilenameUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.nio.file.Path;
 import java.util.Locale;
-import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 
+@RequiredArgsConstructor
+@Slf4j
 public class ExtractMetadataTaskManager implements Managed {
-    private static final Logger log = LoggerFactory.getLogger(ExtractMetadataTaskManager.class);
+
+    @NonNull
     private final Path inbox;
+
+    @NonNull
     private final Path outbox;
     private final long pollingInterval;
+
+    @NonNull
     private final ExecutorService executorService;
+
+    @NonNull
     private final TransferItemService transferItemService;
+
+    @NonNull
     private final TransferItemMetadataReader metadataReader;
+
+    @NonNull
     private final FileService fileService;
+
+    @NonNull
     private final InboxWatcherFactory inboxWatcherFactory;
+
+    @NonNull
     private final TransferItemValidator transferItemValidator;
+
+    @NonNull
     private final VaultCatalogClient vaultCatalogClient;
+
     private InboxWatcher inboxWatcher;
-
-    public ExtractMetadataTaskManager(Path inbox, Path outbox, long pollingInterval, ExecutorService executorService,
-        TransferItemService transferItemService, TransferItemMetadataReader metadataReader, FileService fileService, InboxWatcherFactory inboxWatcherFactory,
-        TransferItemValidator transferItemValidator, VaultCatalogClient vaultCatalogClient) {
-
-        this.inbox = Objects.requireNonNull(inbox);
-        this.outbox = Objects.requireNonNull(outbox);
-        this.pollingInterval = pollingInterval;
-        this.executorService = Objects.requireNonNull(executorService);
-        this.transferItemService = Objects.requireNonNull(transferItemService);
-        this.metadataReader = Objects.requireNonNull(metadataReader);
-        this.fileService = Objects.requireNonNull(fileService);
-        this.inboxWatcherFactory = Objects.requireNonNull(inboxWatcherFactory);
-        this.transferItemValidator = transferItemValidator;
-        this.vaultCatalogClient = vaultCatalogClient;
-    }
 
     @Override
     public void start() throws Exception {
-        // scan inboxes
         log.info("creating InboxWatcher's for configured inboxes");
 
         this.inboxWatcher = inboxWatcherFactory.getInboxWatcher(inbox, null, this::onFileAdded, pollingInterval);

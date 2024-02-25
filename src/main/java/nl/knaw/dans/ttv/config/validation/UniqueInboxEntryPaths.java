@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ttv.core.config.validation;
+package nl.knaw.dans.ttv.config.validation;
 
 import javax.validation.Constraint;
 import javax.validation.Payload;

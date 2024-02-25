@@ -17,6 +17,7 @@ package nl.knaw.dans.ttv.core;
 
 import io.dropwizard.lifecycle.Managed;
 import lombok.AllArgsConstructor;
+import nl.knaw.dans.ttv.client.VaultCatalogClient;
 import nl.knaw.dans.ttv.core.service.TransferItemService;
 import org.quartz.CronScheduleBuilder;
 import org.quartz.JobBuilder;

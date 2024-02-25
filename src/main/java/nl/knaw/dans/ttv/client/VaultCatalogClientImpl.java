@@ -18,7 +18,6 @@ package nl.knaw.dans.ttv.client;
 
 import lombok.extern.slf4j.Slf4j;
 import nl.knaw.dans.ttv.client.mappers.OcflObjectVersionMapper;
-import nl.knaw.dans.ttv.core.VaultCatalogClient;
 import nl.knaw.dans.ttv.core.Tar;
 import nl.knaw.dans.ttv.core.TransferItem;
 import nl.knaw.dans.vaultcatalog.client.api.OcflObjectVersionDto;

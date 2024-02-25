@@ -15,34 +15,27 @@
  */
 package nl.knaw.dans.ttv.core;
 
+import lombok.AllArgsConstructor;
+import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 import nl.knaw.dans.ttv.core.service.FileService;
 import nl.knaw.dans.ttv.core.service.TransferItemMetadataReader;
 import nl.knaw.dans.ttv.core.service.TransferItemService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Objects;
 
+@Slf4j
+@ToString
+@AllArgsConstructor
 public class CollectTask implements Runnable {
-    private static final Logger log = LoggerFactory.getLogger(CollectTask.class);
-
     private final Path filePath;
     private final Path outbox;
     private final String datastationName;
     private final TransferItemService transferItemService;
     private final TransferItemMetadataReader metadataReader;
     private final FileService fileService;
-
-    public CollectTask(Path filePath, Path outbox, String datastationName, TransferItemService transferItemService, TransferItemMetadataReader metadataReader, FileService fileService) {
-        this.filePath = filePath;
-        this.outbox = outbox;
-        this.datastationName = datastationName;
-        this.transferItemService = transferItemService;
-        this.metadataReader = metadataReader;
-        this.fileService = fileService;
-    }
 
     @Override
     public void run() {
@@ -67,10 +60,10 @@ public class CollectTask implements Runnable {
 
     void processFile(Path path) throws IOException, InvalidTransferItemException {
         var filenameAttributes = metadataReader.getFilenameAttributes(path);
-        log.trace("Received filename attributes: {}", filenameAttributes);
+        log.debug("Filename attributes: {}", filenameAttributes);
 
         var filesystemAttributes = metadataReader.getFilesystemAttributes(path);
-        log.trace("Received filesystem attributes: {}", filesystemAttributes);
+        log.debug("Filesystem attributes: {}", filesystemAttributes);
 
         var existingTransferItem = transferItemService.getTransferItemByFilenameAttributes(filenameAttributes)
             // filter out items that have a different checksum, because they are different
@@ -101,9 +94,9 @@ public class CollectTask implements Runnable {
 
     void moveFileToOutbox(TransferItem transferItem, Path filePath, Path outboxPath) throws IOException {
         var newPath = outboxPath.resolve(transferItem.getCanonicalFilename());
-        log.trace("filePath is '{}', newPath is '{}'", filePath, newPath);
+        log.debug("filePath is '{}', newPath is '{}'", filePath, newPath);
 
-        log.trace("Updating database state for item {} with new path '{}'", transferItem, outboxPath);
+        log.debug("Updating database state for item {} with new path '{}'", transferItem, outboxPath);
         transferItemService.moveTransferItem(transferItem, TransferItem.TransferStatus.COLLECTED, newPath);
 
         fileService.moveFileAtomically(filePath, newPath);
@@ -123,14 +116,5 @@ public class CollectTask implements Runnable {
                 log.error("Unable to delete XML file associated with file '{}' (filename: '{}')", path, p, e);
             }
         });
-    }
-
-    @Override
-    public String toString() {
-        return "CollectTask{" +
-            "filePath=" + filePath +
-            ", outbox=" + outbox +
-            ", datastationName='" + datastationName + '\'' +
-            '}';
     }
 }

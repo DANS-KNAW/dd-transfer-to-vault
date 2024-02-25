@@ -15,8 +15,8 @@
  */
 package nl.knaw.dans.ttv.health;
 
-import nl.knaw.dans.ttv.core.config.DdTransferToVaultConfig;
-import nl.knaw.dans.ttv.core.config.ExtractMetadataConfig;
+import nl.knaw.dans.ttv.config.DdTransferToVaultConfig;
+import nl.knaw.dans.ttv.config.ExtractMetadataConfig;
 import nl.knaw.dans.ttv.core.service.FileService;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;

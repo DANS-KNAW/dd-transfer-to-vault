@@ -13,22 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ttv.core;
+package nl.knaw.dans.ttv.client;
 
-import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import nl.knaw.dans.ttv.client.VaultCatalogClient;
-import nl.knaw.dans.ttv.core.service.TransferItemService;
+import nl.knaw.dans.ttv.core.Tar;
+import nl.knaw.dans.ttv.core.TransferItem;
 
-@Slf4j
-@AllArgsConstructor
-public class ConfirmArchivedTask implements Runnable {
-    private final Tar tar;
-    private final TransferItemService transferItemService;
-    private final VaultCatalogClient vaultCatalogClient;
+import java.io.IOException;
 
-    @Override
-    public void run() {
-        // TODO: implement to retrieve status from dd-data-vault
-    }
+/**
+ * Client for the Vault Catalog API.
+ */
+public interface VaultCatalogClient {
+
+    void registerOcflObjectVersion(TransferItem transferItem) throws IOException;
+
+    void registerTar(Tar tar) throws IOException;
+
 }

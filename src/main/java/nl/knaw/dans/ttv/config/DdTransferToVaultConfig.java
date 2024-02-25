@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package nl.knaw.dans.ttv.core.config;
+package nl.knaw.dans.ttv.config;
 
 import io.dropwizard.core.Configuration;
 import io.dropwizard.db.DataSourceFactory;
@@ -31,16 +31,28 @@ public class DdTransferToVaultConfig extends Configuration {
     @Valid
     @NotNull
     private DataSourceFactory database = new DataSourceFactory();
+
     @Valid
     @NotNull
     private CollectConfig collect;
+
     @Valid
     @NotNull
     private ExtractMetadataConfig extractMetadata;
+
+    @Valid
+    @NotNull
+    private SendToVaultConfig sendToVault;
+
     @Valid
     @NotNull
     private ConfirmArchivedConfig confirmArchived;
+
     @Valid
     @NotNull
     private VaultCatalogConfig vaultCatalog;
+
+    @Valid
+    @NotNull
+    private DataVaultConfig dataVault;
 }

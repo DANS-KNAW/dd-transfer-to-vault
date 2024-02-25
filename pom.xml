@@ -34,6 +34,7 @@
 
     <properties>
         <main-class>nl.knaw.dans.ttv.DdTransferToVaultApplication</main-class>
+        <dd-data-vault-api.version>0.1.0</dd-data-vault-api.version>
     </properties>
 
     <scm>
@@ -171,8 +172,6 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration combine.children="override">
-                    <source>11</source>
-                    <target>11</target>
                     <annotationProcessorPaths>
                         <path>
                             <groupId>org.mapstruct</groupId>
@@ -210,6 +209,12 @@
                                     <version>${dd-vault-catalog-api.version}</version>
                                     <outputDirectory>${project.build.directory}/openapi</outputDirectory>
                                 </artifactItem>
+                                <artifactItem>
+                                    <groupId>nl.knaw.dans</groupId>
+                                    <artifactId>dd-data-vault-api</artifactId>
+                                    <version>${dd-data-vault-api.version}</version>
+                                    <outputDirectory>${project.build.directory}/openapi</outputDirectory>
+                                </artifactItem>
                             </artifactItems>
                         </configuration>
                     </execution>
@@ -221,6 +226,7 @@
                 <artifactId>openapi-generator-maven-plugin</artifactId>
                 <executions>
                     <execution>
+                        <id>vault-catalog-client</id>
                         <goals>
                             <goal>generate</goal>
                         </goals>
@@ -230,6 +236,28 @@
                             <apiPackage>nl.knaw.dans.vaultcatalog.client.resources</apiPackage>
                             <modelPackage>nl.knaw.dans.vaultcatalog.client.api</modelPackage>
                             <invokerPackage>nl.knaw.dans.vaultcatalog.client.invoker</invokerPackage>
+                            <configOptions>
+                                <!-- the client does not appear to need annotations so we can remove them -->
+                                <annotationLibrary>none</annotationLibrary>
+                                <!-- this generates jersey2 client -->
+                                <library>jersey2</library>
+                                <!-- remove this optional dependency as it was not used in the generated code anyway  -->
+                                <!-- see https://github.com/OpenAPITools/jackson-databind-nullable -->
+                                <openApiNullable>false</openApiNullable>
+                            </configOptions>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>data-vault-client</id>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <configuration>
+                            <inputSpec>${project.build.directory}/openapi/dd-data-vault-api.yml</inputSpec>
+                            <generatorName>java</generatorName>
+                            <apiPackage>nl.knaw.dans.datavault.client.resources</apiPackage>
+                            <modelPackage>nl.knaw.dans.datavault.client.api</modelPackage>
+                            <invokerPackage>nl.knaw.dans.datavault.client.invoker</invokerPackage>
                             <configOptions>
                                 <!-- the client does not appear to need annotations so we can remove them -->
                                 <annotationLibrary>none</annotationLibrary>

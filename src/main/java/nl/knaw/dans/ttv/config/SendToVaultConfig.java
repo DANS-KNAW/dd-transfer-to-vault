@@ -13,23 +13,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ttv.core.config.validation;
+package nl.knaw.dans.ttv.config;
 
-import javax.validation.Constraint;
-import javax.validation.Payload;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import lombok.Data;
 
-@Target({ ElementType.FIELD })
-@Retention(RetentionPolicy.RUNTIME)
-@Constraint(validatedBy = UniqueInboxEntryNamesValidator.class)
-public @interface UniqueInboxEntryNames {
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotNull;
+import java.nio.file.Path;
 
-    String message() default "duplicate";
+@Data
+public class SendToVaultConfig {
+    @NotNull
+    private Path inbox;
 
-    Class<?>[] groups() default {};
+    @NotNull
+    private Path work;
 
-    Class<? extends Payload>[] payload() default {};
+    @NotNull
+    private Path outbox;
+
+    @Min(1)
+    private long maxBatchSize;
+
+    @Min(1)
+    private long pollingInterval;
 }

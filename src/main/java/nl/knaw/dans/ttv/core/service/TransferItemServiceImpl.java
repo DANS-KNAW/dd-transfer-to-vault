@@ -309,4 +309,11 @@ public class TransferItemServiceImpl implements TransferItemService {
     public List<Tar> findTarsToBeRetried() {
         return tarDAO.findTarsToBeRetried();
     }
+
+
+    @Override
+    @UnitOfWork
+    public Optional<TransferItem> findByDveFilename(String name) {
+        return transferItemDAO.findByDveFilename(name);
+    }
 }

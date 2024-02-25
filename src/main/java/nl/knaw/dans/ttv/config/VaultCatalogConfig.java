@@ -13,30 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ttv.core.config;
+package nl.knaw.dans.ttv.config;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import io.dropwizard.client.JerseyClientConfiguration;
 import lombok.Data;
-import nl.knaw.dans.lib.util.ExecutorServiceFactory;
 
 import javax.validation.Valid;
-import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
-import java.nio.file.Path;
+import java.net.URI;
 
 @Data
-public class ExtractMetadataConfig {
-    @Valid
+public class VaultCatalogConfig {
     @NotNull
-    private Path inbox;
+    private URI url;
 
     @Valid
     @NotNull
-    @JsonProperty("taskQueue")
-    private ExecutorServiceFactory taskQueue;
-
-    @Valid
-    @NotNull
-    @Min(1)
-    private long pollingInterval;
+    private JerseyClientConfiguration httpClient = new JerseyClientConfiguration();
 }
