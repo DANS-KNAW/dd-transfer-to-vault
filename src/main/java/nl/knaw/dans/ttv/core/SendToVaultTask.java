@@ -22,7 +22,6 @@ import nl.knaw.dans.datavault.client.api.ImportCommandDto;
 import nl.knaw.dans.datavault.client.resources.DefaultApi;
 import nl.knaw.dans.ttv.core.service.FileService;
 import nl.knaw.dans.ttv.core.service.TransferItemService;
-import nl.knaw.dans.ttv.db.TransferItemDao;
 import org.apache.commons.compress.archivers.zip.ZipFile;
 import org.apache.commons.io.FileUtils;
 
@@ -117,6 +116,9 @@ public class SendToVaultTask implements Runnable {
             zipFile.getEntries().asIterator().forEachRemaining(entry -> {
                 try (InputStream input = zipFile.getInputStream(entry)) {
                     Path outputPath = outputDirectory.resolve(entry.getName());
+                    if (!outputPath.normalize().startsWith(outputDirectory)) {
+                        throw new IllegalArgumentException("Bad zip entry path: '" + entry.getName() + "'");
+                    }
                     try (OutputStream output = new FileOutputStream(outputPath.toFile())) {
                         input.transferTo(output);
                     }
