@@ -23,6 +23,7 @@ import nl.knaw.dans.datavault.client.resources.DefaultApi;
 import nl.knaw.dans.ttv.core.service.FileService;
 import nl.knaw.dans.ttv.core.service.InboxWatcher;
 import nl.knaw.dans.ttv.core.service.InboxWatcherFactory;
+import nl.knaw.dans.ttv.core.service.TransferItemMetadataReader;
 import nl.knaw.dans.ttv.core.service.TransferItemService;
 import nl.knaw.dans.ttv.db.TransferItemDao;
 
@@ -44,7 +45,10 @@ public class SendToVaultTaskManager implements Managed {
     private final FileService fileService;
 
     @NonNull
-    private TransferItemService transferItemService;
+    private final TransferItemService transferItemService;
+
+    @NonNull
+    private final TransferItemMetadataReader metadataReader;
 
     @NonNull
     private final Path currentBatchPath;
@@ -73,6 +77,7 @@ public class SendToVaultTaskManager implements Managed {
             executor.execute(new SendToVaultTask(
                 fileService,
                 transferItemService,
+                metadataReader,
                 path.toPath(),
                 currentBatchPath,
                 threshold,

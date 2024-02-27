@@ -121,6 +121,7 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
             configuration.getSendToVault().getPollingInterval(),
             fileService,
             transferItemService,
+            metadataReader,
             configuration.getSendToVault().getWork(),
             configuration.getSendToVault().getMaxBatchSize(),
             new DataVaultClientFactory().createDataVaultClient(configuration.getDataVault(), environment),

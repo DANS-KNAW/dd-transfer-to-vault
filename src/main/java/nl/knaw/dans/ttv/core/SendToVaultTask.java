@@ -21,9 +21,11 @@ import lombok.extern.slf4j.Slf4j;
 import nl.knaw.dans.datavault.client.api.ImportCommandDto;
 import nl.knaw.dans.datavault.client.resources.DefaultApi;
 import nl.knaw.dans.ttv.core.service.FileService;
+import nl.knaw.dans.ttv.core.service.TransferItemMetadataReader;
 import nl.knaw.dans.ttv.core.service.TransferItemService;
 import org.apache.commons.compress.archivers.zip.ZipFile;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -40,6 +42,7 @@ import java.time.ZoneId;
 public class SendToVaultTask implements Runnable {
     private final FileService fileService;
     private final TransferItemService transferItemService;
+    private final TransferItemMetadataReader metadataReader;
     private final Path filePath;
     private final Path currentBatchPath;
     private final long threshold;
@@ -66,7 +69,10 @@ public class SendToVaultTask implements Runnable {
         /*
          * SendToVaultTasks are executed on a single thread executor, so we don't have to worry about concurrent access to the currentBatchPath.
          */
-        transferItemService.findByDveFilename(path.getFileName().toString())
+        var filenameAttributes = metadataReader.getFilenameAttributes(path);
+        log.debug("Filename attributes: {}", filenameAttributes);
+
+        transferItemService.getTransferItemByFilenameAttributes(filenameAttributes)
             .ifPresentOrElse(
                 transferItem -> processTransferItem(path, transferItem),
                 () -> log.error("No TransferItem found for path '{}'", path)
@@ -119,9 +125,12 @@ public class SendToVaultTask implements Runnable {
                     if (!outputPath.normalize().startsWith(outputDirectory)) {
                         throw new IllegalArgumentException("Bad zip entry path: '" + entry.getName() + "'");
                     }
-                    try (OutputStream output = new FileOutputStream(outputPath.toFile())) {
-                        input.transferTo(output);
+                    if (entry.isDirectory()) {
+                        Files.createDirectories(outputPath);
+                        return;
                     }
+                    Files.createDirectories(outputPath.getParent()); // ZIPs created by Dataverse don't seem to comply with the ZIP spec, so we have to create the parent directories manually
+                    IOUtils.copy(input, new FileOutputStream(outputPath.toFile()));
                 }
                 catch (IOException e) {
                     throw new RuntimeException(e);
@@ -133,7 +142,8 @@ public class SendToVaultTask implements Runnable {
     private void sendBatchToVault(Path batchPath) {
         try {
             var importCommand = new ImportCommandDto()
-                .path(batchPath.toString());
+                .path(batchPath.toAbsolutePath().toString())
+                .singleObject(false); // TODO: make default
             vaultApi.importsPost(importCommand);
         }
         catch (Exception e) {
