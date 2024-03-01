@@ -13,22 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ttv.core;
+package nl.knaw.dans.ttv.config;
 
-import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import nl.knaw.dans.ttv.client.VaultCatalogClient;
-import nl.knaw.dans.ttv.core.service.TransferItemService;
+import lombok.Data;
+import nl.knaw.dans.lib.util.ExecutorServiceFactory;
 
-@Slf4j
-@AllArgsConstructor
-public class ConfirmArchivedTask implements Runnable {
-    private final Tar tar;
-    private final TransferItemService transferItemService;
-    private final VaultCatalogClient vaultCatalogClient;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 
-    @Override
-    public void run() {
-        // TODO: implement to retrieve status from dd-data-vault
-    }
+@Data
+public class ConfirmArchivedConfig {
+    @Valid
+    @NotNull
+    private String cron;
+    @Valid
+    @NotNull
+    private String vaultServiceEndpoint;
+    @Valid
+    @NotNull
+    private ExecutorServiceFactory taskQueue;
 }

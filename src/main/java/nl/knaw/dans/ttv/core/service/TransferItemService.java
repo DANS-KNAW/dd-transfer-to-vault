@@ -65,4 +65,6 @@ public interface TransferItemService {
 
     List<Tar> findTarsToBeRetried();
 
+    public Optional<TransferItem> findByDveFilename(String name);
+
 }

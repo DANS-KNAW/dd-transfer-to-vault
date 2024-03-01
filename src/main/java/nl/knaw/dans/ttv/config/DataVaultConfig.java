@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ttv.core.config;
+package nl.knaw.dans.ttv.config;
 
 import io.dropwizard.client.JerseyClientConfiguration;
 import lombok.Data;
@@ -23,9 +23,8 @@ import javax.validation.constraints.NotNull;
 import java.net.URI;
 
 @Data
-public class VaultCatalogConfig {
+public class DataVaultConfig {
     @NotNull
-    @Valid
     private URI url;
 
     @Valid

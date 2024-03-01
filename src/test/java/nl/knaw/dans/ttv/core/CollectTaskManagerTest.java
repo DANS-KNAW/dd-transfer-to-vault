@@ -15,7 +15,8 @@
  */
 package nl.knaw.dans.ttv.core;
 
-import nl.knaw.dans.ttv.core.config.CollectConfig;
+import nl.knaw.dans.ttv.client.VaultCatalogClient;
+import nl.knaw.dans.ttv.config.CollectConfig;
 import nl.knaw.dans.ttv.core.service.FileService;
 import nl.knaw.dans.ttv.core.service.InboxWatcherFactory;
 import nl.knaw.dans.ttv.core.service.TransferItemMetadataReader;

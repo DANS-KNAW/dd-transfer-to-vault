@@ -33,10 +33,12 @@ extractMetadata:
     # Threads will die after 60 seconds of idleness
     keepAliveTime: 60 seconds
 
-dataArchive:
-  user: 'danstst0'
-  host: 'archive.surfsara.nl'
-  path: 'dans-vault'
+sendToVault:
+  inbox: data/tmp/send-to-vault-inbox
+  pollingInterval: 500
+  work: data/tmp/send-to-vault-work
+  maxBatchSize: 10000
+  outbox: data/tmp/data-vault-inbox
 
 confirmArchived:
   cron: '0 0/15 * * * ?' # cron expression for triggering a polling round
@@ -52,7 +54,7 @@ confirmArchived:
     keepAliveTime: 60 seconds
 
 vaultCatalog:
-  url: http://localhost:20100
+  url: http://localhost:20305
   httpClient:
     timeout: 10s
     connectionTimeout: 1min

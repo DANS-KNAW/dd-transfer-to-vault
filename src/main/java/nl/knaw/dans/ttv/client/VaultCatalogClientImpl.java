@@ -16,9 +16,9 @@
 
 package nl.knaw.dans.ttv.client;
 
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import nl.knaw.dans.ttv.client.mappers.OcflObjectVersionMapper;
-import nl.knaw.dans.ttv.core.VaultCatalogClient;
 import nl.knaw.dans.ttv.core.Tar;
 import nl.knaw.dans.ttv.core.TransferItem;
 import nl.knaw.dans.vaultcatalog.client.api.OcflObjectVersionDto;
@@ -35,16 +35,11 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class VaultCatalogClientImpl implements VaultCatalogClient
-{
+@AllArgsConstructor
+public class VaultCatalogClientImpl implements VaultCatalogClient {
 
     private final TarApi tarApi;
     private final OcflObjectVersionApi ocflObjectVersionApi;
-
-    public VaultCatalogClientImpl(TarApi tarApi, OcflObjectVersionApi ocflObjectVersionApi) {
-        this.tarApi = tarApi;
-        this.ocflObjectVersionApi = ocflObjectVersionApi;
-    }
 
     @Override
     public void registerOcflObjectVersion(TransferItem transferItem) throws IOException {
@@ -52,10 +47,10 @@ public class VaultCatalogClientImpl implements VaultCatalogClient
             var newVersion = getObjectVersion(transferItem);
             var dto = OcflObjectVersionMapper.INSTANCE.mapParameters(transferItem);
 
-            log.info("Registering OCFL object version: {}", dto);
+            log.debug("Registering OCFL object version: {}", dto);
 
             var response = ocflObjectVersionApi.createOcflObjectVersion(transferItem.getBagId(), newVersion, dto);
-            log.info("Response: {}", response);
+            log.debug("Response: {}", response);
 
             transferItem.setOcflObjectVersion(newVersion);
         }
@@ -117,14 +112,14 @@ public class VaultCatalogClientImpl implements VaultCatalogClient
                         .objectVersion(item.getOcflObjectVersion()))
                     .collect(Collectors.toList()));
 
-            log.info("Registering TAR: {}", params);
+            log.info("Registering TAR: {}", tar.getTarUuid());
 
             // check if tar already exists
             try {
                 var existing = tarApi.getArchiveByIdWithHttpInfo(UUID.fromString(tar.getTarUuid()));
                 log.debug("Response code for tar with UUID {}: {}", tar.getTarUuid(), existing.getStatusCode());
 
-                log.info("Tar with UUID {} already exists in vault", tar.getTarUuid());
+                log.debug("Tar with UUID {} already exists in vault", tar.getTarUuid());
                 tarApi.updateArchive(UUID.fromString(tar.getTarUuid()), params);
             }
             catch (ApiException e) {

@@ -13,29 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ttv.core.config.validation;
+package nl.knaw.dans.ttv.config.validation;
 
-import nl.knaw.dans.ttv.core.config.CollectConfig;
+import nl.knaw.dans.ttv.config.CollectConfig;
+import nl.knaw.dans.ttv.config.CollectConfig.InboxEntry;
 
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
-public class UniqueInboxEntryNamesValidator implements ConstraintValidator<UniqueInboxEntryNames, List<CollectConfig.InboxEntry>> {
-
+public class UniqueInboxEntryPathsValidator implements ConstraintValidator<UniqueInboxEntryPaths, List<InboxEntry>> {
     @Override
-    public boolean isValid(List<CollectConfig.InboxEntry> inboxEntries, ConstraintValidatorContext constraintValidatorContext) {
-        // This groups by the name property and checks if there are more than 1 entries for that.
-        // Only unique names are allowed, so duplicates will make it return false
-        var inboxNames = inboxEntries.stream()
-            .collect(Collectors.groupingBy(CollectConfig.InboxEntry::getName))
-            .entrySet()
-            .stream().filter(e -> e.getValue().size() > 1)
-            .map(Map.Entry::getKey)
+    public boolean isValid(List<InboxEntry> inboxEntries, ConstraintValidatorContext constraintValidatorContext) {
+        var inboxPaths = inboxEntries.stream()
+            .collect(Collectors.groupingBy(CollectConfig.InboxEntry::getPath))
+            .values()
+            .stream().filter(entries -> entries.size() > 1)
             .collect(Collectors.toList());
 
-        return inboxNames.size() <= 0;
+        return inboxPaths.size() <= 0;
     }
 }

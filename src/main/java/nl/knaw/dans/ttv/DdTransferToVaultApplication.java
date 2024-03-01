@@ -16,20 +16,21 @@
 
 package nl.knaw.dans.ttv;
 
-import io.dropwizard.client.JerseyClientBuilder;
 import io.dropwizard.core.Application;
 import io.dropwizard.core.setup.Bootstrap;
 import io.dropwizard.core.setup.Environment;
 import io.dropwizard.db.PooledDataSourceFactory;
 import io.dropwizard.hibernate.HibernateBundle;
 import io.dropwizard.hibernate.UnitOfWorkAwareProxyFactory;
-import nl.knaw.dans.ttv.client.VaultCatalogClientImpl;
+import nl.knaw.dans.ttv.client.DataVaultClientFactory;
+import nl.knaw.dans.ttv.client.VaultCatalogClientFactory;
+import nl.knaw.dans.ttv.config.DdTransferToVaultConfig;
 import nl.knaw.dans.ttv.core.CollectTaskManager;
 import nl.knaw.dans.ttv.core.ExtractMetadataTaskManager;
+import nl.knaw.dans.ttv.core.SendToVaultTaskManager;
 import nl.knaw.dans.ttv.core.Tar;
 import nl.knaw.dans.ttv.core.TarPart;
 import nl.knaw.dans.ttv.core.TransferItem;
-import nl.knaw.dans.ttv.core.config.DdTransferToVaultConfig;
 import nl.knaw.dans.ttv.core.oaiore.OaiOreMetadataReader;
 import nl.knaw.dans.ttv.core.service.FileServiceImpl;
 import nl.knaw.dans.ttv.core.service.InboxWatcherFactoryImpl;
@@ -41,9 +42,6 @@ import nl.knaw.dans.ttv.db.TransferItemDao;
 import nl.knaw.dans.ttv.health.FilesystemHealthCheck;
 import nl.knaw.dans.ttv.health.InboxHealthCheck;
 import nl.knaw.dans.ttv.health.PartitionHealthCheck;
-import nl.knaw.dans.vaultcatalog.client.invoker.ApiClient;
-import nl.knaw.dans.vaultcatalog.client.resources.OcflObjectVersionApi;
-import nl.knaw.dans.vaultcatalog.client.resources.TarApi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -94,12 +92,16 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
         environment.healthChecks().register("Filesystem", new FilesystemHealthCheck(configuration, fileService));
         environment.healthChecks().register("Partitions", new PartitionHealthCheck(configuration, fileService));
 
-        final var vaultCatalogRepository = buildCatalogRepository(configuration, environment);
+        final var vaultCatalogRepository = new VaultCatalogClientFactory().createVaultCatalogClient(configuration, environment);
 
         // the Collect task, which listens to new files on the network-drive shares
         log.info("Creating CollectTaskManager");
-        final var collectTaskManager = new CollectTaskManager(configuration.getCollect().getInboxes(), configuration.getExtractMetadata().getInbox(), configuration.getCollect().getPollingInterval(),
-            collectExecutorService, transferItemService, metadataReader, fileService, inboxWatcherFactory);
+        final var collectTaskManager = new CollectTaskManager(
+            configuration.getCollect().getInboxes(),
+            configuration.getExtractMetadata().getInbox(),
+            configuration.getCollect().getPollingInterval(),
+            collectExecutorService,
+            transferItemService, metadataReader, fileService, inboxWatcherFactory);
 
         environment.lifecycle().manage(collectTaskManager);
 
@@ -107,25 +109,24 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
         // and then moves it to the tar inbox
         log.info("Creating ExtractMetadataTaskManager");
         final var extractMetadataExecutorService = configuration.getExtractMetadata().getTaskQueue().build(environment);
-        // TODO: set outbox to inbox of the send to vault task
-        final var extractMetadataTaskManager = new ExtractMetadataTaskManager(configuration.getExtractMetadata().getInbox(), null,
+        final var extractMetadataTaskManager = new ExtractMetadataTaskManager(configuration.getExtractMetadata().getInbox(), configuration.getSendToVault().getInbox(),
             configuration.getExtractMetadata().getPollingInterval(), extractMetadataExecutorService, transferItemService, metadataReader, fileService, inboxWatcherFactory, transferItemValidator,
             vaultCatalogRepository);
         environment.lifecycle().manage(extractMetadataTaskManager);
+
+        log.info("Creating SendToVaultTaskManager");
+        final var sendToVaultTaskManager = new SendToVaultTaskManager(
+            configuration.getSendToVault().getInbox(),
+            configuration.getSendToVault().getOutbox(),
+            configuration.getSendToVault().getPollingInterval(),
+            fileService,
+            transferItemService,
+            metadataReader,
+            configuration.getSendToVault().getWork(),
+            configuration.getSendToVault().getMaxBatchSize(),
+            new DataVaultClientFactory().createDataVaultClient(configuration.getDataVault(), environment),
+            inboxWatcherFactory);
+        environment.lifecycle().manage(sendToVaultTaskManager);
     }
 
-    VaultCatalogClientImpl buildCatalogRepository(DdTransferToVaultConfig configuration, Environment environment) {
-        var client = new JerseyClientBuilder(environment)
-            .using(configuration.getVaultCatalog().getHttpClient())
-            .build("vault-catalog");
-
-        var apiClient = new ApiClient();
-        apiClient.setHttpClient(client);
-        apiClient.setBasePath(configuration.getVaultCatalog().getUrl().toString());
-
-        var tarApi = new TarApi(apiClient);
-        var ocflObjectVersionApi = new OcflObjectVersionApi(apiClient);
-
-        return new VaultCatalogClientImpl(tarApi, ocflObjectVersionApi);
-    }
 }

@@ -32,6 +32,12 @@ public class TransferItemDao extends AbstractDAO<TransferItem> {
         return Optional.ofNullable(get(id));
     }
 
+    public Optional<TransferItem> findByDveFilename(String name) {
+        return query("from TransferItem where dveFilename = :name")
+            .setParameter("name", name)
+            .uniqueResultOptional();
+    }
+
     public TransferItem save(TransferItem transferItem) {
         return persist(transferItem);
     }

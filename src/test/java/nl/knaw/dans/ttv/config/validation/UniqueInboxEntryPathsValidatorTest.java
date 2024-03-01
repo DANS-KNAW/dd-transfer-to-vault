@@ -13,9 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ttv.core.config.validation;
+package nl.knaw.dans.ttv.config.validation;
 
-import nl.knaw.dans.ttv.core.config.CollectConfig;
+import nl.knaw.dans.ttv.config.CollectConfig;
+import nl.knaw.dans.ttv.config.validation.UniqueInboxEntryPathsValidator;
 import org.junit.jupiter.api.Test;
 
 import java.nio.file.Path;

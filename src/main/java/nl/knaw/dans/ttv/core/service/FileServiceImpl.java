@@ -214,21 +214,7 @@ public class FileServiceImpl implements FileService {
     @Override
     public long getPathSize(Path path) throws IOException {
         Objects.requireNonNull(path, "path cannot be null");
-
-        try (var files = Files.walk(path)) {
-            return files
-                    .filter(Files::isRegularFile)
-                    .mapToLong(p -> {
-                        try {
-                            var size = getFileSize(p);
-                            log.trace("File size for file '{}' is {} bytes", p, size);
-                            return size;
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
-                        }
-                    })
-                    .sum();
-        }
+        return FileUtils.sizeOfDirectory(path.toFile());
     }
 
     @Override

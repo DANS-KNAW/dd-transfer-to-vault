@@ -13,17 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ttv.core;
+package nl.knaw.dans.ttv.config.validation;
 
-import java.io.IOException;
+import javax.validation.Constraint;
+import javax.validation.Payload;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-/**
- * Client for the Vault Catalog API.
- */
-public interface VaultCatalogClient {
+@Target({ ElementType.FIELD })
+@Retention(RetentionPolicy.RUNTIME)
+@Constraint(validatedBy = UniqueInboxEntryNamesValidator.class)
+public @interface UniqueInboxEntryNames {
 
-    void registerOcflObjectVersion(TransferItem transferItem) throws IOException;
+    String message() default "duplicate";
 
-    void registerTar(Tar tar) throws IOException;
+    Class<?>[] groups() default {};
 
+    Class<? extends Payload>[] payload() default {};
 }

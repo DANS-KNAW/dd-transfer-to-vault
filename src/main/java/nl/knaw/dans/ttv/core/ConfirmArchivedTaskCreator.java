@@ -16,6 +16,7 @@
 package nl.knaw.dans.ttv.core;
 
 import lombok.Data;
+import nl.knaw.dans.ttv.client.VaultCatalogClient;
 import nl.knaw.dans.ttv.core.service.TransferItemService;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;

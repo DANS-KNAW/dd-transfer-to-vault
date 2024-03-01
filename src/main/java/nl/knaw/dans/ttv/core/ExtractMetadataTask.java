@@ -16,6 +16,7 @@
 package nl.knaw.dans.ttv.core;
 
 import lombok.extern.slf4j.Slf4j;
+import nl.knaw.dans.ttv.client.VaultCatalogClient;
 import nl.knaw.dans.ttv.core.service.FileService;
 import nl.knaw.dans.ttv.core.service.TransferItemMetadataReader;
 import nl.knaw.dans.ttv.core.service.TransferItemService;

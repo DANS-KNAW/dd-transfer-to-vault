@@ -16,56 +16,56 @@
 package nl.knaw.dans.ttv.core;
 
 import io.dropwizard.lifecycle.Managed;
-import nl.knaw.dans.ttv.core.config.CollectConfig;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import nl.knaw.dans.ttv.config.CollectConfig;
 import nl.knaw.dans.ttv.core.service.FileService;
 import nl.knaw.dans.ttv.core.service.InboxWatcher;
 import nl.knaw.dans.ttv.core.service.InboxWatcherFactory;
 import nl.knaw.dans.ttv.core.service.TransferItemMetadataReader;
 import nl.knaw.dans.ttv.core.service.TransferItemService;
 import org.apache.commons.io.FilenameUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Locale;
-import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 
+@Slf4j
+@RequiredArgsConstructor
 public class CollectTaskManager implements Managed {
-    private static final Logger log = LoggerFactory.getLogger(CollectTaskManager.class);
+    @NonNull
     private final List<CollectConfig.InboxEntry> inboxes;
+
+    @NonNull
     private final Path outbox;
     private final long pollingInterval;
+
+    @NonNull
     private final ExecutorService executorService;
+
+    @NonNull
     private final TransferItemService transferItemService;
+
+    @NonNull
     private final TransferItemMetadataReader metadataReader;
+
+    @NonNull
     private final FileService fileService;
+
+    @NonNull
     private final InboxWatcherFactory inboxWatcherFactory;
     private List<InboxWatcher> inboxWatchers;
 
-    public CollectTaskManager(List<CollectConfig.InboxEntry> inboxes, Path outbox, long pollingInterval, ExecutorService executorService,
-        TransferItemService transferItemService, TransferItemMetadataReader metadataReader, FileService fileService, InboxWatcherFactory inboxWatcherFactory) {
-
-        this.inboxes = Objects.requireNonNull(inboxes);
-        this.outbox = Objects.requireNonNull(outbox);
-        this.pollingInterval = pollingInterval;
-        this.executorService = Objects.requireNonNull(executorService);
-        this.transferItemService = Objects.requireNonNull(transferItemService);
-        this.metadataReader = Objects.requireNonNull(metadataReader);
-        this.fileService = Objects.requireNonNull(fileService);
-        this.inboxWatcherFactory = Objects.requireNonNull(inboxWatcherFactory);
-    }
-
     @Override
     public void start() throws Exception {
-        // scan inboxes
-        log.info("Creating InboxWatcher's for configured inboxes");
+        log.debug("Creating InboxWatcher's for configured inboxes");
 
         this.inboxWatchers = inboxes.stream().map(entry -> {
-            log.info("Creating InboxWatcher for {}", entry);
+            log.debug("Creating InboxWatcher for {}", entry);
 
             try {
                 return inboxWatcherFactory.getInboxWatcher(
@@ -80,7 +80,7 @@ public class CollectTaskManager implements Managed {
 
         for (var inboxWatcher : this.inboxWatchers) {
             if (inboxWatcher != null) {
-                log.info("Starting InboxWatcher {}", inboxWatcher);
+                log.debug("Starting InboxWatcher {}", inboxWatcher);
                 inboxWatcher.start();
             }
         }
@@ -104,7 +104,7 @@ public class CollectTaskManager implements Managed {
 
         for (var inboxWatcher : this.inboxWatchers) {
             if (inboxWatcher != null) {
-                log.trace("Stopping InboxWatcher {}", inboxWatcher);
+                log.debug("Stopping InboxWatcher {}", inboxWatcher);
                 inboxWatcher.stop();
             }
         }

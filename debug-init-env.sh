@@ -23,9 +23,7 @@ echo "OK"
 echo - n "Pre-creating work directories..."
 mkdir -p $TEMPDIR/tmp/transfer-inboxes/inbox1
 mkdir -p $TEMPDIR/tmp/transfer-inboxes/inbox2
-mkdir -p $TEMPDIR/tmp/collect-workdir
 mkdir -p $TEMPDIR/tmp/metadata-inbox
-mkdir -p $TEMPDIR/tmp/ocfl-tar-inbox
-mkdir -p $TEMPDIR/tmp/ocfl-tar-workdirs
+mkdir -p $TEMPDIR/tmp/send-to-vault
 echo "OK"
 
