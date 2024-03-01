@@ -15,7 +15,6 @@
  */
 package nl.knaw.dans.ttv.client;
 
-import nl.knaw.dans.ttv.core.Tar;
 import nl.knaw.dans.ttv.core.TransferItem;
 
 import java.io.IOException;
@@ -24,9 +23,5 @@ import java.io.IOException;
  * Client for the Vault Catalog API.
  */
 public interface VaultCatalogClient {
-
     void registerOcflObjectVersion(TransferItem transferItem) throws IOException;
-
-    void registerTar(Tar tar) throws IOException;
-
 }

@@ -19,26 +19,17 @@ package nl.knaw.dans.ttv.client;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import nl.knaw.dans.ttv.client.mappers.OcflObjectVersionMapper;
-import nl.knaw.dans.ttv.core.Tar;
 import nl.knaw.dans.ttv.core.TransferItem;
 import nl.knaw.dans.vaultcatalog.client.api.OcflObjectVersionDto;
-import nl.knaw.dans.vaultcatalog.client.api.OcflObjectVersionRefDto;
-import nl.knaw.dans.vaultcatalog.client.api.TarParameterDto;
-import nl.knaw.dans.vaultcatalog.client.api.TarPartParameterDto;
 import nl.knaw.dans.vaultcatalog.client.invoker.ApiException;
 import nl.knaw.dans.vaultcatalog.client.resources.OcflObjectVersionApi;
-import nl.knaw.dans.vaultcatalog.client.resources.TarApi;
 
 import java.io.IOException;
 import java.util.Comparator;
-import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Slf4j
 @AllArgsConstructor
 public class VaultCatalogClientImpl implements VaultCatalogClient {
-
-    private final TarApi tarApi;
     private final OcflObjectVersionApi ocflObjectVersionApi;
 
     @Override
@@ -87,50 +78,6 @@ public class VaultCatalogClientImpl implements VaultCatalogClient {
             }
 
             return newVersion;
-        }
-        catch (ApiException e) {
-            throw new IOException(e.getResponseBody(), e);
-        }
-    }
-
-    @Override
-    public void registerTar(Tar tar) throws IOException {
-        try {
-            var params = new TarParameterDto()
-                .tarUuid(UUID.fromString(tar.getTarUuid()))
-                .archivalTimestamp(tar.getArchivalTimestamp())
-                .vaultPath(tar.getVaultPath())
-                .tarParts(tar.getTarParts().stream()
-                    .map(p -> new TarPartParameterDto()
-                        .partName(p.getPartName())
-                        .checksumAlgorithm(p.getChecksumAlgorithm())
-                        .checksumValue(p.getChecksumValue()))
-                    .collect(Collectors.toList()))
-                .ocflObjectVersions(tar.getTransferItems().stream()
-                    .map(item -> new OcflObjectVersionRefDto()
-                        .bagId(item.getBagId())
-                        .objectVersion(item.getOcflObjectVersion()))
-                    .collect(Collectors.toList()));
-
-            log.info("Registering TAR: {}", tar.getTarUuid());
-
-            // check if tar already exists
-            try {
-                var existing = tarApi.getArchiveByIdWithHttpInfo(UUID.fromString(tar.getTarUuid()));
-                log.debug("Response code for tar with UUID {}: {}", tar.getTarUuid(), existing.getStatusCode());
-
-                log.debug("Tar with UUID {} already exists in vault", tar.getTarUuid());
-                tarApi.updateArchive(UUID.fromString(tar.getTarUuid()), params);
-            }
-            catch (ApiException e) {
-                if (e.getCode() == 404) {
-                    log.info("Tar with UUID {} does not exist in vault; adding it", tar.getTarUuid());
-                    tarApi.addArchive(params);
-                }
-                else {
-                    throw e;
-                }
-            }
         }
         catch (ApiException e) {
             throw new IOException(e.getResponseBody(), e);

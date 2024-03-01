@@ -17,8 +17,6 @@ package nl.knaw.dans.ttv.db;
 
 import io.dropwizard.testing.junit5.DAOTestExtension;
 import io.dropwizard.testing.junit5.DropwizardExtensionsSupport;
-import nl.knaw.dans.ttv.core.Tar;
-import nl.knaw.dans.ttv.core.TarPart;
 import nl.knaw.dans.ttv.core.TransferItem;
 import org.hibernate.exception.ConstraintViolationException;
 import org.junit.jupiter.api.BeforeEach;
@@ -37,8 +35,6 @@ class TransferItemDaoTest {
 
     private final DAOTestExtension daoTestRule = DAOTestExtension.newBuilder()
         .addEntityClass(TransferItem.class)
-        .addEntityClass(Tar.class)
-        .addEntityClass(TarPart.class)
         .build();
 
     private TransferItemDao transferItemDAO;

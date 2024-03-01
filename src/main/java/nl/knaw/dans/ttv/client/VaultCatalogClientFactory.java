@@ -20,7 +20,6 @@ import io.dropwizard.core.setup.Environment;
 import nl.knaw.dans.ttv.config.DdTransferToVaultConfig;
 import nl.knaw.dans.vaultcatalog.client.invoker.ApiClient;
 import nl.knaw.dans.vaultcatalog.client.resources.OcflObjectVersionApi;
-import nl.knaw.dans.vaultcatalog.client.resources.TarApi;
 
 public class VaultCatalogClientFactory {
 
@@ -33,9 +32,8 @@ public class VaultCatalogClientFactory {
         apiClient.setHttpClient(client);
         apiClient.setBasePath(configuration.getVaultCatalog().getUrl().toString());
 
-        var tarApi = new TarApi(apiClient);
         var ocflObjectVersionApi = new OcflObjectVersionApi(apiClient);
 
-        return new VaultCatalogClientImpl(tarApi, ocflObjectVersionApi);
+        return new VaultCatalogClientImpl(ocflObjectVersionApi);
     }
 }

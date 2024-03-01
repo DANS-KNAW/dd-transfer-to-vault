@@ -25,7 +25,6 @@ import nl.knaw.dans.ttv.core.service.TransferItemMetadataReader;
 import nl.knaw.dans.ttv.core.service.TransferItemMetadataReaderImpl;
 import nl.knaw.dans.ttv.core.service.TransferItemService;
 import nl.knaw.dans.ttv.core.service.TransferItemServiceImpl;
-import nl.knaw.dans.ttv.db.TarDao;
 import nl.knaw.dans.ttv.db.TransferItemDao;
 import org.apache.commons.io.FilenameUtils;
 import org.junit.jupiter.api.BeforeEach;
@@ -52,23 +51,19 @@ public class CollectTaskIntegrationTest {
     private final OaiOreMetadataReader oaiOreMetadataReader = new OaiOreMetadataReader();
     public DAOTestExtension database = DAOTestExtension.newBuilder()
         .addEntityClass(TransferItem.class)
-        .addEntityClass(Tar.class)
-        .addEntityClass(TarPart.class)
         .build();
     private TransferItemService transferItemService;
     private TransferItemMetadataReader transferItemMetadataReader;
     private FileService fileService;
-    private TarDao tarDAO;
     private TransferItemDao transferItemDAO;
 
     @BeforeEach
     void setUp() {
-        tarDAO = new TarDao(database.getSessionFactory());
         transferItemDAO = new TransferItemDao(database.getSessionFactory());
         fileService = new FileServiceImpl();
 
         transferItemService = new TransferItemServiceImpl(
-            transferItemDAO, tarDAO
+            transferItemDAO
         );
 
         transferItemMetadataReader = new TransferItemMetadataReaderImpl(

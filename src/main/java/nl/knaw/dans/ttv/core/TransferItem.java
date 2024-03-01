@@ -17,6 +17,7 @@ package nl.knaw.dans.ttv.core;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -34,8 +35,6 @@ import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 import java.time.OffsetDateTime;
@@ -80,11 +79,6 @@ public class TransferItem {
     @Column(name = "data_supplier")
     private String dataSupplier;
 
-    @ManyToOne
-    @JoinColumn(name = "tar_id")
-    private Tar tar;
-
-    // this is the tar entry name without the urn:uuid: prefix
     @Column(name = "ocfl_object_path")
     private String ocflObjectPath;
 

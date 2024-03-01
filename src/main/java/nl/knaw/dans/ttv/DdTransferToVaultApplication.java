@@ -28,8 +28,6 @@ import nl.knaw.dans.ttv.config.DdTransferToVaultConfig;
 import nl.knaw.dans.ttv.core.CollectTaskManager;
 import nl.knaw.dans.ttv.core.ExtractMetadataTaskManager;
 import nl.knaw.dans.ttv.core.SendToVaultTaskManager;
-import nl.knaw.dans.ttv.core.Tar;
-import nl.knaw.dans.ttv.core.TarPart;
 import nl.knaw.dans.ttv.core.TransferItem;
 import nl.knaw.dans.ttv.core.oaiore.OaiOreMetadataReader;
 import nl.knaw.dans.ttv.core.service.FileServiceImpl;
@@ -37,7 +35,6 @@ import nl.knaw.dans.ttv.core.service.InboxWatcherFactoryImpl;
 import nl.knaw.dans.ttv.core.service.TransferItemMetadataReaderImpl;
 import nl.knaw.dans.ttv.core.service.TransferItemServiceImpl;
 import nl.knaw.dans.ttv.core.service.TransferItemValidatorImpl;
-import nl.knaw.dans.ttv.db.TarDao;
 import nl.knaw.dans.ttv.db.TransferItemDao;
 import nl.knaw.dans.ttv.health.FilesystemHealthCheck;
 import nl.knaw.dans.ttv.health.InboxHealthCheck;
@@ -48,7 +45,7 @@ import org.slf4j.LoggerFactory;
 public class DdTransferToVaultApplication extends Application<DdTransferToVaultConfig> {
 
     private static final Logger log = LoggerFactory.getLogger(DdTransferToVaultApplication.class);
-    private final HibernateBundle<DdTransferToVaultConfig> hibernateBundle = new HibernateBundle<>(TransferItem.class, Tar.class, TarPart.class) {
+    private final HibernateBundle<DdTransferToVaultConfig> hibernateBundle = new HibernateBundle<>(TransferItem.class) {
 
         @Override
         public PooledDataSourceFactory getDataSourceFactory(DdTransferToVaultConfig configuration) {
@@ -62,7 +59,7 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
 
     @Override
     public String getName() {
-        return "Dd Transfer To Vault";
+        return "DD Transfer To Vault";
     }
 
     @Override
@@ -73,7 +70,6 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
     @Override
     public void run(final DdTransferToVaultConfig configuration, final Environment environment) {
         final var transferItemDao = new TransferItemDao(hibernateBundle.getSessionFactory());
-        final var tarDao = new TarDao(hibernateBundle.getSessionFactory());
 
         final var transferItemValidator = new TransferItemValidatorImpl();
         final var collectExecutorService = configuration.getCollect().getTaskQueue().build(environment);
@@ -82,8 +78,8 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
         final var inboxWatcherFactory = new InboxWatcherFactoryImpl();
 
         final var transferItemService = new UnitOfWorkAwareProxyFactory(hibernateBundle)
-            .create(TransferItemServiceImpl.class, new Class[] { TransferItemDao.class, TarDao.class },
-                new Object[] { transferItemDao, tarDao });
+            .create(TransferItemServiceImpl.class, new Class[] { TransferItemDao.class },
+                new Object[] { transferItemDao });
 
         final var oaiOreMetadataReader = new OaiOreMetadataReader();
         final var metadataReader = new TransferItemMetadataReaderImpl(fileService, oaiOreMetadataReader);
@@ -105,8 +101,6 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
 
         environment.lifecycle().manage(collectTaskManager);
 
-        // the Metadata task, which analyses the zip files and stores this information in the database
-        // and then moves it to the tar inbox
         log.info("Creating ExtractMetadataTaskManager");
         final var extractMetadataExecutorService = configuration.getExtractMetadata().getTaskQueue().build(environment);
         final var extractMetadataTaskManager = new ExtractMetadataTaskManager(configuration.getExtractMetadata().getInbox(), configuration.getSendToVault().getInbox(),
