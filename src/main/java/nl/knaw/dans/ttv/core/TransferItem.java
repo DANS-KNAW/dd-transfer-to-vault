@@ -17,15 +17,14 @@ package nl.knaw.dans.ttv.core;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import org.apache.commons.io.FilenameUtils;
+import org.hibernate.Hibernate;
 import org.hibernate.annotations.TypeDef;
 import org.hibernate.annotations.TypeDefs;
-import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.type.TextType;
 
 import javax.persistence.Column;
@@ -131,14 +130,10 @@ public class TransferItem {
     private TransferStatus transferStatus;
 
     @Override
-    public final boolean equals(Object o) {
+    public boolean equals(Object o) {
         if (this == o)
             return true;
-        if (o == null)
-            return false;
-        Class<?> oEffectiveClass = o instanceof HibernateProxy ? ((HibernateProxy) o).getHibernateLazyInitializer().getPersistentClass() : o.getClass();
-        Class<?> thisEffectiveClass = this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass() : this.getClass();
-        if (thisEffectiveClass != oEffectiveClass)
+        if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o))
             return false;
         TransferItem that = (TransferItem) o;
         return getId() != null && Objects.equals(getId(), that.getId());
@@ -146,7 +141,7 @@ public class TransferItem {
 
     @Override
     public final int hashCode() {
-        return getClass().hashCode();
+        return id != null ? id.hashCode() : 0;
     }
 
     public String getCanonicalFilename() {
@@ -156,7 +151,7 @@ public class TransferItem {
 
         var name = FilenameUtils.removeExtension(this.getDveFilename());
 
-        return String.format("%s-ttv%s.zip", name , getId());
+        return String.format("%s-ttv%s.zip", name, getId());
     }
 
     public enum TransferStatus {
