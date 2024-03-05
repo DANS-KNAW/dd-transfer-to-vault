@@ -81,10 +81,7 @@ public class SendToVaultTask implements Runnable {
     private void processTransferItem(Path path, TransferItem transferItem) {
         try {
             var nbn = transferItem.getNbn();
-            var creationTime = transferItem.getCreationTime();
-            Instant instant = creationTime.atZoneSameInstant(ZoneId.systemDefault()).toInstant();
-            long epochMilli = instant.toEpochMilli();
-            addToObjectImportDirectory(path, epochMilli, this.currentBatchPath.resolve(nbn));
+            addToObjectImportDirectory(path, transferItem.getOcflObjectVersionNumber(), this.currentBatchPath.resolve(nbn));
             if (fileService.getPathSize(this.currentBatchPath) > this.threshold) {
                 var batch = this.outbox.resolve("batch-" + System.currentTimeMillis());
                 log.info("Threshold reached, sending batch {} to vault", batch);
@@ -104,10 +101,10 @@ public class SendToVaultTask implements Runnable {
         }
     }
 
-    private void addToObjectImportDirectory(Path dvePath, long epochMilli, Path objectImportDirectory) throws IOException {
+    private void addToObjectImportDirectory(Path dvePath, int ocflObjectVersionNumber, Path objectImportDirectory) throws IOException {
         fileService.ensureDirectoryExists(objectImportDirectory);
         try {
-            extractZipFile(dvePath, objectImportDirectory.resolve(String.valueOf(epochMilli)));
+            extractZipFile(dvePath, objectImportDirectory.resolve("v" + ocflObjectVersionNumber));
             Files.delete(dvePath);
         }
         catch (IOException e) {
