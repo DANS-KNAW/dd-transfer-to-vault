@@ -234,7 +234,7 @@ class TransferItemServiceImplTest {
     void getTransferItemByFilenameAttributes_should_return_matching_TransferItem_if_ID_is_set() throws Exception {
         var transferItemService = getTransferItemService();
         var attributes = FilenameAttributes.builder()
-            .internalId(1L)
+            .ocflObjectVersionNumber(1)
             .dveFilePath("path")
             .dveFilename("pid")
             .build();

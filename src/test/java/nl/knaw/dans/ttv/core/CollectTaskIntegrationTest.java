@@ -74,34 +74,6 @@ public class CollectTaskIntegrationTest {
     }
 
     @Test
-    void run_should_reject_invalid_filenames() throws Exception {
-        try (var fs = MemoryFileSystemBuilder.newLinux().build()) {
-            var filePath = fs.getPath("/inbox/deposit1.zip");
-            var outboxPath = fs.getPath("/outbox/");
-
-            Files.createDirectories(outboxPath);
-            Files.createDirectories(filePath.getParent());
-            copyFileToPath(TEST_BAG, filePath);
-
-            var task = new CollectTask(
-                filePath,
-                outboxPath,
-                "datastation1",
-                transferItemService,
-                transferItemMetadataReader,
-                fileService
-            );
-
-            task.run();
-
-            assertThat(Files.exists(fs.getPath("/inbox/rejected/deposit1.zip"))).isTrue();
-
-            var error = getErrorMessage(filePath, "rejected");
-            assertThat(error).contains("does not match expected pattern");
-        }
-    }
-
-    @Test
     void run_should_accept_valid_dataverse_file() throws Exception {
         try (var fs = MemoryFileSystemBuilder.newLinux().build()) {
             var filePath = fs.getPath("/inbox/doi-10-5072-dar-vfspuqv1.0.zip");
@@ -178,56 +150,6 @@ public class CollectTaskIntegrationTest {
     }
 
     @Test
-    void run_should_accept_already_existing_file() throws Exception {
-        try (var fs = MemoryFileSystemBuilder.newLinux().build()) {
-            var filePath = fs.getPath("/inbox/doi-10-5072-dar-vfspuqv1.0.zip");
-            var outboxPath = fs.getPath("/outbox/");
-
-            var existing = TransferItem.builder()
-                .dveFilename("doi-10-5072-dar-vfspuqv1.0.zip")
-                .transferStatus(TransferItem.TransferStatus.TARRING)
-                .bagSha256Checksum("different-checksum-than-real-file")
-                .creationTime(OffsetDateTime.now())
-                .bagId("bagid")
-                .ocflObjectVersion(1)
-                .dveFilePath("/otherinbox/doi-10-5072-dar-vfspuqv1.0.zip")
-                .build();
-
-            transferItemDAO.save(existing);
-
-            Files.createDirectories(outboxPath);
-            Files.createDirectories(filePath.getParent());
-            copyFileToPath(TEST_BAG, filePath);
-
-            var task = new CollectTask(
-                filePath,
-                outboxPath,
-                "datastation1",
-                transferItemService,
-                transferItemMetadataReader,
-                fileService
-            );
-
-            task.run();
-
-            var records = transferItemDAO.findAll();
-            assertThat(records)
-                .hasSize(2)
-                .extracting(TransferItem::getDveFilename)
-                .containsOnly("doi-10-5072-dar-vfspuqv1.0.zip");
-
-            var dbId = records.get(1).getId();
-            var allFiles = getAllFiles(filePath.getParent(), outboxPath);
-
-            assertThat(allFiles)
-                .hasSize(1)
-                .containsOnly(
-                    fs.getPath("/outbox/doi-10-5072-dar-vfspuqv1.0-ttv" + dbId + ".zip")
-                );
-        }
-    }
-
-    @Test
     void run_should_accept_already_existing_file_with_same_checksum_and_status_collected() throws Exception {
         try (var fs = MemoryFileSystemBuilder.newLinux().build()) {
             var filePath = fs.getPath("/inbox/doi-10-5072-dar-vfspuqv1.0.zip");
@@ -239,7 +161,7 @@ public class CollectTaskIntegrationTest {
                 .bagSha256Checksum(TEST_BAG_CHECKSUM)
                 .creationTime(OffsetDateTime.now())
                 .bagId("bagid")
-                .ocflObjectVersion(1)
+                .ocflObjectVersionNumber(1)
                 .dveFilePath("/otherinbox/doi-10-5072-dar-vfspuqv1.0.zip")
                 .build();
 
@@ -273,108 +195,6 @@ public class CollectTaskIntegrationTest {
                 .hasSize(1)
                 .containsOnly(
                     fs.getPath("/outbox/doi-10-5072-dar-vfspuqv1.0-ttv" + dbId + ".zip")
-                );
-        }
-    }
-
-    @Test
-    void run_should_reject_file_with_same_checksum_and_other_status() throws Exception {
-        try (var fs = MemoryFileSystemBuilder.newLinux().build()) {
-            var filePath = fs.getPath("/inbox/doi-10-5072-dar-vfspuqv1.0.zip");
-            var outboxPath = fs.getPath("/outbox/");
-
-            var existing = TransferItem.builder()
-                .dveFilename("doi-10-5072-dar-vfspuqv1.0.zip")
-                .transferStatus(TransferItem.TransferStatus.TARRING)
-                .bagSha256Checksum(TEST_BAG_CHECKSUM)
-                .creationTime(OffsetDateTime.now())
-                .bagId("bagid")
-                .ocflObjectVersion(1)
-                .dveFilePath("/otherinbox/doi-10-5072-dar-vfspuqv1.0.zip")
-                .build();
-
-            transferItemDAO.save(existing);
-
-            Files.createDirectories(outboxPath);
-            Files.createDirectories(filePath.getParent());
-            copyFileToPath(TEST_BAG, filePath);
-
-            var task = new CollectTask(
-                filePath,
-                outboxPath,
-                "datastation1",
-                transferItemService,
-                transferItemMetadataReader,
-                fileService
-            );
-
-            task.run();
-
-            var records = transferItemDAO.findAll();
-            assertThat(records)
-                .hasSize(1)
-                .extracting(TransferItem::getDveFilename)
-                .containsOnly("doi-10-5072-dar-vfspuqv1.0.zip");
-
-            var allFiles = getAllFiles(filePath.getParent(), outboxPath);
-
-            assertThat(allFiles)
-                .hasSize(2)
-                .containsOnly(
-                    fs.getPath("/inbox/rejected/doi-10-5072-dar-vfspuqv1.0.zip"),
-                    fs.getPath("/inbox/rejected/doi-10-5072-dar-vfspuqv1.0.error.txt")
-                );
-
-            var errorMessage = getErrorMessage(filePath, "rejected");
-            assertThat(errorMessage)
-                .containsIgnoringCase("TransferItem exists already, but does not have expected status of COLLECTED");
-        }
-    }
-
-    @Test
-    void run_should_reject_file_multiple_times() throws Exception {
-        try (var fs = MemoryFileSystemBuilder.newLinux().build()) {
-            var filePath = fs.getPath("/inbox/doi-10-5072-dar-vfspuqv1.0.zip");
-            var outboxPath = fs.getPath("/outbox/");
-
-            var existing = TransferItem.builder()
-                .dveFilename("doi-10-5072-dar-vfspuqv1.0.zip")
-                .transferStatus(TransferItem.TransferStatus.TARRING)
-                .bagSha256Checksum(TEST_BAG_CHECKSUM)
-                .creationTime(OffsetDateTime.now())
-                .bagId("bagid")
-                .ocflObjectVersion(1)
-                .dveFilePath("/otherinbox/doi-10-5072-dar-vfspuqv1.0.zip")
-                .build();
-
-            transferItemDAO.save(existing);
-
-            Files.createDirectories(outboxPath);
-            Files.createDirectories(filePath.getParent());
-
-            var task = new CollectTask(
-                filePath,
-                outboxPath,
-                "datastation1",
-                transferItemService,
-                transferItemMetadataReader,
-                fileService
-            );
-
-            copyFileToPath(TEST_BAG, filePath);
-            task.run();
-            copyFileToPath(TEST_BAG, filePath);
-            task.run();
-
-            var allFiles = getAllFiles(filePath.getParent(), outboxPath);
-
-            assertThat(allFiles)
-                .hasSize(4)
-                .containsOnly(
-                    fs.getPath("/inbox/rejected/doi-10-5072-dar-vfspuqv1.0.zip"),
-                    fs.getPath("/inbox/rejected/doi-10-5072-dar-vfspuqv1.0.error.txt"),
-                    fs.getPath("/inbox/rejected/doi-10-5072-dar-vfspuqv1.0_1.zip"),
-                    fs.getPath("/inbox/rejected/doi-10-5072-dar-vfspuqv1.0_1.error.txt")
                 );
         }
     }

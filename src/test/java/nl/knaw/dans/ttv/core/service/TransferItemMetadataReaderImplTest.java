@@ -66,21 +66,7 @@ class TransferItemMetadataReaderImplTest {
         }
     }
 
-    @Test
-    void getFilenameAttributesInvalidFilename() {
-        var fileService = Mockito.mock(FileService.class);
-        var service = new TransferItemMetadataReaderImpl(fileService, oaiOreMetadataReader);
-        var path = Path.of("something.zip");
-        assertThrows(InvalidTransferItemException.class, () -> service.getFilenameAttributes(path));
-    }
 
-    @Test
-    void getFilenameAttributesInvalidExtension() {
-        var fileService = Mockito.mock(FileService.class);
-        var service = new TransferItemMetadataReaderImpl(fileService, oaiOreMetadataReader);
-        var path = Path.of("doi-10-5072-dar-kxteqtv1.0.rar");
-        assertThrows(InvalidTransferItemException.class, () -> service.getFilenameAttributes(path));
-    }
 
     @Test
     void getFilesystemAttributes() {

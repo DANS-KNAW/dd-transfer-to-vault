@@ -44,7 +44,7 @@ class OaiOreMetadataReaderTest {
             .otherId("doi:10-")
             .otherIdVersion("5.3")
             .dataSupplier("user001")
-            .swordToken("sword:123e4567-e89b-12d3-a456-556642440000")
+            .swordToken("urn:uuid:123e4567-e89b-12d3-a456-556642440000")
             .datastation("DANS Data Station Archaeology (dev)")
             .build();
 
@@ -66,7 +66,7 @@ class OaiOreMetadataReaderTest {
             .otherId("1234; DCTERMS_ID001; DCTERMS_ID002; DCTERMS_ID003")
             .otherIdVersion(null)
             .dataSupplier("user001")
-            .swordToken("sword:0b9bb5ee-3187-4387-bb39-2c09536c79f7")
+            .swordToken("urn:uuid:0b9bb5ee-3187-4387-bb39-2c09536c79f7")
             .datastation("DANS Vault Service")
             .build();
 

@@ -61,7 +61,7 @@ public class TransferItem {
     private String bagId;
 
     @Column(name = "ocfl_object_version")
-    private Integer ocflObjectVersion;
+    private Integer ocflObjectVersionNumber;
 
     @Column(name = "dve_filename", nullable = false)
     private String dveFilename;
@@ -157,7 +157,6 @@ public class TransferItem {
     public enum TransferStatus {
         COLLECTED,
         METADATA_EXTRACTED,
-        TARRING,
-        OCFLTARCREATED
+        SENT_TO_VAULT
     }
 }

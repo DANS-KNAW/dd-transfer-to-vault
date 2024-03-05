@@ -33,7 +33,7 @@ import java.util.Optional;
 @Slf4j
 @AllArgsConstructor
 public class TransferItemServiceImpl implements TransferItemService {
-    private final TransferItemDao transferItemDAO;
+    private final TransferItemDao transferItemDao;
 
     @Override
     @UnitOfWork
@@ -52,6 +52,7 @@ public class TransferItemServiceImpl implements TransferItemService {
         // filename attributes
         transferItem.setDveFilePath(filenameAttributes.getDveFilePath());
         transferItem.setDveFilename(filenameAttributes.getDveFilename());
+        transferItem.setOcflObjectVersionNumber(filenameAttributes.getOcflObjectVersionNumber());
 
         // filesystem attributes
         transferItem.setCreationTime(filesystemAttributes.getCreationTime());
@@ -68,7 +69,7 @@ public class TransferItemServiceImpl implements TransferItemService {
         }
 
         // check if an item with this ID already exists
-        var existing = transferItemDAO.findByIdentifier(transferItem.getDveFilename())
+        var existing = transferItemDao.findByIdentifier(transferItem.getDveFilename())
             .filter(item -> Objects.equals(item.getBagSha256Checksum(), transferItem.getBagSha256Checksum()));
 
         if (existing.isPresent()) {
@@ -79,7 +80,7 @@ public class TransferItemServiceImpl implements TransferItemService {
             );
         }
 
-        transferItemDAO.save(transferItem);
+        transferItemDao.save(transferItem);
         return transferItem;
     }
 
@@ -88,7 +89,7 @@ public class TransferItemServiceImpl implements TransferItemService {
     public TransferItem moveTransferItem(TransferItem transferItem, TransferItem.TransferStatus newStatus, Path newPath) {
         transferItem.setDveFilePath(newPath.toString());
         transferItem.setTransferStatus(newStatus);
-        transferItemDAO.merge(transferItem);
+        transferItemDao.merge(transferItem);
 
         return transferItem;
     }
@@ -101,10 +102,10 @@ public class TransferItemServiceImpl implements TransferItemService {
         }
 
         if (filenameAttributes.getInternalId() != null) {
-            return transferItemDAO.findById(filenameAttributes.getInternalId());
+            return transferItemDao.findById(filenameAttributes.getInternalId());
         }
 
-        return transferItemDAO.findByIdentifier(filenameAttributes.getDveFilename());
+        return transferItemDao.findByIdentifier(filenameAttributes.getDveFilename());
     }
 
     @Override

@@ -20,7 +20,6 @@ import nl.knaw.dans.ttv.core.domain.FileContentAttributes;
 import nl.knaw.dans.ttv.core.domain.FilenameAttributes;
 import nl.knaw.dans.ttv.core.domain.FilesystemAttributes;
 import nl.knaw.dans.ttv.core.oaiore.OaiOreMetadataReader;
-import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 
 import java.io.IOException;
@@ -43,14 +42,7 @@ public class TransferItemMetadataReaderImpl implements TransferItemMetadataReade
     );
 
     private static final Pattern VAAS_PATTERN = Pattern.compile("^vaas-[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}-v\\d+(\\.zip)$");
-    private static final List<Pattern> VALID_PATTERNS = List.of(
-        // the dataverse output
-        DATAVERSE_PATTERN,
-        // the vault ingest flow output (uuid + version)
-        VAAS_PATTERN
-    );
-    private static final Pattern TTV_SUFFIX = Pattern.compile("(?<identifier>.*)(?<suffix>-ttv\\d+)");
-    private static final Set<String> ALLOWED_EXTENSIONS = Set.of("zip");
+    Pattern DVE_NAME_PATTERN = Pattern.compile("(?<identifier>.*?)(-v(?<ocflobjectversionnr>\\d+))?(-ttv(?<internalid>\\d+))?\\.(?<extension>zip)");
     private final FileService fileService;
     private final OaiOreMetadataReader oaiOreMetadataReader;
 
@@ -61,48 +53,60 @@ public class TransferItemMetadataReaderImpl implements TransferItemMetadataReade
 
     @Override
     public FilenameAttributes getFilenameAttributes(Path path) throws InvalidTransferItemException {
-        var filename = normalizeFilename(path.getFileName().toString());
-        var extension = FilenameUtils.getExtension(path.getFileName().toString());
-        var filenameIsExpected = filenameMatchesPatterns(filename, extension);
+        var normalizedFilename = normalizeFilename(path.getFileName().toString());
         var internalId = getInternalId(path.getFileName().toString());
-
-        if (!filenameIsExpected) {
-            throw new InvalidTransferItemException(String.format("filename %s does not match expected pattern(s)", path.getFileName()));
-        }
-
+        var ocflObjectVersionNumber = getOcflObjectVersionNumber(path.getFileName().toString());
         return FilenameAttributes.builder()
             .dveFilePath(path.toString())
-            .dveFilename(filename)
+            .dveFilename(normalizedFilename)
             .internalId(internalId)
+            .ocflObjectVersionNumber(ocflObjectVersionNumber)
             .build();
     }
 
+    /**
+     * Input can be a canonical filename or original DVE file name. The output is the original DVE filename.
+     *
+     * @param filename the filename to normalize
+     * @return the normalized filename
+     */
     private String normalizeFilename(String filename) {
-        var extension = FilenameUtils.getExtension(filename);
-        filename = FilenameUtils.removeExtension(filename);
+        var dveNameMatcher = DVE_NAME_PATTERN.matcher(filename);
 
-        var suffixMatch = TTV_SUFFIX.matcher(filename);
-
-        if (suffixMatch.matches()) {
-            filename = suffixMatch.group("identifier");
+        if (dveNameMatcher.matches()) {
+            var identifier = dveNameMatcher.group("identifier");
+            var ocflObjectVersionNr = dveNameMatcher.group("ocflobjectversionnr");
+            var extension = dveNameMatcher.group("extension");
+            if (ocflObjectVersionNr != null) {
+                return String.format("%s-v%s.%s", identifier, ocflObjectVersionNr, extension);
+            }
+            else {
+                return String.format("%s.%s", identifier, extension);
+            }
         }
-
-        return filename + "." + extension;
+        throw new IllegalArgumentException("filename does not match expected pattern(s)");
     }
 
     private Long getInternalId(String filename) {
-        filename = FilenameUtils.removeExtension(filename);
+        var dveNameMatcher = DVE_NAME_PATTERN.matcher(filename);
 
-        var suffixMatch = TTV_SUFFIX.matcher(filename);
-
-        if (suffixMatch.matches()) {
-            var number = suffixMatch.group("suffix")
-                .replace("-ttv", "");
-
-            return Long.parseLong(number);
+        if (dveNameMatcher.matches()) {
+            var internalId = dveNameMatcher.group("internalid");
+            return internalId != null ? Long.parseLong(internalId) : null;
         }
 
-        return null;
+        throw new IllegalArgumentException("filename does not match expected pattern(s)");
+    }
+
+    private Integer getOcflObjectVersionNumber(String filename) {
+        var dveNameMatcher = DVE_NAME_PATTERN.matcher(filename);
+
+        if (dveNameMatcher.matches()) {
+            var ocflObjectVersionNr = dveNameMatcher.group("ocflobjectversionnr");
+            return ocflObjectVersionNr != null ? Integer.parseInt(ocflObjectVersionNr) : null;
+        }
+
+        throw new IllegalArgumentException("filename does not match expected pattern(s)");
     }
 
     @Override
@@ -165,19 +169,5 @@ public class TransferItemMetadataReaderImpl implements TransferItemMetadataReade
         }
 
         return Optional.empty();
-    }
-
-    private boolean filenameMatchesPatterns(String filename, String extension) {
-        if (!ALLOWED_EXTENSIONS.contains(extension)) {
-            return false;
-        }
-
-        for (var pattern : VALID_PATTERNS) {
-            if (pattern.matcher(filename).matches()) {
-                return true;
-            }
-        }
-
-        return false;
     }
 }

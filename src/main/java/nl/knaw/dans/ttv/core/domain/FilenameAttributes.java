@@ -23,5 +23,6 @@ import lombok.Value;
 public class FilenameAttributes {
     String dveFilePath;
     String dveFilename;
+    Integer ocflObjectVersionNumber;
     Long internalId;
 }
