@@ -19,8 +19,7 @@ import io.dropwizard.client.JerseyClientBuilder;
 import io.dropwizard.core.setup.Environment;
 import nl.knaw.dans.ttv.config.DdTransferToVaultConfig;
 import nl.knaw.dans.vaultcatalog.client.invoker.ApiClient;
-import nl.knaw.dans.vaultcatalog.client.resources.OcflObjectVersionApi;
-import nl.knaw.dans.vaultcatalog.client.resources.TarApi;
+import nl.knaw.dans.vaultcatalog.client.resources.DefaultApi;
 
 public class VaultCatalogClientFactory {
 
@@ -33,9 +32,9 @@ public class VaultCatalogClientFactory {
         apiClient.setHttpClient(client);
         apiClient.setBasePath(configuration.getVaultCatalog().getUrl().toString());
 
-        var tarApi = new TarApi(apiClient);
-        var ocflObjectVersionApi = new OcflObjectVersionApi(apiClient);
+        var catalogApi = new DefaultApi();
+        catalogApi.setApiClient(apiClient);
 
-        return new VaultCatalogClientImpl(tarApi, ocflObjectVersionApi);
+        return new VaultCatalogClientImpl(catalogApi);
     }
 }

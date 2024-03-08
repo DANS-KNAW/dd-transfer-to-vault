@@ -96,7 +96,7 @@ class CollectTaskTest {
         var filenameAttributes = FilenameAttributes.builder()
             .dveFilename("identifier")
             .dveFilePath(filePath.toString())
-            .internalId(1L)
+            .ocflObjectVersionNumber(1)
             .build();
 
         var filesystemAttributes = new FilesystemAttributes(OffsetDateTime.now(), 1234L, "abc");
@@ -133,7 +133,7 @@ class CollectTaskTest {
         var filenameAttributes = FilenameAttributes.builder()
             .dveFilename("identifier")
             .dveFilePath(filePath.toString())
-            .internalId(1L)
+            .ocflObjectVersionNumber(1)
             .build();
 
         var filesystemAttributes = new FilesystemAttributes(OffsetDateTime.now(), 1234L, "abc");
@@ -223,44 +223,4 @@ class CollectTaskTest {
             fail(e);
         }
     }
-
-    @Test
-    void run_should_call_rejectFile_in_case_of_IOException() throws Exception {
-        var filePath = Path.of("data/inbox/doi-10-5072-dar-kxteqtv1.0.zip");
-        var outbox = Path.of("data/outbox");
-        var datastationName = "dsname";
-
-        var task = new CollectTask(filePath, outbox, datastationName, transferItemService, transferItemMetadataReader, fileService);
-        var transferItem = TransferItem.builder()
-            .dataversePid("pid1")
-            .dveFilePath("path/to1.zip")
-            .creationTime(OffsetDateTime.now())
-            .bagSha256Checksum("abc")
-            .transferStatus(TransferItem.TransferStatus.TARRING)
-            .build();
-
-        var filenameAttributes = FilenameAttributes.builder()
-            .dveFilename("identifier")
-            .dveFilePath(filePath.toString())
-            .internalId(1L)
-            .build();
-
-        var filesystemAttributes = new FilesystemAttributes(OffsetDateTime.now(), 1234L, "abc");
-
-        Mockito.when(transferItemMetadataReader.getFilenameAttributes(filePath))
-            .thenReturn(filenameAttributes);
-
-        Mockito.when(transferItemMetadataReader.getFilesystemAttributes(filePath))
-            .thenReturn(filesystemAttributes);
-
-        Mockito.doThrow(IOException.class)
-            .when(fileService).rejectFile(Mockito.any(), Mockito.any());
-
-        Mockito.when(transferItemService.getTransferItemByFilenameAttributes(Mockito.any()))
-            .thenReturn(Optional.of(transferItem));
-
-        assertDoesNotThrow(task::run);
-        Mockito.verify(fileService, Mockito.times(1)).rejectFile(Mockito.any(), Mockito.any());
-    }
-
 }

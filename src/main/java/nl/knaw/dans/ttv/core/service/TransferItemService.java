@@ -16,16 +16,13 @@
 package nl.knaw.dans.ttv.core.service;
 
 import nl.knaw.dans.ttv.core.InvalidTransferItemException;
-import nl.knaw.dans.ttv.core.domain.ArchiveMetadata;
+import nl.knaw.dans.ttv.core.TransferItem;
 import nl.knaw.dans.ttv.core.domain.FileContentAttributes;
 import nl.knaw.dans.ttv.core.domain.FilenameAttributes;
 import nl.knaw.dans.ttv.core.domain.FilesystemAttributes;
-import nl.knaw.dans.ttv.core.Tar;
-import nl.knaw.dans.ttv.core.TransferItem;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.Optional;
 
 public interface TransferItemService {
@@ -35,36 +32,8 @@ public interface TransferItemService {
 
     TransferItem moveTransferItem(TransferItem transferItem, TransferItem.TransferStatus newStatus, Path newPath) throws IOException;
 
-    void saveAllTars(List<Tar> tars);
-
-    void setArchiveAttemptFailed(String id, boolean increaseAttemptCount, int maxRetries);
-
-    Optional<Tar> updateTarToCreated(String id, ArchiveMetadata metadata);
-
-    void setArchivingInProgress(String id);
-
-    List<Tar> stageAllTarsToBeConfirmed();
-
     Optional<TransferItem> getTransferItemByFilenameAttributes(FilenameAttributes filenameAttributes);
 
     TransferItem addMetadata(TransferItem transferItem, FileContentAttributes fileContentAttributes);
-
-    Optional<Tar> getTarById(String id);
-
-    Tar createTarArchiveWithAllMetadataExtractedTransferItems(String id, String vaultPath);
-
-    Tar save(Tar tarArchive);
-
-    void resetTarToArchiving(Tar tar);
-
-    void updateTarToArchived(Tar tar);
-
-    List<Tar> findTarsByStatusTarring();
-
-    List<Tar> findTarsByConfirmInProgress();
-
-    List<Tar> findTarsToBeRetried();
-
-    public Optional<TransferItem> findByDveFilename(String name);
 
 }

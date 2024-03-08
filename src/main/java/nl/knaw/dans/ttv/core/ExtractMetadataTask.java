@@ -15,6 +15,7 @@
  */
 package nl.knaw.dans.ttv.core;
 
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import nl.knaw.dans.ttv.client.VaultCatalogClient;
 import nl.knaw.dans.ttv.core.service.FileService;
@@ -26,6 +27,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 
 @Slf4j
+@ToString
 public class ExtractMetadataTask implements Runnable {
     private final Path filePath;
     private final Path outbox;
@@ -89,6 +91,8 @@ public class ExtractMetadataTask implements Runnable {
         var fileContentAttributes = metadataReader.getFileContentAttributes(path);
         log.trace("Received file content attributes: {}", fileContentAttributes);
 
+
+
         // apply content attributes and validate the transfer item
         transferItemService.addMetadata(transferItem, fileContentAttributes);
         transferItemValidator.validateTransferItem(transferItem);
@@ -113,13 +117,5 @@ public class ExtractMetadataTask implements Runnable {
 
         return transferItemService.getTransferItemByFilenameAttributes(filenameAttributes)
             .orElseThrow(() -> new InvalidTransferItemException(String.format("no TransferItem found for filename attributes %s", filenameAttributes)));
-    }
-
-    @Override
-    public String toString() {
-        return "MetadataTask{" +
-            "filePath=" + filePath +
-            ", outbox=" + outbox +
-            '}';
     }
 }

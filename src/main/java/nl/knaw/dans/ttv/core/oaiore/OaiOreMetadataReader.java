@@ -46,7 +46,7 @@ public class OaiOreMetadataReader {
 
             builder.bagId(getRDFProperty(resource, DansDataVaultMetadata.dansBagId));
             builder.nbn(getRDFProperty(resource, DansDataVaultMetadata.dansNbn));
-            builder.swordToken(getRDFProperty(resource, DansDataVaultMetadata.dansSwordToken));
+            builder.swordToken(swordTokenToUrnUuid(getRDFProperty(resource, DansDataVaultMetadata.dansSwordToken)));
             builder.dataSupplier(getRDFProperty(resource, DansDataVaultMetadata.dansDataSupplier));
             builder.dataversePid(getRDFProperty(resource, DansDataVaultMetadata.dansDataversePid));
             builder.dataversePidVersion(getRDFProperty(resource, DansDataVaultMetadata.dansDataversePidVersion));
@@ -70,6 +70,20 @@ public class OaiOreMetadataReader {
         }
 
         return builder.build();
+    }
+
+    private String swordTokenToUrnUuid(String swordToken) {
+        if (StringUtils.isBlank(swordToken)) {
+            return null;
+        }
+
+        var parts = swordToken.split(":");
+
+        if (parts.length != 2) {
+            return null;
+        }
+
+        return "urn:uuid:" + parts[1];
     }
 
     private String getEmbeddedRDFProperty(Resource resource, Property parent, Property child) {

@@ -17,9 +17,8 @@ package nl.knaw.dans.ttv.db;
 
 import io.dropwizard.testing.junit5.DAOTestExtension;
 import io.dropwizard.testing.junit5.DropwizardExtensionsSupport;
-import nl.knaw.dans.ttv.core.Tar;
-import nl.knaw.dans.ttv.core.TarPart;
 import nl.knaw.dans.ttv.core.TransferItem;
+import nl.knaw.dans.ttv.core.TransferItem.TransferStatus;
 import org.hibernate.exception.ConstraintViolationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -37,8 +36,6 @@ class TransferItemDaoTest {
 
     private final DAOTestExtension daoTestRule = DAOTestExtension.newBuilder()
         .addEntityClass(TransferItem.class)
-        .addEntityClass(Tar.class)
-        .addEntityClass(TarPart.class)
         .build();
 
     private TransferItemDao transferItemDAO;
@@ -99,7 +96,7 @@ class TransferItemDaoTest {
                 .dataversePidVersion("2.0")
                 .dveFilePath("src/test/resources/doi-10-5072-fk2-qz0ljqv-1-2/metadata/oai-ore.jsonld")
                 .creationTime(OffsetDateTime.parse("2020-08-03T00:15:22Z"))
-                .transferStatus(TransferItem.TransferStatus.TARRING)
+                .transferStatus(TransferStatus.SENT_TO_VAULT)
                 .build()
             );
         });
@@ -129,7 +126,7 @@ class TransferItemDaoTest {
                 OffsetDateTime.parse("2020-08-03T00:15:22Z")
             );
 
-        assertThat(transferItems).extracting("transferStatus").containsOnly(TransferItem.TransferStatus.METADATA_EXTRACTED, TransferItem.TransferStatus.TARRING);
+        assertThat(transferItems).extracting("transferStatus").containsOnly(TransferItem.TransferStatus.METADATA_EXTRACTED, TransferStatus.SENT_TO_VAULT);
     }
 
     @Test
@@ -176,7 +173,7 @@ class TransferItemDaoTest {
                 .dveFilename("identifier2")
                 .dveFilePath("src/test/resources/doi-10-5072-fk2-qz0ljqv-1-2/metadata/oai-ore.jsonld")
                 .creationTime(OffsetDateTime.parse("2020-08-03T11:30:00Z"))
-                .transferStatus(TransferItem.TransferStatus.TARRING)
+                .transferStatus(TransferStatus.SENT_TO_VAULT)
                 .build()
             );
         });

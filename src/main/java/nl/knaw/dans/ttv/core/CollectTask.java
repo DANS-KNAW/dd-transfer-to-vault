@@ -65,31 +65,26 @@ public class CollectTask implements Runnable {
         var filesystemAttributes = metadataReader.getFilesystemAttributes(path);
         log.debug("Filesystem attributes: {}", filesystemAttributes);
 
-        var existingTransferItem = transferItemService.getTransferItemByFilenameAttributes(filenameAttributes)
-            // filter out items that have a different checksum, because they are different
+        var optExistingTransferItem = transferItemService.getTransferItemByFilenameAttributes(filenameAttributes)
             .filter(item -> Objects.equals(item.getBagSha256Checksum(), filesystemAttributes.getChecksum()));
 
-        // treat it as an existing TransferItem if either:
-        // - it has the same filename and it has the same checksum
-        // - there is an internal ID in the filename, and it matches a record in the database
-
-        // if it is an existing TransferItem, it should have status COLLECTED
-        if (existingTransferItem.isPresent()) {
-            var status = existingTransferItem.get().getTransferStatus();
-
-            if (!status.equals(TransferItem.TransferStatus.COLLECTED)) {
-                throw new InvalidTransferItemException(
-                    String.format("TransferItem exists already, but does not have expected status of COLLECTED: %s", existingTransferItem.get())
-                );
-            }
+        TransferItem transferItem;
+        if (optExistingTransferItem.isPresent()) {
+            checkForExistingTransferItem(optExistingTransferItem.get());
+            transferItem = optExistingTransferItem.get();
+        } else {
+            transferItem = transferItemService.createTransferItem(datastationName, filenameAttributes, filesystemAttributes, null);
         }
-
-        var transferItem = existingTransferItem.isPresent()
-            ? existingTransferItem.get()
-            : transferItemService.createTransferItem(datastationName, filenameAttributes, filesystemAttributes, null);
-
-        log.info("Moving file '{}' to outbox '{}'", path, this.outbox);
+        log.debug("Moving file '{}' to outbox '{}'", path, this.outbox);
         moveFileToOutbox(transferItem, path, this.outbox);
+    }
+
+    private void checkForExistingTransferItem(TransferItem transferItem) throws InvalidTransferItemException {
+        if (transferItem.getTransferStatus() != TransferItem.TransferStatus.COLLECTED) {
+            throw new InvalidTransferItemException(
+                String.format("TransferItem exists already, but does not have expected status of COLLECTED: %s", transferItem)
+            );
+        }
     }
 
     void moveFileToOutbox(TransferItem transferItem, Path filePath, Path outboxPath) throws IOException {

@@ -22,9 +22,9 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import org.apache.commons.io.FilenameUtils;
+import org.hibernate.Hibernate;
 import org.hibernate.annotations.TypeDef;
 import org.hibernate.annotations.TypeDefs;
-import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.type.TextType;
 
 import javax.persistence.Column;
@@ -34,8 +34,6 @@ import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 import java.time.OffsetDateTime;
@@ -63,7 +61,7 @@ public class TransferItem {
     private String bagId;
 
     @Column(name = "ocfl_object_version")
-    private Integer ocflObjectVersion;
+    private Integer ocflObjectVersionNumber;
 
     @Column(name = "dve_filename", nullable = false)
     private String dveFilename;
@@ -80,11 +78,6 @@ public class TransferItem {
     @Column(name = "data_supplier")
     private String dataSupplier;
 
-    @ManyToOne
-    @JoinColumn(name = "tar_id")
-    private Tar tar;
-
-    // this is the tar entry name without the urn:uuid: prefix
     @Column(name = "ocfl_object_path")
     private String ocflObjectPath;
 
@@ -137,14 +130,10 @@ public class TransferItem {
     private TransferStatus transferStatus;
 
     @Override
-    public final boolean equals(Object o) {
+    public boolean equals(Object o) {
         if (this == o)
             return true;
-        if (o == null)
-            return false;
-        Class<?> oEffectiveClass = o instanceof HibernateProxy ? ((HibernateProxy) o).getHibernateLazyInitializer().getPersistentClass() : o.getClass();
-        Class<?> thisEffectiveClass = this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass() : this.getClass();
-        if (thisEffectiveClass != oEffectiveClass)
+        if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o))
             return false;
         TransferItem that = (TransferItem) o;
         return getId() != null && Objects.equals(getId(), that.getId());
@@ -152,7 +141,7 @@ public class TransferItem {
 
     @Override
     public final int hashCode() {
-        return getClass().hashCode();
+        return id != null ? id.hashCode() : 0;
     }
 
     public String getCanonicalFilename() {
@@ -162,13 +151,12 @@ public class TransferItem {
 
         var name = FilenameUtils.removeExtension(this.getDveFilename());
 
-        return String.format("%s-ttv%s.zip", name , getId());
+        return String.format("%s-ttv%s.zip", name, getId());
     }
 
     public enum TransferStatus {
         COLLECTED,
         METADATA_EXTRACTED,
-        TARRING,
-        OCFLTARCREATED
+        SENT_TO_VAULT
     }
 }
