@@ -35,7 +35,7 @@
     <properties>
         <main-class>nl.knaw.dans.ttv.DdTransferToVaultApplication</main-class>
         <dd-data-vault-api.version>0.1.0</dd-data-vault-api.version>
-        <dd-vault-catalog-api.version>0.3.0-SNAPSHOT</dd-vault-catalog-api.version>
+        <dd-vault-catalog-api.version>0.3.0</dd-vault-catalog-api.version>
     </properties>
 
     <scm>
@@ -95,13 +95,13 @@
         <dependency>
             <groupId>nl.knaw.dans</groupId>
             <artifactId>dans-java-utils</artifactId>
-            <version>0.9.1-SNAPSHOT</version>
+            <version>0.10.1</version>
         </dependency>
 
         <dependency>
             <groupId>nl.knaw.dans</groupId>
             <artifactId>dans-validation-lib</artifactId>
-            <version>0.1.0-SNAPSHOT</version>
+            <version>0.1.0</version>
         </dependency>
 
         <dependency>
