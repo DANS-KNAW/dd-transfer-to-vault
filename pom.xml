@@ -34,7 +34,6 @@
 
     <properties>
         <main-class>nl.knaw.dans.ttv.DdTransferToVaultApplication</main-class>
-        <dd-data-vault-api.version>0.1.0</dd-data-vault-api.version>
     </properties>
 
     <scm>
