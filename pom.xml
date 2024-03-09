@@ -21,7 +21,7 @@
     <parent>
         <groupId>nl.knaw.dans</groupId>
         <artifactId>dd-parent</artifactId>
-        <version>1.2.0</version>
+        <version>1.2.2-SNAPSHOT</version>
     </parent>
 
     <artifactId>dd-transfer-to-vault</artifactId>
@@ -35,7 +35,6 @@
     <properties>
         <main-class>nl.knaw.dans.ttv.DdTransferToVaultApplication</main-class>
         <dd-data-vault-api.version>0.1.0</dd-data-vault-api.version>
-        <dd-vault-catalog-api.version>0.3.0</dd-vault-catalog-api.version>
     </properties>
 
     <scm>
