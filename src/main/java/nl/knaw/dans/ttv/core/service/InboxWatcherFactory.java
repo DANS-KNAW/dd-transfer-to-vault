@@ -19,7 +19,7 @@ import java.nio.file.Path;
 
 public interface InboxWatcherFactory {
 
-    InboxWatcher getInboxWatcher(
+    InboxWatcher createInboxWatcher(
         Path path, String datastationName, InboxWatcher.Callback callback, long interval);
 
 }

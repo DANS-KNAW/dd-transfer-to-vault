@@ -16,6 +16,7 @@
 package nl.knaw.dans.ttv.core.service;
 
 import io.dropwizard.lifecycle.Managed;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.apache.commons.io.filefilter.IOFileFilter;
@@ -23,6 +24,8 @@ import org.apache.commons.io.monitor.FileAlterationListenerAdaptor;
 import org.apache.commons.io.monitor.FileAlterationMonitor;
 import org.apache.commons.io.monitor.FileAlterationObserver;
 
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotNull;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -30,16 +33,18 @@ import java.util.Objects;
 
 @Slf4j
 public class InboxWatcher extends FileAlterationListenerAdaptor implements Managed {
+
     private final Path path;
+
     private final Callback callback;
     private final int interval;
     private final String datastationName;
     private FileAlterationMonitor monitor;
 
-    public InboxWatcher(Path path, String datastationName, Callback callback, int interval) {
-        this.path = Objects.requireNonNull(path, "InboxWatcher path must not be null");
+    public InboxWatcher(@NotNull Path path, @NotNull String datastationName, @NotNull Callback callback, @Min(1) int interval) {
+        this.path = path;
         this.datastationName = datastationName;
-        this.callback = Objects.requireNonNull(callback, "InboxWatcher callback must not be null");
+        this.callback = callback;
         this.interval = interval;
     }
 
@@ -110,6 +115,10 @@ public class InboxWatcher extends FileAlterationListenerAdaptor implements Manag
 
         public NonInitializedFileAlterationObserver(File file, IOFileFilter filters) {
             super(file, filters);
+        }
+
+        public void checkAndNotify() {
+            super.checkAndNotify();
         }
 
         @Override

@@ -71,7 +71,7 @@ public class ExtractMetadataTaskManager implements Managed {
     public void start() throws Exception {
         log.info("creating InboxWatcher's for configured inboxes");
 
-        this.inboxWatcher = inboxWatcherFactory.getInboxWatcher(inbox, null, this::onFileAdded, pollingInterval);
+        this.inboxWatcher = inboxWatcherFactory.createInboxWatcher(inbox, null, this::onFileAdded, pollingInterval);
         this.inboxWatcher.start();
     }
 

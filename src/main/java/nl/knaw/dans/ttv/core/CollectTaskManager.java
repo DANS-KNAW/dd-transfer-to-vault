@@ -62,18 +62,18 @@ public class CollectTaskManager implements Managed {
 
     @Override
     public void start() throws Exception {
-        log.debug("Creating InboxWatcher's for configured inboxes");
+        log.debug("Creating InboxWatchers for configured inboxes");
 
         this.inboxWatchers = inboxes.stream().map(entry -> {
             log.debug("Creating InboxWatcher for {}", entry);
 
             try {
-                return inboxWatcherFactory.getInboxWatcher(
+                return inboxWatcherFactory.createInboxWatcher(
                     entry.getPath(), entry.getName(), this::onFileAdded, this.pollingInterval
                 );
             }
             catch (Exception e) {
-                log.error("Unable to create InboxWatcher", e);
+                log.warn("Unable to create InboxWatcher {}. It will be ignored.", entry.getName(), e);
             }
             return null;
         }).collect(Collectors.toList());

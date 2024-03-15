@@ -70,7 +70,7 @@ public class CollectTask implements Runnable {
 
         TransferItem transferItem;
         if (optExistingTransferItem.isPresent()) {
-            checkForExistingTransferItem(optExistingTransferItem.get());
+            checkStatusOfExistingTransferItem(optExistingTransferItem.get());
             transferItem = optExistingTransferItem.get();
         } else {
             transferItem = transferItemService.createTransferItem(datastationName, filenameAttributes, filesystemAttributes, null);
@@ -79,7 +79,7 @@ public class CollectTask implements Runnable {
         moveFileToOutbox(transferItem, path, this.outbox);
     }
 
-    private void checkForExistingTransferItem(TransferItem transferItem) throws InvalidTransferItemException {
+    private void checkStatusOfExistingTransferItem(TransferItem transferItem) throws InvalidTransferItemException {
         if (transferItem.getTransferStatus() != TransferItem.TransferStatus.COLLECTED) {
             throw new InvalidTransferItemException(
                 String.format("TransferItem exists already, but does not have expected status of COLLECTED: %s", transferItem)

@@ -71,13 +71,13 @@ class CollectTaskManagerTest {
         try {
             manager.start();
 
-            Mockito.verify(inboxWatcherFactory, Mockito.times(1)).getInboxWatcher(
+            Mockito.verify(inboxWatcherFactory, Mockito.times(1)).createInboxWatcher(
                 Mockito.eq(Path.of("data/inbox/1")),
                 Mockito.eq("Datastation 1"),
                 Mockito.any(),
                 Mockito.eq(100L));
 
-            Mockito.verify(inboxWatcherFactory, Mockito.times(1)).getInboxWatcher(
+            Mockito.verify(inboxWatcherFactory, Mockito.times(1)).createInboxWatcher(
                 Mockito.eq(Path.of("data/inbox/2")),
                 Mockito.eq("Datastation 2"),
                 Mockito.any(),
