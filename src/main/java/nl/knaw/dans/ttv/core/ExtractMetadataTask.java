@@ -97,7 +97,7 @@ public class ExtractMetadataTask implements Runnable {
         transferItemService.addMetadata(transferItem, fileContentAttributes);
         transferItemValidator.validateTransferItem(transferItem);
 
-        var newPath = outbox.resolve(transferItem.getCanonicalFilename());
+        var newPath = outbox.resolve(transferItem.getDveFilename());
 
         vaultCatalogClient.registerOcflObjectVersion(transferItem);
 

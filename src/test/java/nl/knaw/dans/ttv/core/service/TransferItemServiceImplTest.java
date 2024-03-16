@@ -162,23 +162,7 @@ class TransferItemServiceImplTest {
         );
     }
 
-    @Test
-    void moveTransferItem() throws Exception {
-        var currentPath = Path.of("current/path.zip");
-        var newStatus = TransferItem.TransferStatus.METADATA_EXTRACTED;
-        var transferItem = TransferItem.builder()
-            .id(5L)
-            .dveFilename("pid")
-            .build();
 
-        var newPath = Path.of("new/").resolve(transferItem.getCanonicalFilename());
-        var transferItemService = getTransferItemService();
-
-        transferItem = transferItemService.moveTransferItem(transferItem, newStatus, newPath);
-
-        assertEquals("new/pid-ttv5.zip", transferItem.getDveFilePath());
-        assertEquals(TransferItem.TransferStatus.METADATA_EXTRACTED, transferItem.getTransferStatus());
-    }
 
     @Test
     void getTransferItemByFilenameAttributes() {

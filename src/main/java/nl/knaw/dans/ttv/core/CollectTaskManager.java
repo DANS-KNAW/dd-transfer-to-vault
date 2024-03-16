@@ -28,6 +28,8 @@ import nl.knaw.dans.ttv.core.service.TransferItemService;
 import org.apache.commons.io.FilenameUtils;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Locale;
@@ -96,6 +98,12 @@ public class CollectTaskManager implements Managed {
             log.debug("Executing task {}", collectTask);
             executorService.execute(collectTask);
         }
+    }
+
+    private void addCreationTimeToFileName(Path path) throws IOException {
+        var creationTime = FileNameUtil.getCreationTimeUnixTimestamp(path);
+        var newFileName = creationTime + "-" + path.getFileName();
+        Files.move(path, path.getParent().resolve(newFileName));
     }
 
     @Override

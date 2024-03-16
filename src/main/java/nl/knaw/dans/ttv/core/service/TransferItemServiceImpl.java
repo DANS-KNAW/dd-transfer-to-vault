@@ -17,6 +17,7 @@ package nl.knaw.dans.ttv.core.service;
 
 import io.dropwizard.hibernate.UnitOfWork;
 import lombok.AllArgsConstructor;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import nl.knaw.dans.ttv.core.InvalidTransferItemException;
 import nl.knaw.dans.ttv.core.TransferItem;
@@ -26,7 +27,6 @@ import nl.knaw.dans.ttv.core.domain.FilesystemAttributes;
 import nl.knaw.dans.ttv.db.TransferItemDao;
 
 import java.nio.file.Path;
-import java.time.OffsetDateTime;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -47,7 +47,6 @@ public class TransferItemServiceImpl implements TransferItemService {
 
         transferItem.setTransferStatus(TransferItem.TransferStatus.COLLECTED);
         transferItem.setDatastation(datastationName);
-        transferItem.setQueueTimestamp(OffsetDateTime.now());
 
         // filename attributes
         transferItem.setDveFilePath(filenameAttributes.getDveFilePath());
@@ -109,11 +108,7 @@ public class TransferItemServiceImpl implements TransferItemService {
     }
 
     @Override
-    public TransferItem addMetadata(TransferItem transferItem, FileContentAttributes fileContentAttributes) {
-
-        Objects.requireNonNull(transferItem, "transferItem cannot be null");
-        Objects.requireNonNull(fileContentAttributes, "fileContentAttributes cannot be null");
-
+    public TransferItem addMetadata(@NonNull TransferItem transferItem, @NonNull FileContentAttributes fileContentAttributes) {
         // file content attributes
         transferItem.setDataversePid(fileContentAttributes.getDataversePid());
         transferItem.setDataversePidVersion(fileContentAttributes.getDataversePidVersion());

@@ -64,28 +64,23 @@ class CollectTaskManagerTest {
     }
 
     @Test
-    void createsInboxWatchersOnStart() {
+    void createsInboxWatchersOnStart() throws Exception {
         var manager = new CollectTaskManager(inboxes, Path.of("data/outbox/"), 100, executorService, transferItemService, transferItemMetadataReader, fileService,
             inboxWatcherFactory);
 
-        try {
-            manager.start();
+        manager.start();
 
-            Mockito.verify(inboxWatcherFactory, Mockito.times(1)).createInboxWatcher(
-                Mockito.eq(Path.of("data/inbox/1")),
-                Mockito.eq("Datastation 1"),
-                Mockito.any(),
-                Mockito.eq(100L));
+        Mockito.verify(inboxWatcherFactory, Mockito.times(1)).createInboxWatcher(
+            Mockito.eq(Path.of("data/inbox/1")),
+            Mockito.eq("Datastation 1"),
+            Mockito.any(),
+            Mockito.eq(100L));
 
-            Mockito.verify(inboxWatcherFactory, Mockito.times(1)).createInboxWatcher(
-                Mockito.eq(Path.of("data/inbox/2")),
-                Mockito.eq("Datastation 2"),
-                Mockito.any(),
-                Mockito.eq(100L));
-        }
-        catch (Exception e) {
-            fail(e);
-        }
+        Mockito.verify(inboxWatcherFactory, Mockito.times(1)).createInboxWatcher(
+            Mockito.eq(Path.of("data/inbox/2")),
+            Mockito.eq("Datastation 2"),
+            Mockito.any(),
+            Mockito.eq(100L));
     }
 
     @Test

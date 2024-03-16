@@ -88,7 +88,7 @@ public class CollectTask implements Runnable {
     }
 
     void moveFileToOutbox(TransferItem transferItem, Path filePath, Path outboxPath) throws IOException {
-        var newPath = outboxPath.resolve(transferItem.getCanonicalFilename());
+        var newPath = outboxPath.resolve(transferItem.getDveFilename());
         log.debug("filePath is '{}', newPath is '{}'", filePath, newPath);
 
         log.debug("Updating database state for item {} with new path '{}'", transferItem, outboxPath);

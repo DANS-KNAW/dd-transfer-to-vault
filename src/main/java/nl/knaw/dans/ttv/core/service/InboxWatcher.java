@@ -111,7 +111,7 @@ public class InboxWatcher extends FileAlterationListenerAdaptor implements Manag
         void onFileCreate(File file, String datastationName);
     }
 
-    private static class NonInitializedFileAlterationObserver extends FileAlterationObserver {
+    public static class NonInitializedFileAlterationObserver extends FileAlterationObserver {
 
         public NonInitializedFileAlterationObserver(File file, IOFileFilter filters) {
             super(file, filters);
