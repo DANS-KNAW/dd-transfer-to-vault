@@ -57,4 +57,6 @@ public interface FileService {
     boolean canWrite(Path path);
 
     FileStore getFileStore(Path path) throws IOException;
+
+    Path addCreationTimeToFileName(Path path) throws IOException;
 }

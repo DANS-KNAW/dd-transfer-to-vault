@@ -29,7 +29,6 @@ import org.apache.commons.io.FilenameUtils;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Locale;
@@ -90,6 +89,21 @@ public class CollectTaskManager implements Managed {
 
     public void onFileAdded(File file, String datastationName) {
         log.debug("Received file creation event for file '{}' and datastation name '{}'", file, datastationName);
+        try {
+            var path = fileService.addCreationTimeToFileName(file.toPath());
+            file = path.toFile();
+        }
+        catch (IOException e) {
+            log.error("Unable to add creation time to file name", e);
+            try {
+                fileService.rejectFile(file.toPath(), e);
+            }
+            catch (IOException error) {
+                log.error("Tried to move file to dead-letter box, but failed", error);
+                return;
+            }
+        }
+
         if (FilenameUtils.getExtension(file.getName()).toLowerCase(Locale.ROOT).equals("zip")) {
             var collectTask = new CollectTask(
                 file.toPath(), outbox, datastationName, transferItemService, metadataReader, fileService
@@ -98,12 +112,6 @@ public class CollectTaskManager implements Managed {
             log.debug("Executing task {}", collectTask);
             executorService.execute(collectTask);
         }
-    }
-
-    private void addCreationTimeToFileName(Path path) throws IOException {
-        var creationTime = FileNameUtil.getCreationTimeUnixTimestamp(path);
-        var newFileName = creationTime + "-" + path.getFileName();
-        Files.move(path, path.getParent().resolve(newFileName));
     }
 
     @Override

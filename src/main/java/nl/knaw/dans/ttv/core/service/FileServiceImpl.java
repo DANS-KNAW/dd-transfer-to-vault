@@ -15,6 +15,8 @@
  */
 package nl.knaw.dans.ttv.core.service;
 
+import lombok.NonNull;
+import nl.knaw.dans.ttv.core.FileNameUtil;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
@@ -44,10 +46,8 @@ public class FileServiceImpl implements FileService {
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
 
     @Override
-    public Path moveFile(Path current, Path newPath) throws IOException {
-        Objects.requireNonNull(current, "current path cannot be null");
-        Objects.requireNonNull(newPath, "newPath cannot be null");
-        log.trace("moving file from {} to {}", current, newPath);
+    public Path moveFile(@NonNull Path current, @NonNull Path newPath) throws IOException {
+        log.debug("moving file from {} to {}", current, newPath);
 
         if (Files.exists(newPath)) {
             throw new FileAlreadyExistsException(String.format("Cannot move file %s to %s, file already exists", current, newPath));
@@ -57,31 +57,27 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
-    public Path moveFileAtomically(Path filePath, Path newPath) throws IOException {
-        Objects.requireNonNull(filePath, "filePath cannot be null");
-        Objects.requireNonNull(newPath, "newPath cannot be null");
-
+    public Path moveFileAtomically(@NonNull Path filePath, @NonNull Path newPath) throws IOException {
         var tempTarget = newPath.getParent().resolve(newPath.getFileName() + ".part");
 
         var store1 = Files.getFileStore(filePath);
         var store2 = Files.getFileStore(newPath.getParent());
 
         if (store1.equals(store2)) {
-            log.info("Moving file {} to {}", filePath, newPath);
+            log.debug("Moving file {} to {}", filePath, newPath);
             return moveFile(filePath, newPath);
         }
 
         // there could be leftovers from a previous attempt, remove them
         Files.deleteIfExists(tempTarget);
 
-        log.info("Moving file atomically {} to {}", filePath, newPath);
+        log.debug("Moving file atomically {} to {}", filePath, newPath);
         moveFile(filePath, tempTarget);
         return moveFile(tempTarget, newPath);
     }
 
     @Override
-    public void ensureDirectoryExists(Path path) throws IOException {
-        Objects.requireNonNull(path, "path cannot be null");
+    public void ensureDirectoryExists(@NonNull Path path) throws IOException {
         Files.createDirectories(path);
     }
 
@@ -93,10 +89,7 @@ public class FileServiceImpl implements FileService {
      * @param path The path to the file to reject
      */
     @Override
-    public void rejectFile(Path path, Throwable exception) throws IOException {
-        Objects.requireNonNull(path, "path cannot be null");
-        Objects.requireNonNull(exception, "exception cannot be null");
-
+    public void rejectFile(@NonNull Path path, @NonNull Throwable exception) throws IOException {
         var rejectedFolder = path.getParent().resolve("rejected");
         ensureDirectoryExists(rejectedFolder);
 
@@ -106,25 +99,25 @@ public class FileServiceImpl implements FileService {
         var extension = FilenameUtils.getExtension(filename);
         var fileBaseName = FilenameUtils.removeExtension(filename);
 
-        log.trace("File base name is '{}', extension is '{}'", fileBaseName, extension);
+        log.debug("File base name is '{}', extension is '{}'", fileBaseName, extension);
         var rejectedFileName = fileBaseName + "." + extension;
         var errorFileName = fileBaseName + ".error.txt";
 
         var duplicateCounter = 1;
 
         while (Files.exists(rejectedFolder.resolve(rejectedFileName))) {
-            log.trace("File '{}' already exists, generating a new filename", rejectedFolder.resolve(rejectedFileName));
+            log.debug("File '{}' already exists, generating a new filename", rejectedFolder.resolve(rejectedFileName));
             rejectedFileName = fileBaseName + "_" + duplicateCounter + "." + extension;
             errorFileName = fileBaseName + "_" + duplicateCounter + ".error.txt";
 
             duplicateCounter += 1;
         }
 
-        log.trace("Settled on '{}' for filename", rejectedFileName);
+        log.debug("Settled on '{}' for filename", rejectedFileName);
         var targetPath = rejectedFolder.resolve(rejectedFileName);
         var targetErrorPath = rejectedFolder.resolve(errorFileName);
 
-        log.trace("Moving file to '{}', writing error report to '{}'", targetPath, targetErrorPath);
+        log.debug("Moving file to '{}', writing error report to '{}'", targetPath, targetErrorPath);
 
         Files.move(path, targetPath);
         writeExceptionToFile(targetErrorPath, exception);
@@ -145,9 +138,11 @@ public class FileServiceImpl implements FileService {
         var future = executorService.submit(() -> Files.isReadable(path));
         try {
             return future.get(timeout, TimeUnit.SECONDS);
-        } catch (InterruptedException | ExecutionException e) {
+        }
+        catch (InterruptedException | ExecutionException e) {
             throw new RuntimeException(e);
-        } finally {
+        }
+        finally {
             future.cancel(true);
         }
     }
@@ -162,7 +157,7 @@ public class FileServiceImpl implements FileService {
         return Files.getFileStore(path);
     }
 
-    void writeExceptionToFile(Path errorReportName, Throwable exception) throws IOException {
+    void writeExceptionToFile(@NonNull Path errorReportName, @NonNull Throwable exception) throws IOException {
         var writer = new StringWriter();
         var pw = new PrintWriter(writer);
         exception.printStackTrace(pw);
@@ -173,31 +168,26 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
-    public boolean deleteFile(Path path) throws IOException {
-        Objects.requireNonNull(path, "path cannot be null");
-        log.trace("Deleting file {}", path);
+    public boolean deleteFile(@NonNull Path path) throws IOException {
+        log.debug("Deleting file {}", path);
         return Files.deleteIfExists(path);
     }
 
     @Override
-    public void deleteDirectory(Path path) throws IOException {
-        Objects.requireNonNull(path, "path cannot be null");
-        log.trace("Deleting directory '{}'", path);
+    public void deleteDirectory(@NonNull Path path) throws IOException {
+        log.debug("Deleting directory '{}'", path);
         FileUtils.deleteDirectory(path.toFile());
     }
 
     @Override
-    public Object getFilesystemAttribute(Path path, String property) throws IOException {
-        Objects.requireNonNull(path, "path cannot be null");
-        Objects.requireNonNull(property, "property cannot be null");
-        log.trace("Getting attribute {} for path '{}'", property, path);
+    public Object getFilesystemAttribute(@NonNull Path path, @NonNull String property) throws IOException {
+        log.debug("Getting attribute {} for path '{}'", property, path);
         return Files.getAttribute(path, property);
     }
 
     @Override
-    public String calculateChecksum(Path path) throws IOException {
-        Objects.requireNonNull(path, "path cannot be null");
-        log.trace("Calculating checksum for '{}'", path);
+    public String calculateChecksum(@NonNull Path path) throws IOException {
+        log.debug("Calculating checksum for '{}'", path);
 
         try (var input = Files.newInputStream(path)) {
             return DigestUtils.sha256Hex(new BufferedInputStream(input));
@@ -205,39 +195,53 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
-    public long getFileSize(Path path) throws IOException {
-        Objects.requireNonNull(path, "path cannot be null");
-        log.trace("Getting file size for path '{}'", path);
+    public long getFileSize(@NonNull Path path) throws IOException {
+        log.debug("Getting file size for path '{}'", path);
         return Files.size(path);
     }
 
     @Override
-    public long getPathSize(Path path) throws IOException {
-        Objects.requireNonNull(path, "path cannot be null");
+    public long getPathSize(@NonNull Path path) throws IOException {
         return FileUtils.sizeOfDirectory(path.toFile());
     }
 
     @Override
-    public ZipFile openZipFile(Path path) throws IOException {
-        Objects.requireNonNull(path, "path cannot be null");
-        log.trace("Opening zip file '{}'", path);
+    public ZipFile openZipFile(@NonNull Path path) throws IOException {
+        log.debug("Opening zip file '{}'", path);
         return new ZipFile(path.toFile());
     }
 
     @Override
-    public InputStream openFileFromZip(ZipFile zipFile, Path path) throws IOException {
-        Objects.requireNonNull(zipFile, "zipFile cannot be null");
-        Objects.requireNonNull(path, "path cannot be null");
-
+    public InputStream openFileFromZip(@NonNull ZipFile zipFile, @NonNull Path path) throws IOException {
         var entryPath = Objects.requireNonNull(zipFile.stream()
-                        .filter(e -> e.getName().endsWith(path.toString()))
-                        .findFirst()
-                        .orElse(null)
-                , String.format("no entries found for path '%s' in zip file %s", path, zipFile)
+                .filter(e -> e.getName().endsWith(path.toString()))
+                .findFirst()
+                .orElse(null)
+            , String.format("no entries found for path '%s' in zip file %s", path, zipFile)
         );
 
-        log.trace("Requested entry for path '{}', found match on '{}'", path, entryPath);
+        log.debug("Requested entry for path '{}', found match on '{}'", path, entryPath);
 
         return zipFile.getInputStream(entryPath);
+    }
+
+    @Override
+    public Path addCreationTimeToFileName(Path path) throws IOException {
+        var dveName = new DveFileName(path.getFileName().toString());
+        if (dveName.isDve()) {
+            if (dveName.getOrderNumber() == null) {
+                var creationTime = FileNameUtil.getCreationTimeUnixTimestamp(path);
+                var newFileName = creationTime + "-" + path.getFileName();
+                return Files.move(path, path.getParent().resolve(newFileName));
+            }
+            else {
+                log.debug("File '{}' already has a creation time in its name, not adding it again", path);
+                return path;
+            }
+        }
+        else {
+            log.debug("File '{}' is not a DvE file, not adding creation time to filename", path);
+            return path;
+        }
     }
 }

@@ -79,11 +79,10 @@ public class VaultCatalogClientImpl implements VaultCatalogClient {
         var dveDto = catalogApi.getVersionExport(transferItem.getNbn(), transferItem.getOcflObjectVersionNumber());
         if (dveDto != null) {
             if (Boolean.FALSE.equals(dveDto.getSkeletonRecord())) {
-                throw new IllegalArgumentException("The OCFL object version cannot be updated because it is not a skeleton record.");
+                throw new IllegalArgumentException("The Dataset Version Export record cannot be updated because it is not a skeleton record.");
             }
             conversions.updateVersionExportDtoFromTransferItem(transferItem, dveDto);
         }
         catalogApi.setVersionExport(dveDto.getDatasetNbn(), dveDto.getOcflObjectVersionNumber(), dveDto);
     }
-
 }
