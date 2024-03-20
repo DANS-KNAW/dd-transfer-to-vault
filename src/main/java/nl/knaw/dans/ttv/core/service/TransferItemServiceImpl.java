@@ -40,8 +40,7 @@ public class TransferItemServiceImpl implements TransferItemService {
     public TransferItem createTransferItem(
         String datastationName,
         FilenameAttributes filenameAttributes,
-        FilesystemAttributes filesystemAttributes,
-        FileContentAttributes fileContentAttributes
+        FilesystemAttributes filesystemAttributes
     ) throws InvalidTransferItemException {
         var transferItem = new TransferItem();
 
@@ -57,15 +56,6 @@ public class TransferItemServiceImpl implements TransferItemService {
         transferItem.setCreationTime(filesystemAttributes.getCreationTime());
         transferItem.setBagSize(filesystemAttributes.getBagSize());
         transferItem.setBagSha256Checksum(filesystemAttributes.getChecksum());
-
-        // file content attributes
-        if (fileContentAttributes != null) {
-            transferItem.setDataversePidVersion(fileContentAttributes.getDataversePidVersion());
-            transferItem.setBagId(fileContentAttributes.getBagId());
-            transferItem.setNbn(fileContentAttributes.getNbn());
-            transferItem.setMetadata(fileContentAttributes.getMetadata());
-            transferItem.setFilepidToLocalPath(fileContentAttributes.getFilepidToLocalPath());
-        }
 
         // check if an item with this ID already exists
         var existing = transferItemDao.findByIdentifier(transferItem.getDveFilename())
@@ -99,11 +89,6 @@ public class TransferItemServiceImpl implements TransferItemService {
         if (filenameAttributes == null) {
             return Optional.empty();
         }
-
-        if (filenameAttributes.getInternalId() != null) {
-            return transferItemDao.findById(filenameAttributes.getInternalId());
-        }
-
         return transferItemDao.findByIdentifier(filenameAttributes.getDveFilename());
     }
 
@@ -120,7 +105,6 @@ public class TransferItemServiceImpl implements TransferItemService {
         transferItem.setOtherIdVersion(fileContentAttributes.getOtherIdVersion());
         transferItem.setSwordToken(fileContentAttributes.getSwordToken());
         transferItem.setDataSupplier(fileContentAttributes.getDataSupplier());
-
         return transferItem;
     }
 }

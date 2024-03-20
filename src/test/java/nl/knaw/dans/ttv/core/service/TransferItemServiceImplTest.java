@@ -26,7 +26,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
-import java.nio.file.Path;
 import java.time.OffsetDateTime;
 import java.util.Optional;
 
@@ -70,45 +69,12 @@ class TransferItemServiceImplTest {
      * test that all properties are set correctly
      */
     @Test
-    void createTransferItem() {
-
-        var transferItemService = new TransferItemServiceImpl(transferItemDao);
-
-        try {
-            var transferItem = transferItemService.createTransferItem("datastation name", filenameAttributes, filesystemAttributes, fileContentAttributes);
-
-            Assertions.assertEquals(TransferItem.TransferStatus.COLLECTED, transferItem.getTransferStatus());
-            assertEquals("datastation name", transferItem.getDatastation());
-
-            assertEquals(filesystemAttributes.getCreationTime(), transferItem.getCreationTime());
-            assertEquals("abc123", transferItem.getBagSha256Checksum());
-            assertEquals(1234L, transferItem.getBagSize());
-
-            assertEquals("5.3", transferItem.getDataversePidVersion());
-            assertEquals("bag id", transferItem.getBagId());
-            assertEquals("nbn value", transferItem.getNbn());
-            assertEquals("{}", transferItem.getMetadata());
-            assertEquals("string\nline2\n", transferItem.getFilepidToLocalPath());
-
-            Mockito.verify(transferItemDao).save(transferItem);
-        }
-        catch (InvalidTransferItemException e) {
-            fail(e);
-        }
-    }
-
-    /**
-     * test that all properties are set correctly
-     */
-    @Test
     void createTransferItemPartial() {
 
         var transferItemService = new TransferItemServiceImpl(transferItemDao);
 
         try {
-            var transferItem = transferItemService.createTransferItem(
-                "datastation name", filenameAttributes, filesystemAttributes, null
-            );
+            var transferItem = transferItemService.createTransferItem("datastation name", filenameAttributes, filesystemAttributes);
 
             Assertions.assertEquals(TransferItem.TransferStatus.COLLECTED, transferItem.getTransferStatus());
             assertEquals("datastation name", transferItem.getDatastation());
@@ -129,23 +95,7 @@ class TransferItemServiceImplTest {
         }
     }
 
-    @Test
-    void createDuplicateTransferItem() {
-        var existing = TransferItem.builder()
-            .dveFilename("pid")
-            .bagSha256Checksum(filesystemAttributes.getChecksum())
-            .build();
-
-        Mockito.when(transferItemDao.findByIdentifier("pid"))
-            .thenReturn(Optional.of(existing));
-
-        var transferItemService = new TransferItemServiceImpl(transferItemDao);
-
-        assertThrows(InvalidTransferItemException.class, () ->
-            transferItemService.createTransferItem("name", filenameAttributes, filesystemAttributes, fileContentAttributes));
-    }
-
-    @Test
+     @Test
     void createDuplicateTransferItemPartial() {
         var existing = TransferItem.builder()
             .dveFilename("pid")
@@ -158,11 +108,9 @@ class TransferItemServiceImplTest {
         var transferItemService = getTransferItemService();
 
         assertThrows(InvalidTransferItemException.class, () ->
-            transferItemService.createTransferItem("name", filenameAttributes, filesystemAttributes, null)
+            transferItemService.createTransferItem("name", filenameAttributes, filesystemAttributes)
         );
     }
-
-
 
     @Test
     void getTransferItemByFilenameAttributes() {

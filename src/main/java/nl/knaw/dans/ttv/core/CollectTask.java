@@ -25,11 +25,14 @@ import nl.knaw.dans.ttv.core.service.TransferItemService;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Objects;
+import java.util.regex.Pattern;
 
 @Slf4j
 @ToString
 @AllArgsConstructor
 public class CollectTask implements Runnable {
+    private static final Pattern XML_FILE_PATTERN = Pattern.compile(".*\\.xml$");
+
     private final Path filePath;
     private final Path outbox;
     private final String datastationName;
@@ -53,8 +56,13 @@ public class CollectTask implements Runnable {
             }
         }
         finally {
-            log.info("Cleaning up XML file associated with '{}'", this.filePath);
-            cleanUpXmlFile(this.filePath);
+            log.debug("Cleaning up XML files");
+            try {
+                cleanUpXmlFiles(this.filePath.getParent());
+            }
+            catch (IOException e) {
+                log.warn("Unable to clean up XML files", e);
+            }
         }
     }
 
@@ -72,8 +80,9 @@ public class CollectTask implements Runnable {
         if (optExistingTransferItem.isPresent()) {
             checkStatusOfExistingTransferItem(optExistingTransferItem.get());
             transferItem = optExistingTransferItem.get();
-        } else {
-            transferItem = transferItemService.createTransferItem(datastationName, filenameAttributes, filesystemAttributes, null);
+        }
+        else {
+            transferItem = transferItemService.createTransferItem(datastationName, filenameAttributes, filesystemAttributes);
         }
         log.debug("Moving file '{}' to outbox '{}'", path, this.outbox);
         moveFileToOutbox(transferItem, path, this.outbox);
@@ -101,15 +110,7 @@ public class CollectTask implements Runnable {
         fileService.rejectFile(path, exception);
     }
 
-    void cleanUpXmlFile(Path path) {
-        metadataReader.getAssociatedXmlFile(path).ifPresent(p -> {
-            log.debug("Deleting file '{}'", p);
-            try {
-                fileService.deleteFile(p);
-            }
-            catch (IOException e) {
-                log.error("Unable to delete XML file associated with file '{}' (filename: '{}')", path, p, e);
-            }
-        });
+    void cleanUpXmlFiles(Path path) throws IOException {
+        fileService.cleanup(path, XML_FILE_PATTERN);
     }
 }

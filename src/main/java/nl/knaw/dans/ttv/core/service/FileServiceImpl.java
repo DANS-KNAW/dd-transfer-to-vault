@@ -16,7 +16,6 @@
 package nl.knaw.dans.ttv.core.service;
 
 import lombok.NonNull;
-import nl.knaw.dans.ttv.core.FileNameUtil;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
@@ -32,12 +31,14 @@ import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.FileStore;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.regex.Pattern;
 import java.util.zip.ZipFile;
 
 public class FileServiceImpl implements FileService {
@@ -168,18 +169,6 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
-    public boolean deleteFile(@NonNull Path path) throws IOException {
-        log.debug("Deleting file {}", path);
-        return Files.deleteIfExists(path);
-    }
-
-    @Override
-    public void deleteDirectory(@NonNull Path path) throws IOException {
-        log.debug("Deleting directory '{}'", path);
-        FileUtils.deleteDirectory(path.toFile());
-    }
-
-    @Override
     public Object getFilesystemAttribute(@NonNull Path path, @NonNull String property) throws IOException {
         log.debug("Getting attribute {} for path '{}'", property, path);
         return Files.getAttribute(path, property);
@@ -230,7 +219,7 @@ public class FileServiceImpl implements FileService {
         var dveName = new DveFileName(path.getFileName().toString());
         if (dveName.isDve()) {
             if (dveName.getOrderNumber() == null) {
-                var creationTime = FileNameUtil.getCreationTimeUnixTimestamp(path);
+                var creationTime = getCreationTimeUnixTimestamp(path);
                 var newFileName = creationTime + "-" + path.getFileName();
                 return Files.move(path, path.getParent().resolve(newFileName));
             }
@@ -242,6 +231,33 @@ public class FileServiceImpl implements FileService {
         else {
             log.debug("File '{}' is not a DvE file, not adding creation time to filename", path);
             return path;
+        }
+    }
+
+    private long getCreationTimeUnixTimestamp(Path path) {
+        try {
+            BasicFileAttributes attrs = Files.readAttributes(path, BasicFileAttributes.class);
+            return attrs.creationTime().toInstant().toEpochMilli();
+        }
+        catch (IOException e) {
+            throw new RuntimeException("Failed to get creation time of file: " + path, e);
+        }
+    }
+
+
+    @Override
+    public void cleanup(Path dir, Pattern pattern) throws IOException {
+        log.debug("Cleaning up directory '{}' with pattern '{}'", dir, pattern);
+        try (var stream = Files.list(dir)) {
+            stream.filter(p -> pattern.matcher(p.getFileName().toString()).matches())
+                .forEach(p -> {
+                    try {
+                        Files.delete(p);
+                    }
+                    catch (IOException e) {
+                        log.error("Unable to delete file '{}'", p, e);
+                    }
+                });
         }
     }
 }
