@@ -19,7 +19,7 @@ import java.nio.file.Path;
 
 public class InboxWatcherFactoryImpl implements InboxWatcherFactory {
     @Override
-    public InboxWatcher getInboxWatcher(Path path, String datastationName, InboxWatcher.Callback callback, long interval) {
+    public InboxWatcher createInboxWatcher(Path path, String datastationName, InboxWatcher.Callback callback, long interval) {
         return new InboxWatcher(path, datastationName, callback, 500);
     }
 }

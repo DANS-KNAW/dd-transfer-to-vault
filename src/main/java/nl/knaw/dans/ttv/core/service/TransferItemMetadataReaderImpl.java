@@ -28,21 +28,10 @@ import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
-import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.regex.Pattern;
 
 public class TransferItemMetadataReaderImpl implements TransferItemMetadataReader {
-    private static final Pattern DATAVERSE_PATTERN = Pattern.compile(
-        "(?<doi>doi-10-[0-9]{4,}-[A-Za-z0-9]{2,}-[A-Za-z0-9]{6})-?" +
-            "(?<schema>datacite)?.?" +
-            "v(?<major>[0-9]+).(?<minor>[0-9]+)" +
-            "(\\.zip)"
-    );
-
-    private static final Pattern VAAS_PATTERN = Pattern.compile("^vaas-[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}-v\\d+(\\.zip)$");
-    Pattern DVE_NAME_PATTERN = Pattern.compile("(?<identifier>.*?)(-v(?<ocflobjectversionnr>\\d+))?(-ttv(?<internalid>\\d+))?\\.(?<extension>zip)");
     private final FileService fileService;
     private final OaiOreMetadataReader oaiOreMetadataReader;
 
@@ -53,60 +42,12 @@ public class TransferItemMetadataReaderImpl implements TransferItemMetadataReade
 
     @Override
     public FilenameAttributes getFilenameAttributes(Path path) throws InvalidTransferItemException {
-        var normalizedFilename = normalizeFilename(path.getFileName().toString());
-        var internalId = getInternalId(path.getFileName().toString());
-        var ocflObjectVersionNumber = getOcflObjectVersionNumber(path.getFileName().toString());
+        var dveFileName = new DveFileName(path.getFileName().toString());
         return FilenameAttributes.builder()
             .dveFilePath(path.toString())
-            .dveFilename(normalizedFilename)
-            .internalId(internalId)
-            .ocflObjectVersionNumber(ocflObjectVersionNumber)
+            .dveFilename(path.getFileName().toString())
+            .ocflObjectVersionNumber(dveFileName.getOcflObjectVersionNr())
             .build();
-    }
-
-    /**
-     * Input can be a canonical filename or original DVE file name. The output is the original DVE filename.
-     *
-     * @param filename the filename to normalize
-     * @return the normalized filename
-     */
-    private String normalizeFilename(String filename) {
-        var dveNameMatcher = DVE_NAME_PATTERN.matcher(filename);
-
-        if (dveNameMatcher.matches()) {
-            var identifier = dveNameMatcher.group("identifier");
-            var ocflObjectVersionNr = dveNameMatcher.group("ocflobjectversionnr");
-            var extension = dveNameMatcher.group("extension");
-            if (ocflObjectVersionNr != null) {
-                return String.format("%s-v%s.%s", identifier, ocflObjectVersionNr, extension);
-            }
-            else {
-                return String.format("%s.%s", identifier, extension);
-            }
-        }
-        throw new IllegalArgumentException("filename does not match expected pattern(s)");
-    }
-
-    private Long getInternalId(String filename) {
-        var dveNameMatcher = DVE_NAME_PATTERN.matcher(filename);
-
-        if (dveNameMatcher.matches()) {
-            var internalId = dveNameMatcher.group("internalid");
-            return internalId != null ? Long.parseLong(internalId) : null;
-        }
-
-        throw new IllegalArgumentException("filename does not match expected pattern(s)");
-    }
-
-    private Integer getOcflObjectVersionNumber(String filename) {
-        var dveNameMatcher = DVE_NAME_PATTERN.matcher(filename);
-
-        if (dveNameMatcher.matches()) {
-            var ocflObjectVersionNr = dveNameMatcher.group("ocflobjectversionnr");
-            return ocflObjectVersionNr != null ? Integer.parseInt(ocflObjectVersionNr) : null;
-        }
-
-        throw new IllegalArgumentException("filename does not match expected pattern(s)");
     }
 
     @Override
@@ -158,16 +99,6 @@ public class TransferItemMetadataReaderImpl implements TransferItemMetadataReade
 
     @Override
     public Optional<Path> getAssociatedXmlFile(Path path) {
-        var filename = normalizeFilename(path.getFileName().toString());
-        var matcher = DATAVERSE_PATTERN.matcher(filename);
-        var xml = matcher.matches()
-            ? matcher.group("doi") + "-datacite.v" + matcher.group("major") + "." + matcher.group("minor") + ".xml"
-            : null;
-
-        if (xml != null) {
-            return Optional.of(path.getParent().resolve(xml));
-        }
-
         return Optional.empty();
     }
 }

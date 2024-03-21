@@ -17,6 +17,7 @@ package nl.knaw.dans.ttv.core.service;
 
 import io.dropwizard.hibernate.UnitOfWork;
 import lombok.AllArgsConstructor;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import nl.knaw.dans.ttv.core.InvalidTransferItemException;
 import nl.knaw.dans.ttv.core.TransferItem;
@@ -26,7 +27,6 @@ import nl.knaw.dans.ttv.core.domain.FilesystemAttributes;
 import nl.knaw.dans.ttv.db.TransferItemDao;
 
 import java.nio.file.Path;
-import java.time.OffsetDateTime;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -40,14 +40,12 @@ public class TransferItemServiceImpl implements TransferItemService {
     public TransferItem createTransferItem(
         String datastationName,
         FilenameAttributes filenameAttributes,
-        FilesystemAttributes filesystemAttributes,
-        FileContentAttributes fileContentAttributes
+        FilesystemAttributes filesystemAttributes
     ) throws InvalidTransferItemException {
         var transferItem = new TransferItem();
 
         transferItem.setTransferStatus(TransferItem.TransferStatus.COLLECTED);
         transferItem.setDatastation(datastationName);
-        transferItem.setQueueTimestamp(OffsetDateTime.now());
 
         // filename attributes
         transferItem.setDveFilePath(filenameAttributes.getDveFilePath());
@@ -58,15 +56,6 @@ public class TransferItemServiceImpl implements TransferItemService {
         transferItem.setCreationTime(filesystemAttributes.getCreationTime());
         transferItem.setBagSize(filesystemAttributes.getBagSize());
         transferItem.setBagSha256Checksum(filesystemAttributes.getChecksum());
-
-        // file content attributes
-        if (fileContentAttributes != null) {
-            transferItem.setDataversePidVersion(fileContentAttributes.getDataversePidVersion());
-            transferItem.setBagId(fileContentAttributes.getBagId());
-            transferItem.setNbn(fileContentAttributes.getNbn());
-            transferItem.setMetadata(fileContentAttributes.getMetadata());
-            transferItem.setFilepidToLocalPath(fileContentAttributes.getFilepidToLocalPath());
-        }
 
         // check if an item with this ID already exists
         var existing = transferItemDao.findByIdentifier(transferItem.getDveFilename())
@@ -100,20 +89,11 @@ public class TransferItemServiceImpl implements TransferItemService {
         if (filenameAttributes == null) {
             return Optional.empty();
         }
-
-        if (filenameAttributes.getInternalId() != null) {
-            return transferItemDao.findById(filenameAttributes.getInternalId());
-        }
-
         return transferItemDao.findByIdentifier(filenameAttributes.getDveFilename());
     }
 
     @Override
-    public TransferItem addMetadata(TransferItem transferItem, FileContentAttributes fileContentAttributes) {
-
-        Objects.requireNonNull(transferItem, "transferItem cannot be null");
-        Objects.requireNonNull(fileContentAttributes, "fileContentAttributes cannot be null");
-
+    public TransferItem addMetadata(@NonNull TransferItem transferItem, @NonNull FileContentAttributes fileContentAttributes) {
         // file content attributes
         transferItem.setDataversePid(fileContentAttributes.getDataversePid());
         transferItem.setDataversePidVersion(fileContentAttributes.getDataversePidVersion());
@@ -125,7 +105,6 @@ public class TransferItemServiceImpl implements TransferItemService {
         transferItem.setOtherIdVersion(fileContentAttributes.getOtherIdVersion());
         transferItem.setSwordToken(fileContentAttributes.getSwordToken());
         transferItem.setDataSupplier(fileContentAttributes.getDataSupplier());
-
         return transferItem;
     }
 }

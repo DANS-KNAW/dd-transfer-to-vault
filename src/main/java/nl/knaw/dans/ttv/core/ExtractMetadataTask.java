@@ -77,31 +77,27 @@ public class ExtractMetadataTask implements Runnable {
 
     void processFile(Path path) throws IOException, InvalidTransferItemException {
         var transferItem = getTransferItem(path);
-        log.info("Processing file '{}' with TransferItem {}", path, transferItem);
+        log.debug("Processing file '{}' with TransferItem {}", path, transferItem);
 
-        if (
-            transferItem.getTransferStatus() != TransferItem.TransferStatus.METADATA_EXTRACTED
-                && transferItem.getTransferStatus() != TransferItem.TransferStatus.COLLECTED
-        ) {
+        if (transferItem.getTransferStatus() != TransferItem.TransferStatus.METADATA_EXTRACTED
+            && transferItem.getTransferStatus() != TransferItem.TransferStatus.COLLECTED) {
             throw new InvalidTransferItemException(String.format("TransferItem already exists but with an unexpected status: %s", transferItem));
         }
 
         // we only expect items with status COLLECTED, but if they are already METADATA_EXTRACTED we
         // can just read the metadata again and update the TransferItem before moving
         var fileContentAttributes = metadataReader.getFileContentAttributes(path);
-        log.trace("Received file content attributes: {}", fileContentAttributes);
-
-
+        log.debug("Retrieved file content attributes: {}", fileContentAttributes);
 
         // apply content attributes and validate the transfer item
         transferItemService.addMetadata(transferItem, fileContentAttributes);
         transferItemValidator.validateTransferItem(transferItem);
 
-        var newPath = outbox.resolve(transferItem.getCanonicalFilename());
+        var newPath = outbox.resolve(transferItem.getDveFilename());
 
         vaultCatalogClient.registerOcflObjectVersion(transferItem);
 
-        log.info("Updated file metadata, moving file '{}' to '{}'", path, newPath);
+        log.debug("Updated file metadata, moving file '{}' to '{}'", path, newPath);
         transferItemService.moveTransferItem(transferItem, TransferItem.TransferStatus.METADATA_EXTRACTED, newPath);
 
         fileService.moveFile(path, newPath);
@@ -109,11 +105,7 @@ public class ExtractMetadataTask implements Runnable {
 
     public TransferItem getTransferItem(Path path) throws InvalidTransferItemException {
         var filenameAttributes = metadataReader.getFilenameAttributes(path);
-        log.trace("Received filename attributes: {}", filenameAttributes);
-
-        if (filenameAttributes.getInternalId() == null) {
-            throw new InvalidTransferItemException(String.format("Expected filename to contain internal transfer-to-vault ID, not found; filename = %s", path));
-        }
+        log.debug("Retrieved filename attributes: {}", filenameAttributes);
 
         return transferItemService.getTransferItemByFilenameAttributes(filenameAttributes)
             .orElseThrow(() -> new InvalidTransferItemException(String.format("no TransferItem found for filename attributes %s", filenameAttributes)));

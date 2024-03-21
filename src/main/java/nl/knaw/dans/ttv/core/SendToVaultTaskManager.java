@@ -25,7 +25,6 @@ import nl.knaw.dans.ttv.core.service.InboxWatcher;
 import nl.knaw.dans.ttv.core.service.InboxWatcherFactory;
 import nl.knaw.dans.ttv.core.service.TransferItemMetadataReader;
 import nl.knaw.dans.ttv.core.service.TransferItemService;
-import nl.knaw.dans.ttv.db.TransferItemDao;
 
 import java.nio.file.Path;
 import java.util.concurrent.ExecutorService;
@@ -72,7 +71,7 @@ public class SendToVaultTaskManager implements Managed {
     @Override
     public void start() throws Exception {
         log.debug("creating InboxWatcher for inbox");
-        inboxWatcher = inboxWatcherFactory.getInboxWatcher(inbox, null, (path, datastationName) -> {
+        inboxWatcher = inboxWatcherFactory.createInboxWatcher(inbox, null, (path, datastationName) -> {
             log.debug("File added: {}", path);
             executor.execute(new SendToVaultTask(
                 fileService,

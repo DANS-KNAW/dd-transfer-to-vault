@@ -20,15 +20,12 @@ import java.io.InputStream;
 import java.nio.file.FileStore;
 import java.nio.file.Path;
 import java.util.concurrent.TimeoutException;
+import java.util.regex.Pattern;
 import java.util.zip.ZipFile;
 
 public interface FileService {
 
     Path moveFile(Path current, Path newPath) throws IOException;
-
-    boolean deleteFile(Path path) throws IOException;
-
-    void deleteDirectory(Path path) throws IOException;
 
     Object getFilesystemAttribute(Path path, String property) throws IOException;
 
@@ -57,4 +54,7 @@ public interface FileService {
     boolean canWrite(Path path);
 
     FileStore getFileStore(Path path) throws IOException;
+
+    Path addCreationTimeToFileName(Path path) throws IOException;
+    void cleanup(Path dir, Pattern pattern) throws IOException;
 }

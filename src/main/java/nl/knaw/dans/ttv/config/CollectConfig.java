@@ -18,8 +18,7 @@ package nl.knaw.dans.ttv.config;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import nl.knaw.dans.lib.util.ExecutorServiceFactory;
-import nl.knaw.dans.ttv.config.validation.UniqueInboxEntryPaths;
-import nl.knaw.dans.ttv.config.validation.UniqueInboxEntryNames;
+import nl.knaw.dans.validation.UniqueAttribute;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
@@ -35,8 +34,8 @@ public class CollectConfig {
     @NotNull
     @JsonProperty("inboxes")
     @Size(min = 1)
-    @UniqueInboxEntryNames(message = "multiple inboxes with the same name found")
-    @UniqueInboxEntryPaths(message = "multiple inboxes are configured with the same path")
+    @UniqueAttribute(attribute = "name", message = "multiple inboxes are configured with the same name")
+    @UniqueAttribute(attribute = "path", message = "multiple inboxes are configured with the same path")
     private List<InboxEntry> inboxes;
 
     @Valid

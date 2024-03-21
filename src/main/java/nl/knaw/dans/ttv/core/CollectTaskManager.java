@@ -28,6 +28,7 @@ import nl.knaw.dans.ttv.core.service.TransferItemService;
 import org.apache.commons.io.FilenameUtils;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Locale;
@@ -62,18 +63,18 @@ public class CollectTaskManager implements Managed {
 
     @Override
     public void start() throws Exception {
-        log.debug("Creating InboxWatcher's for configured inboxes");
+        log.debug("Creating InboxWatchers for configured inboxes");
 
         this.inboxWatchers = inboxes.stream().map(entry -> {
             log.debug("Creating InboxWatcher for {}", entry);
 
             try {
-                return inboxWatcherFactory.getInboxWatcher(
+                return inboxWatcherFactory.createInboxWatcher(
                     entry.getPath(), entry.getName(), this::onFileAdded, this.pollingInterval
                 );
             }
             catch (Exception e) {
-                log.error("Unable to create InboxWatcher", e);
+                log.warn("Unable to create InboxWatcher {}. It will be ignored.", entry.getName(), e);
             }
             return null;
         }).collect(Collectors.toList());
@@ -88,6 +89,21 @@ public class CollectTaskManager implements Managed {
 
     public void onFileAdded(File file, String datastationName) {
         log.debug("Received file creation event for file '{}' and datastation name '{}'", file, datastationName);
+        try {
+            var path = fileService.addCreationTimeToFileName(file.toPath());
+            file = path.toFile();
+        }
+        catch (IOException e) {
+            log.error("Unable to add creation time to file name", e);
+            try {
+                fileService.rejectFile(file.toPath(), e);
+            }
+            catch (IOException error) {
+                log.error("Tried to move file to dead-letter box, but failed", error);
+                return;
+            }
+        }
+
         if (FilenameUtils.getExtension(file.getName()).toLowerCase(Locale.ROOT).equals("zip")) {
             var collectTask = new CollectTask(
                 file.toPath(), outbox, datastationName, transferItemService, metadataReader, fileService

@@ -119,9 +119,6 @@ public class TransferItem {
     @Column(name = "bag_sha256_checksum")
     private String bagSha256Checksum;
 
-    @Column(name = "queue_timestamp")
-    private OffsetDateTime queueTimestamp;
-
     @Column(name = "bag_size")
     private long bagSize;
 
@@ -142,16 +139,6 @@ public class TransferItem {
     @Override
     public final int hashCode() {
         return id != null ? id.hashCode() : 0;
-    }
-
-    public String getCanonicalFilename() {
-        if (this.getId() == null || this.getDveFilename() == null) {
-            throw new IllegalStateException("Cannot create canonical filename for transfer item without id and dataset identifier");
-        }
-
-        var name = FilenameUtils.removeExtension(this.getDveFilename());
-
-        return String.format("%s-ttv%s.zip", name, getId());
     }
 
     public enum TransferStatus {
