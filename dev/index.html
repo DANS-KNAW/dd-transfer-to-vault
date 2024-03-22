@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>Development - dd-transfer-to-vault</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Development";
+        var mkdocs_page_input_path = "dev.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <script src="../js/jquery-3.6.0.min.js" defer></script>
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+      <script>hljs.initHighlightingOnLoad();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href=".." class="icon icon-home"> dd-transfer-to-vault
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption"><span class="caption-text">Manual</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="..">Synopsis</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../description/">Description</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../installation/">Installation & building</a>
+                  </li>
+              </ul>
+              <ul class="current">
+                <li class="toctree-l1 current"><a class="reference internal current" href="./">Development</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#set-up">Set-up</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#initialize-development-environment">Initialize development environment</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#database">Database</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#start-services">Start services</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#start-an-ingest">Start an ingest</a>
+    </li>
+    </ul>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Context</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../arch/">⇒ DANS Data Station Architecture</a>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="..">dd-transfer-to-vault</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".." class="icon icon-home" alt="Docs"></a> &raquo;</li><li>Development</li>
+    <li class="wy-breadcrumbs-aside">
+        <a href="https://github.com/DANS-KNAW/dd-transfer-to-vault/edit/master/docs/dev.md"> Edit on DANS-KNAW/dd-transfer-to-vault</a>
+    </li>
+  </ul>
+  <hr/>
+</div>
+
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="development">Development<a class="headerlink" href="#development" title="Permanent link">&para;</a></h1>
+<p>This page contains information for developers about how to contribute to this project.</p>
+<h2 id="set-up">Set-up<a class="headerlink" href="#set-up" title="Permanent link">&para;</a></h2>
+<p>This project can be used in combination with  <a href="https://github.com/DANS-KNAW/dans-dev-tools#dans-dev-tools" target="_blank">dans-dev-tools</a>. Before you can start it as a service
+some dependencies must first be started:</p>
+<h3 id="initialize-development-environment">Initialize development environment<a class="headerlink" href="#initialize-development-environment" title="Permanent link">&para;</a></h3>
+<p>This is only necessary once per project. If you execute this any existing configuration and data will be reset.</p>
+<p>Open a separate terminal tab for <code>dd-transfer-to-vault</code> and one for its dependency <code>dd-vault-catalog</code> and in each one run:</p>
+<pre><code class="language-commandline">start-env.sh
+</code></pre>
+<p>To actually complete transfers, you will also need <a href="https://gitlab.com/surfsara/dmftar#installation">dmftar</a>.</p>
+<h3 id="database">Database<a class="headerlink" href="#database" title="Permanent link">&para;</a></h3>
+<p>Optionally remove the directory <code>data/database</code> for a fresh up-to-date DB.</p>
+<p>Run in both terminals:</p>
+<pre><code class="language-commandline">start-hsqldb-server.sh
+</code></pre>
+<p>To examine the database with a GUI you can run <code>start-hsqldb-client.sh</code>.
+Copy the url from <code>etc/config.yml</code> into the GUI dialog to open a connection: <code>file</code> - <code>connect</code> - <code>url</code>.
+The names of the tables should appear in the tree view panel.</p>
+<h3 id="start-services">Start services<a class="headerlink" href="#start-services" title="Permanent link">&para;</a></h3>
+<p>See: <a href="https://github.com/DANS-KNAW/dd-dtap/blob/master/docs/connect-transfer-server-to-surf-data-archive.md">connect to surf</a>,
+otherwise the transfer service will prompt for a password.</p>
+<p>Open new terminals for both services and run:</p>
+<pre><code class="language-commandline">start-service.sh
+</code></pre>
+<h2 id="start-an-ingest">Start an ingest<a class="headerlink" href="#start-an-ingest" title="Permanent link">&para;</a></h2>
+<p>To start an ingest, copy a zipped bag (e.g. from <code>src/test/resources/bags</code>) into one of the <code>transfer-inboxes</code> configured in  </p>
+<pre class="codehilite"><code>dd-transfer-to-vault/etc/config.yml
+</code></pre>
+
+<p>The zip will reappear with <code>-ttv1.zip</code> in <code>ocfl-tar-inbox</code> and a row will be added to the table <code>transfer_queue</code>.
+To repeat with the same zip you will have to delete the row from the table.</p>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../installation/" class="btn btn-neutral float-left" title="Installation & building"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../arch/" class="btn btn-neutral float-right" title="⇒ DANS Data Station Architecture">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../installation/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../arch/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme_extra.js" defer></script>
+    <script src="../js/theme.js" defer></script>
+      <script src="../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>
