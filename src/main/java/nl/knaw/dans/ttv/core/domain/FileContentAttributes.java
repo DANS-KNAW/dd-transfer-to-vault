@@ -29,7 +29,7 @@ public class FileContentAttributes {
     @ToString.Exclude
     private String metadata;
     @ToString.Exclude
-    private String filepidToLocalPath;
+    private String filePidToLocalPath;
     private String otherId;
     private String otherIdVersion;
     private String swordToken;

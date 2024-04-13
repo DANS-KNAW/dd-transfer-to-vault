@@ -100,9 +100,9 @@ public class TransferItem {
     @ToString.Exclude
     private String metadata;
 
-    @Column(name = "filepid_to_local_path")
+    @Column(name = "file_pid_to_local_path")
     @ToString.Exclude
-    private String filepidToLocalPath;
+    private String filePidToLocalPath;
 
     @Column
     private String deaccessioned;
