@@ -22,8 +22,8 @@ import io.dropwizard.core.setup.Environment;
 import io.dropwizard.db.PooledDataSourceFactory;
 import io.dropwizard.hibernate.HibernateBundle;
 import io.dropwizard.hibernate.UnitOfWorkAwareProxyFactory;
-import nl.knaw.dans.ttv.client.DataVaultClientFactory;
-import nl.knaw.dans.ttv.client.VaultCatalogClientFactory;
+import nl.knaw.dans.lib.util.ClientProxyBuilder;
+import nl.knaw.dans.ttv.client.VaultCatalogClientImpl;
 import nl.knaw.dans.ttv.config.DdTransferToVaultConfig;
 import nl.knaw.dans.ttv.core.CollectTaskManager;
 import nl.knaw.dans.ttv.core.ExtractMetadataTaskManager;
@@ -88,9 +88,14 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
         environment.healthChecks().register("Filesystem", new FilesystemHealthCheck(configuration, fileService));
         environment.healthChecks().register("Partitions", new PartitionHealthCheck(configuration, fileService));
 
-        final var vaultCatalogRepository = new VaultCatalogClientFactory().createVaultCatalogClient(configuration, environment);
+        final var vaultCatalogProxy = new ClientProxyBuilder<nl.knaw.dans.vaultcatalog.client.invoker.ApiClient, nl.knaw.dans.vaultcatalog.client.resources.DefaultApi>()
+            .apiClient(new nl.knaw.dans.vaultcatalog.client.invoker.ApiClient())
+            .basePath(configuration.getVaultCatalog().getUrl())
+            .httpClient(configuration.getVaultCatalog().getHttpClient())
+            .defaultApiCtor(nl.knaw.dans.vaultcatalog.client.resources.DefaultApi::new)
+            .build();
+        final var vaultCatalogClient = new VaultCatalogClientImpl(vaultCatalogProxy);
 
-        // the Collect task, which listens to new files on the network-drive shares
         log.info("Creating CollectTaskManager");
         final var collectTaskManager = new CollectTaskManager(
             configuration.getCollect().getInboxes(),
@@ -105,10 +110,17 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
         final var extractMetadataExecutorService = configuration.getExtractMetadata().getTaskQueue().build(environment);
         final var extractMetadataTaskManager = new ExtractMetadataTaskManager(configuration.getExtractMetadata().getInbox(), configuration.getSendToVault().getInbox(),
             configuration.getExtractMetadata().getPollingInterval(), extractMetadataExecutorService, transferItemService, metadataReader, fileService, inboxWatcherFactory, transferItemValidator,
-            vaultCatalogRepository);
+            vaultCatalogClient);
         environment.lifecycle().manage(extractMetadataTaskManager);
 
         log.info("Creating SendToVaultTaskManager");
+        final var dataVaultProxy = new ClientProxyBuilder<nl.knaw.dans.datavault.client.invoker.ApiClient, nl.knaw.dans.datavault.client.resources.DefaultApi>()
+            .apiClient(new nl.knaw.dans.datavault.client.invoker.ApiClient())
+            .basePath(configuration.getDataVault().getUrl())
+            .httpClient(configuration.getDataVault().getHttpClient())
+            .defaultApiCtor(nl.knaw.dans.datavault.client.resources.DefaultApi::new)
+            .build();
+
         final var sendToVaultTaskManager = new SendToVaultTaskManager(
             configuration.getSendToVault().getInbox(),
             configuration.getSendToVault().getOutbox(),
@@ -118,7 +130,7 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
             metadataReader,
             configuration.getSendToVault().getWork(),
             configuration.getSendToVault().getMaxBatchSize(),
-            new DataVaultClientFactory().createDataVaultClient(configuration.getDataVault(), environment),
+            dataVaultProxy,
             inboxWatcherFactory);
         environment.lifecycle().manage(sendToVaultTaskManager);
     }

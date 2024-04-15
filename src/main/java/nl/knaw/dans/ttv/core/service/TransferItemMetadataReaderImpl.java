@@ -29,7 +29,6 @@ import java.nio.file.attribute.FileTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.Optional;
-import java.util.regex.Pattern;
 
 public class TransferItemMetadataReaderImpl implements TransferItemMetadataReader {
     private final FileService fileService;
@@ -85,7 +84,7 @@ public class TransferItemMetadataReaderImpl implements TransferItemMetadataReade
             var fileContentAttributes = oaiOreMetadataReader.readMetadata(oaiOre);
 
             fileContentAttributes.setMetadata(oaiOre);
-            fileContentAttributes.setFilepidToLocalPath(pidMapping);
+            fileContentAttributes.setFilePidToLocalPath(pidMapping);
 
             return fileContentAttributes;
         }
