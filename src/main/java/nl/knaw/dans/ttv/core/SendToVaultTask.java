@@ -84,7 +84,7 @@ public class SendToVaultTask implements Runnable {
             addToObjectImportDirectory(path, transferItem.getOcflObjectVersionNumber(), this.currentBatchPath.resolve(nbn));
             if (fileService.getPathSize(this.currentBatchPath) > this.threshold) {
                 var batch = this.outbox.resolve("batch-" + System.currentTimeMillis());
-                log.info("Threshold reached, sending batch {} to vault", batch);
+                log.info("Threshold ({}) reached, sending batch {} to vault", this.threshold, batch);
                 FileUtils.moveDirectory(this.currentBatchPath.toFile(), batch.toFile());
                 sendBatchToVault(batch);
                 Files.createDirectories(this.currentBatchPath);
