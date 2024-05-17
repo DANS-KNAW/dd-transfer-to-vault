@@ -81,7 +81,8 @@ database:
 logging:
   level: INFO
   loggers:
-    "nl.knaw.dans": TRACE
+    'nl.knaw.dans': DEBUG
+    'org.hibernate.engine.internal.StatisticalLoggingSessionEventListener': 'OFF'
   appenders:
     - type: file
       archive: false
