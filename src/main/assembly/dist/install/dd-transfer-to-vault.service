@@ -5,6 +5,8 @@ Description=Transfer to Vault Service
 ExecStart=/opt/dans.knaw.nl/dd-transfer-to-vault/bin/dd-transfer-to-vault server /etc/opt/dans.knaw.nl/dd-transfer-to-vault/config.yml
 # Java returns 143 even if the SIGTERM was handled correctly.
 SuccessExitStatus=143
+Environment="INITIAL_HEAP_SIZE=-Xms64m"
+Environment="LC_ALL=en_US.UTF-8"
 
 User=dd-transfer-to-vault
 Group=dd-transfer-to-vault
