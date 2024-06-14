@@ -46,6 +46,17 @@ collect:
 
 extractMetadata:
   inbox: /var/opt/dans.knaw.nl/tmp/metadata-inbox
+  catalogBaseUrl: https://catalog.vault.datastations.nl/dataset
+  gmh:
+    url: "https://resolver.tgharvester.dans.knaw.nl/gmh-registration-service/nbn"
+    token: # Fill in a valid token, generated via the token endpoint of the GMH server
+    httpClient:
+      timeout: 30s
+      connectionTimeout: 15s
+      timeToLive: 1h
+      retries: 2
+      # The GMH server does not handle GZIP compression
+      gzipEnabled: false
   # polling interval in milliseconds
   pollingInterval: 500
   taskQueue:

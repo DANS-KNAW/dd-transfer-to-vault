@@ -16,7 +16,8 @@
     limitations under the License.
 
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>nl.knaw.dans</groupId>
@@ -34,6 +35,7 @@
 
     <properties>
         <main-class>nl.knaw.dans.ttv.DdTransferToVaultApplication</main-class>
+        <dd-gmh-api.version>0.1.1</dd-gmh-api.version> <!-- TODO: move to parent -->
     </properties>
 
     <scm>
@@ -219,6 +221,12 @@
                                     <version>${dd-data-vault-api.version}</version>
                                     <outputDirectory>${project.build.directory}/openapi</outputDirectory>
                                 </artifactItem>
+                                <artifactItem>
+                                    <groupId>nl.knaw.dans</groupId>
+                                    <artifactId>dd-gmh-api</artifactId>
+                                    <version>${dd-gmh-api.version}</version>
+                                    <outputDirectory>${project.build.directory}/openapi</outputDirectory>
+                                </artifactItem>
                             </artifactItems>
                         </configuration>
                     </execution>
@@ -269,6 +277,24 @@
                                 <library>jersey2</library>
                                 <!-- remove this optional dependency as it was not used in the generated code anyway  -->
                                 <!-- see https://github.com/OpenAPITools/jackson-databind-nullable -->
+                                <openApiNullable>false</openApiNullable>
+                            </configOptions>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>generate-dd-gmh-client</id>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <configuration>
+                            <inputSpec>${project.build.directory}/openapi/dd-gmh-api.yml</inputSpec>
+                            <generatorName>java</generatorName>
+                            <configOptions>
+                                <apiPackage>nl.knaw.dans.gmh.client.resources</apiPackage>
+                                <modelPackage>nl.knaw.dans.gmh.client.api</modelPackage>
+                                <invokerPackage>nl.knaw.dans.gmh.client.invoker</invokerPackage>
+                                <annotationLibrary>none</annotationLibrary>--&gt;
+                                <library>jersey2</library>
                                 <openApiNullable>false</openApiNullable>
                             </configOptions>
                         </configuration>

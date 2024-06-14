@@ -19,6 +19,7 @@ import io.dropwizard.lifecycle.Managed;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import nl.knaw.dans.ttv.client.GmhClient;
 import nl.knaw.dans.ttv.client.VaultCatalogClient;
 import nl.knaw.dans.ttv.core.service.FileService;
 import nl.knaw.dans.ttv.core.service.InboxWatcher;
@@ -65,6 +66,9 @@ public class ExtractMetadataTaskManager implements Managed {
     @NonNull
     private final VaultCatalogClient vaultCatalogClient;
 
+    @NonNull
+    private final GmhClient gmhClient;
+
     private InboxWatcher inboxWatcher;
 
     @Override
@@ -80,7 +84,7 @@ public class ExtractMetadataTaskManager implements Managed {
         if (FilenameUtils.getExtension(file.getName()).toLowerCase(Locale.ROOT).equals("zip")) {
             var metadataTask = new ExtractMetadataTask(
                 file.toPath(), outbox, transferItemService, metadataReader, fileService,
-                transferItemValidator, vaultCatalogClient);
+                transferItemValidator, vaultCatalogClient, gmhClient);
 
             log.debug("Executing task {}", metadataTask);
             executorService.execute(metadataTask);
