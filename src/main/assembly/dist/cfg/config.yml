@@ -44,8 +44,7 @@ collect:
     # Threads will die after 60 seconds of idleness
     keepAliveTime: 60 seconds
 
-extractMetadata:
-  inbox: /var/opt/dans.knaw.nl/tmp/metadata-inbox
+nbnRegistration:
   catalogBaseUrl: https://catalog.vault.datastations.nl/dataset
   gmh:
     url: "https://resolver.tgharvester.dans.knaw.nl/gmh-registration-service/nbn"
@@ -57,6 +56,9 @@ extractMetadata:
       retries: 2
       # The GMH server does not handle GZIP compression
       gzipEnabled: false
+
+extractMetadata:
+  inbox: /var/opt/dans.knaw.nl/tmp/metadata-inbox
   # polling interval in milliseconds
   pollingInterval: 500
   taskQueue:

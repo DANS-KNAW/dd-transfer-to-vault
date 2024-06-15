@@ -18,9 +18,9 @@ package nl.knaw.dans.ttv.core;
 import lombok.AllArgsConstructor;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
-import nl.knaw.dans.ttv.client.GmhClient;
 import nl.knaw.dans.ttv.client.VaultCatalogClient;
 import nl.knaw.dans.ttv.core.service.FileService;
+import nl.knaw.dans.ttv.core.service.NbnRegistrationService;
 import nl.knaw.dans.ttv.core.service.TransferItemMetadataReader;
 import nl.knaw.dans.ttv.core.service.TransferItemService;
 import nl.knaw.dans.ttv.core.service.TransferItemValidator;
@@ -39,7 +39,7 @@ public class ExtractMetadataTask implements Runnable {
     private final FileService fileService;
     private final TransferItemValidator transferItemValidator;
     private final VaultCatalogClient vaultCatalogClient;
-    private final GmhClient gmhClient;
+    private final NbnRegistrationService nbnRegistrationService;
 
     @Override
     public void run() {
@@ -91,7 +91,7 @@ public class ExtractMetadataTask implements Runnable {
         vaultCatalogClient.registerOcflObjectVersion(transferItem);
 
         if (transferItem.getOcflObjectVersionNumber() == 1) {
-            gmhClient.registerNbn(transferItem);
+            nbnRegistrationService.scheduleNbnRegistration(transferItem);
         }
 
         log.debug("Updated file metadata, moving file '{}' to '{}'", path, newPath);

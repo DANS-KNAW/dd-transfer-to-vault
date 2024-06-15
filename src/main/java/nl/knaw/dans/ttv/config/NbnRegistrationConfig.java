@@ -13,13 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ttv.client;
+package nl.knaw.dans.ttv.config;
 
-import nl.knaw.dans.ttv.core.NbnRegistration;
-import nl.knaw.dans.ttv.core.TransferItem;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import lombok.Data;
+import nl.knaw.dans.ttv.config.converter.TrailingSlashConverter;
 
-import java.io.IOException;
+import javax.validation.constraints.NotNull;
+import java.net.URI;
 
-public interface GmhClient {
-    void registerNbn(NbnRegistration registration) throws IOException;
+@Data
+public class NbnRegistrationConfig {
+    @NotNull
+    private GmhConfig gmh;
+
+    @NotNull
+    @JsonDeserialize(converter = TrailingSlashConverter.class)
+    private URI catalogBaseUrl;
+
+    private long registrationInterval;
 }

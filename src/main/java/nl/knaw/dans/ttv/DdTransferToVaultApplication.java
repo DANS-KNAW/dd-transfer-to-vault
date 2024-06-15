@@ -30,14 +30,19 @@ import nl.knaw.dans.ttv.client.VaultCatalogClientImpl;
 import nl.knaw.dans.ttv.config.DdTransferToVaultConfig;
 import nl.knaw.dans.ttv.core.CollectTaskManager;
 import nl.knaw.dans.ttv.core.ExtractMetadataTaskManager;
+import nl.knaw.dans.ttv.core.NbnRegistration;
 import nl.knaw.dans.ttv.core.SendToVaultTaskManager;
 import nl.knaw.dans.ttv.core.TransferItem;
 import nl.knaw.dans.ttv.core.oaiore.OaiOreMetadataReader;
 import nl.knaw.dans.ttv.core.service.FileServiceImpl;
 import nl.knaw.dans.ttv.core.service.InboxWatcherFactoryImpl;
+import nl.knaw.dans.ttv.core.service.NbnRegistrationService;
+import nl.knaw.dans.ttv.core.service.NbnRegistrationServiceImpl;
+import nl.knaw.dans.ttv.core.service.RegistrationWorker;
 import nl.knaw.dans.ttv.core.service.TransferItemMetadataReaderImpl;
 import nl.knaw.dans.ttv.core.service.TransferItemServiceImpl;
 import nl.knaw.dans.ttv.core.service.TransferItemValidatorImpl;
+import nl.knaw.dans.ttv.db.NbnRegistrationDao;
 import nl.knaw.dans.ttv.db.TransferItemDao;
 import nl.knaw.dans.ttv.health.FilesystemHealthCheck;
 import nl.knaw.dans.ttv.health.InboxHealthCheck;
@@ -45,16 +50,19 @@ import nl.knaw.dans.ttv.health.PartitionHealthCheck;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.URI;
+
 public class DdTransferToVaultApplication extends Application<DdTransferToVaultConfig> {
 
     private static final Logger log = LoggerFactory.getLogger(DdTransferToVaultApplication.class);
-    private final HibernateBundle<DdTransferToVaultConfig> hibernateBundle = new HibernateBundle<>(TransferItem.class) {
+    private final HibernateBundle<DdTransferToVaultConfig> hibernateBundle = new HibernateBundle<>(TransferItem.class, NbnRegistration.class) {
 
         @Override
         public PooledDataSourceFactory getDataSourceFactory(DdTransferToVaultConfig configuration) {
             return configuration.getDatabase();
         }
     };
+    
 
     public static void main(final String[] args) throws Exception {
         new DdTransferToVaultApplication().run(args);
@@ -72,6 +80,7 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
 
     @Override
     public void run(final DdTransferToVaultConfig configuration, final Environment environment) {
+        final var proxyFactory = new UnitOfWorkAwareProxyFactory(hibernateBundle);
         final var transferItemDao = new TransferItemDao(hibernateBundle.getSessionFactory());
 
         final var transferItemValidator = new TransferItemValidatorImpl();
@@ -80,9 +89,8 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
 
         final var inboxWatcherFactory = new InboxWatcherFactoryImpl();
 
-        final var transferItemService = new UnitOfWorkAwareProxyFactory(hibernateBundle)
-            .create(TransferItemServiceImpl.class, new Class[] { TransferItemDao.class },
-                new Object[] { transferItemDao });
+        final var transferItemService = proxyFactory.create(TransferItemServiceImpl.class, new Class[] { TransferItemDao.class },
+            new Object[] { transferItemDao });
 
         final var oaiOreMetadataReader = new OaiOreMetadataReader();
         final var metadataReader = new TransferItemMetadataReaderImpl(fileService, oaiOreMetadataReader);
@@ -103,12 +111,14 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
 
         log.info("Creating ExtractMetadataTaskManager");
         final var vaultCatalogClient = createVaultCatalogClient(configuration);
-        final var gmhClient = createGmhClient(configuration);
         final var extractMetadataExecutorService = configuration.getExtractMetadata().getTaskQueue().build(environment);
+        final var nbnRegistrationService = createNbnRegistrationService(configuration, proxyFactory);
+        environment.lifecycle().manage(nbnRegistrationService);
         final var extractMetadataTaskManager = new ExtractMetadataTaskManager(configuration.getExtractMetadata().getInbox(), configuration.getSendToVault().getInbox(),
             configuration.getExtractMetadata().getPollingInterval(), extractMetadataExecutorService, transferItemService, metadataReader, fileService, inboxWatcherFactory, transferItemValidator,
-            vaultCatalogClient, gmhClient);
+            vaultCatalogClient, nbnRegistrationService);
         environment.lifecycle().manage(extractMetadataTaskManager);
+        
 
         log.info("Creating SendToVaultTaskManager");
         final var dataVaultProxy = createDataVaultProxy(configuration);
@@ -136,14 +146,25 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
         return new VaultCatalogClientImpl(vaultCatalogProxy);
     }
 
+    private NbnRegistrationService createNbnRegistrationService(DdTransferToVaultConfig configuration, UnitOfWorkAwareProxyFactory proxyFactory) {
+        final var gmhClient = createGmhClient(configuration);
+        final var locationBaseUrl = configuration.getNbnRegistration().getCatalogBaseUrl();
+        final var nbnRegistrationDao = new NbnRegistrationDao(hibernateBundle.getSessionFactory());
+        final var registrationInterval = configuration.getNbnRegistration().getRegistrationInterval();
+        final var registrationWorker = proxyFactory.create(RegistrationWorker.class, new Class[] { GmhClient.class, URI.class, NbnRegistrationDao.class, long.class },
+            new Object[] { gmhClient, locationBaseUrl, nbnRegistrationDao, registrationInterval });
+        return proxyFactory.create(NbnRegistrationServiceImpl.class, new Class[] { RegistrationWorker.class, NbnRegistrationDao.class, URI.class },
+            new Object[] { registrationWorker, nbnRegistrationDao, locationBaseUrl });
+    }
+
     private GmhClient createGmhClient(DdTransferToVaultConfig configuration) {
         final var gmhProxy = new ClientProxyBuilder<nl.knaw.dans.gmh.client.invoker.ApiClient, nl.knaw.dans.gmh.client.resources.UrnnbnIdentifierApi>()
-            .apiClient(new nl.knaw.dans.gmh.client.invoker.ApiClient().setBearerToken(configuration.getExtractMetadata().getGmh().getToken()))
-            .basePath(configuration.getExtractMetadata().getGmh().getUrl())
-            .httpClient(configuration.getExtractMetadata().getGmh().getHttpClient())
+            .apiClient(new nl.knaw.dans.gmh.client.invoker.ApiClient().setBearerToken(configuration.getNbnRegistration().getGmh().getToken()))
+            .basePath(configuration.getNbnRegistration().getGmh().getUrl())
+            .httpClient(configuration.getNbnRegistration().getGmh().getHttpClient())
             .defaultApiCtor(nl.knaw.dans.gmh.client.resources.UrnnbnIdentifierApi::new)
             .build();
-        return new GmhClientImpl(gmhProxy, configuration.getExtractMetadata().getCatalogBaseUrl());
+        return new GmhClientImpl(gmhProxy, configuration.getNbnRegistration().getCatalogBaseUrl());
     }
 
     private nl.knaw.dans.datavault.client.resources.DefaultApi createDataVaultProxy(DdTransferToVaultConfig configuration) {

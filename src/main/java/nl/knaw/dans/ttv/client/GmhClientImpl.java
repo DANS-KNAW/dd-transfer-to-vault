@@ -20,11 +20,10 @@ import lombok.extern.slf4j.Slf4j;
 import nl.knaw.dans.gmh.client.api.NbnLocationsObjectDto;
 import nl.knaw.dans.gmh.client.invoker.ApiException;
 import nl.knaw.dans.gmh.client.resources.UrnnbnIdentifierApi;
-import nl.knaw.dans.ttv.core.TransferItem;
+import nl.knaw.dans.ttv.core.NbnRegistration;
 
 import java.io.IOException;
 import java.net.URI;
-import java.nio.file.Path;
 
 @AllArgsConstructor
 @Slf4j
@@ -34,18 +33,18 @@ public class GmhClientImpl implements GmhClient {
     private final URI catalogBaseUrl;
 
     @Override
-    public void registerNbn(TransferItem transferItem) throws IOException {
-        var landingPageUrl = catalogBaseUrl + transferItem.getNbn();
-        log.debug("Registering NBN {} with landing page URL {}", transferItem.getNbn(), landingPageUrl);
+    public void registerNbn(NbnRegistration nbnRegistration) throws IOException {
+        var landingPageUrl = catalogBaseUrl + nbnRegistration.getNbn();
+        log.debug("Registering NBN {} with landing page URL {}", nbnRegistration.getNbn(), landingPageUrl);
         var nbnLocationDto = new NbnLocationsObjectDto()
-            .identifier(transferItem.getNbn())
+            .identifier(nbnRegistration.getNbn())
             .addLocationsItem(landingPageUrl);
         try {
             api.createNbnLocations(nbnLocationDto);
         }
         catch (ApiException e) {
             // TODO: implement automatic retry?
-            log.warn("Failed to register NBN {} with landing page URL {}", transferItem.getNbn(), landingPageUrl, e);
+            log.warn("Failed to register NBN {} with landing page URL {}", nbnRegistration.getNbn(), landingPageUrl, e);
         }
     }
 }

@@ -41,11 +41,4 @@ public class ExtractMetadataConfig {
     @NotNull
     @Min(1)
     private long pollingInterval;
-    
-    @NotNull
-    private GmhConfig gmh;
-    
-    @NotNull
-    @JsonDeserialize(converter = TrailingSlashConverter.class) 
-    private URI catalogBaseUrl;
 }

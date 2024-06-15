@@ -13,13 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ttv.client;
+package nl.knaw.dans.ttv.core.service;
 
-import nl.knaw.dans.ttv.core.NbnRegistration;
+import io.dropwizard.lifecycle.Managed;
 import nl.knaw.dans.ttv.core.TransferItem;
 
-import java.io.IOException;
-
-public interface GmhClient {
-    void registerNbn(NbnRegistration registration) throws IOException;
+public interface NbnRegistrationService extends Managed {
+    /**
+     * Adds a new NBN registration to the database. The status of the registration is set to PENDING. The service will schedule the actual registration of the NBN with the GMH service.
+     *
+     * @param transferItem the transfer item of which the NBN should be registered
+     */
+    void scheduleNbnRegistration(TransferItem transferItem);
 }
