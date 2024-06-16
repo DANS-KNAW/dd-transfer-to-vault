@@ -103,6 +103,12 @@
         </dependency>
 
         <dependency>
+            <groupId>nl.knaw.dans</groupId>
+            <artifactId>dans-converter-lib</artifactId> 
+            <version>0.1.0</version>
+        </dependency>
+        
+        <dependency>
             <groupId>org.quartz-scheduler</groupId>
             <artifactId>quartz</artifactId>
         </dependency>

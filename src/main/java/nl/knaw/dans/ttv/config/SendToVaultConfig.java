@@ -15,7 +15,9 @@
  */
 package nl.knaw.dans.ttv.config;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.Data;
+import nl.knaw.dans.convert.jackson.StringByteSizeConverter;
 
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
@@ -33,6 +35,7 @@ public class SendToVaultConfig {
     private Path outbox;
 
     @Min(1)
+    @JsonDeserialize(converter = StringByteSizeConverter.class)
     private long maxBatchSize;
 
     @Min(1)

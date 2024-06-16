@@ -16,16 +16,12 @@
 package nl.knaw.dans.ttv.config;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.Data;
 import nl.knaw.dans.lib.util.ExecutorServiceFactory;
-import nl.knaw.dans.ttv.config.converter.TrailingSlashConverter;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.nio.file.Path;
 
 @Data

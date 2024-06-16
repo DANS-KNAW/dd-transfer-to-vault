@@ -17,7 +17,7 @@ package nl.knaw.dans.ttv.config;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.Data;
-import nl.knaw.dans.ttv.config.converter.TrailingSlashConverter;
+import nl.knaw.dans.convert.jackson.UriAddTrailingSlashConverter;
 
 import javax.validation.constraints.NotNull;
 import java.net.URI;
@@ -28,7 +28,7 @@ public class NbnRegistrationConfig {
     private GmhConfig gmh;
 
     @NotNull
-    @JsonDeserialize(converter = TrailingSlashConverter.class)
+    @JsonDeserialize(converter = UriAddTrailingSlashConverter.class)
     private URI catalogBaseUrl;
 
     private long registrationInterval;
