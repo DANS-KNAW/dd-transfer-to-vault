@@ -22,23 +22,16 @@ import nl.knaw.dans.gmh.client.invoker.ApiException;
 import nl.knaw.dans.gmh.client.resources.UrnnbnIdentifierApi;
 import nl.knaw.dans.ttv.core.NbnRegistration;
 
-import java.io.IOException;
-import java.net.URI;
-
 @AllArgsConstructor
 @Slf4j
 public class GmhClientImpl implements GmhClient {
     private final UrnnbnIdentifierApi api;
-
-    private final URI catalogBaseUrl;
-
     @Override
     public void registerNbn(NbnRegistration nbnRegistration) throws FailedNbnRegistrationException {
-        var landingPageUrl = catalogBaseUrl + nbnRegistration.getNbn();
-        log.debug("Registering NBN {} with landing page URL {}", nbnRegistration.getNbn(), landingPageUrl);
+        log.debug("Registering NBN {} with landing page URL {}", nbnRegistration.getNbn(), nbnRegistration.getLocation());
         var nbnLocationDto = new NbnLocationsObjectDto()
             .identifier(nbnRegistration.getNbn())
-            .addLocationsItem(landingPageUrl);
+            .addLocationsItem(nbnRegistration.getLocation().toString());
         try {
             api.createNbnLocations(nbnLocationDto);
         }

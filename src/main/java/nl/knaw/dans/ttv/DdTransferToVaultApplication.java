@@ -164,7 +164,7 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
             .httpClient(configuration.getNbnRegistration().getGmh().getHttpClient())
             .defaultApiCtor(nl.knaw.dans.gmh.client.resources.UrnnbnIdentifierApi::new)
             .build();
-        return new GmhClientImpl(gmhProxy, configuration.getNbnRegistration().getCatalogBaseUrl());
+        return new GmhClientImpl(gmhProxy);
     }
 
     private nl.knaw.dans.datavault.client.resources.DefaultApi createDataVaultProxy(DdTransferToVaultConfig configuration) {

@@ -25,6 +25,8 @@ import nl.knaw.dans.ttv.core.TransferItem;
 import nl.knaw.dans.ttv.db.NbnRegistrationDao;
 
 import java.net.URI;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -65,7 +67,7 @@ public class NbnRegistrationServiceImpl implements NbnRegistrationService {
     public void scheduleNbnRegistration(TransferItem transferItem) {
         NbnRegistration nbnRegistration = NbnRegistration.builder()
             .nbn(transferItem.getNbn())
-            .location(locationBaseUrl.resolve(transferItem.getNbn()))
+            .location(locationBaseUrl.resolve(URLEncoder.encode(transferItem.getNbn(), StandardCharsets.UTF_8)))
             .build();
         nbnRegistrationDao.save(nbnRegistration);
     }
