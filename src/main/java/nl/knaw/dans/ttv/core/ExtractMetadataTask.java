@@ -15,10 +15,12 @@
  */
 package nl.knaw.dans.ttv.core;
 
+import lombok.AllArgsConstructor;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import nl.knaw.dans.ttv.client.VaultCatalogClient;
 import nl.knaw.dans.ttv.core.service.FileService;
+import nl.knaw.dans.ttv.core.service.NbnRegistrationService;
 import nl.knaw.dans.ttv.core.service.TransferItemMetadataReader;
 import nl.knaw.dans.ttv.core.service.TransferItemService;
 import nl.knaw.dans.ttv.core.service.TransferItemValidator;
@@ -28,6 +30,7 @@ import java.nio.file.Path;
 
 @Slf4j
 @ToString
+@AllArgsConstructor
 public class ExtractMetadataTask implements Runnable {
     private final Path filePath;
     private final Path outbox;
@@ -36,17 +39,7 @@ public class ExtractMetadataTask implements Runnable {
     private final FileService fileService;
     private final TransferItemValidator transferItemValidator;
     private final VaultCatalogClient vaultCatalogClient;
-
-    public ExtractMetadataTask(Path filePath, Path outbox, TransferItemService transferItemService,
-        TransferItemMetadataReader metadataReader, FileService fileService, TransferItemValidator transferItemValidator, VaultCatalogClient vaultCatalogClient) {
-        this.filePath = filePath;
-        this.outbox = outbox;
-        this.transferItemService = transferItemService;
-        this.metadataReader = metadataReader;
-        this.fileService = fileService;
-        this.transferItemValidator = transferItemValidator;
-        this.vaultCatalogClient = vaultCatalogClient;
-    }
+    private final NbnRegistrationService nbnRegistrationService;
 
     @Override
     public void run() {
@@ -96,6 +89,10 @@ public class ExtractMetadataTask implements Runnable {
         var newPath = outbox.resolve(transferItem.getDveFilename());
 
         vaultCatalogClient.registerOcflObjectVersion(transferItem);
+
+        if (transferItem.getOcflObjectVersionNumber() == 1) {
+            nbnRegistrationService.scheduleNbnRegistration(transferItem);
+        }
 
         log.debug("Updated file metadata, moving file '{}' to '{}'", path, newPath);
         transferItemService.moveTransferItem(transferItem, TransferItem.TransferStatus.METADATA_EXTRACTED, newPath);

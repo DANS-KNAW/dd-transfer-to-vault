@@ -26,7 +26,6 @@ import java.nio.file.Path;
 
 @Data
 public class ExtractMetadataConfig {
-    @Valid
     @NotNull
     private Path inbox;
 
@@ -35,7 +34,6 @@ public class ExtractMetadataConfig {
     @JsonProperty("taskQueue")
     private ExecutorServiceFactory taskQueue;
 
-    @Valid
     @NotNull
     @Min(1)
     private long pollingInterval;

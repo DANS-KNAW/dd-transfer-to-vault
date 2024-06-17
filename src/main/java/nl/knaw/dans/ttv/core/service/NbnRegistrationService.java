@@ -13,31 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ttv.config;
+package nl.knaw.dans.ttv.core.service;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import lombok.Data;
-import nl.knaw.dans.convert.jackson.StringByteSizeConverter;
+import io.dropwizard.lifecycle.Managed;
+import nl.knaw.dans.ttv.core.TransferItem;
 
-import javax.validation.constraints.Min;
-import javax.validation.constraints.NotNull;
-import java.nio.file.Path;
-
-@Data
-public class SendToVaultConfig {
-    @NotNull
-    private Path inbox;
-
-    @NotNull
-    private Path work;
-
-    @NotNull
-    private Path outbox;
-
-    @Min(1)
-    @JsonDeserialize(converter = StringByteSizeConverter.class)
-    private long maxBatchSize;
-
-    @Min(1)
-    private long pollingInterval;
+public interface NbnRegistrationService extends Managed {
+    /**
+     * Adds a new NBN registration to the database. The status of the registration is set to PENDING. The service will schedule the actual registration of the NBN with the GMH service.
+     *
+     * @param transferItem the transfer item of which the NBN should be registered
+     */
+    void scheduleNbnRegistration(TransferItem transferItem);
 }

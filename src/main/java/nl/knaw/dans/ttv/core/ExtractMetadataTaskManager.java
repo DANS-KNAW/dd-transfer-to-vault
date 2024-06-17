@@ -23,6 +23,7 @@ import nl.knaw.dans.ttv.client.VaultCatalogClient;
 import nl.knaw.dans.ttv.core.service.FileService;
 import nl.knaw.dans.ttv.core.service.InboxWatcher;
 import nl.knaw.dans.ttv.core.service.InboxWatcherFactory;
+import nl.knaw.dans.ttv.core.service.NbnRegistrationService;
 import nl.knaw.dans.ttv.core.service.TransferItemMetadataReader;
 import nl.knaw.dans.ttv.core.service.TransferItemService;
 import nl.knaw.dans.ttv.core.service.TransferItemValidator;
@@ -65,6 +66,9 @@ public class ExtractMetadataTaskManager implements Managed {
     @NonNull
     private final VaultCatalogClient vaultCatalogClient;
 
+    @NonNull
+    private final NbnRegistrationService nbnRegistrationService;
+
     private InboxWatcher inboxWatcher;
 
     @Override
@@ -80,7 +84,7 @@ public class ExtractMetadataTaskManager implements Managed {
         if (FilenameUtils.getExtension(file.getName()).toLowerCase(Locale.ROOT).equals("zip")) {
             var metadataTask = new ExtractMetadataTask(
                 file.toPath(), outbox, transferItemService, metadataReader, fileService,
-                transferItemValidator, vaultCatalogClient);
+                transferItemValidator, vaultCatalogClient, nbnRegistrationService);
 
             log.debug("Executing task {}", metadataTask);
             executorService.execute(metadataTask);

@@ -39,6 +39,10 @@ public class DdTransferToVaultConfig extends Configuration {
     @Valid
     @NotNull
     private ExtractMetadataConfig extractMetadata;
+    
+    @Valid
+    @NotNull
+    private NbnRegistrationConfig nbnRegistration;
 
     @Valid
     @NotNull

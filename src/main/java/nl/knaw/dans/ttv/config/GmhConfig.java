@@ -15,29 +15,19 @@
  */
 package nl.knaw.dans.ttv.config;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import io.dropwizard.client.JerseyClientConfiguration;
 import lombok.Data;
-import nl.knaw.dans.convert.jackson.StringByteSizeConverter;
 
-import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
-import java.nio.file.Path;
+import java.net.URI;
 
-@Data
-public class SendToVaultConfig {
+@Data 
+public class GmhConfig {
     @NotNull
-    private Path inbox;
-
+    private URI url;
+    
+    private String token;
+    
     @NotNull
-    private Path work;
-
-    @NotNull
-    private Path outbox;
-
-    @Min(1)
-    @JsonDeserialize(converter = StringByteSizeConverter.class)
-    private long maxBatchSize;
-
-    @Min(1)
-    private long pollingInterval;
+    private JerseyClientConfiguration httpClient;
 }

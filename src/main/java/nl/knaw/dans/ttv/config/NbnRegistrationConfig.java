@@ -17,27 +17,19 @@ package nl.knaw.dans.ttv.config;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.Data;
-import nl.knaw.dans.convert.jackson.StringByteSizeConverter;
+import nl.knaw.dans.convert.jackson.UriAddTrailingSlashConverter;
 
-import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
-import java.nio.file.Path;
+import java.net.URI;
 
 @Data
-public class SendToVaultConfig {
+public class NbnRegistrationConfig {
     @NotNull
-    private Path inbox;
-
-    @NotNull
-    private Path work;
+    private GmhConfig gmh;
 
     @NotNull
-    private Path outbox;
+    @JsonDeserialize(converter = UriAddTrailingSlashConverter.class)
+    private URI catalogBaseUrl;
 
-    @Min(1)
-    @JsonDeserialize(converter = StringByteSizeConverter.class)
-    private long maxBatchSize;
-
-    @Min(1)
-    private long pollingInterval;
+    private long registrationInterval = 1000;
 }

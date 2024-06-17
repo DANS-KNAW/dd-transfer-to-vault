@@ -21,7 +21,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import org.apache.commons.io.FilenameUtils;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.TypeDef;
 import org.hibernate.annotations.TypeDefs;
@@ -53,6 +52,12 @@ import java.util.Objects;
 @NoArgsConstructor
 @AllArgsConstructor
 public class TransferItem {
+    public enum TransferStatus {
+        COLLECTED,
+        METADATA_EXTRACTED,
+        SENT_TO_VAULT
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -125,7 +130,7 @@ public class TransferItem {
     @Enumerated(EnumType.STRING)
     @Column(name = "transfer_status", nullable = false)
     private TransferStatus transferStatus;
-
+    
     @Override
     public boolean equals(Object o) {
         if (this == o)
@@ -141,9 +146,4 @@ public class TransferItem {
         return id != null ? id.hashCode() : 0;
     }
 
-    public enum TransferStatus {
-        COLLECTED,
-        METADATA_EXTRACTED,
-        SENT_TO_VAULT
-    }
 }

@@ -13,31 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.ttv.config;
+package nl.knaw.dans.ttv.client;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import lombok.Data;
-import nl.knaw.dans.convert.jackson.StringByteSizeConverter;
+public class FailedNbnRegistrationException extends Exception {
+    public FailedNbnRegistrationException(String message) {
+        super(message);
+    }
 
-import javax.validation.constraints.Min;
-import javax.validation.constraints.NotNull;
-import java.nio.file.Path;
-
-@Data
-public class SendToVaultConfig {
-    @NotNull
-    private Path inbox;
-
-    @NotNull
-    private Path work;
-
-    @NotNull
-    private Path outbox;
-
-    @Min(1)
-    @JsonDeserialize(converter = StringByteSizeConverter.class)
-    private long maxBatchSize;
-
-    @Min(1)
-    private long pollingInterval;
+    public FailedNbnRegistrationException(String message, Throwable cause) {
+        super(message, cause);
+    }
 }

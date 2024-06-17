@@ -44,6 +44,20 @@ collect:
     # Threads will die after 60 seconds of idleness
     keepAliveTime: 60 seconds
 
+nbnRegistration:
+  catalogBaseUrl: https://catalog.vault.datastations.nl/dataset
+  registrationInterval: 1000
+  gmh:
+    url: "https://resolver.tgharvester.dans.knaw.nl/gmh-registration-service/nbn"
+    token: # Fill in a valid token, generated via the token endpoint of the GMH server
+    httpClient:
+      timeout: 30s
+      connectionTimeout: 15s
+      timeToLive: 1h
+      retries: 2
+      # The GMH server does not handle GZIP compression
+      gzipEnabled: false
+
 extractMetadata:
   inbox: /var/opt/dans.knaw.nl/tmp/metadata-inbox
   # polling interval in milliseconds
