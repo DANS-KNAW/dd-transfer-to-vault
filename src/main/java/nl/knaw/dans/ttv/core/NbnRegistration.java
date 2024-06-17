@@ -21,8 +21,10 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import nl.knaw.dans.convert.jpa.UriConverter;
 
 import javax.persistence.Column;
+import javax.persistence.Convert;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
@@ -59,7 +61,8 @@ public class NbnRegistration {
     @Column(name = "nbn")
     private String nbn;
 
-    @Column(name = "location")
+    @Column(name = "location", columnDefinition = "varchar(255)")
+    @Convert(converter = UriConverter.class)
     private URI location;
 
     @Column(name = "timestamp")

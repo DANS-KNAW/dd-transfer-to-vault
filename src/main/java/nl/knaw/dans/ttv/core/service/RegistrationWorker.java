@@ -43,22 +43,27 @@ public class RegistrationWorker implements Runnable {
 
     @Override
     public void run() {
-        running = true;
-        while (running) {
-            getAndProcessNextBatch();
-            retryFailed = !retryFailed;
-            try {
-                log.debug("Sleeping for {} ms", registrationInterval);
-                Thread.sleep(registrationInterval);
+        try {
+            running = true;
+            log.info("Starting RegistrationWorker");
+            while (running) {
+                getAndProcessNextBatch();
+                retryFailed = !retryFailed;
+                try {
+                    log.debug("Sleeping for {} ms", registrationInterval);
+                    Thread.sleep(registrationInterval);
+                }
+                catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
             }
-            catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
+        } catch (Exception e) {
+            log.error("Unexpected error in RegistrationWorker", e);
         }
     }
 
     @UnitOfWork
-    private void getAndProcessNextBatch() {
+    public void getAndProcessNextBatch() {
         log.debug("Getting next batch of {} NBNs to register", retryFailed ? "failed" : "pending");
         var nextBatch = retryFailed ? nbnRegistrationDao.getFailedRegistrations() : nbnRegistrationDao.getPendingRegistrations();
         if (nextBatch.isEmpty()) {

@@ -44,6 +44,7 @@ public class NbnRegistrationServiceImpl implements NbnRegistrationService {
 
     @Override
     public synchronized void start() {
+        log.info("Starting NbnRegistrationService");
         if (started) {
             log.warn("NbnRegistrationService already started. Ignoring start request.");
             return;
@@ -63,7 +64,7 @@ public class NbnRegistrationServiceImpl implements NbnRegistrationService {
     @Override
     public void scheduleNbnRegistration(TransferItem transferItem) {
         NbnRegistration nbnRegistration = NbnRegistration.builder()
-            .nbn(transferItem.getDataversePid())
+            .nbn(transferItem.getNbn())
             .location(locationBaseUrl.resolve(transferItem.getNbn()))
             .build();
         nbnRegistrationDao.save(nbnRegistration);

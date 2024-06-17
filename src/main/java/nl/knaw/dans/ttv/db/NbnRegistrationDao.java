@@ -16,7 +16,6 @@
 package nl.knaw.dans.ttv.db;
 
 import io.dropwizard.hibernate.AbstractDAO;
-import io.dropwizard.hibernate.UnitOfWork;
 import nl.knaw.dans.ttv.core.NbnRegistration;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -33,17 +32,15 @@ public class NbnRegistrationDao extends AbstractDAO<NbnRegistration> {
         super(sessionFactory);
     }
 
-    @UnitOfWork
     public NbnRegistration save(NbnRegistration nbnRegistration) {
         return persist(nbnRegistration);
     }
 
-    @UnitOfWork
+    
     public List<NbnRegistration> getPendingRegistrations() {
         return getRegistrationsByStatus(NbnRegistration.Status.PENDING);
     }
 
-    @UnitOfWork
     public List<NbnRegistration> getFailedRegistrations() {
         return getRegistrationsByStatus(NbnRegistration.Status.FAILED);
     }

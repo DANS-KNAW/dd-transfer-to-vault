@@ -33,7 +33,7 @@ public class GmhClientImpl implements GmhClient {
     private final URI catalogBaseUrl;
 
     @Override
-    public void registerNbn(NbnRegistration nbnRegistration) throws IOException {
+    public void registerNbn(NbnRegistration nbnRegistration) throws FailedNbnRegistrationException {
         var landingPageUrl = catalogBaseUrl + nbnRegistration.getNbn();
         log.debug("Registering NBN {} with landing page URL {}", nbnRegistration.getNbn(), landingPageUrl);
         var nbnLocationDto = new NbnLocationsObjectDto()
@@ -43,8 +43,7 @@ public class GmhClientImpl implements GmhClient {
             api.createNbnLocations(nbnLocationDto);
         }
         catch (ApiException e) {
-            // TODO: implement automatic retry?
-            log.warn("Failed to register NBN {} with landing page URL {}", nbnRegistration.getNbn(), landingPageUrl, e);
+            throw new FailedNbnRegistrationException("Failed to register NBN " + nbnRegistration.getNbn(), e);
         }
     }
 }

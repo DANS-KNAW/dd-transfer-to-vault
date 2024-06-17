@@ -46,6 +46,7 @@ collect:
 
 nbnRegistration:
   catalogBaseUrl: https://catalog.vault.datastations.nl/dataset
+  registrationInterval: 1000
   gmh:
     url: "https://resolver.tgharvester.dans.knaw.nl/gmh-registration-service/nbn"
     token: # Fill in a valid token, generated via the token endpoint of the GMH server

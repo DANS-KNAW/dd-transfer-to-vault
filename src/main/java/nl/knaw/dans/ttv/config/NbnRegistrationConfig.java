@@ -31,5 +31,5 @@ public class NbnRegistrationConfig {
     @JsonDeserialize(converter = UriAddTrailingSlashConverter.class)
     private URI catalogBaseUrl;
 
-    private long registrationInterval;
+    private long registrationInterval = 1000;
 }

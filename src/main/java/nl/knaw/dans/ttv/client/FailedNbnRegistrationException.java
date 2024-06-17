@@ -15,10 +15,12 @@
  */
 package nl.knaw.dans.ttv.client;
 
-import nl.knaw.dans.ttv.core.NbnRegistration;
+public class FailedNbnRegistrationException extends Exception {
+    public FailedNbnRegistrationException(String message) {
+        super(message);
+    }
 
-import java.io.IOException;
-
-public interface GmhClient {
-    void registerNbn(NbnRegistration registration) throws IOException, FailedNbnRegistrationException;
+    public FailedNbnRegistrationException(String message, Throwable cause) {
+        super(message, cause);
+    }
 }
