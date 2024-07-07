@@ -98,7 +98,7 @@ public class OaiOreMetadataReader {
                 }
             });
 
-        if (results.size() == 0) {
+        if (results.isEmpty()) {
             return null;
         }
 
@@ -118,7 +118,7 @@ public class OaiOreMetadataReader {
             }
         });
 
-        if (results.size() == 0) {
+        if (results.isEmpty()) {
             return null;
         }
 

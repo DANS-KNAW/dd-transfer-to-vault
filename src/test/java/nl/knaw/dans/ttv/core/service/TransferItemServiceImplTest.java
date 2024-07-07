@@ -60,7 +60,6 @@ class TransferItemServiceImplTest {
             .bagId("bag id")
             .nbn("nbn value")
             .metadata("{}")
-            .filePidToLocalPath("string\nline2\n")
             .dataversePidVersion("5.3")
             .build();
     }
@@ -133,7 +132,6 @@ class TransferItemServiceImplTest {
             .bagId("id")
             .nbn("nbn")
             .metadata("{}")
-            .filePidToLocalPath("a  b")
             .otherId("otherId")
             .otherIdVersion("otherIdVersion")
             .dataSupplier("swordClient")
@@ -159,7 +157,6 @@ class TransferItemServiceImplTest {
         assertEquals("swordClient", result.getDataSupplier());
         assertNull(result.getBagSha256Checksum());
         assertEquals("{}", result.getMetadata());
-        assertEquals("a  b", result.getFilePidToLocalPath());
     }
 
     @Test

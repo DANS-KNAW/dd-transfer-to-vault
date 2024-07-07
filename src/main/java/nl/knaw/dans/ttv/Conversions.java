@@ -20,6 +20,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import nl.knaw.dans.lib.util.UrnUuid;
 import nl.knaw.dans.ttv.core.TransferItem;
+import nl.knaw.dans.ttv.core.domain.FileContentAttributes;
 import nl.knaw.dans.vaultcatalog.client.api.DatasetDto;
 import nl.knaw.dans.vaultcatalog.client.api.VersionExportDto;
 import org.mapstruct.Mapper;
@@ -40,7 +41,7 @@ public interface Conversions {
     VersionExportDto mapTransferItemToVersionExportDto(TransferItem transferItem);
 
     DatasetDto mapTransferItemToDatasetDto(TransferItem transferItem);
-
+    
     @Mapping(constant = "false", target = "skeletonRecord")
     VersionExportDto updateVersionExportDtoFromTransferItem(TransferItem transferItem, @MappingTarget VersionExportDto versionExportDto);
 

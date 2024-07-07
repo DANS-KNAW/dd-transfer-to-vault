@@ -19,20 +19,22 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.ToString;
 
+import java.util.List;
+
 @Data
 @Builder
 public class FileContentAttributes {
     private String dataversePid;
     private String dataversePidVersion;
+    private String title;
     private String bagId;
     private String nbn;
     @ToString.Exclude
     private String metadata;
-    @ToString.Exclude
-    private String filePidToLocalPath;
     private String otherId;
     private String otherIdVersion;
     private String swordToken;
     private String dataSupplier;
     private String datastation;
+    private List<DataFileAttributes> dataFileAttributes;
 }

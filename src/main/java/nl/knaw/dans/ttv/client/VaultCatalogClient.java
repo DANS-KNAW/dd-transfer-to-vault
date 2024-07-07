@@ -16,6 +16,7 @@
 package nl.knaw.dans.ttv.client;
 
 import nl.knaw.dans.ttv.core.TransferItem;
+import nl.knaw.dans.ttv.core.domain.FileContentAttributes;
 
 import java.io.IOException;
 
@@ -24,4 +25,6 @@ import java.io.IOException;
  */
 public interface VaultCatalogClient {
     void registerOcflObjectVersion(TransferItem transferItem) throws IOException;
+
+    void registerOcflObjectVersion(FileContentAttributes fileContentAttributes) throws IOException;
 }

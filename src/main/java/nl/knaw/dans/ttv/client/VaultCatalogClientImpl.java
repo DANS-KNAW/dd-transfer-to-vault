@@ -20,7 +20,10 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import nl.knaw.dans.ttv.Conversions;
 import nl.knaw.dans.ttv.core.TransferItem;
+import nl.knaw.dans.ttv.core.domain.FileContentAttributes;
+import nl.knaw.dans.ttv.core.domain.FilesystemAttributes;
 import nl.knaw.dans.vaultcatalog.client.api.DatasetDto;
+import nl.knaw.dans.vaultcatalog.client.api.VersionExportDto;
 import nl.knaw.dans.vaultcatalog.client.invoker.ApiException;
 import nl.knaw.dans.vaultcatalog.client.resources.DefaultApi;
 import org.mapstruct.factory.Mappers;
@@ -51,6 +54,22 @@ public class VaultCatalogClientImpl implements VaultCatalogClient {
         }
     }
 
+    @Override
+    public void registerOcflObjectVersion(FileContentAttributes fileContentAttributes) throws IOException {
+//        try {
+//            var datasetDto = getDataset(fileContentAttributes.getNbn());
+//            if (datasetDto == null) {
+//                registerNewDataset2(fileContentAttributes);
+//            }
+//            else {
+//                updateExistingDataset(transferItem);
+//            }
+//        }
+//        catch (ApiException e) {
+//            throw new IOException(e.getResponseBody(), e);
+//        }
+    }
+
     private DatasetDto getDataset(String nbn) {
         try {
             return catalogApi.getDataset(nbn, null);
@@ -62,6 +81,41 @@ public class VaultCatalogClientImpl implements VaultCatalogClient {
             throw new RuntimeException(e);
         }
     }
+
+    private void registerNewDataset2(FileContentAttributes fileContentAttributes, FilesystemAttributes filesystemAttributes) throws ApiException {
+//        var datasetDto = new DatasetDto()
+//            .nbn(fileContentAttributes.getNbn())
+//            .dataversePid(fileContentAttributes.getDataversePid())
+//            .swordToken(fileContentAttributes.getSwordToken())
+//            .dataSupplier(fileContentAttributes.getDataSupplier())
+//            .datastation(fileContentAttributes.getDatastation());
+//        
+//        var versionExportDto = new VersionExportDto()
+//            .ocflObjectVersionNumber(1)
+//            .skeletonRecord(false)
+//            .createdTimestamp(filesystemAttributes.getCreationTime())
+//            .dataversePidVersion(fileContentAttributes.getDataversePidVersion())
+//            .metadata(fileContentAttributes.getMetadata());
+//        
+//        // TODO: set other fields in versionExportDto
+//        
+//        
+//            
+//            
+//            
+//            
+//            
+//            
+//        var dveDto = conversions.mapTransferItemToVersionExportDto(transferItem);
+//        if (transferItem.getOcflObjectVersionNumber() != null && transferItem.getOcflObjectVersionNumber() != 1) {
+//            throw new IllegalArgumentException("The OCFL object version number must be 1 for a new dataset.");
+//        }
+//        dveDto.setOcflObjectVersionNumber(1);
+//        dveDto.setDatasetNbn(datasetDto.getNbn());
+//        datasetDto.setVersionExports(List.of(dveDto));
+//        catalogApi.addDataset(datasetDto.getNbn(), datasetDto);
+    }
+
 
     private void registerNewDataset(TransferItem transferItem) throws ApiException {
         var datasetDto = conversions.mapTransferItemToDatasetDto(transferItem);
