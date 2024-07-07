@@ -46,7 +46,7 @@ public class OaiOreMetadataReader {
 
             builder.bagId(getRDFProperty(resource, DansDataVaultMetadata.dansBagId));
             builder.nbn(getRDFProperty(resource, DansDataVaultMetadata.dansNbn));
-            builder.swordToken(swordTokenToUrnUuid(getRDFProperty(resource, DansDataVaultMetadata.dansSwordToken)));
+            builder.swordToken(getRDFProperty(resource, DansDataVaultMetadata.dansSwordToken));
             builder.dataSupplier(getRDFProperty(resource, DansDataVaultMetadata.dansDataSupplier));
             builder.dataversePid(getRDFProperty(resource, DansDataVaultMetadata.dansDataversePid));
             builder.dataversePidVersion(getRDFProperty(resource, DansDataVaultMetadata.dansDataversePidVersion));

@@ -80,7 +80,8 @@ public class ExtractMetadataTask implements Runnable {
         // we only expect items with status COLLECTED, but if they are already METADATA_EXTRACTED we
         // can just read the metadata again and update the TransferItem before moving
         var fileContentAttributes = metadataReader.getFileContentAttributes(path);
-        log.debug("Retrieved file content attributes: {}", fileContentAttributes);
+        var filesystemAttributes = metadataReader.getFilesystemAttributes(path);
+        var filenameAttributes = metadataReader.getFilenameAttributes(path);
 
         // apply content attributes and validate the transfer item
         transferItemService.addMetadata(transferItem, fileContentAttributes);
@@ -88,7 +89,7 @@ public class ExtractMetadataTask implements Runnable {
 
         var newPath = outbox.resolve(transferItem.getDveFilename());
 
-        vaultCatalogClient.registerOcflObjectVersion(transferItem);
+        vaultCatalogClient.registerOcflObjectVersion(fileContentAttributes, filesystemAttributes, filenameAttributes);
 
         if (transferItem.getOcflObjectVersionNumber() == 1) {
             nbnRegistrationService.scheduleNbnRegistration(transferItem);

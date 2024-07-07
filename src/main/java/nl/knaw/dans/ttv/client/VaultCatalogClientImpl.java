@@ -19,55 +19,40 @@ package nl.knaw.dans.ttv.client;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import nl.knaw.dans.ttv.Conversions;
-import nl.knaw.dans.ttv.core.TransferItem;
 import nl.knaw.dans.ttv.core.domain.FileContentAttributes;
+import nl.knaw.dans.ttv.core.domain.FilenameAttributes;
 import nl.knaw.dans.ttv.core.domain.FilesystemAttributes;
 import nl.knaw.dans.vaultcatalog.client.api.DatasetDto;
+import nl.knaw.dans.vaultcatalog.client.api.FileMetaDto;
 import nl.knaw.dans.vaultcatalog.client.api.VersionExportDto;
 import nl.knaw.dans.vaultcatalog.client.invoker.ApiException;
 import nl.knaw.dans.vaultcatalog.client.resources.DefaultApi;
 import org.mapstruct.factory.Mappers;
 
 import java.io.IOException;
-import java.util.List;
 
 @Slf4j
 @AllArgsConstructor
 public class VaultCatalogClientImpl implements VaultCatalogClient {
-    private static final Conversions conversions = Mappers.getMapper(Conversions.class);
-
     private final DefaultApi catalogApi;
 
     @Override
-    public void registerOcflObjectVersion(TransferItem transferItem) throws IOException {
+    public void registerOcflObjectVersion(FileContentAttributes fileContentAttributes, FilesystemAttributes filesystemAttributes, FilenameAttributes filenameAttributes) throws IOException {
         try {
-            var datasetDto = getDataset(transferItem.getNbn());
+            var datasetDto = getDataset(fileContentAttributes.getNbn());
             if (datasetDto == null) {
-                registerNewDataset(transferItem);
+                if (filenameAttributes.getOcflObjectVersionNumber() != 1) {
+                    throw new IllegalArgumentException("The OCFL object version number must be 1 for a new dataset.");
+                }
+                registerNewDataset(fileContentAttributes, filesystemAttributes);
             }
             else {
-                updateExistingDataset(transferItem);
+                updateExistingDataset(fileContentAttributes, filenameAttributes.getOcflObjectVersionNumber());
             }
         }
         catch (ApiException e) {
             throw new IOException(e.getResponseBody(), e);
         }
-    }
-
-    @Override
-    public void registerOcflObjectVersion(FileContentAttributes fileContentAttributes) throws IOException {
-//        try {
-//            var datasetDto = getDataset(fileContentAttributes.getNbn());
-//            if (datasetDto == null) {
-//                registerNewDataset2(fileContentAttributes);
-//            }
-//            else {
-//                updateExistingDataset(transferItem);
-//            }
-//        }
-//        catch (ApiException e) {
-//            throw new IOException(e.getResponseBody(), e);
-//        }
     }
 
     private DatasetDto getDataset(String nbn) {
@@ -82,60 +67,60 @@ public class VaultCatalogClientImpl implements VaultCatalogClient {
         }
     }
 
-    private void registerNewDataset2(FileContentAttributes fileContentAttributes, FilesystemAttributes filesystemAttributes) throws ApiException {
-//        var datasetDto = new DatasetDto()
-//            .nbn(fileContentAttributes.getNbn())
-//            .dataversePid(fileContentAttributes.getDataversePid())
-//            .swordToken(fileContentAttributes.getSwordToken())
-//            .dataSupplier(fileContentAttributes.getDataSupplier())
-//            .datastation(fileContentAttributes.getDatastation());
-//        
-//        var versionExportDto = new VersionExportDto()
-//            .ocflObjectVersionNumber(1)
-//            .skeletonRecord(false)
-//            .createdTimestamp(filesystemAttributes.getCreationTime())
-//            .dataversePidVersion(fileContentAttributes.getDataversePidVersion())
-//            .metadata(fileContentAttributes.getMetadata());
-//        
-//        // TODO: set other fields in versionExportDto
-//        
-//        
-//            
-//            
-//            
-//            
-//            
-//            
-//        var dveDto = conversions.mapTransferItemToVersionExportDto(transferItem);
-//        if (transferItem.getOcflObjectVersionNumber() != null && transferItem.getOcflObjectVersionNumber() != 1) {
-//            throw new IllegalArgumentException("The OCFL object version number must be 1 for a new dataset.");
-//        }
-//        dveDto.setOcflObjectVersionNumber(1);
-//        dveDto.setDatasetNbn(datasetDto.getNbn());
-//        datasetDto.setVersionExports(List.of(dveDto));
-//        catalogApi.addDataset(datasetDto.getNbn(), datasetDto);
-    }
+    private void registerNewDataset(FileContentAttributes fileContentAttributes, FilesystemAttributes filesystemAttributes) throws ApiException {
+        var datasetDto = new DatasetDto()
+            .nbn(fileContentAttributes.getNbn())
+            .dataversePid(fileContentAttributes.getDataversePid())
+            .swordToken(fileContentAttributes.getSwordToken())
+            .dataSupplier(fileContentAttributes.getDataSupplier())
+            .datastation(fileContentAttributes.getDatastation());
 
+        var versionExportDto = new VersionExportDto()
+            .bagId(fileContentAttributes.getBagId())
+            .title(fileContentAttributes.getTitle())
+            .ocflObjectVersionNumber(1)
+            .skeletonRecord(false)
+            .createdTimestamp(filesystemAttributes.getCreationTime())
+            .dataversePidVersion(fileContentAttributes.getDataversePidVersion())
+            .metadata(fileContentAttributes.getMetadata());
 
-    private void registerNewDataset(TransferItem transferItem) throws ApiException {
-        var datasetDto = conversions.mapTransferItemToDatasetDto(transferItem);
-        var dveDto = conversions.mapTransferItemToVersionExportDto(transferItem);
-        if (transferItem.getOcflObjectVersionNumber() != null && transferItem.getOcflObjectVersionNumber() != 1) {
-            throw new IllegalArgumentException("The OCFL object version number must be 1 for a new dataset.");
+        for (var dataFile : fileContentAttributes.getDataFileAttributes()) {
+            var dataFileDto = new FileMetaDto()
+                .filepath(dataFile.getFilepath().toString())
+                .fileUri(dataFile.getUri())
+                .byteSize(dataFile.getSize())
+                .sha1sum(dataFile.getSha1Checksum());
+            versionExportDto.addFileMetasItem(dataFileDto);
         }
-        dveDto.setOcflObjectVersionNumber(1);
-        dveDto.setDatasetNbn(datasetDto.getNbn());
-        datasetDto.setVersionExports(List.of(dveDto));
+        datasetDto.addVersionExportsItem(versionExportDto);
+        versionExportDto.setDatasetNbn(datasetDto.getNbn());
         catalogApi.addDataset(datasetDto.getNbn(), datasetDto);
     }
 
-    private void updateExistingDataset(TransferItem transferItem) throws ApiException {
-        var dveDto = catalogApi.getVersionExport(transferItem.getNbn(), transferItem.getOcflObjectVersionNumber());
+    private void updateExistingDataset(FileContentAttributes fileContentAttributes, int ocflObjectVersion) throws ApiException {
+        var dveDto = catalogApi.getVersionExport(fileContentAttributes.getNbn(), ocflObjectVersion);
         if (dveDto != null) {
             if (Boolean.FALSE.equals(dveDto.getSkeletonRecord())) {
                 throw new IllegalArgumentException("The Dataset Version Export record cannot be updated because it is not a skeleton record.");
             }
-            conversions.updateVersionExportDtoFromTransferItem(transferItem, dveDto);
+            dveDto.setBagId(fileContentAttributes.getBagId());
+            dveDto.setDatasetNbn(fileContentAttributes.getNbn());
+            dveDto.setDataversePidVersion(fileContentAttributes.getDataversePidVersion());
+            dveDto.setOtherId(fileContentAttributes.getOtherId());
+            dveDto.setOtherIdVersion(fileContentAttributes.getOtherIdVersion());
+            dveDto.setMetadata(fileContentAttributes.getMetadata());
+            dveDto.setSkeletonRecord(false);
+            dveDto.setTitle(fileContentAttributes.getTitle());
+
+            dveDto.setFileMetas(null); // clear existing fileMetas
+            for (var dataFile : fileContentAttributes.getDataFileAttributes()) {
+                var dataFileDto = new FileMetaDto()
+                    .filepath(dataFile.getFilepath().toString())
+                    .fileUri(dataFile.getUri())
+                    .byteSize(dataFile.getSize())
+                    .sha1sum(dataFile.getSha1Checksum());
+                dveDto.addFileMetasItem(dataFileDto);
+            }
         }
         catalogApi.setVersionExport(dveDto.getDatasetNbn(), dveDto.getOcflObjectVersionNumber(), dveDto);
     }
