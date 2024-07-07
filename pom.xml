@@ -34,6 +34,7 @@
 
     <properties>
         <main-class>nl.knaw.dans.ttv.DdTransferToVaultApplication</main-class>
+        <dd-vault-catalog-api.version>0.7.0-SNAPSHOT</dd-vault-catalog-api.version> <!-- TODO: move to parent -->
         <dd-gmh-api.version>0.1.1</dd-gmh-api.version> <!-- TODO: move to parent -->
     </properties>
 
