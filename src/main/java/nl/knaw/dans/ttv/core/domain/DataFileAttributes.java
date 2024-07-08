@@ -15,25 +15,15 @@
  */
 package nl.knaw.dans.ttv.core.domain;
 
-import lombok.EqualsAndHashCode;
 import lombok.Value;
 
+import java.net.URI;
+import java.nio.file.Path;
+
 @Value
-@EqualsAndHashCode
-public class Version {
-    int major;
-    int minor;
-
-    private Version(int major, int minor) {
-        this.major = major;
-        this.minor = minor;
-    }
-
-    public static Version of(int major, int minor) {
-        return new Version(major, minor);
-    }
-
-    public String toString() {
-        return String.format("%d.%d", major, minor);
-    }
+public class DataFileAttributes {
+    Path filepath;
+    URI uri;
+    String sha1Checksum;
+    long size;
 }

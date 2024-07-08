@@ -15,6 +15,7 @@
  */
 package nl.knaw.dans.ttv.core.service;
 
+import lombok.AllArgsConstructor;
 import nl.knaw.dans.ttv.core.InvalidTransferItemException;
 import nl.knaw.dans.ttv.core.domain.FileContentAttributes;
 import nl.knaw.dans.ttv.core.domain.FilenameAttributes;
@@ -30,14 +31,11 @@ import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.Optional;
 
+@AllArgsConstructor
 public class TransferItemMetadataReaderImpl implements TransferItemMetadataReader {
     private final FileService fileService;
     private final OaiOreMetadataReader oaiOreMetadataReader;
-
-    public TransferItemMetadataReaderImpl(FileService fileService, OaiOreMetadataReader oaiOreMetadataReader) {
-        this.fileService = fileService;
-        this.oaiOreMetadataReader = oaiOreMetadataReader;
-    }
+    private final DataFileAttributesReader dataFileAttributesReader;
 
     @Override
     public FilenameAttributes getFilenameAttributes(Path path) throws InvalidTransferItemException {
@@ -76,15 +74,12 @@ public class TransferItemMetadataReaderImpl implements TransferItemMetadataReade
             var datasetVersionExport = fileService.openZipFile(path);
 
             var metadataContent = fileService.openFileFromZip(datasetVersionExport, Path.of("metadata/oai-ore.jsonld"));
-            var pidMappingContent = fileService.openFileFromZip(datasetVersionExport, Path.of("metadata/pid-mapping.txt"));
-
             var oaiOre = IOUtils.toString(metadataContent, StandardCharsets.UTF_8);
-            var pidMapping = IOUtils.toString(pidMappingContent, StandardCharsets.UTF_8);
-
             var fileContentAttributes = oaiOreMetadataReader.readMetadata(oaiOre);
-
             fileContentAttributes.setMetadata(oaiOre);
-            fileContentAttributes.setFilePidToLocalPath(pidMapping);
+
+            var dataFileAttributes = dataFileAttributesReader.readDataFileAttributes(path);
+            fileContentAttributes.setDataFileAttributes(dataFileAttributes);
 
             return fileContentAttributes;
         }

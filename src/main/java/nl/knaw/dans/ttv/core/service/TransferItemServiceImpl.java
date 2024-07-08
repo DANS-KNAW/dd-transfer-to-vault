@@ -100,7 +100,6 @@ public class TransferItemServiceImpl implements TransferItemService {
         transferItem.setBagId(fileContentAttributes.getBagId());
         transferItem.setNbn(fileContentAttributes.getNbn());
         transferItem.setMetadata(fileContentAttributes.getMetadata());
-        transferItem.setFilePidToLocalPath(fileContentAttributes.getFilePidToLocalPath());
         transferItem.setOtherId(fileContentAttributes.getOtherId());
         transferItem.setOtherIdVersion(fileContentAttributes.getOtherIdVersion());
         transferItem.setSwordToken(fileContentAttributes.getSwordToken());

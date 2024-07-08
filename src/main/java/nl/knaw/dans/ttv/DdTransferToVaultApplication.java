@@ -34,6 +34,7 @@ import nl.knaw.dans.ttv.core.NbnRegistration;
 import nl.knaw.dans.ttv.core.SendToVaultTaskManager;
 import nl.knaw.dans.ttv.core.TransferItem;
 import nl.knaw.dans.ttv.core.oaiore.OaiOreMetadataReader;
+import nl.knaw.dans.ttv.core.service.DataFileAttributesReader;
 import nl.knaw.dans.ttv.core.service.FileServiceImpl;
 import nl.knaw.dans.ttv.core.service.InboxWatcherFactoryImpl;
 import nl.knaw.dans.ttv.core.service.NbnRegistrationService;
@@ -93,7 +94,8 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
             new Object[] { transferItemDao });
 
         final var oaiOreMetadataReader = new OaiOreMetadataReader();
-        final var metadataReader = new TransferItemMetadataReaderImpl(fileService, oaiOreMetadataReader);
+        final var dataFileAttributesReader = new DataFileAttributesReader(fileService);
+        final var metadataReader = new TransferItemMetadataReaderImpl(fileService, oaiOreMetadataReader, dataFileAttributesReader);
 
         environment.healthChecks().register("Inbox", new InboxHealthCheck(configuration, fileService));
         environment.healthChecks().register("Filesystem", new FilesystemHealthCheck(configuration, fileService));
