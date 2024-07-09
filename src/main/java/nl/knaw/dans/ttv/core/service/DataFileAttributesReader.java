@@ -42,7 +42,7 @@ public class DataFileAttributesReader {
             var sha1Manifest = IOUtils.toString(sha1ManifestContent, StandardCharsets.UTF_8);
             var pathToPidMap = readPathToPidMapping(pidMapping);
             var pathToSha1Map = readPathToSha1Mapping(sha1Manifest);
-            var pathToSizeMap = readPathToSizeMapping(datasetVersionExport, Path.of("data/"));
+            var pathToSizeMap = readPathToSizeMapping(datasetVersionExport);
 
             return pathToPidMap.entrySet().stream()
                 .map(entry -> {
@@ -56,21 +56,34 @@ public class DataFileAttributesReader {
         }
     }
 
-    Map<Path, Long> readPathToSizeMapping(ZipFile dve, Path relativeToPath) throws IOException {
-        Map<Path, Long> pathToSizeMap = new HashMap<>();
-        var entries = dve.entries();
-        while (entries.hasMoreElements()) {
-            ZipEntry entry = entries.nextElement();
-            if (!entry.isDirectory()) {
-                Path entryPath = Path.of(entry.getName());
-                // Paths outside the data directory are not considered, but the full entry path is still used as key
-                if (entryPath.startsWith(relativeToPath)) {
-                    long size = entry.getSize();
-                    pathToSizeMap.put(entryPath, size);
-                }
-            }
-        }
+    Map<Path, Long> readPathToSizeMapping(ZipFile dve) throws IOException {
+        var pathToSizeMap = new HashMap<Path, Long>();
+        var dveEntries = dve.stream().toList();
+        var baseFolder = findBaseFolder(dveEntries);
+        dveEntries.stream()
+            .filter(entry -> !entry.isDirectory())
+            .forEach(entry -> {
+                var entryPath = Path.of(entry.getName());
+                var size = entry.getSize();
+                pathToSizeMap.put(baseFolder.relativize(entryPath), size);
+            });
         return pathToSizeMap;
+    }
+
+    /*
+     * There should be a common base folder for the whole ZIP file. If there are multiple base folders, an exception should be thrown.
+     * Inside the common base folder there should be a "data" folder. Return the path to the "data" folder.
+     */
+    Path findBaseFolder(List<? extends ZipEntry> entries) {
+        var baseFolders = entries.stream()
+            .map(ZipEntry::getName)
+            .map(name -> name.split("/")[0])
+            .distinct()
+            .toList();
+        if (baseFolders.size() != 1) {
+            throw new IllegalArgumentException("There should be a common base folder for the whole ZIP file.");
+        }
+        return Path.of(baseFolders.get(0));
     }
 
     Map<Path, URI> readPathToPidMapping(String pidToPathMapping) throws IOException {

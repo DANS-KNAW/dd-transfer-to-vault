@@ -29,7 +29,7 @@ public class DataFileAttributesReaderTest {
     @Test
     public void testReadDataFileAttributes() throws Exception {
         var dataFileAttributesReader = new DataFileAttributesReader(fileService);
-        var path = Path.of("src/test/resources/bags/vaas-187618f7-8269-4db6-974d-bf173f0e1c1c-v1.zip");
+        var path = Path.of("src/test/resources/bags/vaas-03ca6301-1b10-4a40-a33c-d5696a7ee3f0-v1.zip");
         var dataFileAttributes = dataFileAttributesReader.readDataFileAttributes(path);
 
         assertThat(dataFileAttributes).hasSize(4);
@@ -37,22 +37,22 @@ public class DataFileAttributesReaderTest {
         assertThat(dataFileAttributes).containsExactlyInAnyOrder(
             new DataFileAttributes(
                 Path.of("data/a/deeper/path/With some file.txt"),
-                URI.create("file:///2b5377cf-1194-4043-86ab-720a68383da1"),
+                URI.create("file:///984bf2c6-fd72-423f-8a91-a871a9273888"),
                 "f750a66151421a62521be6495684fb8384cb4aa0",
                 27L),
             new DataFileAttributes(
                 Path.of("data/random images/image01.png"),
-                URI.create("file:///a1c670f7-1c32-4436-bf55-34b762c7567a"),
+                URI.create("file:///92a7ebce-739d-4d06-929c-e52021a60b04"),
                 "f100629544e98ad21503b04a276fe6185cb4e9d2",
                 422887L),
             new DataFileAttributes(
                 Path.of("data/random images/image02.jpeg"),
-                URI.create("file:///8db5fbab-8fab-419a-8f31-ffcab1a1e5fc"),
+                URI.create("file:///d6e9a1bc-c74b-4852-b80b-ed4b16c358e0"),
                 "4ae4fb20ee161b8026a468160553e623dcea4914",
                 13829L),
             new DataFileAttributes(
                 Path.of("data/random images/image03.jpeg"),
-                URI.create("file:///0401d9ef-bf83-42b2-8ffa-caf09f4d95b1"),
+                URI.create("file:///df4ac453-437f-4cc7-a016-29e780012c37"),
                 "0a66ea77834e337e28a043db6d6f3d745c944593",
                 2775738L)
         );

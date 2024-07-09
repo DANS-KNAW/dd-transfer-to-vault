@@ -52,6 +52,7 @@ public class OaiOreMetadataReader {
             builder.dataversePidVersion(getRDFProperty(resource, DansDataVaultMetadata.dansDataversePidVersion));
             builder.otherId(getEmbeddedRDFProperty(resource, DataverseCitationMetadata.otherId, DataverseCitationMetadata.otherIdValue));
             builder.otherIdVersion(getRDFProperty(resource, DansDataVaultMetadata.dansOtherIdVersion));
+            builder.title(getRDFProperty(resource, DCTerms.title));
         }
 
         var resourceMap = model.listStatements(null, RDF.type, OaiOreMetadata.ResourceMap);

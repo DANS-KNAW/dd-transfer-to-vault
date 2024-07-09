@@ -18,7 +18,6 @@ package nl.knaw.dans.ttv.client;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import nl.knaw.dans.ttv.Conversions;
 import nl.knaw.dans.ttv.core.domain.FileContentAttributes;
 import nl.knaw.dans.ttv.core.domain.FilenameAttributes;
 import nl.knaw.dans.ttv.core.domain.FilesystemAttributes;
@@ -27,9 +26,9 @@ import nl.knaw.dans.vaultcatalog.client.api.FileMetaDto;
 import nl.knaw.dans.vaultcatalog.client.api.VersionExportDto;
 import nl.knaw.dans.vaultcatalog.client.invoker.ApiException;
 import nl.knaw.dans.vaultcatalog.client.resources.DefaultApi;
-import org.mapstruct.factory.Mappers;
 
 import java.io.IOException;
+import java.nio.file.Path;
 
 @Slf4j
 @AllArgsConstructor
@@ -75,26 +74,16 @@ public class VaultCatalogClientImpl implements VaultCatalogClient {
             .dataSupplier(fileContentAttributes.getDataSupplier())
             .datastation(fileContentAttributes.getDatastation());
 
-        var versionExportDto = new VersionExportDto()
-            .bagId(fileContentAttributes.getBagId())
-            .title(fileContentAttributes.getTitle())
-            .ocflObjectVersionNumber(1)
-            .skeletonRecord(false)
-            .createdTimestamp(filesystemAttributes.getCreationTime())
-            .dataversePidVersion(fileContentAttributes.getDataversePidVersion())
-            .metadata(fileContentAttributes.getMetadata());
-
-        for (var dataFile : fileContentAttributes.getDataFileAttributes()) {
-            var dataFileDto = new FileMetaDto()
-                .filepath(dataFile.getFilepath().toString())
-                .fileUri(dataFile.getUri())
-                .byteSize(dataFile.getSize())
-                .sha1sum(dataFile.getSha1Checksum());
-            versionExportDto.addFileMetasItem(dataFileDto);
-        }
-        datasetDto.addVersionExportsItem(versionExportDto);
-        versionExportDto.setDatasetNbn(datasetDto.getNbn());
+        var dveDto = new VersionExportDto();
+        setVersionExportMetadata(fileContentAttributes, dveDto);
+        setDataFilesOnVersionExport(fileContentAttributes, dveDto);
+        datasetDto.addVersionExportsItem(dveDto);
+        dveDto.setDatasetNbn(datasetDto.getNbn());
         catalogApi.addDataset(datasetDto.getNbn(), datasetDto);
+    }
+    
+    private Path removeBaseFolder(Path path) {
+        return path.subpath(1, path.getNameCount());
     }
 
     private void updateExistingDataset(FileContentAttributes fileContentAttributes, int ocflObjectVersion) throws ApiException {
@@ -103,25 +92,33 @@ public class VaultCatalogClientImpl implements VaultCatalogClient {
             if (Boolean.FALSE.equals(dveDto.getSkeletonRecord())) {
                 throw new IllegalArgumentException("The Dataset Version Export record cannot be updated because it is not a skeleton record.");
             }
-            dveDto.setBagId(fileContentAttributes.getBagId());
-            dveDto.setDatasetNbn(fileContentAttributes.getNbn());
-            dveDto.setDataversePidVersion(fileContentAttributes.getDataversePidVersion());
-            dveDto.setOtherId(fileContentAttributes.getOtherId());
-            dveDto.setOtherIdVersion(fileContentAttributes.getOtherIdVersion());
-            dveDto.setMetadata(fileContentAttributes.getMetadata());
-            dveDto.setSkeletonRecord(false);
-            dveDto.setTitle(fileContentAttributes.getTitle());
-
-            dveDto.setFileMetas(null); // clear existing fileMetas
-            for (var dataFile : fileContentAttributes.getDataFileAttributes()) {
-                var dataFileDto = new FileMetaDto()
-                    .filepath(dataFile.getFilepath().toString())
-                    .fileUri(dataFile.getUri())
-                    .byteSize(dataFile.getSize())
-                    .sha1sum(dataFile.getSha1Checksum());
-                dveDto.addFileMetasItem(dataFileDto);
-            }
+            setVersionExportMetadata(fileContentAttributes, dveDto);
+            setDataFilesOnVersionExport(fileContentAttributes, dveDto);
         }
         catalogApi.setVersionExport(dveDto.getDatasetNbn(), dveDto.getOcflObjectVersionNumber(), dveDto);
     }
+    
+    private void setVersionExportMetadata(FileContentAttributes fileContentAttributes, VersionExportDto dveDto) {
+        dveDto.setBagId(fileContentAttributes.getBagId());
+        dveDto.setDatasetNbn(fileContentAttributes.getNbn());
+        dveDto.setDataversePidVersion(fileContentAttributes.getDataversePidVersion());
+        dveDto.setOtherId(fileContentAttributes.getOtherId());
+        dveDto.setOtherIdVersion(fileContentAttributes.getOtherIdVersion());
+        dveDto.setMetadata(fileContentAttributes.getMetadata());
+        dveDto.setSkeletonRecord(false);
+        dveDto.setTitle(fileContentAttributes.getTitle());
+    }
+    
+    private void setDataFilesOnVersionExport(FileContentAttributes fileContentAttributes, VersionExportDto dveDto) {
+        dveDto.setFileMetas(null); // clear existing fileMetas
+        for (var dataFile : fileContentAttributes.getDataFileAttributes()) {
+            var dataFileDto = new FileMetaDto()
+                .filepath(removeBaseFolder(dataFile.getFilepath()).toString())
+                .fileUri(dataFile.getUri())
+                .byteSize(dataFile.getSize())
+                .sha1sum(dataFile.getSha1Checksum());
+            dveDto.addFileMetasItem(dataFileDto);
+        }
+    }
+    
 }

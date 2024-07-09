@@ -38,6 +38,7 @@ class OaiOreMetadataReaderTest {
 
         var expected = FileContentAttributes.builder()
             .nbn("urn:nbn:nl:ui:13-ar2-u8v")
+            .title("Title of the dataset")
             .dataversePid("doi:10.5072/DAR/A7AXZP")
             .dataversePidVersion("1.0")
             .bagId("urn:uuid:e1293f37-a334-4559-a02f-4eaa314e57fd")
@@ -60,6 +61,7 @@ class OaiOreMetadataReaderTest {
 
         var expected = FileContentAttributes.builder()
             .nbn("urn:nbn:nl:ui:13-d235a58d-84d5-4062-b008-40fec7ebcd83")
+            .title("A bag containing examples for each mapping rule")
             .dataversePid(null)
             .dataversePidVersion(null)
             .bagId("urn:uuid:0b9bb5ee-3187-4387-bb39-2c09536c79f7")
