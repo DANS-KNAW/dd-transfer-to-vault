@@ -46,6 +46,7 @@ import nl.knaw.dans.ttv.core.service.TransferItemValidatorImpl;
 import nl.knaw.dans.ttv.db.NbnRegistrationDao;
 import nl.knaw.dans.ttv.db.TransferItemDao;
 import nl.knaw.dans.ttv.health.FilesystemHealthCheck;
+import nl.knaw.dans.ttv.health.HttpConnectionHealthCheck;
 import nl.knaw.dans.ttv.health.InboxHealthCheck;
 import nl.knaw.dans.ttv.health.PartitionHealthCheck;
 import org.slf4j.Logger;
@@ -63,7 +64,6 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
             return configuration.getDatabase();
         }
     };
-    
 
     public static void main(final String[] args) throws Exception {
         new DdTransferToVaultApplication().run(args);
@@ -100,6 +100,8 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
         environment.healthChecks().register("Inbox", new InboxHealthCheck(configuration, fileService));
         environment.healthChecks().register("Filesystem", new FilesystemHealthCheck(configuration, fileService));
         environment.healthChecks().register("Partitions", new PartitionHealthCheck(configuration, fileService));
+        environment.healthChecks().register("Data-Vault-connection-check", new HttpConnectionHealthCheck(configuration.getDataVault().getUrl().toString()));
+        environment.healthChecks().register("Vault-Catalog-connection-check", new HttpConnectionHealthCheck(configuration.getVaultCatalog().getUrl().toString()));
 
         log.info("Creating CollectTaskManager");
         final var collectTaskManager = new CollectTaskManager(
@@ -120,7 +122,6 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
             configuration.getExtractMetadata().getPollingInterval(), extractMetadataExecutorService, transferItemService, metadataReader, fileService, inboxWatcherFactory, transferItemValidator,
             vaultCatalogClient, nbnRegistrationService);
         environment.lifecycle().manage(extractMetadataTaskManager);
-        
 
         log.info("Creating SendToVaultTaskManager");
         final var dataVaultProxy = createDataVaultProxy(configuration);

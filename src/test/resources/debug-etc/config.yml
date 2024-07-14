@@ -19,6 +19,20 @@ collect:
     # Threads will die after 60 seconds of idleness
     keepAliveTime: 60 seconds
 
+nbnRegistration:
+  catalogBaseUrl: https://catalog.vault.datastations.nl/dataset
+  registrationInterval: 1000
+  gmh:
+    url: "https://resolver.tgharvester.dans.knaw.nl/gmh-registration-service/nbn"
+    token: # Fill in a valid token, generated via the token endpoint of the GMH server
+    httpClient:
+      timeout: 30s
+      connectionTimeout: 15s
+      timeToLive: 1h
+      retries: 2
+      # The GMH server does not handle GZIP compression
+      gzipEnabled: false
+
 extractMetadata:
   inbox: data/tmp/metadata-inbox
   # polling interval in milliseconds
@@ -67,6 +81,22 @@ vaultCatalog:
     keepAlive: 0ms
     retries: 0
     userAgent: dd-transfer-to-vault
+
+dataVault:
+  url: http://localhost:20365
+  httpClient:
+    timeout: 10s
+    connectionTimeout: 1min
+    # disable chunked encoding because it breaks the multipart/form-data headers:
+    chunkedEncodingEnabled: false
+    timeToLive: 1h
+    cookiesEnabled: false
+    maxConnections: 128
+    maxConnectionsPerRoute: 128
+    keepAlive: 0ms
+    retries: 0
+    userAgent: dd-transfer-to-vault
+
 
 database:
   driverClass: org.hsqldb.jdbcDriver
