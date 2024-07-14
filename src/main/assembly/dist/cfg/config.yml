@@ -27,7 +27,14 @@ health:
       initialState: false
       schedule:
         checkInterval: 60s
-
+    - name: Data-Vault-connection-check
+      critical: true
+      schedule:
+        checkInterval: 60s
+    - name: Vault-Catalog-connection-check
+      critical: true
+      schedule:
+        checkInterval: 60s
 collect:
   inboxes: [ ]
   # polling interval in milliseconds
