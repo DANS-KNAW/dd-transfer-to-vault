@@ -20,6 +20,7 @@ import io.dropwizard.core.Application;
 import io.dropwizard.core.setup.Bootstrap;
 import io.dropwizard.core.setup.Environment;
 import io.dropwizard.db.PooledDataSourceFactory;
+import io.dropwizard.health.check.http.HttpHealthCheck;
 import io.dropwizard.hibernate.HibernateBundle;
 import io.dropwizard.hibernate.UnitOfWorkAwareProxyFactory;
 import nl.knaw.dans.lib.util.ClientProxyBuilder;
@@ -63,7 +64,6 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
             return configuration.getDatabase();
         }
     };
-    
 
     public static void main(final String[] args) throws Exception {
         new DdTransferToVaultApplication().run(args);
@@ -100,6 +100,8 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
         environment.healthChecks().register("Inbox", new InboxHealthCheck(configuration, fileService));
         environment.healthChecks().register("Filesystem", new FilesystemHealthCheck(configuration, fileService));
         environment.healthChecks().register("Partitions", new PartitionHealthCheck(configuration, fileService));
+        environment.healthChecks().register("Data-Vault-connection-check", new HttpHealthCheck(configuration.getDataVault().getUrl().toString()));
+        environment.healthChecks().register("Vault-Catalog-connection-check", new HttpHealthCheck(configuration.getVaultCatalog().getUrl().toString()));
 
         log.info("Creating CollectTaskManager");
         final var collectTaskManager = new CollectTaskManager(
@@ -120,7 +122,6 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
             configuration.getExtractMetadata().getPollingInterval(), extractMetadataExecutorService, transferItemService, metadataReader, fileService, inboxWatcherFactory, transferItemValidator,
             vaultCatalogClient, nbnRegistrationService);
         environment.lifecycle().manage(extractMetadataTaskManager);
-        
 
         log.info("Creating SendToVaultTaskManager");
         final var dataVaultProxy = createDataVaultProxy(configuration);
