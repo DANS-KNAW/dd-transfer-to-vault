@@ -20,6 +20,7 @@ import io.dropwizard.core.Application;
 import io.dropwizard.core.setup.Bootstrap;
 import io.dropwizard.core.setup.Environment;
 import io.dropwizard.db.PooledDataSourceFactory;
+import io.dropwizard.health.check.http.HttpHealthCheck;
 import io.dropwizard.hibernate.HibernateBundle;
 import io.dropwizard.hibernate.UnitOfWorkAwareProxyFactory;
 import nl.knaw.dans.lib.util.ClientProxyBuilder;
@@ -46,7 +47,6 @@ import nl.knaw.dans.ttv.core.service.TransferItemValidatorImpl;
 import nl.knaw.dans.ttv.db.NbnRegistrationDao;
 import nl.knaw.dans.ttv.db.TransferItemDao;
 import nl.knaw.dans.ttv.health.FilesystemHealthCheck;
-import nl.knaw.dans.ttv.health.HttpConnectionHealthCheck;
 import nl.knaw.dans.ttv.health.InboxHealthCheck;
 import nl.knaw.dans.ttv.health.PartitionHealthCheck;
 import org.slf4j.Logger;
@@ -100,8 +100,8 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
         environment.healthChecks().register("Inbox", new InboxHealthCheck(configuration, fileService));
         environment.healthChecks().register("Filesystem", new FilesystemHealthCheck(configuration, fileService));
         environment.healthChecks().register("Partitions", new PartitionHealthCheck(configuration, fileService));
-        environment.healthChecks().register("Data-Vault-connection-check", new HttpConnectionHealthCheck(configuration.getDataVault().getUrl().toString()));
-        environment.healthChecks().register("Vault-Catalog-connection-check", new HttpConnectionHealthCheck(configuration.getVaultCatalog().getUrl().toString()));
+        environment.healthChecks().register("Data-Vault-connection-check", new HttpHealthCheck(configuration.getDataVault().getUrl().toString()));
+        environment.healthChecks().register("Vault-Catalog-connection-check", new HttpHealthCheck(configuration.getVaultCatalog().getUrl().toString()));
 
         log.info("Creating CollectTaskManager");
         final var collectTaskManager = new CollectTaskManager(
