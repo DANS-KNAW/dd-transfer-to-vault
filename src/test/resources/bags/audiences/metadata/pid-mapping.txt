@@ -1,0 +1,5 @@
+10.17026/dans-z6y-5y2e data/
+file:///92a7ebce-739d-4d06-929c-e52021a60b04 data/random images/image01.png
+file:///d6e9a1bc-c74b-4852-b80b-ed4b16c358e0 data/random images/image02.jpeg
+file:///df4ac453-437f-4cc7-a016-29e780012c37 data/random images/image03.jpeg
+file:///984bf2c6-fd72-423f-8a91-a871a9273888 data/a/deeper/path/With some file.txt

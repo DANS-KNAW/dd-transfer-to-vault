@@ -15,10 +15,12 @@
  */
 package nl.knaw.dans.ttv.core.service;
 
+import nl.knaw.dans.lib.util.ZipUtil;
 import nl.knaw.dans.ttv.core.domain.DataFileAttributes;
 import org.junit.jupiter.api.Test;
 
 import java.net.URI;
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -28,8 +30,11 @@ public class DataFileAttributesReaderTest {
 
     @Test
     public void testReadDataFileAttributes() throws Exception {
+        Files.createDirectories(Path.of("target/test"));
+        ZipUtil.zipDirectory(Path.of("src/test/resources/bags/audiences"), Path.of("target/test/vaas-03ca6301-1b10-4a40-a33c-d5696a7ee3f0-v1.zip"), true);
+        
         var dataFileAttributesReader = new DataFileAttributesReader(fileService);
-        var path = Path.of("src/test/resources/bags/vaas-03ca6301-1b10-4a40-a33c-d5696a7ee3f0-v1.zip");
+        var path = Path.of("target/test/vaas-03ca6301-1b10-4a40-a33c-d5696a7ee3f0-v1.zip");
         var dataFileAttributes = dataFileAttributesReader.readDataFileAttributes(path);
 
         assertThat(dataFileAttributes).hasSize(4);

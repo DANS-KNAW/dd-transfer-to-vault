@@ -1,0 +1,79 @@
+<?xml version="1.0"?>
+<rdf:RDF
+    xmlns:dvcore="https://dataverse.org/schema/core#"
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns:schema="https://schema.org/"
+    xmlns:dansRIG="https://dar.dans.knaw.nl/schema/2023.04/dansRights#"
+    xmlns:dansVLT="https://dar.dans.knaw.nl/schema/dansDataVaultMetadata#"
+    xmlns:dansREL="https://dar.dans.knaw.nl/schema/2023.04/dansRelationMetadata#"
+    xmlns:datacite="http://purl.org/spar/datacite/"
+    xmlns:dansAR="https://dar.dans.knaw.nl/schema/dansArchaeologyMetadata#"
+    xmlns:dcterms="http://purl.org/dc/terms/"
+    xmlns:dc="http://purl.org/dc/elements/1.1/"
+    xmlns:dansTS="https://dar.dans.knaw.nl/schema/dansTemporalSpatial#"
+    xmlns:provo="https://www.w3.org/prov-o/#"
+    xmlns:ore="http://www.openarchives.org/ore/terms/"
+    xmlns:cit="https://dataverse.org/schema/citation/"
+    xmlns:foaf="http://xmlns.com/foaf/0.1/">
+  <ore:AggregatedResource rdf:about="urn:uuid:d6e9a1bc-c74b-4852-b80b-ed4b16c358e0">
+    <dvcore:restricted>false</dvcore:restricted>
+    <dvcore:directoryLabel>data/random images</dvcore:directoryLabel>
+    <schema:name>data/random images/image02.jpeg</schema:name>
+  </ore:AggregatedResource>
+  <ore:AggregatedResource rdf:about="urn:uuid:984bf2c6-fd72-423f-8a91-a871a9273888">
+    <dvcore:restricted>false</dvcore:restricted>
+    <dvcore:directoryLabel>data/a/deeper/path</dvcore:directoryLabel>
+    <schema:name>data/a/deeper/path/With some file.txt</schema:name>
+  </ore:AggregatedResource>
+  <ore:AggregatedResource rdf:about="urn:uuid:92a7ebce-739d-4d06-929c-e52021a60b04">
+    <dvcore:restricted>false</dvcore:restricted>
+    <dvcore:directoryLabel>data/random images</dvcore:directoryLabel>
+    <schema:name>data/random images/image01.png</schema:name>
+  </ore:AggregatedResource>
+  <ore:AggregatedResource rdf:about="urn:uuid:df4ac453-437f-4cc7-a016-29e780012c37">
+    <dvcore:restricted>false</dvcore:restricted>
+    <dvcore:directoryLabel>data/random images</dvcore:directoryLabel>
+    <schema:name>data/random images/image03.jpeg</schema:name>
+  </ore:AggregatedResource>
+  <ore:Aggregation rdf:about="urn:nbn:nl:ui:13-2ad6ddc9-90af-48d3-bad5-dda0276284c3">
+    <cit:distributionDate>2015-09-09</cit:distributionDate>
+    <dansVLT:dansBagId>urn:uuid:03ca6301-1b10-4a40-a33c-d5696a7ee3f0</dansVLT:dansBagId>
+    <dansRIG:dansMetadataLanguage>English</dansRIG:dansMetadataLanguage>
+    <dvcore:fileTermsOfAccess rdf:parseType="Resource">
+      <dvcore:fileRequestAccess>Yes</dvcore:fileRequestAccess>
+    </dvcore:fileTermsOfAccess>
+    <dansREL:dansAudience>D16400</dansREL:dansAudience>
+    <dansREL:dansAudience>D16500</dansREL:dansAudience>
+    <schema:license>http://opensource.org/licenses/MIT</schema:license>
+    <cit:author rdf:parseType="Resource">
+      <cit:authorAffiliation>Example Org</cit:authorAffiliation>
+      <cit:authorName>I Lastname</cit:authorName>
+    </cit:author>
+    <cit:dsDescription rdf:parseType="Resource">
+      <cit:dsDescriptionValue>This bag contains multiple ddm:audience entries, each audience is represented by a code for which the classification can be found at https://www.narcis.nl/content/pdf/classification_en.pdf</cit:dsDescriptionValue>
+    </cit:dsDescription>
+    <ore:aggregates rdf:resource="urn:uuid:92a7ebce-739d-4d06-929c-e52021a60b04"/>
+    <ore:aggregates rdf:resource="urn:uuid:df4ac453-437f-4cc7-a016-29e780012c37"/>
+    <dansREL:dansAudience>E16000</dansREL:dansAudience>
+    <ore:aggregates rdf:resource="urn:uuid:984bf2c6-fd72-423f-8a91-a871a9273888"/>
+    <dansVLT:dansSwordToken>sword:03ca6301-1b10-4a40-a33c-d5696a7ee3f0</dansVLT:dansSwordToken>
+    <dansVLT:dansDataSupplier>User001</dansVLT:dansDataSupplier>
+    <dansRIG:dansRightsHolder>I Lastname</dansRIG:dansRightsHolder>
+    <dansRIG:dansPersonalDataPresent>No</dansRIG:dansPersonalDataPresent>
+    <cit:productionDate>2015-09-09</cit:productionDate>
+    <dcterms:subject>Computer and Information Science</dcterms:subject>
+    <dansREL:dansAudience>D16200</dansREL:dansAudience>
+    <dansREL:dansAudience>D16300</dansREL:dansAudience>
+    <dansREL:dansAudience>D16100</dansREL:dansAudience>
+    <dansVLT:dansNbn>urn:nbn:nl:ui:13-2ad6ddc9-90af-48d3-bad5-dda0276284c3</dansVLT:dansNbn>
+    <dansVLT:dansOtherId>10.17026/dans-z6y-5y2e</dansVLT:dansOtherId>
+    <ore:aggregates rdf:resource="urn:uuid:d6e9a1bc-c74b-4852-b80b-ed4b16c358e0"/>
+  </ore:Aggregation>
+  <ore:ResourceMap rdf:about="urn:uuid:03ca6301-1b10-4a40-a33c-d5696a7ee3f0">
+    <ore:describes rdf:resource="urn:nbn:nl:ui:13-2ad6ddc9-90af-48d3-bad5-dda0276284c3"/>
+    <dcterms:creator rdf:parseType="Resource">
+      <foaf:name>DANS Vault Service</foaf:name>
+    </dcterms:creator>
+    <dcterms:modified>2024-07-09T08:26:53.539649168+02:00</dcterms:modified>
+  </ore:ResourceMap>
+</rdf:RDF>

@@ -1,0 +1,38 @@
+<ddm:DDM
+        xmlns:dcx-dai="http://easy.dans.knaw.nl/schemas/dcx/dai/"
+        xmlns:ddm="http://schemas.dans.knaw.nl/dataset/ddm-v2/"
+        xmlns:dcterms="http://purl.org/dc/terms/"
+        xmlns:id-type="http://easy.dans.knaw.nl/schemas/vocab/identifier-type/"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <ddm:profile>
+        <dcterms:title>A bag containing multiple audiences</dcterms:title>
+        <dcterms:description>
+            This bag contains multiple ddm:audience entries, each audience is represented by a code for which the classification can be found at https://www.narcis.nl/content/pdf/classification_en.pdf
+        </dcterms:description>
+        <dcx-dai:creatorDetails>
+            <dcx-dai:author>
+                <dcx-dai:titles>Dr</dcx-dai:titles>
+                <dcx-dai:initials>I</dcx-dai:initials>
+                <dcx-dai:surname>Lastname</dcx-dai:surname>
+                <dcx-dai:organization>
+                    <dcx-dai:name xml:lang="en">Example Org</dcx-dai:name>
+                </dcx-dai:organization>
+            </dcx-dai:author>
+        </dcx-dai:creatorDetails>
+        <ddm:created>2015-09-09</ddm:created>
+        <ddm:available>2015-09-09</ddm:available>
+        <ddm:audience>D16300</ddm:audience>
+        <ddm:audience>D16100</ddm:audience>
+        <ddm:audience>D16200</ddm:audience>
+        <ddm:audience>D16400</ddm:audience>
+        <ddm:audience>D16500</ddm:audience>
+        <ddm:audience>E16000</ddm:audience>
+        <ddm:accessRights>OPEN_ACCESS</ddm:accessRights>
+        <ddm:personalData present="No"/>
+    </ddm:profile>
+    <ddm:dcmiMetadata>
+        <dcterms:license xsi:type="dcterms:URI">http://opensource.org/licenses/MIT</dcterms:license>
+        <dcterms:rightsHolder>I Lastname</dcterms:rightsHolder>
+        <dcterms:identifier xsi:type="id-type:DOI">10.17026/dans-z6y-5y2e</dcterms:identifier>
+    </ddm:dcmiMetadata>
+</ddm:DDM>
