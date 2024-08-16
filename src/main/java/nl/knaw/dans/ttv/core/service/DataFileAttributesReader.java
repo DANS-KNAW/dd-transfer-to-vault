@@ -36,8 +36,8 @@ public class DataFileAttributesReader {
 
     public List<DataFileAttributes> readDataFileAttributes(Path dveZip) throws IOException {
         try (var datasetVersionExport = fileService.openZipFile(dveZip)) {
-            var pidMappingContent = fileService.openFileFromZip(datasetVersionExport, Path.of("metadata/pid-mapping.txt"));
-            var sha1ManifestContent = fileService.openFileFromZip(datasetVersionExport, Path.of("manifest-sha1.txt"));
+            var pidMappingContent = fileService.getEntryUnderBaseFolder(datasetVersionExport, Path.of("metadata/pid-mapping.txt"));
+            var sha1ManifestContent = fileService.getEntryUnderBaseFolder(datasetVersionExport, Path.of("manifest-sha1.txt"));
             var pidMapping = IOUtils.toString(pidMappingContent, StandardCharsets.UTF_8);
             var sha1Manifest = IOUtils.toString(sha1ManifestContent, StandardCharsets.UTF_8);
             var pathToPidMap = readPathToPidMapping(pidMapping);

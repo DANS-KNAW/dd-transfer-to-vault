@@ -37,7 +37,17 @@ public interface FileService {
 
     ZipFile openZipFile(Path path) throws IOException;
 
-    InputStream openFileFromZip(ZipFile datasetVersionExport, Path of) throws IOException;
+    /**
+     * Returns an input stream for the entry under the base folder of the given zip file. The ZIP file is assumed to contain
+     * a single folder at the root level, and the entry is assumed to be under that folder.
+     *
+     * @param datasetVersionExport the zip file
+     * @param subpath              the path of the entry under the base folder
+     * @return an input stream for the entry
+     * @throws IOException              if the entry cannot be read
+     * @throws IllegalArgumentException if the entry is not found or if more than one base folder is found
+     */
+    InputStream getEntryUnderBaseFolder(ZipFile datasetVersionExport, Path subpath) throws IOException;
 
     Path moveFileAtomically(Path filePath, Path newPath) throws IOException;
 
@@ -56,5 +66,6 @@ public interface FileService {
     FileStore getFileStore(Path path) throws IOException;
 
     Path addCreationTimeToFileName(Path path) throws IOException;
+
     void cleanup(Path dir, Pattern pattern) throws IOException;
 }
