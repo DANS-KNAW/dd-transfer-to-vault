@@ -73,7 +73,7 @@ public class TransferItemMetadataReaderImpl implements TransferItemMetadataReade
         try {
             var datasetVersionExport = fileService.openZipFile(path);
 
-            var metadataContent = fileService.openFileFromZip(datasetVersionExport, Path.of("metadata/oai-ore.jsonld"));
+            var metadataContent = fileService.getEntryUnderBaseFolder(datasetVersionExport, Path.of("metadata/oai-ore.jsonld"));
             var oaiOre = IOUtils.toString(metadataContent, StandardCharsets.UTF_8);
             var fileContentAttributes = oaiOreMetadataReader.readMetadata(oaiOre);
             fileContentAttributes.setMetadata(oaiOre);

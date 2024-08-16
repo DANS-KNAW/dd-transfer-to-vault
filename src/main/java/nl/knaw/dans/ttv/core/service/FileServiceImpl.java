@@ -139,11 +139,9 @@ public class FileServiceImpl implements FileService {
         var future = executorService.submit(() -> Files.isReadable(path));
         try {
             return future.get(timeout, TimeUnit.SECONDS);
-        }
-        catch (InterruptedException | ExecutionException e) {
+        } catch (InterruptedException | ExecutionException e) {
             throw new RuntimeException(e);
-        }
-        finally {
+        } finally {
             future.cancel(true);
         }
     }
@@ -201,17 +199,21 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
-    public InputStream openFileFromZip(@NonNull ZipFile zipFile, @NonNull Path path) throws IOException {
-        var entryPath = Objects.requireNonNull(zipFile.stream()
-                .filter(e -> e.getName().endsWith(path.toString()))
-                .findFirst()
-                .orElse(null)
-            , String.format("no entries found for path '%s' in zip file %s", path, zipFile)
-        );
-
-        log.debug("Requested entry for path '{}', found match on '{}'", path, entryPath);
-
-        return zipFile.getInputStream(entryPath);
+    public InputStream getEntryUnderBaseFolder(@NonNull ZipFile zipFile, @NonNull Path path) throws IOException {
+        var entries = zipFile.stream()
+                .filter(e -> {
+                    var p = Path.of(e.getName());
+                    return p.getNameCount() != 1 && p.subpath(1, p.getNameCount()).equals(path);
+                })
+                .toList();
+        if (entries.isEmpty()) {
+            throw new IllegalArgumentException("No entry found for path: " + path);
+        } else if (entries.size() > 1) {
+            throw new IllegalArgumentException("Multiple entries found for path: " + path);
+        }
+        var entry = entries.get(0);
+        log.debug("Requested entry for path '{}', found match on '{}'", path, entry.getName());
+        return zipFile.getInputStream(entries.get(0));
     }
 
     @Override
@@ -222,13 +224,11 @@ public class FileServiceImpl implements FileService {
                 var creationTime = getCreationTimeUnixTimestamp(path);
                 var newFileName = creationTime + "-" + path.getFileName();
                 return Files.move(path, path.getParent().resolve(newFileName));
-            }
-            else {
+            } else {
                 log.debug("File '{}' already has a creation time in its name, not adding it again", path);
                 return path;
             }
-        }
-        else {
+        } else {
             log.debug("File '{}' is not a DvE file, not adding creation time to filename", path);
             return path;
         }
@@ -238,8 +238,7 @@ public class FileServiceImpl implements FileService {
         try {
             BasicFileAttributes attrs = Files.readAttributes(path, BasicFileAttributes.class);
             return attrs.creationTime().toInstant().toEpochMilli();
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             throw new RuntimeException("Failed to get creation time of file: " + path, e);
         }
     }
@@ -250,14 +249,13 @@ public class FileServiceImpl implements FileService {
         log.debug("Cleaning up directory '{}' with pattern '{}'", dir, pattern);
         try (var stream = Files.list(dir)) {
             stream.filter(p -> pattern.matcher(p.getFileName().toString()).matches())
-                .forEach(p -> {
-                    try {
-                        Files.delete(p);
-                    }
-                    catch (IOException e) {
-                        log.error("Unable to delete file '{}'", p, e);
-                    }
-                });
+                    .forEach(p -> {
+                        try {
+                            Files.delete(p);
+                        } catch (IOException e) {
+                            log.error("Unable to delete file '{}'", p, e);
+                        }
+                    });
         }
     }
 }
