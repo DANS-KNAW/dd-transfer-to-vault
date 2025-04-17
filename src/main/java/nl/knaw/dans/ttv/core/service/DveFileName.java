@@ -24,7 +24,7 @@ import java.util.regex.Pattern;
  * Represents a DVE file name. This is one of:
  * <ul>
  *     <li>A ZIP file exported by Dataverse</li>
- *     <li>A ZIP file exported by dd-vault-ingest-flow</li>
+ *     <li>A ZIP file exported by dd-vault-ingest</li>
  * </ul>
  */
 @Getter
