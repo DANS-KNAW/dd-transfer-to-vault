@@ -17,7 +17,7 @@ Interfaces
 
 ### Provided
 
-#### Inbox directories
+#### Inbox
 
 * _Protocol type_: Shared filesystem
 * _Internal or external_: **internal**
