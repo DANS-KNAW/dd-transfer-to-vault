@@ -154,3 +154,4 @@ logging:
   loggers:
     'org.hibernate.engine.internal.StatisticalLoggingSessionEventListener': 'OFF'
     'nl.knaw.dans.ttv.core.service.NbnRegistrationWorker': INFO
+    'nl.knaw.dans.ttv.health': INFO
