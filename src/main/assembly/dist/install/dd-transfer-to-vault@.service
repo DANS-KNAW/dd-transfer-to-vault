@@ -7,6 +7,7 @@ ExecStart=/opt/dans.knaw.nl/dd-transfer-to-vault/bin/dd-transfer-to-vault server
 SuccessExitStatus=143
 Environment="JAVA_OPTS=-Xms64m"
 Environment="LC_ALL=en_US.UTF-8"
+SyslogIdentifier=dd-transfer-to-vault@%i
 
 User=dd-transfer-to-vault
 Group=dd-transfer-to-vault

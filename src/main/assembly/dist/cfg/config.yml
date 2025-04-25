@@ -148,5 +148,9 @@ logging:
       type: file
       timeZone: system
       currentLogFilename: '/var/opt/dans.knaw.nl/log/dd-transfer-to-vault/dd-transfer-to-vault.log'
+  # Used in combination with journald, which already adds the timestamp
+    - type: console
+      logFormat: "%-5p %c{0}: %m%n%dwREx"
   loggers:
     'org.hibernate.engine.internal.StatisticalLoggingSessionEventListener': 'OFF'
+    'nl.knaw.dans.ttv.core.service.NbnRegistrationWorker': INFO

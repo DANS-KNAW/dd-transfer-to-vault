@@ -23,16 +23,13 @@ import nl.knaw.dans.ttv.client.GmhClient;
 import nl.knaw.dans.ttv.core.NbnRegistration;
 import nl.knaw.dans.ttv.db.NbnRegistrationDao;
 
-import java.net.URI;
 import java.time.OffsetDateTime;
 
 @Slf4j
 @RequiredArgsConstructor
-public class RegistrationWorker implements Runnable {
+public class NbnRegistrationWorker implements Runnable {
     @NonNull
     private final GmhClient gmhClient;
-    @NonNull
-    private final URI locationBaseUrl;
     @NonNull
     private final NbnRegistrationDao nbnRegistrationDao;
 
@@ -70,7 +67,9 @@ public class RegistrationWorker implements Runnable {
             log.debug("No NBNs to register, switching to {} NBNs", retryFailed ? "pending" : "failed");
             nextBatch = retryFailed ? nbnRegistrationDao.getPendingRegistrations() : nbnRegistrationDao.getFailedRegistrations();
         }
-        log.debug("Processing {} NBNs", nextBatch.size());
+        if (!nextBatch.isEmpty()) {
+            log.info("Processing {} NBNs", nextBatch.size());
+        }
         nextBatch.forEach(nbnRegistration -> {
             try {
                 log.debug("Registering NBN {}", nbnRegistration.getNbn());

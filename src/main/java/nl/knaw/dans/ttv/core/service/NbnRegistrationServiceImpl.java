@@ -16,7 +16,6 @@
 package nl.knaw.dans.ttv.core.service;
 
 import io.dropwizard.hibernate.UnitOfWork;
-import io.dropwizard.lifecycle.Managed;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,7 +35,7 @@ public class NbnRegistrationServiceImpl implements NbnRegistrationService {
     @NonNull
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
     @NonNull
-    private final RegistrationWorker registrationWorker;
+    private final NbnRegistrationWorker nbnRegistrationWorker;
     @NonNull
     private final NbnRegistrationDao nbnRegistrationDao;
     @NonNull
@@ -52,13 +51,13 @@ public class NbnRegistrationServiceImpl implements NbnRegistrationService {
             return;
         }
 
-        executorService.submit(registrationWorker);
+        executorService.submit(nbnRegistrationWorker);
         started = true;
     }
 
     @Override
     public void stop() {
-        registrationWorker.stop();
+        nbnRegistrationWorker.stop();
         executorService.shutdown();
     }
 

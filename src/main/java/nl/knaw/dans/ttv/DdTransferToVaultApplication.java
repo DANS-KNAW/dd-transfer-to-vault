@@ -40,7 +40,7 @@ import nl.knaw.dans.ttv.core.service.FileServiceImpl;
 import nl.knaw.dans.ttv.core.service.InboxWatcherFactoryImpl;
 import nl.knaw.dans.ttv.core.service.NbnRegistrationService;
 import nl.knaw.dans.ttv.core.service.NbnRegistrationServiceImpl;
-import nl.knaw.dans.ttv.core.service.RegistrationWorker;
+import nl.knaw.dans.ttv.core.service.NbnRegistrationWorker;
 import nl.knaw.dans.ttv.core.service.TransferItemMetadataReaderImpl;
 import nl.knaw.dans.ttv.core.service.TransferItemServiceImpl;
 import nl.knaw.dans.ttv.core.service.TransferItemValidatorImpl;
@@ -154,9 +154,9 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
         final var locationBaseUrl = configuration.getNbnRegistration().getCatalogBaseUrl();
         final var nbnRegistrationDao = new NbnRegistrationDao(hibernateBundle.getSessionFactory());
         final var registrationInterval = configuration.getNbnRegistration().getRegistrationInterval();
-        final var registrationWorker = proxyFactory.create(RegistrationWorker.class, new Class[] { GmhClient.class, URI.class, NbnRegistrationDao.class, long.class },
-            new Object[] { gmhClient, locationBaseUrl, nbnRegistrationDao, registrationInterval });
-        return proxyFactory.create(NbnRegistrationServiceImpl.class, new Class[] { RegistrationWorker.class, NbnRegistrationDao.class, URI.class },
+        final var registrationWorker = proxyFactory.create(NbnRegistrationWorker.class, new Class[] { GmhClient.class, NbnRegistrationDao.class, long.class },
+            new Object[] { gmhClient, nbnRegistrationDao, registrationInterval });
+        return proxyFactory.create(NbnRegistrationServiceImpl.class, new Class[] { NbnRegistrationWorker.class, NbnRegistrationDao.class, URI.class },
             new Object[] { registrationWorker, nbnRegistrationDao, locationBaseUrl });
     }
 
