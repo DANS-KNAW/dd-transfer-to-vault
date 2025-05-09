@@ -105,7 +105,7 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
 
         log.info("Creating CollectTaskManager");
         final var collectTaskManager = new CollectTaskManager(
-            configuration.getCollect().getInboxes(),
+            configuration.getCollect().getInbox(),
             configuration.getExtractMetadata().getInbox(),
             configuration.getCollect().getPollingInterval(),
             collectExecutorService,

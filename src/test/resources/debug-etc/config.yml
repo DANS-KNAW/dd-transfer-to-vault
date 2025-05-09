@@ -29,11 +29,9 @@ health:
       schedule:
         checkInterval: 60s
 collect:
-  inboxes:
-    - name: Test inbox 1
-      path: data/tmp/transfer-inboxes/inbox1
-    - name: Test_inbox 2
-      path: data/tmp/transfer-inboxes/inbox2
+  inbox:
+    name: Test inbox 1
+    path: data/tmp/transfer-inboxes/inbox1
   # polling interval in milliseconds
   pollingInterval: 500
   taskQueue:

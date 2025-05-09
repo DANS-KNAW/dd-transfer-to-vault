@@ -16,20 +16,24 @@
 package nl.knaw.dans.ttv.config;
 
 import lombok.Data;
-import nl.knaw.dans.lib.util.ExecutorServiceFactory;
 
-import javax.validation.Valid;
+import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
+import java.nio.file.Path;
 
 @Data
-public class ConfirmArchivedConfig {
-    @Valid
+public class InboxConfig {
+    @NotEmpty
+    private String name;
     @NotNull
-    private String cron;
-    @Valid
-    @NotNull
-    private String vaultServiceEndpoint;
-    @Valid
-    @NotNull
-    private ExecutorServiceFactory taskQueue;
+    private Path path;
+
+    public InboxConfig() {
+
+    }
+
+    public InboxConfig(String name, Path path) {
+        this.name = name;
+        this.path = path;
+    }
 }

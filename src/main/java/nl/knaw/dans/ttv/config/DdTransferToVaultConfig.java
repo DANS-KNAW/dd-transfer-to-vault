@@ -50,10 +50,6 @@ public class DdTransferToVaultConfig extends Configuration {
 
     @Valid
     @NotNull
-    private ConfirmArchivedConfig confirmArchived;
-
-    @Valid
-    @NotNull
     private VaultCatalogConfig vaultCatalog;
 
     @Valid
