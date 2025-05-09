@@ -94,20 +94,6 @@ sendToVault:
   maxBatchSize: 100000000
   outbox: /var/opt/dans.knaw.nl/tmp/data-vault/inbox
 
-confirmArchived:
-  cron: '0 0 * * * ?' # cron expression for triggering a polling round
-  # TODO: move complete vaultCatalog block to here, deduplicate definition of url.
-  vaultServiceEndpoint: http://localhost:20305
-  taskQueue:
-    nameFormat: "confirm-archived-worker-%d"
-    maxQueueSize: 5000
-    # Number of threads will be increased when maxQueueSize is exceeded.
-    minThreads: 1
-    # No more than maxThreads will be created though
-    maxThreads: 10
-    # Threads will die after 60 seconds of idleness
-    keepAliveTime: 60 seconds
-
 vaultCatalog:
   url: http://localhost:20305
   httpClient:
