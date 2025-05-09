@@ -32,11 +32,7 @@ import java.util.List;
 public class CollectConfig {
     @Valid
     @NotNull
-    @JsonProperty("inboxes")
-    @Size(min = 1)
-    @UniqueAttribute(attribute = "name", message = "multiple inboxes are configured with the same name")
-    @UniqueAttribute(attribute = "path", message = "multiple inboxes are configured with the same path")
-    private List<InboxEntry> inboxes;
+    private InboxEntry inbox;
 
     @Valid
     @NotNull

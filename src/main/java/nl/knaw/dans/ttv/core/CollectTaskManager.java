@@ -30,16 +30,14 @@ import org.apache.commons.io.FilenameUtils;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ExecutorService;
-import java.util.stream.Collectors;
 
 @Slf4j
 @RequiredArgsConstructor
 public class CollectTaskManager implements Managed {
     @NonNull
-    private final List<CollectConfig.InboxEntry> inboxes;
+    private final CollectConfig.InboxEntry inbox;
 
     @NonNull
     private final Path outbox;
@@ -59,32 +57,17 @@ public class CollectTaskManager implements Managed {
 
     @NonNull
     private final InboxWatcherFactory inboxWatcherFactory;
-    private List<InboxWatcher> inboxWatchers;
+    private InboxWatcher inboxWatcher;
 
     @Override
     public void start() throws Exception {
         log.debug("Creating InboxWatchers for configured inboxes");
 
-        this.inboxWatchers = inboxes.stream().map(entry -> {
-            log.debug("Creating InboxWatcher for {}", entry);
-
-            try {
-                return inboxWatcherFactory.createInboxWatcher(
-                    entry.getPath(), entry.getName(), this::onFileAdded, this.pollingInterval
-                );
-            }
-            catch (Exception e) {
-                log.warn("Unable to create InboxWatcher {}. It will be ignored.", entry.getName(), e);
-            }
-            return null;
-        }).collect(Collectors.toList());
-
-        for (var inboxWatcher : this.inboxWatchers) {
-            if (inboxWatcher != null) {
-                log.debug("Starting InboxWatcher {}", inboxWatcher);
-                inboxWatcher.start();
-            }
-        }
+        this.inboxWatcher =
+            inboxWatcherFactory.createInboxWatcher(
+                inbox.getPath(), inbox.getName(), this::onFileAdded, this.pollingInterval
+            );
+        inboxWatcher.start();
     }
 
     public void onFileAdded(File file, String datastationName) {
@@ -117,14 +100,7 @@ public class CollectTaskManager implements Managed {
     @Override
     public void stop() throws Exception {
         log.debug("Shutting down CollectTaskManager");
-
-        for (var inboxWatcher : this.inboxWatchers) {
-            if (inboxWatcher != null) {
-                log.debug("Stopping InboxWatcher {}", inboxWatcher);
-                inboxWatcher.stop();
-            }
-        }
-
+        inboxWatcher.stop();
         this.executorService.shutdownNow();
     }
 }

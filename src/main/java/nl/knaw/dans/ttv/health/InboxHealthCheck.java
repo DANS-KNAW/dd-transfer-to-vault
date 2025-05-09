@@ -43,28 +43,30 @@ public class InboxHealthCheck extends HealthCheck {
     protected Result check() throws Exception {
         var problems = new ArrayList<String>();
 
-        for (var inboxEntry : configuration.getCollect().getInboxes()) {
-            if (!fileService.exists(inboxEntry.getPath())) {
-                problems.add(inboxEntry.getPath() + ": does not exist");
-            } else {
-                var canRead = false;
-                try {
-                    canRead = fileService.canRead(inboxEntry.getPath(), canReadTimeout);
-                } catch (TimeoutException e) {
-                    log.warn("Inbox path '{}' is not readable within {} seconds", inboxEntry.getPath(), canReadTimeout);
-                }
-                if (!canRead) {
-                    problems.add(String.format("%s: not readable or the NFS server is not responding within the timeout (%d seconds)",
-                            inboxEntry.getPath(), canReadTimeout));
-                }
+        var inboxEntry = configuration.getCollect().getInbox();
+        if (!fileService.exists(inboxEntry.getPath())) {
+            problems.add(inboxEntry.getPath() + ": does not exist");
+        }
+        else {
+            var canRead = false;
+            try {
+                canRead = fileService.canRead(inboxEntry.getPath(), canReadTimeout);
+            }
+            catch (TimeoutException e) {
+                log.warn("Inbox path '{}' is not readable within {} seconds", inboxEntry.getPath(), canReadTimeout);
+            }
+            if (!canRead) {
+                problems.add(String.format("%s: not readable or the NFS server is not responding within the timeout (%d seconds)",
+                    inboxEntry.getPath(), canReadTimeout));
             }
         }
 
         if (problems.isEmpty()) {
             return Result.healthy();
-        } else {
+        }
+        else {
             return Result.unhealthy(String.format("The following inboxes are not accessible: %s",
-                    String.join(", ", problems)));
+                String.join(", ", problems)));
         }
     }
 }

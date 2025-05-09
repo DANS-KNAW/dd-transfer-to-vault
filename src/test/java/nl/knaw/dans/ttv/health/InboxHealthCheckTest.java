@@ -22,7 +22,6 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.nio.file.Path;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -34,10 +33,7 @@ class InboxHealthCheckTest {
         var fileService = Mockito.mock(FileService.class);
         var config = new DdTransferToVaultConfig();
         config.setCollect(new CollectConfig());
-        config.getCollect().setInboxes(List.of(
-            new CollectConfig.InboxEntry("a", Path.of("a")),
-            new CollectConfig.InboxEntry("b", Path.of("b"))
-        ));
+        config.getCollect().setInbox(new CollectConfig.InboxEntry("a", Path.of("a")));
 
         Mockito.when(fileService.canRead(Mockito.any(), Mockito.anyInt())).thenReturn(true);
         Mockito.when(fileService.exists(Mockito.any())).thenReturn(true);
@@ -52,10 +48,7 @@ class InboxHealthCheckTest {
         var fileService = Mockito.mock(FileService.class);
         var config = new DdTransferToVaultConfig();
         config.setCollect(new CollectConfig());
-        config.getCollect().setInboxes(List.of(
-            new CollectConfig.InboxEntry("a", Path.of("a")),
-            new CollectConfig.InboxEntry("b", Path.of("b"))
-        ));
+        config.getCollect().setInbox(new CollectConfig.InboxEntry("a", Path.of("a")));
 
         Mockito.when(fileService.canRead(Mockito.any(), Mockito.anyInt())).thenReturn(false).thenReturn(true);
         Mockito.when(fileService.exists(Mockito.any())).thenReturn(true).thenReturn(false);

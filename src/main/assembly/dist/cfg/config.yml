@@ -44,7 +44,7 @@ health:
       schedule:
         checkInterval: 60s
 collect:
-  inboxes: [ ]
+  inbox: {}
   # polling interval in milliseconds
   pollingInterval: 500
   # timeout for inbox health check in seconds
