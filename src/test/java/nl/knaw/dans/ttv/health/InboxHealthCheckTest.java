@@ -17,6 +17,7 @@ package nl.knaw.dans.ttv.health;
 
 import nl.knaw.dans.ttv.config.CollectConfig;
 import nl.knaw.dans.ttv.config.DdTransferToVaultConfig;
+import nl.knaw.dans.ttv.config.InboxConfig;
 import nl.knaw.dans.ttv.core.service.FileService;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -33,7 +34,7 @@ class InboxHealthCheckTest {
         var fileService = Mockito.mock(FileService.class);
         var config = new DdTransferToVaultConfig();
         config.setCollect(new CollectConfig());
-        config.getCollect().setInbox(new CollectConfig.InboxEntry("a", Path.of("a")));
+        config.getCollect().setInbox(new InboxConfig("a", Path.of("a")));
 
         Mockito.when(fileService.canRead(Mockito.any(), Mockito.anyInt())).thenReturn(true);
         Mockito.when(fileService.exists(Mockito.any())).thenReturn(true);
@@ -48,7 +49,7 @@ class InboxHealthCheckTest {
         var fileService = Mockito.mock(FileService.class);
         var config = new DdTransferToVaultConfig();
         config.setCollect(new CollectConfig());
-        config.getCollect().setInbox(new CollectConfig.InboxEntry("a", Path.of("a")));
+        config.getCollect().setInbox(new InboxConfig("a", Path.of("a")));
 
         Mockito.when(fileService.canRead(Mockito.any(), Mockito.anyInt())).thenReturn(false).thenReturn(true);
         Mockito.when(fileService.exists(Mockito.any())).thenReturn(true).thenReturn(false);

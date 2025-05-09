@@ -13,46 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package nl.knaw.dans.ttv.config;
 
-import io.dropwizard.core.Configuration;
-import io.dropwizard.db.DataSourceFactory;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 
-import javax.validation.Valid;
+import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
+import java.nio.file.Path;
 
 @Data
-@EqualsAndHashCode(callSuper = true)
-public class DdTransferToVaultConfig extends Configuration {
+public class InboxConfig {
+    @NotEmpty
+    private String name;
+    @NotNull
+    private Path path;
 
-    @Valid
-    @NotNull
-    private DataSourceFactory database = new DataSourceFactory();
+    public InboxConfig() {
 
-    @Valid
-    @NotNull
-    private CollectConfig collect;
+    }
 
-    @Valid
-    @NotNull
-    private ExtractMetadataConfig extractMetadata;
-    
-    @Valid
-    @NotNull
-    private NbnRegistrationConfig nbnRegistration;
-
-    @Valid
-    @NotNull
-    private SendToVaultConfig sendToVault;
-
-    @Valid
-    @NotNull
-    private VaultCatalogConfig vaultCatalog;
-
-    @Valid
-    @NotNull
-    private DataVaultConfig dataVault;
+    public InboxConfig(String name, Path path) {
+        this.name = name;
+        this.path = path;
+    }
 }

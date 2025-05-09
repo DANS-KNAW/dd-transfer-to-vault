@@ -19,7 +19,7 @@ import io.dropwizard.lifecycle.Managed;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import nl.knaw.dans.ttv.config.CollectConfig;
+import nl.knaw.dans.ttv.config.InboxConfig;
 import nl.knaw.dans.ttv.core.service.FileService;
 import nl.knaw.dans.ttv.core.service.InboxWatcher;
 import nl.knaw.dans.ttv.core.service.InboxWatcherFactory;
@@ -37,7 +37,7 @@ import java.util.concurrent.ExecutorService;
 @RequiredArgsConstructor
 public class CollectTaskManager implements Managed {
     @NonNull
-    private final CollectConfig.InboxEntry inbox;
+    private final InboxConfig inbox;
 
     @NonNull
     private final Path outbox;
