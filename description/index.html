@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>Description - dd-transfer-to-vault</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Description";
+        var mkdocs_page_input_path = "description.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <script src="../js/jquery-3.6.0.min.js" defer></script>
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+      <script>hljs.initHighlightingOnLoad();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href=".." class="icon icon-home"> dd-transfer-to-vault
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption"><span class="caption-text">Manual</span></p>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="..">Synopsis</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="./">Description</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#interfaces">Interfaces</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#provided">Provided</a>
+        <ul>
+    <li class="toctree-l4"><a class="reference internal" href="#inbox">Inbox</a>
+    </li>
+    <li class="toctree-l4"><a class="reference internal" href="#admin-console">Admin console</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#consumed">Consumed</a>
+        <ul>
+    <li class="toctree-l4"><a class="reference internal" href="#data-vault-catalog">Data Vault Catalog</a>
+    </li>
+    <li class="toctree-l4"><a class="reference internal" href="#nbn-database">NBN Database</a>
+    </li>
+    <li class="toctree-l4"><a class="reference internal" href="#data-vault-import-inbox">Data Vault import inbox</a>
+    </li>
+        </ul>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#processing">Processing</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#collect">COLLECT</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#extract-metadata">EXTRACT-METADATA</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#send-to-data-vault">SEND-TO-DATA-VAULT</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#confirm-archived">CONFIRM-ARCHIVED</a>
+    </li>
+        </ul>
+    </li>
+    </ul>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../installation/">Installation & building</a>
+                  </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../dev/">Development</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Context</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../arch/">⇒ DANS Data Station Architecture</a>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="..">dd-transfer-to-vault</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".." class="icon icon-home" alt="Docs"></a> &raquo;</li>
+          <li>Manual &raquo;</li><li>Description</li>
+    <li class="wy-breadcrumbs-aside">
+        <a href="https://github.com/DANS-KNAW/dd-transfer-to-vault/edit/master/docs/description.md"> Edit on DANS-KNAW/dd-transfer-to-vault</a>
+    </li>
+  </ul>
+  <hr/>
+</div>
+
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="description">DESCRIPTION<a class="headerlink" href="#description" title="Permanent link">&para;</a></h1>
+<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
+<p>This service is responsible for taking dataset version exports, cataloging them and transferring them to the DANS data vault. If the dataset version export is
+the first version of a dataset, an NBN persistent identifier is minted for the dataset and registered in the NBN database. For more information about the
+context of this service, see the <a href="https://dans-knaw.github.io/dans-datastation-architecture/datastation/" target="_blank">Data Station architecture overview</a>.</p>
+<h2 id="interfaces">Interfaces<a class="headerlink" href="#interfaces" title="Permanent link">&para;</a></h2>
+<p><img alt="Interfaces" src="../img/overview.png" /></p>
+<h3 id="provided">Provided<a class="headerlink" href="#provided" title="Permanent link">&para;</a></h3>
+<h4 id="inbox">Inbox<a class="headerlink" href="#inbox" title="Permanent link">&para;</a></h4>
+<ul>
+<li><em>Protocol type</em>: Shared filesystem</li>
+<li><em>Internal or external</em>: <strong>internal</strong></li>
+<li><em>Purpose</em>: to receive dataset version exports from the Data Stations and other services</li>
+</ul>
+<h4 id="admin-console">Admin console<a class="headerlink" href="#admin-console" title="Permanent link">&para;</a></h4>
+<ul>
+<li><em>Protocol type</em>: HTTP</li>
+<li><em>Internal or external</em>: <strong>internal</strong></li>
+<li><em>Purpose</em>: application monitoring and management</li>
+</ul>
+<h3 id="consumed">Consumed<a class="headerlink" href="#consumed" title="Permanent link">&para;</a></h3>
+<h4 id="data-vault-catalog">Data Vault Catalog<a class="headerlink" href="#data-vault-catalog" title="Permanent link">&para;</a></h4>
+<ul>
+<li><em>Protocol type</em>: HTTP</li>
+<li><em>Internal or external</em>: <strong>internal</strong></li>
+<li><em>Purpose</em>: to maintain information about the datasets and their versions that are stored in the DANS data vault</li>
+</ul>
+<h4 id="nbn-database">NBN Database<a class="headerlink" href="#nbn-database" title="Permanent link">&para;</a></h4>
+<ul>
+<li><em>Protocol type</em>: HTTP</li>
+<li><em>Internal or external</em>: <strong>internal</strong></li>
+<li><em>Purpose</em>: to mint and register NBN persistent identifiers for datasets</li>
+</ul>
+<h4 id="data-vault-import-inbox">Data Vault import inbox<a class="headerlink" href="#data-vault-import-inbox" title="Permanent link">&para;</a></h4>
+<ul>
+<li><em>Protocol type</em>: Shared filesystem</li>
+<li><em>Internal or external</em>: <strong>internal</strong></li>
+<li><em>Purpose</em>: to import dataset version exports into the DANS data vault</li>
+</ul>
+<h6 id="data-vault-api">Data Vault API<a class="headerlink" href="#data-vault-api" title="Permanent link">&para;</a></h6>
+<ul>
+<li><em>Protocol type</em>: HTTP</li>
+<li><em>Internal or external</em>: <strong>internal</strong></li>
+<li><em>Purpose</em>: to issue commands to the DANS data vault and retrieve information from it</li>
+</ul>
+<h2 id="processing">Processing<a class="headerlink" href="#processing" title="Permanent link">&para;</a></h2>
+<p>This service is best viewed as a processing pipeline for dataset version exports. A dataset version export is a zip file containing the metadata and files of a
+dataset version. It is created as a long term preservation copy of a dataset version. The processing pipeline consists of the following steps:</p>
+<h3 id="collect">COLLECT<a class="headerlink" href="#collect" title="Permanent link">&para;</a></h3>
+<p>The service monitors a number of configured inbox directories for new dataset version exports. The COLLECT step is responsible for detecting new exports and
+creating a transfer items in the service's database.</p>
+<h3 id="extract-metadata">EXTRACT-METADATA<a class="headerlink" href="#extract-metadata" title="Permanent link">&para;</a></h3>
+<p>The metadata of a dataset version export is extracted. An NBN persistent identifier is minted for the dataset if it is the first version of a dataset and
+registered in the NBN database. The metadata, including the NBN is registered in the Data Vault Catalog.</p>
+<p>At this point, the dataset version export is ready to be transferred to the DANS data vault. It is moved the current import batch for the vault collection that
+this dataset version export must be added to. The import batch is a directory on the shared filesystem that is used to transfer dataset version exports to the
+DANS data vault. It has the following structure:</p>
+<pre><code class="language-text">import-batch/
+    urn:nbn:nl:ui:13-4-abc/
+        1/ 
+           /unzipped contents of dataset-1-version-1.zip 
+        2/
+           /unzipped contents of dataset-1-version-2.zip
+    urn:nbn:nl:ui:13-4-def/
+        1/
+           /unzipped contents of dataset-2-version-1.zip
+</code></pre>
+<p>Each directory in the batch is an object import directory, that is to say it targets a specific OCFL object in the DANS data vault. An OCFL object is the
+container for the files and metadata of a dataset. The name of the directory is the URN:NBN of the dataset. Each subdirectory of an object import directory is
+a version import directory. The name of the directory is an integer. The versions are imported in ascending order.</p>
+<h3 id="send-to-data-vault">SEND-TO-DATA-VAULT<a class="headerlink" href="#send-to-data-vault" title="Permanent link">&para;</a></h3>
+<p>Each time a dataset version export is moved to the import batch, the service checks if the total size of the import batch exceeds a configured threshold. If it
+does, the service sends a command to the Data Vault API to start the import of the import batch (after first creating a new empty import batch for subsequent
+dataset version exports).</p>
+<p>After confirmation from the Data Vault API that the import has finished successfully, the service checks the size of the current top layer in the DANS Data
+Vault. If it exceeds a configured threshold, the service sends a command to the Data Vault API to create a new top layer.</p>
+<h3 id="confirm-archived">CONFIRM-ARCHIVED<a class="headerlink" href="#confirm-archived" title="Permanent link">&para;</a></h3>
+<!-- TODO: remove this and instead redefine archived as "added to the vault" ?-->
+
+<p>When the request has been sent to archive the import batch, the service waits for the Data Vault API to confirm that the import batch has been archived. It then
+updates the status of all the dataset version exports in the import batch to <code>ARCHIVED</code> in the Vault Catalog.</p>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href=".." class="btn btn-neutral float-left" title="Synopsis"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../installation/" class="btn btn-neutral float-right" title="Installation & building">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href=".." style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../installation/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme_extra.js" defer></script>
+    <script src="../js/theme.js" defer></script>
+      <script src="../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>
