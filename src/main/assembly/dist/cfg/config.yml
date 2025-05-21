@@ -137,3 +137,5 @@ logging:
       logFormat: "%-5p %c{0}: %m%n%dwREx"
   loggers:
     'org.hibernate.engine.internal.StatisticalLoggingSessionEventListener': 'OFF'
+    'nl.knaw.dans.transfer.core.RemoveXmlFilesTask': 'OFF'
+    'nl.knaw.dans.transfer.core.RemoveEmptyTargetDirsTask': 'OFF'

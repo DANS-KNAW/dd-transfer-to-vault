@@ -16,10 +16,14 @@
 package nl.knaw.dans.transfer.config;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
+import javax.validation.constraints.NotNull;
 import java.nio.file.Path;
 
+@EqualsAndHashCode(callSuper = true)
 @Data
 public class OutboxWithRejectedConfig extends OutboxConfig {
+    @NotNull
     private Path rejected;
 }

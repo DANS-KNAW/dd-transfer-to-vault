@@ -25,7 +25,6 @@ import java.nio.file.Path;
 @Data
 public class InboxConfig {
     @NotNull
-    @ExistingFile(isDirectory = true)
     private Path path;
     private Duration pollingInterval = Duration.seconds(5);
 }

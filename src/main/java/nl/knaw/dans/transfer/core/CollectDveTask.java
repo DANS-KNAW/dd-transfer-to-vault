@@ -68,6 +68,7 @@ public class CollectDveTask implements Runnable {
             log.error("Unable to process DVE: {}", dve, e);
             try {
                 if (transferItem != null) {
+                    FileUtils.ensureDirectoryExists(failedOutbox);
                     transferItem.moveToDir(failedOutbox, e);
                 }
                 else {

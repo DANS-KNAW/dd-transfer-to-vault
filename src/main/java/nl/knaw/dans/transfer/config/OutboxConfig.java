@@ -18,12 +18,13 @@ package nl.knaw.dans.transfer.config;
 import lombok.Data;
 import nl.knaw.dans.validation.ExistingFile;
 
+import javax.validation.constraints.NotNull;
 import java.nio.file.Path;
 
 @Data
 public class OutboxConfig {
-    @ExistingFile(isDirectory = true)
+    @NotNull
     private Path processed;
-    @ExistingFile(isDirectory = true)
+    @NotNull
     private Path failed;
 }
