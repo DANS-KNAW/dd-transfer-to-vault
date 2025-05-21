@@ -1,0 +1,147 @@
+#
+# dd-transfer-to-vault configuration file
+#
+server:
+  applicationContextPath: /
+  adminContextPath: /
+  applicationConnectors:
+    - type: http
+      port: 20350
+  adminConnectors:
+    - type: http
+      port: 20351
+  # Logs the requests to the Jetty http server
+  requestLog:
+    appenders:
+      - type: file
+        archive: false
+        timeZone: system
+        currentLogFilename: /var/opt/dans.knaw.nl/log/dd-transfer-to-vault/request.log
+
+transfer:
+  # Value to store in the 'datastation' field of the dataset's vault catalog record. Not required for VaaS, because dd-vault-ingest
+  # already adds this column in the skeleton record.
+  datastation: null
+  # Collect the DVE from the transfer-inbox and determine its target NBN
+  collectDve:
+    inbox:
+      path: /var/opt/dans.knaw.nl/tmp/transfer-inboxes/INSTANCE/inbox
+      pollingInterval: 500ms
+    outbox:
+      processed: /var/opt/dans.knaw.nl/dd-transfer-to-vault/INSTANCE/metadata-extraction/inbox
+      failed: /var/opt/dans.knaw.nl/tmp/transfer-inboxes/INSTANCE/failed
+  # Extract metadata from the DVE, register the NBN and update the Vault Catalog
+  extractMetadata:
+    inbox:
+      path: /var/opt/dans.knaw.nl/dd-transfer-to-vault/INSTANCE/metadata-extraction/inbox
+      pollingInterval: 500ms
+    outbox:
+      # Successfully processed DVEs will be sent on to the sendToVault service.
+      processed: /var/opt/dans.knaw.nl/tmp/dd-transfer-to-vault/INSTANCE/send-to-vault/inbox
+      # Failed DVEs will be moved to the failed directory.
+      failed: /var/opt/dans.knaw.nl/tmp/dd-transfer-to-vault/INSTANCE/metadata-extraction/failed
+      # DVEs that do not comply with the BagPack requirements will be moved to the rejected directory.
+      rejected: /var/opt/dans.knaw.nl/tmp/dd-transfer-to-vault/INSTANCE/metadata-extraction/rejected
+    taskQueue:
+      nameFormat: "extract-metadata-worker-%d"
+      maxQueueSize: 5000
+      # Number of threads will be increased when maxQueueSize is exceeded.
+      minThreads: 1
+      # No more than maxThreads will be created though
+      maxThreads: 3
+      # Threads will die after 60 seconds of idleness
+      keepAliveTime: 60 seconds
+  # Unzip the DVE and send it to the Data Vault
+  sendToVault:
+    inbox:
+      path: /var/opt/dans.knaw.nl/tmp/dd-transfer-to-vault/INSTANCE/send-to-vault/inbox
+      pollingInterval: 500ms
+    outbox:
+      # The original ZIP files of successfully processed DVEs will be moved to this directory. Note that the data is transferred to the vault by
+      # extracting the ZIP file to a batch directory (see below) and then sending the batch to the vault.
+      processed: /var/opt/dans.knaw.nl/tmp/dd-transfer-to-vault/INSTANCE/send-to-vault/processed
+      # If the transfer to the vault fails, the original ZIP files will be moved to this directory.
+      failed: /var/opt/dans.knaw.nl/tmp/dd-transfer-to-vault/INSTANCE/send-to-vault/failed
+    dataVault:
+      # The current batch being assembled
+      currentBatchWorkingDir: /var/opt/dans.knaw.nl/tmp/dd-transfer-to-vault/INSTANCE/current-batch-work
+      # Create import batches under this directory
+      batchRoot: /var/opt/dans.knaw.nl/tmp/dd-data-vault/INSTANCE/inbox
+      # If the batch size exceeds this threshold, issue the import request and start a new batch
+      threshold: 100MB
+
+nbnRegistration:
+  catalogBaseUrl: https://catalog.vault.datastations.nl/dataset
+  inbox:
+    path: /var/opt/dans.knaw.nl/tmp/dd-transfer-to-vault/INSTANCE/nbn-registration/inbox
+    pollingInterval: 500ms
+  outbox:
+    processed: /var/opt/dans.knaw.nl/tmp/dd-transfer-to-vault/INSTANCE/nbn-registration/processed
+    failed: /var/opt/dans.knaw.nl/tmp/dd-transfer-to-vault/INSTANCE/nbn-registration/failed
+  gmh:
+    url: # Fill in a valid GMH server URL
+    token: # Fill in a valid token, generated via the token endpoint of the GMH server
+    httpClient:
+      timeout: 30s
+      connectionTimeout: 15s
+      timeToLive: 1h
+      retries: 2
+      # The GMH server does not handle GZIP compression
+      gzipEnabled: false
+      userAgent: dd-transfer-to-vault
+
+vaultCatalog:
+  url: http://dev.transfer.dans-data.nl:20305
+  httpClient:
+    timeout: 10s
+    connectionTimeout: 1min
+    # disable chunked encoding because it breaks the multipart/form-data headers:
+    chunkedEncodingEnabled: false
+    timeToLive: 1h
+    cookiesEnabled: false
+    maxConnections: 128
+    maxConnectionsPerRoute: 128
+    keepAlive: 0ms
+    retries: 0
+    userAgent: dd-transfer-to-vault
+
+dataVault:
+  url: http://localhost:20365
+  httpClient:
+    timeout: 10s
+    connectionTimeout: 1min
+    # disable chunked encoding because it breaks the multipart/form-data headers:
+    chunkedEncodingEnabled: false
+    timeToLive: 1h
+    cookiesEnabled: false
+    maxConnections: 128
+    maxConnectionsPerRoute: 128
+    keepAlive: 0ms
+    retries: 0
+    userAgent: dd-transfer-to-vault
+
+database:
+  driverClass: org.postgresql.Driver
+  url: jdbc:postgresql://localhost:5432/dd_transfer_to_vault
+  user: changeme
+  password: changeme
+  logValidationErrors: true
+  properties:
+    hibernate.dialect: 'org.hibernate.dialect.PostgreSQL95Dialect'
+    hibernate.hbm2ddl.auto: update
+
+#
+# See https://www.dropwizard.io/en/latest/manual/configuration.html#logging
+#
+logging:
+  level: INFO
+  appenders:
+    - type: file
+      archive: false
+      timeZone: system
+      currentLogFilename: /var/opt/dans.knaw.nl/log/dd-transfer-to-vault/dd-transfer-to-vault.log
+    - type: console
+      # Used in combination with journald, which already adds the timestamp
+      logFormat: "%-5p %c{0}: %m%n%dwREx"
+  loggers:
+    'org.hibernate.engine.internal.StatisticalLoggingSessionEventListener': 'OFF'

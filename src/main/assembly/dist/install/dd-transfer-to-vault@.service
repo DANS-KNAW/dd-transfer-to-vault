@@ -1,0 +1,16 @@
+[Unit]
+Description=Transfer to Vault Service
+
+[Service]
+ExecStart=/opt/dans.knaw.nl/dd-transfer-to-vault/bin/dd-transfer-to-vault server /etc/opt/dans.knaw.nl/dd-transfer-to-vault/config-%i.yml
+# Java returns 143 even if the SIGTERM was handled correctly.
+SuccessExitStatus=143
+Environment="JAVA_OPTS=-Xms64m"
+Environment="LC_ALL=en_US.UTF-8"
+SyslogIdentifier=dd-transfer-to-vault@%i
+
+User=dd-transfer-to-vault
+Group=dd-transfer-to-vault
+
+[Install]
+WantedBy=multi-user.target

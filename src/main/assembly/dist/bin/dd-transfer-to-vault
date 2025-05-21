@@ -1,0 +1,7 @@
+#!/bin/sh
+
+SCRIPTNAME=$(basename $0)
+BINPATH=$(command readlink -f $0 2> /dev/null || command grealpath $0 2> /dev/null)
+APPHOME=$(dirname  "$(dirname $BINPATH)")
+
+java $DANS_JAVA_OPTS $JAVA_OPTS -jar $APPHOME/bin/$SCRIPTNAME.jar "$@"
