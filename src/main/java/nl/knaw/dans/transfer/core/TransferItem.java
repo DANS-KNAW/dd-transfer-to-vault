@@ -20,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.MessageDigest;
 import java.util.Properties;
 
 /**
@@ -72,13 +73,15 @@ public class TransferItem {
      */
     public void moveToDir(Path dir, Exception e) throws IOException {
         var newLocation = findFreeName(dir, dve);
+        var tempNewLocation = newLocation.resolveSibling(newLocation.getFileName() + ".tmp");
         var newPropertiesFile = newLocation.resolveSibling(newLocation.getFileName() + PROPERTIES_SUFFIX);
         if (Files.exists(newLocation)) {
             log.error("File already exists: {}", newLocation);
         }
         else {
             Files.move(properties, newPropertiesFile);
-            Files.move(dve, newLocation);
+            Files.move(dve, tempNewLocation); // Make sure the file is not detected before the move is complete
+            Files.move(tempNewLocation, newLocation);
             dve = newLocation;
             properties = newPropertiesFile;
         }
@@ -194,9 +197,20 @@ public class TransferItem {
 
     private static String calculateMd5(Path path) throws IOException {
         try {
-            var md5 = java.security.MessageDigest.getInstance("MD5");
+            var md5 = MessageDigest.getInstance("MD5");
+            long totalBytesRead = 0;
+            long fileSize = Files.size(path);
             try (var is = Files.newInputStream(path)) {
-                var digest = md5.digest(is.readAllBytes());
+                byte[] buffer = new byte[8192];
+                int bytesRead;
+                while ((bytesRead = is.read(buffer)) != -1) {
+                    md5.update(buffer, 0, bytesRead);
+                    totalBytesRead += bytesRead;
+                    if (totalBytesRead % 1048576 == 0) { // Log every MB
+                        log.debug("Read {} MB of {} MB", totalBytesRead / 1048576, fileSize / 1048576);
+                    }
+                }
+                var digest = md5.digest();
                 var hexString = new StringBuilder();
                 for (byte b : digest) {
                     hexString.append(String.format("%02x", b));
