@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2021 DANS - Data Archiving and Networked Services (info@dans.knaw.nl)
+# Copyright (C) 2025 DANS - Data Archiving and Networked Services (info@dans.knaw.nl)
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -23,12 +23,16 @@ repo_url: https://github.com/DANS-KNAW/dd-transfer-to-vault
 
 nav:
   - Manual:
-    - Synopsis: index.md
-    - Description: description.md
-    - Installation & building: installation.md
-  - Development: dev.md
+      - Synopsis: index.md
+      - Description: description.md
+      - Installation & building: installation.md
   - Context:
-    - ⇒ DANS Data Station Architecture: arch.md
+      - ⇒ DANS Data Station Architecture: arch.md
+
+extra:
+  nbn_url: https://www.kb.nl/en/about-us/services/nbn-agency-nl
+  data_station_architecture_overview: https://dans-knaw.github.io/dans-datastation-architecture/datastation/
+  data_vault_storage_root: https://dans-knaw.github.io/dans-datastation-architecture/data-vault-storage-root/
 
 plugins:
   - markdownextradata

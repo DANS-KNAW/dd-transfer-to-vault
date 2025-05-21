@@ -4,11 +4,12 @@ DESCRIPTION
 Overview
 --------
 
-This service is responsible for taking dataset version exports, cataloging them and transferring them to the DANS data vault. If the dataset version export is
-the first version of a dataset, an NBN persistent identifier is minted for the dataset and registered in the NBN database. For more information about the
-context of this service, see the [Data Station architecture overview]{:target="_blank"}.
+This service is responsible for taking dataset version exports (DVE for short), cataloging them and transferring them to the DANS data vault. If the dataset
+version export is the first version of a dataset, an [NBN persistent identifier]{:target=_blank} is minted for the dataset and registered in the NBN database.
+For more information about the context of this service, see the [Data Station architecture overview]{:target="_blank"}.
 
-[Data Station architecture overview]: https://dans-knaw.github.io/dans-datastation-architecture/datastation/
+[Data Station architecture overview]: {{ data_station_architecture_overview }}
+[NBN persistent identifier]: {{ nbn_url }}
 
 Interfaces
 ----------
@@ -21,7 +22,7 @@ Interfaces
 
 * _Protocol type_: Shared filesystem
 * _Internal or external_: **internal**
-* _Purpose_: to receive dataset version exports from the Data Stations and other services
+* _Purpose_: to receive DVEs from the Data Stations and other services
 
 #### Admin console
 
@@ -40,14 +41,14 @@ Interfaces
 #### NBN Database
 
 * _Protocol type_: HTTP
-* _Internal or external_: **internal**
+* _Internal or external_: **external**
 * _Purpose_: to mint and register NBN persistent identifiers for datasets
 
 #### Data Vault import inbox
 
 * _Protocol type_: Shared filesystem
 * _Internal or external_: **internal**
-* _Purpose_: to import dataset version exports into the DANS data vault
+* _Purpose_: to import DVEs into the DANS data vault
 
 ###### Data Vault API
 
@@ -57,51 +58,54 @@ Interfaces
 
 Processing
 ----------
-This service is best viewed as a processing pipeline for dataset version exports. A dataset version export is a zip file containing the metadata and files of a
-dataset version. It is created as a long term preservation copy of a dataset version. The processing pipeline consists of the following steps:
+This service is best viewed as a processing pipeline for DVEs. It connects a source that produces DVEs to a target DANS
+[Data Vault Storage Root]{:target=_blank}, which stores the DVEs as OCFL object versions. A source can be a Data Station or a Vault as a Service client. The
+service takes care of cataloging the DVEs and ensuring that the dataset is resolvable via the NBN persistent identifier. It attempts to do this in an efficient
+way, by processing multiple DVEs in parallel, while ensuring that the order of the dataset version exports is preserved. Furthermore, the service will attempt
+to resume processing of DVEs that were left unfinished in the event of a crash or restart.
 
-### COLLECT
+[Data Vault Storage Root]: {{ data_vault_storage_root }}
 
-The service monitors a number of configured inbox directories for new dataset version exports. The COLLECT step is responsible for detecting new exports and
-creating a transfer items in the service's database.
+### Inbox
 
-### EXTRACT-METADATA
+The inbox is a directory into which DVEs are dropped. When a DVE is detected the inbox will determine what the NBN of the target dataset is. DVEs for the same
+dataset version are processed in order, but DVEs for different dataset versions can be processed in parallel, except for the transfer to the vault (see below).
 
-The metadata of a dataset version export is extracted. An NBN persistent identifier is minted for the dataset if it is the first version of a dataset and
-registered in the NBN database. The metadata, including the NBN is registered in the Data Vault Catalog.
+### Validation
 
-At this point, the dataset version export is ready to be transferred to the DANS data vault. It is moved the current import batch for the vault collection that
-this dataset version export must be added to. The import batch is a directory on the shared filesystem that is used to transfer dataset version exports to the
-DANS data vault. It has the following structure:
+The first step in the processing pipeline is to validate the DVE. Currently, the only layout that is supported is the [bagpack] layout. If the DVE is not a
+bagpack, it will be rejected. Any other DVEs for the same dataset version will be blocked from processing until the problem is resolved.
 
-```text
-import-batch/
-    urn:nbn:nl:ui:13-4-abc/
-        1/ 
-           /unzipped contents of dataset-1-version-1.zip 
-        2/
-           /unzipped contents of dataset-1-version-2.zip
-    urn:nbn:nl:ui:13-4-def/
-        1/
-           /unzipped contents of dataset-2-version-1.zip
-```
+### Metadata extraction
 
-Each directory in the batch is an object import directory, that is to say it targets a specific OCFL object in the DANS data vault. An OCFL object is the
-container for the files and metadata of a dataset. The name of the directory is the URN:NBN of the dataset. Each subdirectory of an object import directory is
-a version import directory. The name of the directory is an integer. The versions are imported in ascending order.
+The next step is to extract the metadata from the DVE and to create or update the dataset version in the DANS data vault catalog. The main source of metadata is
+the `metadata/oai-ore.jsonld` file in the DVE.
 
-### SEND-TO-DATA-VAULT
+### NBN registration
 
-Each time a dataset version export is moved to the import batch, the service checks if the total size of the import batch exceeds a configured threshold. If it
-does, the service sends a command to the Data Vault API to start the import of the import batch (after first creating a new empty import batch for subsequent
-dataset version exports).
+After the Vault Catalog has been updated, the NBN persistent identifier is minted and scheduled for registration in the NBN database. This is done in a separate
+background thread which uses a database table as a queue, so that the registration can be retried in case of a restart or crash.
 
-After confirmation from the Data Vault API that the import has finished successfully, the service checks the size of the current top layer in the DANS Data
-Vault. If it exceeds a configured threshold, the service sends a command to the Data Vault API to create a new top layer.
+### Transfer to vault and layer management
 
-### CONFIRM-ARCHIVED
+Finally, the DVE is extracted to the current DANS data vault import inbox batch for this instance of `dd-transfer-to-vault`. If the size of the batch exceeds a
+configured threshold, the service will do two things:
 
-<!-- TODO: remove this and instead redefine archived as "added to the vault" ?-->
+1. Check if a new layer is needed. If so, it will issue a command to the DANS data vault to create a new layer.
+2. Issue a command to the DANS data vault to import the current batch of DVEs.
 
-When the request has been sent to archive the import batch, the service waits for the Data Vault API to confirm that the import batch has been archived. It then
-updates the status of all the dataset version exports in the import batch to `ARCHIVED` in the Vault Catalog.
+This step is executed on a single dedicated thread, so that determining the size of the batch can be done reliably. The import command will return a tracking
+URL which can be used to monitor the progress of the import. A confirmation of archiving task is scheduled to check the status of the import and to confirm that
+the DVE has been archived in the DANS data vault.
+
+### Confirmation of archiving
+
+This step is also performed in a separate background thread, similar to the NBN registration. When `dd-data-vault` confirms that the DVE has been archived, the
+Vault Catalog is updated to mark the dataset version as archived.
+
+
+
+
+
+
+

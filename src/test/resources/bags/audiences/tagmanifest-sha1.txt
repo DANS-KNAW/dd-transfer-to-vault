@@ -1,9 +1,0 @@
-78c6dbeaad9e04da66bbcf69e6b2c2c9958cbff9  README.md
-4eed769614e7f771a7a58f26187c1d0f5c065ff0  metadata/oai-ore.jsonld
-4f859fa19ffef24c7458c651228ef630a5e2e74b  manifest-sha1.txt
-aac9cc1d8e842f7fe7365504c7c3643bf274e4dc  metadata/oai-ore.rdf
-a1dab488de230d5b87ef688d6ffd6c0458c471d0  metadata/datacite.xml
-e2924b081506bac23f5fffe650ad1848a1c8ac1d  bagit.txt
-90579aa9e8bd4fae4f28d0975a42b7601336c216  metadata/dataset.xml
-9675064b1d9788d535685b763b1d69eb019658b8  metadata/files.xml
-3140c238999a33bb487724fe54f09e82741e1a25  metadata/pid-mapping.txt

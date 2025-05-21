@@ -1,5 +1,5 @@
-INSTALLATION AND CONFIGURATION
-==============================
+INSTALLATION 
+============
 
 Currently, this project is built as an RPM package for OSes compatible with RHEL8 and later. The RPM will install the binaries to
 `/opt/dans.knaw.nl/dd-transfer-to-vault` and the configuration files to `/etc/opt/dans.knaw.nl/dd-transfer-to-vault`.

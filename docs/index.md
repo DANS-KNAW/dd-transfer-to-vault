@@ -1,7 +1,7 @@
 dd-transfer-to-vault
 ====================
 
-Transfers (Dataverse) dataset version exports to the DANS data vault.
+Processes dataset version exports for inclusion in the DANS Data Vault
 
 
 SYNOPSIS
