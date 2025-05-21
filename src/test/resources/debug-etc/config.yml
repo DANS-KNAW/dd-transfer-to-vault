@@ -55,16 +55,24 @@ transfer:
     dataVault:
       # The current batch being assembled
       currentBatchWorkingDir: data/03_send-to-vault/work
+      # If the batch size exceeds this threshold, move work to a new batch in the batchRoot and issue an import request
+      batchThreshold: 1MB
       # Create import batches under this directory
-      batchRoot: data/04_data-vault/inbox
-      # If the batch size exceeds this threshold, issue the import request and start a new batch
-      threshold: 100MB
+      batchRoot: /home/janm/git/dans-core-systems/modules/dd-data-vault/data/ingest/inbox
+      # If the top layer of the vault exceeds this threshold first create a new top layer and then issue the import request
+      layerThreshold: 100MB
 
-nbnRegistration:
+
   catalogBaseUrl: http://dev.catalog.vault.datastations.nl/dataset
   registrationInterval: 1000
+  inbox:
+    path: data/nbn-registration/inbox
+    pollingInterval: 500ms
+  outbox:
+    processed: data/nbn-registration/outbox/processed
+    failed: data/nbn-registration/outbox/failed
   gmh:
-    url:
+    url: https://resolver.tgharvester.dans.knaw.nl/gmh-registration-service/nbn
     token: # Fill in a valid token, generated via the token endpoint of the GMH server
     httpClient:
       timeout: 30s
@@ -104,16 +112,6 @@ dataVault:
     keepAlive: 0ms
     retries: 0
     userAgent: dd-transfer-to-vault
-
-database:
-  driverClass: org.postgresql.Driver
-  url: jdbc:postgresql://dev.transfer.dans-data.nl:5432/dd_transfer_to_vault
-  user: dd_transfer_to_vault
-  password: dd_transfer_to_vault
-  logValidationErrors: true
-  properties:
-    hibernate.dialect: 'org.hibernate.dialect.PostgreSQL95Dialect'
-    hibernate.hbm2ddl.auto: update
 
 #
 # See https://www.dropwizard.io/en/latest/manual/configuration.html#logging

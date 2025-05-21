@@ -57,8 +57,14 @@ public class ExtractMetadataTask implements Runnable {
                     TransferItem transferItem = null;
                     try {
                         transferItem = new TransferItem(dve);
+
+                        // TODO: validate DVE (call dd-validate-bagpack)
+
                         transferItem.setOcflObjectVersion(
                             vaultCatalogClient.registerOcflObjectVersion(datastation, dveMetadataReader.readDveMetadata(dve), transferItem.getOcflObjectVersion()));
+
+                        // TODO: schedule NBN registration
+
                         transferItem.moveToDir(outboxProcessed);
                     }
                     catch (Exception e) {

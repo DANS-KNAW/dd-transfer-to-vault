@@ -42,8 +42,4 @@ public class DdTransferToVaultConfiguration extends Configuration {
     @Valid
     @NotNull
     private DataVaultConfig dataVault;
-
-    @Valid
-    @NotNull
-    private DataSourceFactory database;
 }

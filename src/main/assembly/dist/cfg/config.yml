@@ -65,10 +65,12 @@ transfer:
     dataVault:
       # The current batch being assembled
       currentBatchWorkingDir: /var/opt/dans.knaw.nl/tmp/dd-transfer-to-vault/INSTANCE/current-batch-work
+      # If the batch size exceeds this threshold, move work to a new batch in the batchRoot and issue an import request
+      batchThreshold: 100MB
       # Create import batches under this directory
       batchRoot: /var/opt/dans.knaw.nl/tmp/dd-data-vault/INSTANCE/inbox
       # If the batch size exceeds this threshold, issue the import request and start a new batch
-      threshold: 100MB
+      layerThreshold: 1GB
 
 nbnRegistration:
   catalogBaseUrl: https://catalog.vault.datastations.nl/dataset
@@ -119,16 +121,6 @@ dataVault:
     keepAlive: 0ms
     retries: 0
     userAgent: dd-transfer-to-vault
-
-database:
-  driverClass: org.postgresql.Driver
-  url: jdbc:postgresql://localhost:5432/dd_transfer_to_vault
-  user: changeme
-  password: changeme
-  logValidationErrors: true
-  properties:
-    hibernate.dialect: 'org.hibernate.dialect.PostgreSQL95Dialect'
-    hibernate.hbm2ddl.auto: update
 
 #
 # See https://www.dropwizard.io/en/latest/manual/configuration.html#logging
