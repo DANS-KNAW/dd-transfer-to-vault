@@ -19,7 +19,7 @@ server:
         currentLogFilename: data/request.log
 
 transfer:
-  datastation: Test Datastation
+  storageRoot: Test Datastation
   # Inbox for incoming DVEs
   collectDve:
     inbox:

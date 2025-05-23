@@ -35,6 +35,7 @@
 
     <properties>
         <main-class>nl.knaw.dans.transfer.DdTransferToVaultApplication</main-class>
+        <dd-vault-catalog-api.version>0.9.0</dd-vault-catalog-api.version>
     </properties>
 
     <scm>

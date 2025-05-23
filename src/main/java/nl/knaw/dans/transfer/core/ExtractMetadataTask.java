@@ -28,7 +28,7 @@ import java.util.List;
 @Slf4j
 @AllArgsConstructor
 public class ExtractMetadataTask implements Runnable {
-    private final String datastation;
+    private final String storageRoot;
     private final Path targetNbnDir;
     private final Path outboxProcessed;
     private final Path outboxFailed;
@@ -61,7 +61,7 @@ public class ExtractMetadataTask implements Runnable {
                         // TODO: validate DVE (call dd-validate-bagpack)
 
                         transferItem.setOcflObjectVersion(
-                            vaultCatalogClient.registerOcflObjectVersion(datastation, dveMetadataReader.readDveMetadata(dve), transferItem.getOcflObjectVersion()));
+                            vaultCatalogClient.registerOcflObjectVersion(storageRoot, dveMetadataReader.readDveMetadata(dve), transferItem.getOcflObjectVersion()));
 
                         // TODO: schedule NBN registration
 

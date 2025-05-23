@@ -19,9 +19,9 @@ server:
         currentLogFilename: /var/opt/dans.knaw.nl/log/dd-transfer-to-vault/request.log
 
 transfer:
-  # Value to store in the 'datastation' field of the dataset's vault catalog record. Not required for VaaS, because dd-vault-ingest
+  # Value to store in the 'ocfl_storage_root' field of the dataset's vault catalog record. Not required for VaaS, because dd-vault-ingest
   # already adds this column in the skeleton record.
-  datastation: null
+  storageRoot: null
   # Collect the DVE from the transfer-inbox and determine its target NBN
   collectDve:
     inbox:
