@@ -86,7 +86,7 @@ public class SendToVaultTask implements Runnable {
     private void importIfBatchThresholdReached() throws IOException {
         if (sizeOfDirectory(this.currentBatchWorkDir.toFile()) > this.batchThreshold.toBytes()) {
             var batch = dataVaultBatchRoot.resolve("batch-" + System.currentTimeMillis());
-            log.info("Threshold ({}) reached, sending batch {} to Data Vault", this.batchThreshold, batch);
+            log.info("Batch threshold ({}) reached, sending batch {} to Data Vault", this.batchThreshold, batch);
             log.info("Moving current batch directory {} to {}", currentBatchWorkDir, batch);
             moveDirectory(currentBatchWorkDir.toFile(), batch.toFile());
             dataVaultClient.sendBatchToVault(batch);
