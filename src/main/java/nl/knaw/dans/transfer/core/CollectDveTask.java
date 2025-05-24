@@ -26,6 +26,7 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.ProviderNotFoundException;
+import java.util.List;
 
 /**
  * <p>
@@ -42,6 +43,7 @@ import java.nio.file.ProviderNotFoundException;
 public class CollectDveTask implements Runnable {
     private static final String METADATA_PATH = "metadata/oai-ore.jsonld";
     private static final String NBN_PATH = "$.ore:describes.dansDataVaultMetadata:dansNbn";
+    private static final String TEMP_ALT_NBN_PATH = "$..[\"dansVLT:dansNbn\"]";
 
     private final Path dve;
     private final Path destinationRoot;
@@ -120,7 +122,19 @@ public class CollectDveTask implements Runnable {
                         return JsonPath.read(is, NBN_PATH);
                     }
                     catch (PathNotFoundException e) {
-                        throw new IllegalStateException("No NBN found in DVE", e);
+                        try (var is = Files.newInputStream(metadataPath)) {
+                            // Try to read the NBN from an alternative path
+                            List<String> results = JsonPath.read(is, TEMP_ALT_NBN_PATH);
+                            if (results.isEmpty()) {
+                                throw new IllegalStateException("No NBN found in DVE");
+                            } else if (results.size() > 1) {
+                                throw new IllegalStateException("Multiple NBNs found in DVE: " + results);
+                            }
+                            return results.get(0);
+                        }
+                        catch (PathNotFoundException e2) {
+                            throw new IllegalStateException("No NBN found in DVE", e2);
+                        }
                     }
                     catch (Exception e) {
                         throw new IllegalStateException("Unable to read NBN from metadata file", e);

@@ -25,7 +25,7 @@ import java.nio.file.Path;
 @Builder
 public class ExtractMetadataTaskFactory implements InboxTaskFactory {
     @NonNull
-    private final String datastation;
+    private final String ocflStorageRoot;
     @NonNull
     private final Path outboxProcessed;
     @NonNull
@@ -39,6 +39,6 @@ public class ExtractMetadataTaskFactory implements InboxTaskFactory {
 
     @Override
     public Runnable createInboxTask(Path targetNbnDir) {
-        return new ExtractMetadataTask(datastation, targetNbnDir, outboxProcessed, outboxFailed, outboxRejected, dveMetadataReader, vaultCatalogClient);
+        return new ExtractMetadataTask(ocflStorageRoot, targetNbnDir, outboxProcessed, outboxFailed, outboxRejected, dveMetadataReader, vaultCatalogClient);
     }
 }

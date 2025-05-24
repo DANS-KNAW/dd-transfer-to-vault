@@ -24,5 +24,5 @@ import java.io.IOException;
  * Client for the Vault Catalog API.
  */
 public interface VaultCatalogClient {
-    int registerOcflObjectVersion(String datastation, DveMetadata dveMetadata, int ocflObjectVersion) throws IOException;
+    int registerOcflObjectVersion(String ocflStorageRoot, DveMetadata dveMetadata, int ocflObjectVersion) throws IOException;
 }

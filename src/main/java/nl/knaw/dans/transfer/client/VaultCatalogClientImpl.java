@@ -34,11 +34,11 @@ public class VaultCatalogClientImpl implements VaultCatalogClient {
     private final DefaultApi catalogApi;
 
     @Override
-    public int registerOcflObjectVersion(String storageRoot, DveMetadata dveMetadata, int ocflObjectVersion) throws IOException {
+    public int registerOcflObjectVersion(String ocflStorageRoot, DveMetadata dveMetadata, int ocflObjectVersion) throws IOException {
         try {
             var datasetDto = getDataset(dveMetadata.getNbn());
             if (datasetDto == null) { // Data Stations only
-                addNewDataset(storageRoot, dveMetadata);
+                addNewDataset(ocflStorageRoot, dveMetadata);
                 return 1;
             }
             else if (ocflObjectVersion == -1) { // Data Stations only
@@ -66,13 +66,13 @@ public class VaultCatalogClientImpl implements VaultCatalogClient {
         }
     }
 
-    private void addNewDataset(String storageRoot, DveMetadata dveMetadata) throws ApiException {
+    private void addNewDataset(String ocflStorageRoot, DveMetadata dveMetadata) throws ApiException {
         var datasetDto = new DatasetDto()
             .nbn(dveMetadata.getNbn())
             .dataversePid(dveMetadata.getDataversePid())
             .swordToken(dveMetadata.getSwordToken())
             .dataSupplier(dveMetadata.getDataSupplier())
-            .ocflStorageRoot(storageRoot);
+            .ocflStorageRoot(ocflStorageRoot);
 
         var dveDto = new VersionExportDto();
         dveDto.setOcflObjectVersionNumber(1);

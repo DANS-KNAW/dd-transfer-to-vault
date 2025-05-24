@@ -21,7 +21,7 @@ server:
 transfer:
   # Value to store in the 'ocfl_storage_root' field of the dataset's vault catalog record. Not required for VaaS, because dd-vault-ingest
   # already adds this column in the skeleton record.
-  storageRoot: null
+  ocflStorageRoot: null
   # Collect the DVE from the transfer-inbox and determine its target NBN
   collectDve:
     inbox:

@@ -22,7 +22,7 @@ import javax.validation.constraints.NotNull;
 
 @Data
 public class TransferConfig {
-    private String datastation;
+    private String ocflStorageRoot;
 
     @Valid
     @NotNull
