@@ -22,6 +22,13 @@ import javax.validation.constraints.NotNull;
 
 @Data
 public class CollectDveConfig {
+    public enum NbnSource {
+        OAI_ORE,
+        PROPERTIES
+    }
+
+    private NbnSource nbnSource = NbnSource.OAI_ORE;
+
     @Valid
     @NotNull
     private InboxConfig inbox;

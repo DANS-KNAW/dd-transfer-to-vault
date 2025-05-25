@@ -18,6 +18,7 @@ package nl.knaw.dans.transfer.core;
 import lombok.Builder;
 import lombok.NonNull;
 import nl.knaw.dans.lib.util.inbox.InboxTaskFactory;
+import nl.knaw.dans.transfer.config.CollectDveConfig;
 
 import java.nio.file.Path;
 
@@ -27,9 +28,11 @@ public class CollectDveTaskFactory implements InboxTaskFactory {
     private final Path destinationRoot;
     @NonNull
     private final Path failedOutbox;
+    @NonNull
+    private final CollectDveConfig.NbnSource nbnSource;
 
     @Override
     public Runnable createInboxTask(Path path) {
-        return new CollectDveTask(path, destinationRoot, failedOutbox);
+        return new CollectDveTask(path, destinationRoot, failedOutbox, nbnSource);
     }
 }

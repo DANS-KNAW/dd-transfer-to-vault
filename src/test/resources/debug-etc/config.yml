@@ -22,6 +22,7 @@ transfer:
   ocflStorageRoot: Test Datastation
   # Inbox for incoming DVEs
   collectDve:
+    nbnSource: OAI_ORE
     inbox:
       path: data/01_transfer-inbox/inbox
       pollingInterval: 500ms

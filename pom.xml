@@ -26,7 +26,7 @@
     </parent>
 
     <artifactId>dd-transfer-to-vault</artifactId>
-    <version>0.94.1-SNAPSHOT</version>
+    <version>0.95.0-SNAPSHOT</version>
 
     <name>DD Transfer To Vault</name>
     <url>https://github.com/DANS-KNAW/dd-transfer-to-vault</url>
