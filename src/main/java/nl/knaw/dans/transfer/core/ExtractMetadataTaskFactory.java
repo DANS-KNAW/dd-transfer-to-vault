@@ -20,6 +20,7 @@ import lombok.NonNull;
 import nl.knaw.dans.lib.util.inbox.InboxTaskFactory;
 import nl.knaw.dans.transfer.client.VaultCatalogClient;
 
+import java.net.URI;
 import java.nio.file.Path;
 
 @Builder
@@ -36,9 +37,13 @@ public class ExtractMetadataTaskFactory implements InboxTaskFactory {
     private final DveMetadataReader dveMetadataReader;
     @NonNull
     private final VaultCatalogClient vaultCatalogClient;
+    @NonNull
+    private final Path nbnRegistrationInbox;
+    @NonNull
+    private final URI vaultCatalogBaseUri;
 
     @Override
     public Runnable createInboxTask(Path targetNbnDir) {
-        return new ExtractMetadataTask(ocflStorageRoot, targetNbnDir, outboxProcessed, outboxFailed, outboxRejected, dveMetadataReader, vaultCatalogClient);
+        return new ExtractMetadataTask(ocflStorageRoot, targetNbnDir, outboxProcessed, outboxFailed, outboxRejected, nbnRegistrationInbox, vaultCatalogBaseUri, dveMetadataReader, vaultCatalogClient);
     }
 }

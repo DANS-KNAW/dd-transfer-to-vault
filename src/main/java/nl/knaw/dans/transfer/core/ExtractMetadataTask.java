@@ -20,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import nl.knaw.dans.transfer.client.VaultCatalogClient;
 
 import java.io.IOException;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
@@ -33,6 +34,8 @@ public class ExtractMetadataTask implements Runnable {
     private final Path outboxProcessed;
     private final Path outboxFailed;
     private final Path outboxRejected;
+    private final Path nbnRegistrationInbox;
+    private final URI vaultCatalogBaseUri;
     private final DveMetadataReader dveMetadataReader;
     private final VaultCatalogClient vaultCatalogClient;
 
@@ -62,9 +65,10 @@ public class ExtractMetadataTask implements Runnable {
 
                         transferItem.setOcflObjectVersion(
                             vaultCatalogClient.registerOcflObjectVersion(ocflStorageRoot, dveMetadataReader.readDveMetadata(dve), transferItem.getOcflObjectVersion()));
-
-                        // TODO: schedule NBN registration
-
+                        if (transferItem.getOcflObjectVersion() == 1) {
+                            log.info("First version of dataset {}. Scheduling NBN registration", transferItem.getNbn());
+                            scheduleNbnRegistration(transferItem);
+                        }
                         transferItem.moveToDir(outboxProcessed);
                     }
                     catch (Exception e) {
@@ -114,6 +118,11 @@ public class ExtractMetadataTask implements Runnable {
          * The transfer inbox will dete targetNbnDir if it is empty in the next polling cycle. If new DVEs are added for this same NBN, the inbox will create a new targetNbnDir (with a different name)
          * and create a new ExtractMetadataTask for it. It cannot have the same name, because there would be two tasks instances competing for the same targetNbnDir.
          */
+    }
+
+    private void scheduleNbnRegistration(TransferItem transferItem) {
+        new RegistrationToken(transferItem.getNbn(), URI.create(vaultCatalogBaseUri + transferItem.getNbn()))
+            .save(nbnRegistrationInbox.resolve(transferItem.getNbn() + ".properties"));
     }
 
     private List<Path> getDves() throws IOException {
