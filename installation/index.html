@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>Installation & building - dd-transfer-to-vault</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Installation \u0026 building";
+        var mkdocs_page_input_path = "installation.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <script src="../js/jquery-3.6.0.min.js" defer></script>
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+      <script>hljs.initHighlightingOnLoad();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href=".." class="icon icon-home"> dd-transfer-to-vault
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption"><span class="caption-text">Manual</span></p>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="..">Synopsis</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../description/">Description</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="./">Installation & building</a>
+    <ul class="current">
+    </ul>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Context</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../arch/">⇒ DANS Data Station Architecture</a>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="..">dd-transfer-to-vault</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".." class="icon icon-home" alt="Docs"></a> &raquo;</li>
+          <li>Manual &raquo;</li><li>Installation & building</li>
+    <li class="wy-breadcrumbs-aside">
+        <a href="https://github.com/DANS-KNAW/dd-transfer-to-vault/edit/master/docs/installation.md"> Edit on DANS-KNAW/dd-transfer-to-vault</a>
+    </li>
+  </ul>
+  <hr/>
+</div>
+
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="installation">INSTALLATION<a class="headerlink" href="#installation" title="Permanent link">&para;</a></h1>
+<p>Currently, this project is built as an RPM package for OSes compatible with RHEL8 and later. The RPM will install the binaries to
+<code>/opt/dans.knaw.nl/dd-transfer-to-vault</code> and the configuration files to <code>/etc/opt/dans.knaw.nl/dd-transfer-to-vault</code>.</p>
+<p>For installation on systems that do no support RPM and/or systemd:</p>
+<ol>
+<li>Build the tarball (see next section).</li>
+<li>Extract it to some location on your system, for example <code>/opt/dans.knaw.nl/dd-transfer-to-vault</code>.</li>
+<li>Start the service with the following command
+   <code>/opt/dans.knaw.nl/dd-transfer-to-vault/bin/dd-transfer-to-vault server /opt/dans.knaw.nl/dd-transfer-to-vault/cfg/config.yml</code></li>
+</ol>
+<h1 id="building-from-source">BUILDING FROM SOURCE<a class="headerlink" href="#building-from-source" title="Permanent link">&para;</a></h1>
+<p>Prerequisites:</p>
+<ul>
+<li>Java 17 or higher</li>
+<li>Maven 3.6.3 or higher</li>
+<li>RPM</li>
+</ul>
+<p>Steps:</p>
+<pre class="codehilite"><code>git clone https://github.com/DANS-KNAW/dd-transfer-to-vault.git
+cd dd-transfer-to-vault 
+mvn clean install
+</code></pre>
+
+<p>If the <code>rpm</code> executable is found at <code>/usr/local/bin/rpm</code>, the build profile that includes the RPM packaging will be activated. If <code>rpm</code> is available, but at a
+different path, then activate it by using Maven's <code>-P</code> switch: <code>mvn -Pprm install</code>.</p>
+<p>Alternatively, to build the tarball execute:</p>
+<pre class="codehilite"><code>mvn clean install assembly:single
+</code></pre>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../description/" class="btn btn-neutral float-left" title="Description"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../arch/" class="btn btn-neutral float-right" title="⇒ DANS Data Station Architecture">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../description/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../arch/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme_extra.js" defer></script>
+    <script src="../js/theme.js" defer></script>
+      <script src="../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>
