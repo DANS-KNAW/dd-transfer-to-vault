@@ -69,6 +69,7 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
         environment.lifecycle().manage(Inbox.builder()
             .fileFilter(new DveFileFilter())
             .inbox(configuration.getTransfer().getSendToVault().getInbox().getPath())
+            .interval(Math.toIntExact(configuration.getTransfer().getSendToVault().getInbox().getPollingInterval().toMilliseconds()))
             .taskFactory(SendToVaultTaskFactory.builder()
                 .currentBatchWorkDir(configuration.getTransfer().getSendToVault().getDataVault().getCurrentBatchWorkingDir())
                 .batchThreshold(configuration.getTransfer().getSendToVault().getDataVault().getBatchThreshold())
