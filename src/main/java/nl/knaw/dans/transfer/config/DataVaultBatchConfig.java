@@ -17,13 +17,10 @@ package nl.knaw.dans.transfer.config;
 
 import io.dropwizard.util.DataSize;
 import lombok.Data;
-import nl.knaw.dans.validation.GreaterThan;
-
 import javax.validation.constraints.NotNull;
 import java.nio.file.Path;
 
 @Data
-@GreaterThan(greater = "layerThreshold", smaller = "batchThreshold", message = "layerThreshold must be greater than batchThreshold")
 public class DataVaultBatchConfig {
     @NotNull
     private Path currentBatchWorkingDir;
@@ -32,6 +29,4 @@ public class DataVaultBatchConfig {
     private Path batchRoot;
 
     private DataSize batchThreshold = DataSize.mebibytes(100);
-
-    private DataSize layerThreshold = DataSize.gibibytes(1);
 }

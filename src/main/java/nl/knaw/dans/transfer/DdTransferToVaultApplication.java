@@ -73,7 +73,6 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
             .taskFactory(SendToVaultTaskFactory.builder()
                 .currentBatchWorkDir(configuration.getTransfer().getSendToVault().getDataVault().getCurrentBatchWorkingDir())
                 .batchThreshold(configuration.getTransfer().getSendToVault().getDataVault().getBatchThreshold())
-                .layerThreshold(configuration.getTransfer().getSendToVault().getDataVault().getLayerThreshold())
                 .outboxProcessed(configuration.getTransfer().getSendToVault().getOutbox().getProcessed())
                 .outboxFailed(configuration.getTransfer().getSendToVault().getOutbox().getFailed())
                 .dataVaultBatchRoot(configuration.getTransfer().getSendToVault().getDataVault().getBatchRoot())

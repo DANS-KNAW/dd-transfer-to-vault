@@ -60,9 +60,6 @@ transfer:
       batchThreshold: 1MB
       # Create import batches under this directory
       batchRoot: /home/janm/git/dans-core-systems/modules/dd-data-vault/data/ingest/inbox
-      # If the top layer of the vault exceeds this threshold first create a new top layer and then issue the import request
-      layerThreshold: 100MB
-
 
   catalogBaseUrl: http://dev.catalog.vault.datastations.nl/dataset
   registrationInterval: 1000

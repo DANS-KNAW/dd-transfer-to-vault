@@ -37,7 +37,6 @@ public class SendToVaultTask implements Runnable {
     private final Path currentBatchWorkDir;
     private final Path dataVaultBatchRoot;
     private final DataSize batchThreshold;
-    private final DataSize layerThreshold;
     private final Path outboxProcessed;
     private final Path outboxFailed;
     private final DataVaultClient dataVaultClient;
@@ -48,7 +47,6 @@ public class SendToVaultTask implements Runnable {
         try {
             transferItem = new TransferItem(dve);
             addToObjectImportDirectory(dve, transferItem.getOcflObjectVersion(), this.currentBatchWorkDir.resolve(transferItem.getNbn()));
-            createNewLayerIfLayerThresholdReached();
             importIfBatchThresholdReached();
             transferItem.moveToDir(outboxProcessed);
         }
@@ -70,17 +68,6 @@ public class SendToVaultTask implements Runnable {
         var versionDirectory = objectImportDirectory.resolve("v" + ocflObjectVersionNumber);
         log.debug("Extracting DVE {} to {}", dvePath, versionDirectory);
         ZipUtil.extractZipFile(dvePath, versionDirectory);
-    }
-
-    private void createNewLayerIfLayerThresholdReached() {
-        if (dataVaultClient.getTopLayerSize() > layerThreshold.toBytes()) {
-            log.info("Layer threshold ({}) reached, creating new layer in Data Vault", this.layerThreshold);
-            var layerStatusDto = dataVaultClient.createNewLayer();
-            log.info("New layer created in Data Vault; id = {}", layerStatusDto.getLayerId());
-        }
-        else {
-            log.debug("Layer threshold not reached, current size: {}", dataVaultClient.getTopLayerSize());
-        }
     }
 
     private void importIfBatchThresholdReached() throws IOException {

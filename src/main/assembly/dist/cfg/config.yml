@@ -73,8 +73,6 @@ transfer:
       batchThreshold: 100MB
       # Create import batches under this directory
       batchRoot: /var/opt/dans.knaw.nl/tmp/dd-data-vault/INSTANCE/inbox
-      # If the batch size exceeds this threshold, issue the import request and start a new batch
-      layerThreshold: 1GB
 
 nbnRegistration:
   catalogBaseUrl: https://catalog.vault.datastations.nl/dataset
