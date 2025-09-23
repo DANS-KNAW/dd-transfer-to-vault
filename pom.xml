@@ -22,7 +22,7 @@
     <parent>
         <groupId>nl.knaw.dans</groupId>
         <artifactId>dd-parent</artifactId>
-        <version>1.9.0</version>
+        <version>1.9.1-SNAPSHOT</version>
     </parent>
 
     <artifactId>dd-transfer-to-vault</artifactId>
@@ -35,9 +35,6 @@
 
     <properties>
         <main-class>nl.knaw.dans.transfer.DdTransferToVaultApplication</main-class>
-        <!--TODO: move to parent pom-->
-        <dd-vault-catalog-api.version>0.9.0</dd-vault-catalog-api.version>
-        <dd-data-vault-api.version>0.7.0</dd-data-vault-api.version>
     </properties>
 
     <scm>
@@ -57,7 +54,6 @@
         <dependency>
             <groupId>nl.knaw.dans</groupId>
             <artifactId>dans-java-utils</artifactId>
-            <version>2.0.0</version>
         </dependency>
         <dependency>
             <groupId>nl.knaw.dans</groupId>
@@ -83,17 +79,14 @@
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
-            <version>2.19.0</version>
         </dependency>
         <dependency>
             <groupId>com.jayway.jsonpath</groupId>
             <artifactId>json-path</artifactId>
-            <version>2.9.0</version>
         </dependency>
         <dependency>
             <groupId>org.apache.jena</groupId>
             <artifactId>apache-jena-libs</artifactId>
-            <version>5.0.0</version>
             <type>pom</type>
         </dependency>
         <dependency>
@@ -103,7 +96,6 @@
         <dependency>
             <groupId>nl.knaw.dans</groupId>
             <artifactId>dans-validation-lib</artifactId>
-            <version>1.0.0</version>
         </dependency>
 
         <dependency>
@@ -153,17 +145,14 @@
                         <path>
                             <groupId>org.mapstruct</groupId>
                             <artifactId>mapstruct-processor</artifactId>
-                            <version>${mapstruct.version}</version>
                         </path>
                         <path>
                             <groupId>org.projectlombok</groupId>
                             <artifactId>lombok</artifactId>
-                            <version>${lombok.version}</version>
                         </path>
                         <dependency>
                             <groupId>org.projectlombok</groupId>
                             <artifactId>lombok-mapstruct-binding</artifactId>
-                            <version>0.2.0</version>
                         </dependency>
                         <!-- other annotation processors -->
                     </annotationProcessorPaths>
