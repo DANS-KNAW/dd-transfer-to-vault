@@ -19,13 +19,13 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import nl.knaw.dans.gmh.client.api.NbnLocationsObjectDto;
 import nl.knaw.dans.gmh.client.invoker.ApiException;
-import nl.knaw.dans.gmh.client.resources.UrnnbnIdentifierApi;
+import nl.knaw.dans.gmh.client.resources.UrnNbnIdentifierApi;
 import nl.knaw.dans.transfer.core.RegistrationToken;
 
 @AllArgsConstructor
 @Slf4j
 public class GmhClientImpl implements GmhClient {
-    private final UrnnbnIdentifierApi api;
+    private final UrnNbnIdentifierApi api;
     @Override
     public void registerNbn(RegistrationToken registrationToken) throws FailedNbnRegistrationException {
         log.debug("Registering NBN {} with landing page URL {}", registrationToken.getNbn(), registrationToken.getLocation());

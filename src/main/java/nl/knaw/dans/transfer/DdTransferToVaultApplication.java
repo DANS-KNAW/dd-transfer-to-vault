@@ -160,11 +160,11 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
     }
 
     private GmhClient createGmhClient(DdTransferToVaultConfiguration configuration) {
-        return new GmhClientImpl(new ClientProxyBuilder<nl.knaw.dans.gmh.client.invoker.ApiClient, nl.knaw.dans.gmh.client.resources.UrnnbnIdentifierApi>()
+        return new GmhClientImpl(new ClientProxyBuilder<nl.knaw.dans.gmh.client.invoker.ApiClient, nl.knaw.dans.gmh.client.resources.UrnNbnIdentifierApi>()
             .apiClient(new nl.knaw.dans.gmh.client.invoker.ApiClient().setBearerToken(configuration.getNbnRegistration().getGmh().getToken()))
             .basePath(configuration.getNbnRegistration().getGmh().getUrl())
             .httpClient(configuration.getNbnRegistration().getGmh().getHttpClient())
-            .defaultApiCtor(nl.knaw.dans.gmh.client.resources.UrnnbnIdentifierApi::new)
+            .defaultApiCtor(nl.knaw.dans.gmh.client.resources.UrnNbnIdentifierApi::new)
             .build());
     }
 
