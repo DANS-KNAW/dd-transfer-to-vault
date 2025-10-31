@@ -31,6 +31,7 @@ public class DveMetadataReader {
     private final FileService fileService;
     private final OaiOreMetadataReader oaiOreMetadataReader;
     private final DataFileMetadataReader dataFileMetadataReader;
+    private final BagInfoReader bagInfoReader = new BagInfoReader();
 
     public DveMetadata readDveMetadata(Path path) {
 
@@ -39,6 +40,11 @@ public class DveMetadataReader {
             var metadataInputstream = fileService.getEntryUnderBaseFolder(datasetVersionExport, Path.of("metadata/oai-ore.jsonld"));
             var oaiOre = IOUtils.toString(metadataInputstream, StandardCharsets.UTF_8);
             var dveMetadata = oaiOreMetadataReader.readMetadata(oaiOre);
+            var baginfoInputstream = fileService.getEntryUnderBaseFolder(datasetVersionExport, Path.of("bag-info.txt"));
+            var bagInfo = IOUtils.toString(baginfoInputstream, StandardCharsets.UTF_8);
+            var bagInfoMap = bagInfoReader.readBagInfo(bagInfo);
+            bagInfoMap.get("Contact-Name").stream().findFirst().ifPresent(dveMetadata::setContactName);
+            bagInfoMap.get("Contact-Email").stream().findFirst().ifPresent(dveMetadata::setContactEmail);
             var propertiesPath = path.getParent().resolve(path.getFileName() + ".properties");
             String creationTimeValue = null;
             if (Files.exists(propertiesPath)) {

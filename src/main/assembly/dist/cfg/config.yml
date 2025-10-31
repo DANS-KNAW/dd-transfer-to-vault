@@ -73,6 +73,8 @@ transfer:
       batchThreshold: 100MB
       # Create import batches under this directory
       batchRoot: /var/opt/dans.knaw.nl/tmp/dd-data-vault/INSTANCE/inbox
+    # 'Commit message' for each object version created in the Data Vault. Currently, there is no way to set this per DVE, so it is a static message.
+    defaultMessage: No message
 
 nbnRegistration:
   catalogBaseUrl: https://catalog.vault.datastations.nl/dataset

@@ -27,6 +27,9 @@ import java.util.List;
 public class DveMetadata {
     private OffsetDateTime creationTime;
 
+    private String contactName;
+    private String contactEmail;
+
     private String dataversePid;
     private String dataversePidVersion;
     private String title;

@@ -60,6 +60,8 @@ transfer:
       batchThreshold: 1MB
       # Create import batches under this directory
       batchRoot: /home/janm/git/dans-core-systems/modules/dd-data-vault/data/ingest/inbox
+    # 'Commit message' for each object version created in the Data Vault. Currently, there is no way to set this per DVE, so it is a static message.
+    defaultMessage: No message
 
   catalogBaseUrl: http://dev.catalog.vault.datastations.nl/dataset
   registrationInterval: 1000
