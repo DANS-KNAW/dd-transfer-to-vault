@@ -77,6 +77,7 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
                 .outboxFailed(configuration.getTransfer().getSendToVault().getOutbox().getFailed())
                 .dataVaultBatchRoot(configuration.getTransfer().getSendToVault().getDataVault().getBatchRoot())
                 .dataVaultClient(createDataVaultClient(configuration))
+                .defaultMessage(configuration.getTransfer().getSendToVault().getDefaultMessage())
                 .build())
             .build());
 
