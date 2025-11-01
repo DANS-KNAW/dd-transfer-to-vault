@@ -34,4 +34,7 @@ public class SendToVaultConfig {
     @NotNull
     private DataVaultBatchConfig dataVault;
 
+    @NotNull
+    private String defaultMessage;
+
 }

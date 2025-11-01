@@ -36,6 +36,8 @@ public class TransferItem {
     private static final String KEY_MD5 = "md5";
     private static final String KEY_OCFL_OBJECT_VERSION = "ocflObjectVersion";
     private static final String KEY_NBN = "nbn";
+    private static final String CONTACT_NAME = "contactName";
+    private static final String CONTACT_EMAIL = "contactEmail";
 
     private Path dve;
     private Path properties;
@@ -185,6 +187,19 @@ public class TransferItem {
 
     public void setNbn(String nbn) {
         setProperty(KEY_NBN, nbn);
+    }
+
+    public void setContactDetails(String name, String email) {
+        setProperty(CONTACT_NAME, name);
+        setProperty(CONTACT_EMAIL, email);
+    }
+
+    public String getContactName() {
+        return getProperty(CONTACT_NAME);
+    }
+
+    public String getContactEmail() {
+        return getProperty(CONTACT_EMAIL);
     }
 
     public String getMd5() {

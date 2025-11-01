@@ -63,8 +63,15 @@ public class ExtractMetadataTask implements Runnable {
 
                         // TODO: validate DVE (call dd-validate-bagpack)
 
+                        var dveMetadata = dveMetadataReader.readDveMetadata(dve);
+                        if (dveMetadata.getContactName() != null && dveMetadata.getContactEmail() != null) {
+                            transferItem.setContactDetails(dveMetadata.getContactName(), dveMetadata.getContactEmail());
+                        } else {
+                            log.warn("Contact details missing in DVE metadata for dataset {}. Relying on defaults in Data Vault.", transferItem.getNbn());
+                        }
+
                         transferItem.setOcflObjectVersion(
-                            vaultCatalogClient.registerOcflObjectVersion(ocflStorageRoot, dveMetadataReader.readDveMetadata(dve), transferItem.getOcflObjectVersion()));
+                            vaultCatalogClient.registerOcflObjectVersion(ocflStorageRoot, dveMetadata, transferItem.getOcflObjectVersion()));
                         if (transferItem.getOcflObjectVersion() == 1) {
                             log.info("First version of dataset {}. Scheduling NBN registration", transferItem.getNbn());
                             scheduleNbnRegistration(transferItem);
