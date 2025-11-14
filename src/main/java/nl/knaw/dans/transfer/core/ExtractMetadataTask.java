@@ -17,6 +17,7 @@ package nl.knaw.dans.transfer.core;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import nl.knaw.dans.transfer.client.ValidateBagPackClient;
 import nl.knaw.dans.transfer.client.VaultCatalogClient;
 
 import java.io.IOException;
@@ -38,6 +39,7 @@ public class ExtractMetadataTask implements Runnable {
     private final URI vaultCatalogBaseUri;
     private final DveMetadataReader dveMetadataReader;
     private final VaultCatalogClient vaultCatalogClient;
+    private final ValidateBagPackClient validateBagPackClient;
 
     @Override
     public void run() {
@@ -61,12 +63,22 @@ public class ExtractMetadataTask implements Runnable {
                     try {
                         transferItem = new TransferItem(dve);
 
-                        // TODO: validate DVE (call dd-validate-bagpack)
+                        log.debug("Validating DVE {} as BagPack...", dve);
+                        var result = validateBagPackClient.validateBagPack(dve);
+                        if (result.getIsCompliant()) {
+                            log.info("DVE {} is a compliant BagPack.", dve);
+                        }
+                        else {
+                            log.warn("DVE {} is not a compliant BagPack: {}. Moving to rejected outbox.", dve, result.getRuleViolations());
+                            transferItem.moveToDir(outboxRejected);
+                            continue;
+                        }
 
                         var dveMetadata = dveMetadataReader.readDveMetadata(dve);
                         if (dveMetadata.getContactName() != null && dveMetadata.getContactEmail() != null) {
                             transferItem.setContactDetails(dveMetadata.getContactName(), dveMetadata.getContactEmail());
-                        } else {
+                        }
+                        else {
                             log.warn("Contact details missing in DVE metadata for dataset {}. Relying on defaults in Data Vault.", transferItem.getNbn());
                         }
 

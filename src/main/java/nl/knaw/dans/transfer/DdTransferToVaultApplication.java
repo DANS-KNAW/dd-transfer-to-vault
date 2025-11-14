@@ -24,6 +24,8 @@ import nl.knaw.dans.lib.util.inbox.Inbox;
 import nl.knaw.dans.transfer.client.DataVaultClient;
 import nl.knaw.dans.transfer.client.GmhClient;
 import nl.knaw.dans.transfer.client.GmhClientImpl;
+import nl.knaw.dans.transfer.client.ValidateBagPackClient;
+import nl.knaw.dans.transfer.client.ValidateBagPackClientImpl;
 import nl.knaw.dans.transfer.client.VaultCatalogClient;
 import nl.knaw.dans.transfer.client.VaultCatalogClientImpl;
 import nl.knaw.dans.transfer.config.DdTransferToVaultConfiguration;
@@ -82,6 +84,7 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
             .build());
 
         VaultCatalogClient vaultCatalogClient = createVaultCatalogClient(configuration);
+        ValidateBagPackClient validateBagPackClient = createValidateBagPackClient(configuration);
         CountDownLatch startCollectInbox = new CountDownLatch(1);
         environment.lifecycle().manage(
             Inbox.builder()
@@ -99,7 +102,9 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
                             fileService,
                             new OaiOreMetadataReader(),
                             new DataFileMetadataReader(fileService)))
-                        .vaultCatalogClient(vaultCatalogClient).build())
+                        .vaultCatalogClient(vaultCatalogClient)
+                        .validateBagPackClient(validateBagPackClient)
+                        .build())
                 .inbox(configuration.getTransfer().getExtractMetadata().getInbox().getPath())
                 .executorService(configuration.getTransfer().getExtractMetadata().getTaskQueue().build(environment))
                 .interval(Math.toIntExact(configuration.getTransfer().getExtractMetadata().getInbox().getPollingInterval().toMilliseconds()))
@@ -169,4 +174,12 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
             .build());
     }
 
+    private ValidateBagPackClient createValidateBagPackClient(DdTransferToVaultConfiguration configuration) {
+        return new ValidateBagPackClientImpl(new ClientProxyBuilder<nl.knaw.dans.validatebagpack.client.invoker.ApiClient, nl.knaw.dans.validatebagpack.client.resources.DefaultApi>()
+            .apiClient(new nl.knaw.dans.validatebagpack.client.invoker.ApiClient())
+            .basePath(configuration.getValidateBagPack().getUrl())
+            .httpClient(configuration.getValidateBagPack().getHttpClient())
+            .defaultApiCtor(nl.knaw.dans.validatebagpack.client.resources.DefaultApi::new)
+            .build());
+    }
 }

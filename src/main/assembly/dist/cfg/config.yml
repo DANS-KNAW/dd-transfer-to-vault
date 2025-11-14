@@ -126,6 +126,15 @@ dataVault:
     retries: 0
     userAgent: dd-transfer-to-vault
 
+validateBagPack:
+  url: http://localhost:20375
+  httpClient:
+    timeout: 30s
+    connectionTimeout: 15s
+    timeToLive: 1h
+    retries: 2
+    userAgent: dd-transfer-to-vault
+
 #
 # See https://www.dropwizard.io/en/latest/manual/configuration.html#logging
 #
