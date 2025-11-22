@@ -38,7 +38,7 @@
         <!--TODO: move to parent pom-->
         <dd-vault-catalog-api.version>0.9.0</dd-vault-catalog-api.version>
         <dd-data-vault-api.version>0.7.0</dd-data-vault-api.version>
-        <dd-validate-bagpack-api.version>0.1.0</dd-validate-bagpack-api.version>
+        <dd-validate-bagpack-api.version>0.1.1-SNAPSHOT</dd-validate-bagpack-api.version>
     </properties>
 
     <scm>
