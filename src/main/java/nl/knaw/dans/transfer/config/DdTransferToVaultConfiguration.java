@@ -17,7 +17,6 @@
 package nl.knaw.dans.transfer.config;
 
 import io.dropwizard.core.Configuration;
-import io.dropwizard.db.DataSourceFactory;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -42,4 +41,8 @@ public class DdTransferToVaultConfiguration extends Configuration {
     @Valid
     @NotNull
     private DataVaultConfig dataVault;
+
+    @Valid
+    @NotNull
+    private ValidateBagPackConfig validateBagPack;
 }

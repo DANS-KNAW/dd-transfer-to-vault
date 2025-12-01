@@ -18,6 +18,7 @@ package nl.knaw.dans.transfer.core;
 import lombok.Builder;
 import lombok.NonNull;
 import nl.knaw.dans.lib.util.inbox.InboxTaskFactory;
+import nl.knaw.dans.transfer.client.ValidateBagPackClient;
 import nl.knaw.dans.transfer.client.VaultCatalogClient;
 
 import java.net.URI;
@@ -41,9 +42,11 @@ public class ExtractMetadataTaskFactory implements InboxTaskFactory {
     private final Path nbnRegistrationInbox;
     @NonNull
     private final URI vaultCatalogBaseUri;
+    @NonNull
+    private final ValidateBagPackClient validateBagPackClient;
 
     @Override
     public Runnable createInboxTask(Path targetNbnDir) {
-        return new ExtractMetadataTask(ocflStorageRoot, targetNbnDir, outboxProcessed, outboxFailed, outboxRejected, nbnRegistrationInbox, vaultCatalogBaseUri, dveMetadataReader, vaultCatalogClient);
+        return new ExtractMetadataTask(ocflStorageRoot, targetNbnDir, outboxProcessed, outboxFailed, outboxRejected, nbnRegistrationInbox, vaultCatalogBaseUri, dveMetadataReader, vaultCatalogClient, validateBagPackClient);
     }
 }

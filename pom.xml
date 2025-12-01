@@ -22,11 +22,11 @@
     <parent>
         <groupId>nl.knaw.dans</groupId>
         <artifactId>dd-parent</artifactId>
-        <version>1.9.1-SNAPSHOT</version>
+        <version>1.10.0</version>
     </parent>
 
     <artifactId>dd-transfer-to-vault</artifactId>
-    <version>0.99.1-SNAPSHOT</version>
+    <version>1.1.1-SNAPSHOT</version>
 
     <name>DD Transfer To Vault</name>
     <url>https://github.com/DANS-KNAW/dd-transfer-to-vault</url>
@@ -163,6 +163,7 @@
                 <artifactId>maven-dependency-plugin</artifactId>
                 <executions>
                     <execution>
+                        <id>compilation-dependencies</id>
                         <phase>initialize</phase>
                         <goals>
                             <goal>unpack</goal>
@@ -185,6 +186,12 @@
                                     <groupId>nl.knaw.dans</groupId>
                                     <artifactId>dd-gmh-api</artifactId>
                                     <version>${dd-gmh-api.version}</version>
+                                    <outputDirectory>${project.build.directory}/openapi</outputDirectory>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>nl.knaw.dans</groupId>
+                                    <artifactId>dd-validate-bagpack-api</artifactId>
+                                    <version>${dd-validate-bagpack-api.version}</version>
                                     <outputDirectory>${project.build.directory}/openapi</outputDirectory>
                                 </artifactItem>
                             </artifactItems>
@@ -254,6 +261,24 @@
                                 <modelPackage>nl.knaw.dans.gmh.client.api</modelPackage>
                                 <invokerPackage>nl.knaw.dans.gmh.client.invoker</invokerPackage>
                                 <annotationLibrary>none</annotationLibrary>--&gt;
+                                <library>jersey2</library>
+                                <openApiNullable>false</openApiNullable>
+                            </configOptions>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>generate-dd-validate-bagpack-client</id>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <configuration>
+                            <inputSpec>${project.build.directory}/openapi/dd-validate-bagpack-api.yml</inputSpec>
+                            <generatorName>java</generatorName>
+                            <configOptions>
+                                <apiPackage>nl.knaw.dans.validatebagpack.client.resources</apiPackage>
+                                <modelPackage>nl.knaw.dans.validatebagpack.client.api</modelPackage>
+                                <invokerPackage>nl.knaw.dans.validatebagpack.client.invoker</invokerPackage>
+                                <annotationLibrary>none</annotationLibrary>
                                 <library>jersey2</library>
                                 <openApiNullable>false</openApiNullable>
                             </configOptions>

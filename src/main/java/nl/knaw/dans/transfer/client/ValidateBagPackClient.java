@@ -13,28 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.transfer.config;
+package nl.knaw.dans.transfer.client;
 
-import lombok.Data;
+import nl.knaw.dans.validatebagpack.client.api.ValidationResultDto;
 
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
+import java.nio.file.Path;
 
-@Data
-public class SendToVaultConfig {
-    @Valid
-    @NotNull
-    private InboxConfig inbox;
-
-    @Valid
-    @NotNull
-    private OutboxConfig outbox;
-
-    @Valid
-    @NotNull
-    private DataVaultBatchConfig dataVault;
-
-    @NotNull
-    private String defaultMessage;
-
+public interface ValidateBagPackClient {
+    ValidationResultDto validateBagPack(Path bagPackPath);
 }

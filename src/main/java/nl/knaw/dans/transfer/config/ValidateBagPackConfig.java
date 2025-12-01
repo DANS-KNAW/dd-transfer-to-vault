@@ -15,26 +15,19 @@
  */
 package nl.knaw.dans.transfer.config;
 
+import io.dropwizard.client.JerseyClientConfiguration;
 import lombok.Data;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import java.net.URI;
 
 @Data
-public class SendToVaultConfig {
-    @Valid
+public class ValidateBagPackConfig {
     @NotNull
-    private InboxConfig inbox;
+    private URI url;
 
     @Valid
     @NotNull
-    private OutboxConfig outbox;
-
-    @Valid
-    @NotNull
-    private DataVaultBatchConfig dataVault;
-
-    @NotNull
-    private String defaultMessage;
-
+    private JerseyClientConfiguration httpClient = new JerseyClientConfiguration();
 }

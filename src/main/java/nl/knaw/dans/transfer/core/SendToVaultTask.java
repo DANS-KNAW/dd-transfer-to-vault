@@ -17,12 +17,14 @@ package nl.knaw.dans.transfer.core;
 
 import io.dropwizard.util.DataSize;
 import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import nl.knaw.dans.lib.util.ZipUtil;
 import nl.knaw.dans.transfer.client.DataVaultClient;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -31,7 +33,7 @@ import static org.apache.commons.io.FileUtils.sizeOfDirectory;
 
 @Slf4j
 @ToString
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class SendToVaultTask implements Runnable {
     private final Path dve;
     private final Path currentBatchWorkDir;
@@ -40,10 +42,12 @@ public class SendToVaultTask implements Runnable {
     private final Path outboxProcessed;
     private final Path outboxFailed;
     private final DataVaultClient dataVaultClient;
+    private final String defaultMessage;
+
+    private TransferItem transferItem;
 
     @Override
     public void run() {
-        TransferItem transferItem = null;
         try {
             transferItem = new TransferItem(dve);
             addToObjectImportDirectory(dve, transferItem.getOcflObjectVersion(), this.currentBatchWorkDir.resolve(transferItem.getNbn()));
@@ -68,6 +72,18 @@ public class SendToVaultTask implements Runnable {
         var versionDirectory = objectImportDirectory.resolve("v" + ocflObjectVersionNumber);
         log.debug("Extracting DVE {} to {}", dvePath, versionDirectory);
         ZipUtil.extractZipFile(dvePath, versionDirectory);
+        createVersionInfoProperties(versionDirectory, transferItem.getContactName(), transferItem.getContactEmail(), defaultMessage);
+    }
+
+    private void createVersionInfoProperties(Path versionDirectory, String user, String email, String message) throws IOException {
+        var versionInfoFile = versionDirectory.resolveSibling(versionDirectory.getFileName().toString() + ".properties");
+        log.debug("Creating version info properties file at {}", versionInfoFile);
+        var propertiesContent = String.format("""
+            user.name=%s
+            user.email=%s
+            message=%s
+            """, user, email, message);
+        Files.writeString(versionInfoFile, propertiesContent, StandardCharsets.UTF_8);
     }
 
     private void importIfBatchThresholdReached() throws IOException {

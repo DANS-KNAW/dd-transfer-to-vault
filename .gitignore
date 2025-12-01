@@ -22,4 +22,7 @@
 /.dans.knaw.nl-yum-repo
 /venv/
 /.venv-mkdocs
+/docs/swagger-ui/
+/docs/api.yml
+
 
