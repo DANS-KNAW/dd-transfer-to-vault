@@ -32,6 +32,18 @@ This service has the following interfaces:
 
 ### Consumed interfaces
 
+#### Validate Bagpack API
+
+* _Protocol type_: HTTP
+* _Internal or external_: **internal**
+* _Purpose_: to validate that the DVE is a valid bagpack
+
+#### Extract metadata inbox
+
+* _Protocol type_: Shared filesystem
+* _Internal or external_: **internal**
+* _Purpose_: to let the Validate Bagpack service access the DVE for validation
+
 #### Data Vault Catalog
 
 * _Protocol type_: HTTP
