@@ -36,6 +36,7 @@
     <properties>
         <main-class>nl.knaw.dans.transfer.DdTransferToVaultApplication</main-class>
         <dd-validate-bagpack-api.version>0.2.0</dd-validate-bagpack-api.version>
+        <dans-java-utils.version>2.5.0</dans-java-utils.version>
     </properties>
 
     <scm>
