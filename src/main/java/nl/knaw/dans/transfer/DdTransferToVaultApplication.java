@@ -48,6 +48,7 @@ import nl.knaw.dans.vaultcatalog.client.invoker.ApiClient;
 import nl.knaw.dans.vaultcatalog.client.resources.DefaultApi;
 import org.apache.commons.io.filefilter.FileFilterUtils;
 
+import java.time.Duration;
 import java.util.concurrent.CountDownLatch;
 
 public class DdTransferToVaultApplication extends Application<DdTransferToVaultConfiguration> {
@@ -175,11 +176,13 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
     }
 
     private ValidateBagPackClient createValidateBagPackClient(DdTransferToVaultConfiguration configuration) {
-        return new ValidateBagPackClientImpl(new ClientProxyBuilder<nl.knaw.dans.validatebagpack.client.invoker.ApiClient, nl.knaw.dans.validatebagpack.client.resources.DefaultApi>()
+        var api = new ClientProxyBuilder<nl.knaw.dans.validatebagpack.client.invoker.ApiClient, nl.knaw.dans.validatebagpack.client.resources.DefaultApi>()
             .apiClient(new nl.knaw.dans.validatebagpack.client.invoker.ApiClient())
             .basePath(configuration.getValidateBagPack().getUrl())
             .httpClient(configuration.getValidateBagPack().getHttpClient())
             .defaultApiCtor(nl.knaw.dans.validatebagpack.client.resources.DefaultApi::new)
-            .build());
+            .build();
+
+        return new ValidateBagPackClientImpl(api, configuration.getValidateBagPack().getPollInterval().toJavaDuration());
     }
 }

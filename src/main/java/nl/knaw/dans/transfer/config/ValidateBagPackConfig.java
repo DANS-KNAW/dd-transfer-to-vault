@@ -16,6 +16,7 @@
 package nl.knaw.dans.transfer.config;
 
 import io.dropwizard.client.JerseyClientConfiguration;
+import io.dropwizard.util.Duration;
 import lombok.Data;
 
 import javax.validation.Valid;
@@ -30,4 +31,8 @@ public class ValidateBagPackConfig {
     @Valid
     @NotNull
     private JerseyClientConfiguration httpClient = new JerseyClientConfiguration();
+
+    private Duration pollInterval = Duration.seconds(3);
+
+
 }
