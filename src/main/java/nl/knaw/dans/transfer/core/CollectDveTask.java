@@ -56,7 +56,7 @@ public class CollectDveTask implements Runnable {
         TransferItem transferItem = null;
         try {
             transferItem = new TransferItem(dve);
-            var targetNbn = nbnSource == NbnSource.OAI_ORE ? readNbn() : transferItem.getNbn();
+            var targetNbn = transferItem.getNbn();
             var targetDir = findExistingTargetDir(targetNbn);
             if (targetDir == null) {
                 targetDir = destinationRoot.resolve(targetNbn + "-" + generateRandomString(6, "ABCDEFGHIJKLMNOPQRSTUVWXYZ"));
@@ -65,7 +65,6 @@ public class CollectDveTask implements Runnable {
                 log.debug("Target directory {} already exists, using that", targetDir);
             }
             FileUtils.ensureDirectoryExists(targetDir);
-            transferItem.setNbn(targetNbn);
             transferItem.moveToDir(targetDir);
         }
         catch (Exception e) {

@@ -41,7 +41,7 @@ public class VaultCatalogClientImpl implements VaultCatalogClient {
                 addNewDataset(ocflStorageRoot, dveMetadata);
                 return 1;
             }
-            else if (ocflObjectVersion == -1) { // Data Stations only
+            else if (ocflObjectVersion == 0) { // Data Stations only
                 return addNewVersionExport(datasetDto, dveMetadata);
             }
             else { // VaaS only

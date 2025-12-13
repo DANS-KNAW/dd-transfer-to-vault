@@ -75,11 +75,8 @@ public class ExtractMetadataTask implements Runnable {
                         }
 
                         var dveMetadata = dveMetadataReader.readDveMetadata(dve);
-                        if (dveMetadata.getContactName() != null && dveMetadata.getContactEmail() != null) {
-                            transferItem.setContactDetails(dveMetadata.getContactName(), dveMetadata.getContactEmail());
-                        }
-                        else {
-                            log.warn("Contact details missing in DVE metadata for dataset {}. Relying on defaults in Data Vault.", transferItem.getNbn());
+                        if (dveMetadata.getContactName() == null || dveMetadata.getContactEmail() == null) {
+                            throw new IllegalArgumentException("Missing contact information in DVE metadata");
                         }
 
                         transferItem.setOcflObjectVersion(
@@ -140,8 +137,13 @@ public class ExtractMetadataTask implements Runnable {
     }
 
     private void scheduleNbnRegistration(TransferItem transferItem) {
-        new RegistrationToken(transferItem.getNbn(), URI.create(vaultCatalogBaseUri + transferItem.getNbn()))
-            .save(nbnRegistrationInbox.resolve(transferItem.getNbn() + ".properties"));
+        try {
+            new RegistrationToken(transferItem.getNbn(), URI.create(vaultCatalogBaseUri + transferItem.getNbn()))
+                .save(nbnRegistrationInbox.resolve(transferItem.getNbn() + ".properties"));
+        }
+        catch (IOException e) {
+            throw new IllegalArgumentException("Unable to schedule NBN registration because NBN could not be retrieved", e);
+        }
     }
 
     private List<Path> getDves() throws IOException {

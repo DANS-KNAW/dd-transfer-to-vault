@@ -15,13 +15,24 @@
  */
 package nl.knaw.dans.transfer.core;
 
+import com.jayway.jsonpath.JsonPath;
+import com.jayway.jsonpath.PathNotFoundException;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import nl.knaw.dans.bagit.exceptions.InvalidBagitFileFormatException;
+import nl.knaw.dans.bagit.exceptions.MaliciousPathException;
+import nl.knaw.dans.bagit.exceptions.UnparsableVersionException;
+import nl.knaw.dans.bagit.exceptions.UnsupportedAlgorithmException;
+import nl.knaw.dans.bagit.reader.BagReader;
 
 import java.io.IOException;
+import java.nio.channels.FileChannel;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.security.MessageDigest;
-import java.util.Properties;
+import java.nio.file.ProviderNotFoundException;
+import java.util.regex.Pattern;
 
 /**
  * A Dataset Version Export (DVE) and auxiliary files. The DVE is the only mandatory file. The other files are searched next to the DVE or constructed from the DVE. This class is intended to provide
@@ -29,40 +40,38 @@ import java.util.Properties;
  */
 @Slf4j
 public class TransferItem {
-    private static final String PROPERTIES_SUFFIX = ".properties";
     private static final String ERROR_LOG_SUFFIX = "-error.log";
+    private static final String METADATA_PATH = "metadata/oai-ore.jsonld";
+    private static final String BAG_INFO_PATH = "bag-info.txt";
+    private static final String NBN_JSON_PATH = "$.ore:describes.dansDataVaultMetadata:dansNbn";
 
-    private static final String KEY_CREATION_TIME = "creationTime";
-    private static final String KEY_MD5 = "md5";
-    private static final String KEY_OCFL_OBJECT_VERSION = "ocflObjectVersion";
-    private static final String KEY_NBN = "nbn";
-    private static final String CONTACT_NAME = "contactName";
-    private static final String CONTACT_EMAIL = "contactEmail";
+    private static final Pattern OCFL_OBJECT_VERSION_PATTERN = Pattern.compile("^.*_v([0-9]+).zip$");
 
     private Path dve;
-    private Path properties;
+
+    /**
+     * The NBN is included in the DVE metadata and thus considered an internal property. It is cached after the first read.
+     */
+    private String cachedNbn;
+
+    private String cachedContactName;
+
+    private String cachedContactEmail;
+
+    /**
+     * The OCFL object version, extracted from the DVE filename if it matches the pattern *_v{version}, where {version} is an integer. Defaults to 0. If the version is not encoded in the filename,
+     * this means it is yet to be determined and should be set later.
+     */
+    @Getter
+    private int ocflObjectVersion = 0;
 
     public TransferItem(Path dve) {
         this.dve = dve;
-        this.properties = initProperties(dve);
-    }
-
-    private static Path initProperties(Path dve) {
-        try {
-            var properties = dve.resolveSibling(dve.getFileName() + PROPERTIES_SUFFIX);
-            if (Files.notExists(properties)) {
-                var props = new Properties();
-                props.setProperty(KEY_CREATION_TIME, getCreationTime(dve).toString());
-                props.setProperty(KEY_MD5, calculateMd5(dve));
-                // Save
-                try (var out = Files.newOutputStream(properties)) {
-                    props.store(out, null);
-                }
+        if (OCFL_OBJECT_VERSION_PATTERN.matcher(dve.getFileName().toString()).matches()) {
+            var matcher = OCFL_OBJECT_VERSION_PATTERN.matcher(dve.getFileName().toString());
+            if (matcher.find()) {
+                ocflObjectVersion = Integer.parseInt(matcher.group(1));
             }
-            return properties;
-        }
-        catch (IOException e) {
-            throw new IllegalStateException("Failed to initialize properties file", e);
         }
     }
 
@@ -76,16 +85,17 @@ public class TransferItem {
     public void moveToDir(Path dir, Exception e) throws IOException {
         var newLocation = findFreeName(dir, dve);
         var tempNewLocation = newLocation.resolveSibling(newLocation.getFileName() + ".tmp");
-        var newPropertiesFile = newLocation.resolveSibling(newLocation.getFileName() + PROPERTIES_SUFFIX);
         if (Files.exists(newLocation)) {
-            log.error("File already exists: {}", newLocation);
+            throw new IllegalStateException("File already exists: " + newLocation);
         }
         else {
-            Files.move(properties, newPropertiesFile);
             Files.move(dve, tempNewLocation); // Make sure the file is not detected before the move is complete
+            // Hard sync file system
+            try (var channel = FileChannel.open(tempNewLocation)) {
+                channel.force(true);
+            }
             Files.move(tempNewLocation, newLocation);
             dve = newLocation;
-            properties = newPropertiesFile;
         }
         if (e != null) {
             var errorLogFile = newLocation.resolveSibling(newLocation.getFileName() + ERROR_LOG_SUFFIX);
@@ -114,9 +124,6 @@ public class TransferItem {
                 newPath = targetDir.resolve(baseName + "-" + sequenceNumber + extension);
             }
             sequenceNumber++;
-            if (Files.exists(newPath) && new TransferItem(newPath).getMd5().equals(this.getMd5())) {
-                break;
-            }
         }
         while (Files.exists(newPath));
         return newPath;
@@ -126,115 +133,97 @@ public class TransferItem {
         moveToDir(dir, null);
     }
 
-    private void setProperty(String key, String value) {
+    public void setOcflObjectVersion(int ocflObjectVersion) {
+        if (ocflObjectVersion > 0 && this.ocflObjectVersion != ocflObjectVersion) {
+            throw new IllegalStateException("Version already set");
+        }
+        this.ocflObjectVersion = ocflObjectVersion;
         try {
-            var props = new Properties();
-            if (Files.exists(properties)) {
-                try (var in = Files.newInputStream(properties)) {
-                    props.load(in);
+            var newDve = dve.resolveSibling(dve.getFileName() + "_v" + ocflObjectVersion);
+            Files.move(dve, newDve);
+            dve = newDve;
+            try (var channel = FileChannel.open(dve)) {
+                channel.force(true);
+            }
+        }
+        catch (IOException e) {
+            throw new RuntimeException("Unable to rename DVE file to include OCFL object version", e);
+        }
+    }
+
+    public String getContactName() throws IOException {
+        readContactDetails();
+        return cachedContactName;
+    }
+
+    public String getContactEmail() throws IOException {
+        readContactDetails();
+        return cachedContactEmail;
+    }
+
+    private void readContactDetails() throws IOException {
+        if (cachedContactName != null && cachedContactEmail != null) {
+            return;
+        }
+
+        try (FileSystem zipFs = FileSystems.newFileSystem(dve, (ClassLoader) null)) {
+            var rootDir = zipFs.getRootDirectories().iterator().next();
+            try (var topLevelDirStream = Files.list(rootDir)) {
+                var topLevelDir = topLevelDirStream.filter(Files::isDirectory)
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalStateException("No top-level directory found in DVE"));
+
+                var bag = new BagReader().read(topLevelDir);
+                cachedContactName = String.join(";", bag.getMetadata().get("Contact-Name"));
+                cachedContactEmail = String.join(";", bag.getMetadata().get("Contact-Email"));
+            }
+            catch (MaliciousPathException e) {
+                throw new RuntimeException(e);
+            }
+            catch (UnparsableVersionException | UnsupportedAlgorithmException | InvalidBagitFileFormatException e) {
+                throw new RuntimeException("Unable to read bag info from DVE: " + dve, e);
+            }
+            catch (ProviderNotFoundException e) {
+                throw new RuntimeException("The file system provider is not found. Probably not a ZIP file: " + dve, e);
+            }
+        }
+    }
+
+    public String getNbn() throws IOException {
+        readNbn();
+        return cachedNbn;
+    }
+
+    private void readNbn() throws IOException {
+        if (cachedNbn != null) {
+            return;
+        }
+
+        try (FileSystem zipFs = FileSystems.newFileSystem(dve, (ClassLoader) null)) {
+            var rootDir = zipFs.getRootDirectories().iterator().next();
+            try (var topLevelDirStream = Files.list(rootDir)) {
+                var topLevelDir = topLevelDirStream.filter(Files::isDirectory)
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalStateException("No top-level directory found in DVE"));
+
+                var metadataPath = topLevelDir.resolve(METADATA_PATH);
+                if (!Files.exists(metadataPath)) {
+                    throw new IllegalStateException("No metadata file found in DVE");
+                }
+
+                try (var is = Files.newInputStream(metadataPath)) {
+                    cachedNbn = JsonPath.read(is, NBN_JSON_PATH);
+                }
+                catch (PathNotFoundException e) {
+                    throw new IllegalStateException("No NBN found in DVE", e);
+                }
+                catch (Exception e) {
+                    throw new IllegalStateException("Unable to read NBN from metadata file", e);
                 }
             }
-            props.setProperty(key, value);
-            try (var out = Files.newOutputStream(properties)) {
-                props.store(out, null);
-            }
         }
-        catch (Exception ex) {
-            throw new RuntimeException("Failed to set property", ex);
-        }
-    }
-
-    public String getProperty(String key) {
-        try {
-            var props = new Properties();
-            if (properties != null && Files.exists(properties)) {
-                try (var in = Files.newInputStream(properties)) {
-                    props.load(in);
-                }
-            }
-            return props.getProperty(key);
-        }
-        catch (Exception ex) {
-            throw new RuntimeException("Failed to get property", ex);
-        }
-    }
-
-    public int getOcflObjectVersion() {
-        Object ocflObjectVersion = getProperty(KEY_OCFL_OBJECT_VERSION);
-        if (ocflObjectVersion == null) {
-            return -1;
-        }
-        else {
-            try {
-                return Integer.parseInt(ocflObjectVersion.toString());
-            }
-            catch (NumberFormatException e) {
-                throw new IllegalStateException("Invalid OCFL object version: " + ocflObjectVersion, e);
-            }
-        }
-    }
-
-    public void setOcflObjectVersion(int i) {
-        if (i < 1) {
-            throw new IllegalArgumentException("OCFL object version must be greater than 0");
-        }
-        setProperty(KEY_OCFL_OBJECT_VERSION, String.valueOf(i));
-    }
-
-    public String getNbn() {
-        return getProperty(KEY_NBN);
-    }
-
-    public void setNbn(String nbn) {
-        setProperty(KEY_NBN, nbn);
-    }
-
-    public void setContactDetails(String name, String email) {
-        setProperty(CONTACT_NAME, name);
-        setProperty(CONTACT_EMAIL, email);
-    }
-
-    public String getContactName() {
-        return getProperty(CONTACT_NAME);
-    }
-
-    public String getContactEmail() {
-        return getProperty(CONTACT_EMAIL);
-    }
-
-    public String getMd5() {
-        return getProperty(KEY_MD5);
-    }
-
-    private static Object getCreationTime(Path path) throws IOException {
-        return Files.getAttribute(path, "creationTime", java.nio.file.LinkOption.NOFOLLOW_LINKS);
-    }
-
-    private static String calculateMd5(Path path) throws IOException {
-        try {
-            var md5 = MessageDigest.getInstance("MD5");
-            long totalBytesRead = 0;
-            long fileSize = Files.size(path);
-            try (var is = Files.newInputStream(path)) {
-                byte[] buffer = new byte[8192];
-                int bytesRead;
-                while ((bytesRead = is.read(buffer)) != -1) {
-                    md5.update(buffer, 0, bytesRead);
-                    totalBytesRead += bytesRead;
-                    if (totalBytesRead % 1048576 == 0) { // Log every MB
-                        log.debug("Read {} MB of {} MB", totalBytesRead / 1048576, fileSize / 1048576);
-                    }
-                }
-                var digest = md5.digest();
-                var hexString = new StringBuilder();
-                for (byte b : digest) {
-                    hexString.append(String.format("%02x", b));
-                }
-                return hexString.toString();
-            }
-        }
-        catch (java.security.NoSuchAlgorithmException e) {
-            throw new IllegalStateException("MD5 algorithm not found", e);
+        catch (ProviderNotFoundException e) {
+            throw new RuntimeException("The file system provider is not found. Probably not a ZIP file: " + dve, e);
         }
     }
 }
