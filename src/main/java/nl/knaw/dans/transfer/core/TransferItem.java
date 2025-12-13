@@ -17,7 +17,6 @@ package nl.knaw.dans.transfer.core;
 
 import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.PathNotFoundException;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import nl.knaw.dans.bagit.exceptions.InvalidBagitFileFormatException;
 import nl.knaw.dans.bagit.exceptions.MaliciousPathException;
@@ -32,7 +31,8 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.ProviderNotFoundException;
-import java.util.regex.Pattern;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.time.OffsetDateTime;
 
 /**
  * A Dataset Version Export (DVE) and auxiliary files. The DVE is the only mandatory file. The other files are searched next to the DVE or constructed from the DVE. This class is intended to provide
@@ -45,8 +45,6 @@ public class TransferItem {
     private static final String BAG_INFO_PATH = "bag-info.txt";
     private static final String NBN_JSON_PATH = "$.ore:describes.dansDataVaultMetadata:dansNbn";
 
-    private static final Pattern OCFL_OBJECT_VERSION_PATTERN = Pattern.compile("^.*_v([0-9]+).zip$");
-
     private Path dve;
 
     /**
@@ -58,21 +56,28 @@ public class TransferItem {
 
     private String cachedContactEmail;
 
-    /**
-     * The OCFL object version, extracted from the DVE filename if it matches the pattern *_v{version}, where {version} is an integer. Defaults to 0. If the version is not encoded in the filename,
-     * this means it is yet to be determined and should be set later.
-     */
-    @Getter
-    private int ocflObjectVersion = 0;
-
     public TransferItem(Path dve) {
         this.dve = dve;
-        if (OCFL_OBJECT_VERSION_PATTERN.matcher(dve.getFileName().toString()).matches()) {
-            var matcher = OCFL_OBJECT_VERSION_PATTERN.matcher(dve.getFileName().toString());
-            if (matcher.find()) {
-                ocflObjectVersion = Integer.parseInt(matcher.group(1));
-            }
-        }
+    }
+
+    /**
+     * Gets the OCFL object version from the DVE filename. If not present, returns 0.
+     *
+     * @return the OCFL object version
+     */
+    public int getOcflObjectVersion() {
+        var fileName = new DveFileName(dve);
+        return fileName.getOcflObjectVersion() == null ? 0 : fileName.getOcflObjectVersion();
+    }
+
+    /**
+     * Gets the creation time from the DVE filename. If not present, null is returned.
+     *
+     * @return the creation timereads it from the file system attributes.
+     */
+    public OffsetDateTime getCreationTime() {
+        var fileName = new DveFileName(dve);
+        return fileName.getCreationDateTime();
     }
 
     /**
@@ -83,7 +88,7 @@ public class TransferItem {
      * @throws IOException if an I/O error occurs
      */
     public void moveToDir(Path dir, Exception e) throws IOException {
-        var newLocation = findFreeName(dir, dve);
+        var newLocation = findFreeName(dir, e == null ? addCreationTimeIfNeeded(dve) : dve); // Don't bother adding creation time if we are going to log an error anyway
         var tempNewLocation = newLocation.resolveSibling(newLocation.getFileName() + ".tmp");
         if (Files.exists(newLocation)) {
             throw new IllegalStateException("File already exists: " + newLocation);
@@ -100,6 +105,33 @@ public class TransferItem {
         if (e != null) {
             var errorLogFile = newLocation.resolveSibling(newLocation.getFileName() + ERROR_LOG_SUFFIX);
             writeStackTrace(errorLogFile, e);
+        }
+    }
+
+    /*
+     * This should only happen the first time the DVE is moved. This first time it will be move over a partition boundary, which means the creation time will not be
+     * preserved in the file system.
+     */
+    private Path addCreationTimeIfNeeded(Path dve) {
+        var fileName = new DveFileName(dve);
+        if (fileName.getCreationDateTime() != null) {
+            return dve;
+        }
+        var creationTimeMillis = getCreationTimeFromFilesystem(dve);
+        var dotIndex = dve.getFileName().toString().lastIndexOf('.');
+        var baseName = (dotIndex == -1) ? dve.getFileName().toString() : dve.getFileName().toString().substring(0, dotIndex);
+        var extension = (dotIndex == -1) ? "" : dve.getFileName().toString().substring(dotIndex);
+        var newFileName = String.format("%s_%d%s", baseName, creationTimeMillis, extension);
+        return dve.resolveSibling(newFileName);
+    }
+
+    private long getCreationTimeFromFilesystem(Path file) {
+        try {
+            var attrs = Files.readAttributes(file, BasicFileAttributes.class);
+            return attrs.creationTime().toMillis();
+        }
+        catch (IOException ex) {
+            throw new IllegalStateException("Unable to read file attributes for: " + file, ex);
         }
     }
 
@@ -134,10 +166,10 @@ public class TransferItem {
     }
 
     public void setOcflObjectVersion(int ocflObjectVersion) {
-        if (ocflObjectVersion > 0 && this.ocflObjectVersion != ocflObjectVersion) {
-            throw new IllegalStateException("Version already set");
+        int currentVersion = getOcflObjectVersion();
+        if (currentVersion != 0 && currentVersion != ocflObjectVersion) {
+            throw new IllegalStateException("OCFL object version is already set to " + currentVersion + ", cannot change to " + ocflObjectVersion);
         }
-        this.ocflObjectVersion = ocflObjectVersion;
         try {
             var newDve = dve.resolveSibling(dve.getFileName() + "_v" + ocflObjectVersion);
             Files.move(dve, newDve);
