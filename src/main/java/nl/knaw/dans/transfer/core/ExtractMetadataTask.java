@@ -57,7 +57,7 @@ public class ExtractMetadataTask implements Runnable {
 
         try {
             var dves = getDves();
-            while (Files.exists(targetNbnDir)) {
+            while (Files.exists(targetNbnDir) && !isBlocked()) {
                 for (var dve : dves) {
                     TransferItem transferItem = null;
                     try {
@@ -89,17 +89,19 @@ public class ExtractMetadataTask implements Runnable {
                     }
                     catch (Exception e) {
                         log.error("Error processing DVE", e);
+                        try {
+                            log.info("Blocking target directory to prevent subsequent versions from jumping the line");
+                            blockTarget();
+                        }
+                        catch (IOException ioe) {
+                            log.error("Unable to block target directory", ioe);
+                        }
+
                         if (transferItem != null) {
                             transferItem.moveToDir(outboxFailed, e);
                         }
                         else {
                             log.error("TransferItem is null, unable to move DVE to failed outbox");
-                        }
-                        try {
-                            blockTarget();
-                        }
-                        catch (IOException ioe) {
-                            log.error("Unable to block target directory", ioe);
                         }
                     }
                 }
@@ -149,7 +151,6 @@ public class ExtractMetadataTask implements Runnable {
     private List<Path> getDves() throws IOException {
         try (var dirStream = Files.list(targetNbnDir)) {
             return dirStream.filter(Files::isRegularFile).filter(p -> p.getFileName().toString().endsWith(".zip"))
-                // TODO: use creationTime in the properties file instead
                 .sorted(CreationTimeComparator.getInstance()).toList();
         }
         catch (NoSuchFileException e) {

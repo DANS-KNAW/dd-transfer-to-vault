@@ -15,14 +15,26 @@
  */
 package nl.knaw.dans.transfer.core;
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+@Slf4j
 public class FileUtils {
     public static void ensureDirectoryExists(Path dir) throws IOException {
         if (!Files.exists(dir)) {
             Files.createDirectories(dir);
+        }
+        // Wait for dir to be detected
+        while (!Files.isDirectory(dir)) {
+            try {
+                Thread.sleep(1000);
+            }
+            catch (InterruptedException e) {
+                log.warn("Directory was created, but still not visible: {}", dir);
+            }
         }
     }
 }

@@ -16,6 +16,7 @@
 package nl.knaw.dans.transfer.core;
 
 import lombok.Value;
+import lombok.extern.slf4j.Slf4j;
 
 import java.net.URI;
 import java.nio.file.Files;
@@ -23,6 +24,7 @@ import java.nio.file.Path;
 import java.util.Properties;
 
 @Value
+@Slf4j
 public class RegistrationToken {
     String nbn;
     URI location;
@@ -31,6 +33,10 @@ public class RegistrationToken {
         var properties = new Properties();
         properties.setProperty("nbn", nbn);
         properties.setProperty("location", location.toString());
+        if (Files.exists(path)) {
+            log.warn("Registration token already exists. Ignoring request...");
+            return;
+        }
         try (var outputStream = Files.newOutputStream(path)) {
             properties.store(outputStream, "Registration token");
         }
