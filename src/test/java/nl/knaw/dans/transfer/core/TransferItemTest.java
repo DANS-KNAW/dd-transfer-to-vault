@@ -25,6 +25,9 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -46,12 +49,140 @@ public class TransferItemTest extends TestDirFixture {
         assertThat(itemWithoutVersion.getOcflObjectVersion()).isEqualTo(0);
     }
 
+
+    @Test
+    public void moveToDir_without_error_should_move_and_not_write_error_log() throws Exception {
+        // Given
+        var sourceDir = testDir.resolve("transfer-item-noerr");
+        var targetDir = testDir.resolve("transfer-item-noerr-target");
+        Files.createDirectories(sourceDir);
+        Files.createDirectories(targetDir);
+
+        var dve = sourceDir.resolve("dataset.zip");
+        Files.writeString(dve, "dummy");
+
+        var item = new TransferItem(dve);
+
+        // Capture filesystem creation time before the move
+        var millis = Files.readAttributes(dve, java.nio.file.attribute.BasicFileAttributes.class)
+            .creationTime().toMillis();
+
+        // When
+        item.moveToDir(targetDir);
+
+        // Then: creationTime should be added to the name when missing
+        var expected = targetDir.resolve("dataset_" + millis + ".zip");
+        assertThat(Files.exists(expected)).isTrue();
+        assertThat(Files.exists(dve)).isFalse();
+
+        var errorLog = expected.resolveSibling(expected.getFileName() + "-error.log");
+        assertThat(Files.exists(errorLog)).isFalse();
+    }
+
+    @Test
+    public void moveToDir_without_error_should_avoid_collisions_by_index() throws Exception {
+        // Given
+        var sourceDir = testDir.resolve("transfer-item-noerr-collision");
+        var targetDir = testDir.resolve("transfer-item-noerr-collision-target");
+        Files.createDirectories(sourceDir);
+        Files.createDirectories(targetDir);
+
+        var dve = sourceDir.resolve("dataset.zip");
+        Files.writeString(dve, "dummy");
+
+        // Determine the expected timestamped name that moveToDir will produce
+        var millis = Files.readAttributes(dve, java.nio.file.attribute.BasicFileAttributes.class)
+            .creationTime().toMillis();
+        var timestampedName = Path.of("dataset_" + millis + ".zip");
+
+        // existing file in target to force index suffix (must match the timestamped name)
+        var existing = targetDir.resolve(timestampedName);
+        Files.writeString(existing, "existing");
+
+        var item = new TransferItem(dve);
+
+        // When
+        item.moveToDir(targetDir);
+
+        // Then: should pick an index because the timestamped target name already exists
+        var expected = targetDir.resolve("dataset_" + millis + "-1.zip");
+        assertThat(Files.exists(expected)).isTrue();
+        assertThat(Files.exists(existing)).isTrue();
+
+        var errorLog = expected.resolveSibling(expected.getFileName() + "-error.log");
+        assertThat(Files.exists(errorLog)).isFalse();
+    }
+
+    @Test
+    public void moveToDir_without_error_should_preserve_creationTime_when_matches_filesystem() throws Exception {
+        // Given
+        var sourceDir = testDir.resolve("transfer-item-noerr-ctime");
+        var targetDir = testDir.resolve("transfer-item-noerr-ctime-target");
+        Files.createDirectories(sourceDir);
+        Files.createDirectories(targetDir);
+
+        // Start with a plain file
+        var initial = sourceDir.resolve("dataset.zip");
+        Files.writeString(initial, "dummy");
+
+        // Read its creation time and rename to include that exact millis
+        var millis = Files.readAttributes(initial, java.nio.file.attribute.BasicFileAttributes.class)
+            .creationTime().toMillis();
+        var withCtimePath = new DveFileName(initial)
+            .withCreationTime(OffsetDateTime.ofInstant(Instant.ofEpochMilli(millis), ZoneOffset.UTC))
+            .getPath();
+        Files.move(initial, withCtimePath);
+
+        var item = new TransferItem(withCtimePath);
+
+        // When
+        item.moveToDir(targetDir);
+
+        // Then: name should stay the same (same creationTime), just moved
+        var expected = targetDir.resolve(withCtimePath.getFileName());
+        assertThat(Files.exists(expected)).isTrue();
+        assertThat(Files.exists(withCtimePath)).isFalse();
+
+        var errorLog = expected.resolveSibling(expected.getFileName() + "-error.log");
+        assertThat(Files.exists(errorLog)).isFalse();
+    }
+
+    @Test
+    public void moveToDir_without_error_should_add_creationTime_when_matches_filesystem() throws Exception {
+        // Given
+        var sourceDir = testDir.resolve("transfer-item-noerr-addctime");
+        var targetDir = testDir.resolve("transfer-item-noerr-addctime-target");
+        Files.createDirectories(sourceDir);
+        Files.createDirectories(targetDir);
+
+        // Start with a plain file without creationTime in the name
+        var initial = sourceDir.resolve("dataset.zip");
+        Files.writeString(initial, "dummy");
+
+        // Read its filesystem creation time (millis)
+        var millis = Files.readAttributes(initial, java.nio.file.attribute.BasicFileAttributes.class)
+            .creationTime().toMillis();
+
+        var item = new TransferItem(initial);
+
+        // When
+        item.moveToDir(targetDir);
+
+        // Then: name should now include the creationTime from filesystem
+        var expected = targetDir.resolve("dataset_" + millis + ".zip");
+        assertThat(Files.exists(expected)).isTrue();
+        assertThat(Files.exists(initial)).isFalse();
+
+        var errorLog = expected.resolveSibling(expected.getFileName() + "-error.log");
+        assertThat(Files.exists(errorLog)).isFalse();
+    }
+
     @Test
     public void setOcflObjectVersion_should_rename_file() throws IOException {
         // Given
-        var tempDir = testDir.resolve("transfer-item-test");
-        Files.createDirectories(tempDir);
-        var dve = tempDir.resolve("dataset.zip");
+        var sourceDir = testDir.resolve("transfer-item-test");
+        Files.createDirectories(sourceDir);
+        var dve = sourceDir.resolve("dataset.zip");
         Files.writeString(dve, "dummy");
         var item = new TransferItem(dve);
 
@@ -68,12 +199,12 @@ public class TransferItemTest extends TestDirFixture {
     @Test
     public void moveToDir_with_error_should_keep_name_and_write_error_log_and_avoid_collisions() throws Exception {
         // Given
-        var tempDir = testDir.resolve("transfer-item-test");
+        var sourceDir = testDir.resolve("transfer-item-test");
         var targetDir = testDir.resolve("transfer-item-target");
-        Files.createDirectories(tempDir);
+        Files.createDirectories(sourceDir);
         Files.createDirectories(targetDir);
 
-        var dve = tempDir.resolve("dataset_1710000000000_v1.zip");
+        var dve = sourceDir.resolve("dataset_1710000000000_v1.zip");
         Files.writeString(dve, "dummy");
 
         // Place a file with the same name in target to force index suffix
@@ -87,7 +218,7 @@ public class TransferItemTest extends TestDirFixture {
         item.moveToDir(targetDir, error);
 
         // Then
-        var expectedMoved = targetDir.resolve("dataset_1710000000000_v1-0.zip");
+        var expectedMoved = targetDir.resolve("dataset_1710000000000_v1-1.zip");
         assertThat(Files.exists(expectedMoved)).isTrue();
         assertThat(Files.exists(existing)).isTrue(); // original existing untouched
 
@@ -97,17 +228,12 @@ public class TransferItemTest extends TestDirFixture {
         assertThat(logContent).contains("boom");
     }
 
-
-
-
-
-
     @Test
     public void getContact_and_getNbn_should_read_from_zip_dve() throws Exception {
         // Given: create a DVE zip with a top-level directory, bagit files, and metadata JSON
-        var tempDir = testDir.resolve("transfer-item-zip");
-        Files.createDirectories(tempDir);
-        var dve = tempDir.resolve("dataset_v1.zip");
+        var sourceDir = testDir.resolve("transfer-item-zip");
+        Files.createDirectories(sourceDir);
+        var dve = sourceDir.resolve("dataset_v1.zip");
         createDveZip(dve,
             "Contact Name A;Contact Name B",
             "a@example.org;b@example.org",
@@ -124,9 +250,9 @@ public class TransferItemTest extends TestDirFixture {
     @Test
     public void getNbn_should_fail_when_metadata_missing() throws Exception {
         // Given
-        var tempDir = testDir.resolve("transfer-item-zip");
-        Files.createDirectories(tempDir);
-        var dve = tempDir.resolve("dataset.zip");
+        var sourceDir = testDir.resolve("transfer-item-zip");
+        Files.createDirectories(sourceDir);
+        var dve = sourceDir.resolve("dataset.zip");
         createDveZip(dve, "John Doe", "john@example.org", null); // no metadata JSON
 
         var item = new TransferItem(dve);
@@ -137,6 +263,16 @@ public class TransferItemTest extends TestDirFixture {
             .hasMessageContaining("No metadata file");
     }
 
+    /**
+     * Helper method to create a DVE zip file for testing purposes. Creates a minimal BagIt structure with bag-info.txt containing contact information and optionally an oai-ore.jsonld metadata file
+     * with NBN information.
+     *
+     * @param zipPath      the path where the zip file should be created
+     * @param contactName  the contact name to include in bag-info.txt, or null to omit
+     * @param contactEmail the contact email to include in bag-info.txt, or null to omit
+     * @param nbn          the NBN identifier to include in metadata/oai-ore.jsonld, or null to omit metadata file
+     * @throws IOException if an I/O error occurs during zip creation
+     */
     private static void createDveZip(Path zipPath, String contactName, String contactEmail, String nbn) throws IOException {
         var env = new HashMap<String, String>();
         env.put("create", "true");

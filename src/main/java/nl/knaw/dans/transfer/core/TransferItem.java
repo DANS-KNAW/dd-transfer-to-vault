@@ -78,7 +78,7 @@ public class TransferItem {
      */
     public void moveToDir(Path dir, Exception e) throws IOException {
         Path newLocation = dve;
-        if (e == null && new DveFileName(dve).getCreationTime() != null) {  // If there is an error, keep the original name; the error might have to do with naming
+        if (e == null && new DveFileName(dve).getCreationTime() == null) {  // If there is an error, keep the original name; the error might have to do with naming
             newLocation = new DveFileName(dve).withCreationTime(getCreationTimeFromFilesystem(dve)).getPath();
         }
         newLocation = findFreeName(dir, newLocation);
@@ -119,7 +119,7 @@ public class TransferItem {
 
     private Path findFreeName(Path targetDir, Path dve) throws IOException {
         var dveFileName = new DveFileName(targetDir.resolve(dve.getFileName()));
-        int sequenceNumber = 0;
+        int sequenceNumber = 1;
         while (Files.exists(dveFileName.getPath())) {
             dveFileName = dveFileName.withIndex(sequenceNumber++);
         }
