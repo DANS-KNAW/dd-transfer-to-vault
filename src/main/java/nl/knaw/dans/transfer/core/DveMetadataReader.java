@@ -21,10 +21,7 @@ import org.apache.commons.io.IOUtils;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.OffsetDateTime;
-import java.util.Properties;
 
 @AllArgsConstructor
 public class DveMetadataReader {
@@ -45,20 +42,7 @@ public class DveMetadataReader {
             var bagInfoMap = bagInfoReader.readBagInfo(bagInfo);
             bagInfoMap.get("Contact-Name").stream().findFirst().ifPresent(dveMetadata::setContactName);
             bagInfoMap.get("Contact-Email").stream().findFirst().ifPresent(dveMetadata::setContactEmail);
-            var propertiesPath = path.getParent().resolve(path.getFileName() + ".properties");
-            String creationTimeValue = null;
-            if (Files.exists(propertiesPath)) {
-                var props = new Properties();
-                try (var reader = Files.newBufferedReader(propertiesPath)) {
-                    props.load(reader);
-                    creationTimeValue = props.getProperty("creationTime");
-                    dveMetadata.setCreationTime(OffsetDateTime.parse(creationTimeValue));
-                }
-            }
-            else {
-                throw new IllegalStateException("Missing properties file: " + propertiesPath);
-            }
-
+            dveMetadata.setCreationTime(new DveFileName(path).getCreationTime());
             var dataFileAttributes = dataFileMetadataReader.readDataFileAttributes(path);
             dveMetadata.setDataFileAttributes(dataFileAttributes);
 

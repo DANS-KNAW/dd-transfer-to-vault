@@ -42,7 +42,6 @@ import java.time.OffsetDateTime;
 public class TransferItem {
     private static final String ERROR_LOG_SUFFIX = "-error.log";
     private static final String METADATA_PATH = "metadata/oai-ore.jsonld";
-    private static final String BAG_INFO_PATH = "bag-info.txt";
     private static final String NBN_JSON_PATH = "$.ore:describes.dansDataVaultMetadata:dansNbn";
 
     private Path dve;
@@ -71,16 +70,6 @@ public class TransferItem {
     }
 
     /**
-     * Gets the creation time from the DVE filename. If not present, null is returned.
-     *
-     * @return the creation timereads it from the file system attributes.
-     */
-    public OffsetDateTime getCreationTime() {
-        var fileName = new DveFileName(dve);
-        return fileName.getCreationDateTime();
-    }
-
-    /**
      * Moves the DVE to a new directory. If the file already exists with the same MD5 hash, it will be deleted.
      *
      * @param dir the directory to move the DVE to
@@ -88,7 +77,11 @@ public class TransferItem {
      * @throws IOException if an I/O error occurs
      */
     public void moveToDir(Path dir, Exception e) throws IOException {
-        var newLocation = findFreeName(dir, e == null ? addCreationTimeIfNeeded(dve) : dve); // Don't bother adding creation time if we are going to log an error anyway
+        Path newLocation = dve;
+        if (e == null && new DveFileName(dve).getCreationTime() != null) {  // If there is an error, keep the original name; the error might have to do with naming
+            newLocation = new DveFileName(dve).withCreationTime(getCreationTimeFromFilesystem(dve)).getPath();
+        }
+        newLocation = findFreeName(dir, newLocation);
         var tempNewLocation = newLocation.resolveSibling(newLocation.getFileName() + ".tmp");
         if (Files.exists(newLocation)) {
             throw new IllegalStateException("File already exists: " + newLocation);
@@ -108,27 +101,10 @@ public class TransferItem {
         }
     }
 
-    /*
-     * This should only happen the first time the DVE is moved. This first time it will be move over a partition boundary, which means the creation time will not be
-     * preserved in the file system.
-     */
-    private Path addCreationTimeIfNeeded(Path dve) {
-        var fileName = new DveFileName(dve);
-        if (fileName.getCreationDateTime() != null) {
-            return dve;
-        }
-        var creationTimeMillis = getCreationTimeFromFilesystem(dve);
-        var dotIndex = dve.getFileName().toString().lastIndexOf('.');
-        var baseName = (dotIndex == -1) ? dve.getFileName().toString() : dve.getFileName().toString().substring(0, dotIndex);
-        var extension = (dotIndex == -1) ? "" : dve.getFileName().toString().substring(dotIndex);
-        var newFileName = String.format("%s_%d%s", baseName, creationTimeMillis, extension);
-        return dve.resolveSibling(newFileName);
-    }
-
-    private long getCreationTimeFromFilesystem(Path file) {
+    private OffsetDateTime getCreationTimeFromFilesystem(Path file) {
         try {
             var attrs = Files.readAttributes(file, BasicFileAttributes.class);
-            return attrs.creationTime().toMillis();
+            return attrs.creationTime().toInstant().atOffset(OffsetDateTime.now().getOffset());
         }
         catch (IOException ex) {
             throw new IllegalStateException("Unable to read file attributes for: " + file, ex);
@@ -142,23 +118,12 @@ public class TransferItem {
     }
 
     private Path findFreeName(Path targetDir, Path dve) throws IOException {
-        var fileName = dve.getFileName().toString();
-        var dotIndex = fileName.lastIndexOf('.');
-        var baseName = (dotIndex == -1) ? fileName : fileName.substring(0, dotIndex);
-        var extension = (dotIndex == -1) ? "" : fileName.substring(dotIndex);
-        var sequenceNumber = 0;
-        Path newPath;
-        do {
-            if (sequenceNumber == 0) {
-                newPath = targetDir.resolve(baseName + extension);
-            }
-            else {
-                newPath = targetDir.resolve(baseName + "-" + sequenceNumber + extension);
-            }
-            sequenceNumber++;
+        var dveFileName = new DveFileName(targetDir.resolve(dve.getFileName()));
+        int sequenceNumber = 0;
+        while (Files.exists(dveFileName.getPath())) {
+            dveFileName = dveFileName.withIndex(sequenceNumber++);
         }
-        while (Files.exists(newPath));
-        return newPath;
+        return dveFileName.getPath();
     }
 
     public void moveToDir(Path dir) throws IOException {
@@ -166,12 +131,8 @@ public class TransferItem {
     }
 
     public void setOcflObjectVersion(int ocflObjectVersion) {
-        int currentVersion = getOcflObjectVersion();
-        if (currentVersion != 0 && currentVersion != ocflObjectVersion) {
-            throw new IllegalStateException("OCFL object version is already set to " + currentVersion + ", cannot change to " + ocflObjectVersion);
-        }
+        var newDve = new DveFileName(dve).withOcflObjectVersion(ocflObjectVersion).getPath();
         try {
-            var newDve = dve.resolveSibling(dve.getFileName() + "_v" + ocflObjectVersion);
             Files.move(dve, newDve);
             dve = newDve;
             try (var channel = FileChannel.open(dve)) {
