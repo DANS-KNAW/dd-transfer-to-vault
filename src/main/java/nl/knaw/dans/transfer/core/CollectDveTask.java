@@ -66,13 +66,15 @@ public class CollectDveTask implements Runnable {
             }
             FileUtils.ensureDirectoryExists(targetDir);
             transferItem.moveToDir(targetDir);
+            log.info("Collected {}", dve.getFileName());
         }
         catch (Exception e) {
-            log.error("Unable to process DVE: {}", dve, e);
+            log.error("Unable to process DVE: {}", dve.getFileName(), e);
             try {
                 if (transferItem != null) {
                     FileUtils.ensureDirectoryExists(failedOutbox);
                     transferItem.moveToDir(failedOutbox, e);
+                    log.warn("Failed to collect {}", dve.getFileName());
                 }
                 else {
                     log.error("TransferItem is null, unable to move DVE to failed outbox");

@@ -25,6 +25,7 @@ import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.List;
 
 @Slf4j
@@ -38,6 +39,7 @@ public class ExtractMetadataTask implements Runnable {
     private final Path nbnRegistrationInbox;
     private final URI vaultCatalogBaseUri;
     private final DveMetadataReader dveMetadataReader;
+    private final FileService fileService;
     private final VaultCatalogClient vaultCatalogClient;
     private final ValidateBagPackClient validateBagPackClient;
 
@@ -55,58 +57,45 @@ public class ExtractMetadataTask implements Runnable {
             return;
         }
 
+        TransferItem transferItem = null;
         try {
             var dves = getDves();
-            while (Files.exists(targetNbnDir) && !isBlocked()) {
+            while (Files.exists(targetNbnDir)) {
+                log.debug("Found {} DVEs to process", dves.size());
                 for (var dve : dves) {
-                    TransferItem transferItem = null;
-                    try {
-                        transferItem = new TransferItem(dve);
+                    transferItem = new TransferItem(dve);
 
-                        log.debug("Validating DVE {} as BagPack...", dve);
-                        var result = validateBagPackClient.validateBagPack(dve);
-                        if (result.getIsCompliant()) {
-                            log.info("DVE {} is a compliant BagPack.", dve);
-                        }
-                        else {
-                            log.warn("DVE {} is not a compliant BagPack: {}. Moving to rejected outbox.", dve, result.getRuleViolations());
-                            transferItem.moveToDir(outboxRejected);
-                            continue;
-                        }
-
-                        var dveMetadata = dveMetadataReader.readDveMetadata(dve);
-                        if (dveMetadata.getContactName() == null || dveMetadata.getContactEmail() == null) {
-                            throw new IllegalArgumentException("Missing contact information in DVE metadata");
-                        }
-
-                        transferItem.setOcflObjectVersion(
-                            vaultCatalogClient.registerOcflObjectVersion(ocflStorageRoot, dveMetadata, transferItem.getOcflObjectVersion()));
-                        if (transferItem.getOcflObjectVersion() == 1) {
-                            log.info("First version of dataset {}. Scheduling NBN registration", transferItem.getNbn());
-                            scheduleNbnRegistration(transferItem);
-                        }
-                        transferItem.moveToDir(outboxProcessed);
+                    log.debug("Validating DVE {} as BagPack...", dve);
+                    var result = validateBagPackClient.validateBagPack(dve);
+                    if (result.getIsCompliant()) {
+                        log.info("DVE {} is a compliant BagPack.", dve);
                     }
-                    catch (Exception e) {
-                        log.error("Error processing DVE", e);
-                        try {
-                            log.info("Blocking target directory to prevent subsequent versions from jumping the line");
-                            blockTarget();
-                        }
-                        catch (IOException ioe) {
-                            log.error("Unable to block target directory", ioe);
-                        }
-
-                        if (transferItem != null) {
-                            transferItem.moveToDir(outboxFailed, e);
-                        }
-                        else {
-                            log.error("TransferItem is null, unable to move DVE to failed outbox");
-                        }
+                    else {
+                        log.warn("DVE {} is not a compliant BagPack: {}. Moving to rejected outbox.", dve, result.getRuleViolations());
+                        transferItem.moveToDir(outboxRejected, result.getRuleViolations().toString());
+                        blockTarget();
+                        return;
                     }
+
+                    log.debug("Reading metadata from dve");
+                    var dveMetadata = dveMetadataReader.readDveMetadata(dve);
+                    if (dveMetadata.getContactName() == null || dveMetadata.getContactEmail() == null) {
+                        throw new IllegalArgumentException("Missing contact information in DVE metadata");
+                    }
+
+                    log.debug("Registering OCFL Object Version in Vault Catalog");
+                    transferItem.setOcflObjectVersion(
+                        vaultCatalogClient.registerOcflObjectVersion(ocflStorageRoot, dveMetadata, transferItem.getOcflObjectVersion()));
+                    if (transferItem.getOcflObjectVersion() == 1) {
+                        log.info("First version of dataset {}. Scheduling NBN registration", transferItem.getNbn());
+                        scheduleNbnRegistration(transferItem);
+                    }
+                    log.debug("Moving DVE to processed outbox");
+                    transferItem.moveToDir(outboxProcessed);
                 }
-                // Wait 100ms before checking for new files
+
                 try {
+                    log.debug("Taking a short nap before resuming work");
                     Thread.sleep(100);
                 }
                 catch (InterruptedException e) {
@@ -118,10 +107,23 @@ public class ExtractMetadataTask implements Runnable {
                 // Get any new DVE files that may have been added while processing
                 dves = getDves();
             }
+            /*
+             * At this point, all DVE files in targetNbnDir have been processed. We are NOT sticking around to wait for more DVEs, as this would prevent our
+             * worker thread from taking on other tasks. The transfer inbox will dete targetNbnDir if it is empty in the next polling cycle. If new DVEs are added
+             * for this same NBN, the inbox will create a new targetNbnDir (with a different name) and create a new ExtractMetadataTask for it. It cannot have
+             * the same name because there would be two task instances competing for the same targetNbnDir.
+             */
+
         }
         catch (Exception e) {
             log.error("Error processing DVE files", e);
             try {
+                if (transferItem != null) {
+                    transferItem.moveToDir(outboxFailed, e);
+                }
+                else {
+                    log.warn("Failed, but no transferItem was set!");
+                }
                 blockTarget();
             }
             catch (IOException ioe) {
@@ -131,11 +133,6 @@ public class ExtractMetadataTask implements Runnable {
         finally {
             log.debug("Finished ExtractMetadataTask for {}", targetNbnDir);
         }
-        /*
-         * At this point, all DVE files in targetNbnDir have been processed. We are NOT sticking around to wait for more DVEs, as this would prevent our worker thread from taking on other tasks.
-         * The transfer inbox will dete targetNbnDir if it is empty in the next polling cycle. If new DVEs are added for this same NBN, the inbox will create a new targetNbnDir (with a different name)
-         * and create a new ExtractMetadataTask for it. It cannot have the same name, because there would be two tasks instances competing for the same targetNbnDir.
-         */
     }
 
     private void scheduleNbnRegistration(TransferItem transferItem) {
@@ -169,8 +166,10 @@ public class ExtractMetadataTask implements Runnable {
     }
 
     private void blockTarget() throws IOException {
-        if (!isBlocked()) {
-            Files.createFile(targetNbnDir.resolve("block"));
-        }
+        var blockFile = targetNbnDir.resolve("block");
+        // Create the block file
+        Files.writeString(blockFile, "", StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        fileService.fsyncFile(blockFile);
+        fileService.fsyncDirectory(targetNbnDir);
     }
 }

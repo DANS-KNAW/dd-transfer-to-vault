@@ -51,6 +51,7 @@ public class SendToVaultTask implements Runnable {
         try {
             transferItem = new TransferItem(dve);
             addToObjectImportDirectory(dve, transferItem.getOcflObjectVersion(), this.currentBatchWorkDir.resolve(transferItem.getNbn()));
+            log.info("Added {} to current batch", dve.getFileName());
             importIfBatchThresholdReached();
             transferItem.moveToDir(outboxProcessed);
         }
@@ -93,7 +94,7 @@ public class SendToVaultTask implements Runnable {
             log.info("Moving current batch directory {} to {}", currentBatchWorkDir, batch);
             moveDirectory(currentBatchWorkDir.toFile(), batch.toFile());
             dataVaultClient.sendBatchToVault(batch);
-            log.info("Recreating current batch directory");
+            log.info("Recreating empty current batch directory");
             Files.createDirectories(this.currentBatchWorkDir);
         }
     }

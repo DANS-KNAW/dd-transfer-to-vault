@@ -21,9 +21,11 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.regex.Pattern;
+import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
 import java.util.zip.ZipFile;
 
 public class FileServiceImpl implements FileService {
@@ -52,5 +54,28 @@ public class FileServiceImpl implements FileService {
         var entry = entries.get(0);
         log.debug("Requested entry for path '{}', found match on '{}'", path, entry.getName());
         return zipFile.getInputStream(entries.get(0));
+    }
+
+    @Override
+    public void moveAtomically(@NonNull Path oldLocation, @NonNull Path newLocation) throws IOException {
+        Files.move(oldLocation, newLocation, StandardCopyOption.ATOMIC_MOVE);
+        fsyncDirectory(oldLocation.getParent());
+        fsyncDirectory(newLocation.getParent());
+    }
+
+    @Override
+    public void fsyncFile(Path file) throws IOException {
+        try (FileChannel ch = FileChannel.open(file, StandardOpenOption.WRITE)) {
+            ch.force(true);
+        }
+    }
+
+    @Override
+    public void fsyncDirectory(Path dir) throws IOException {
+        // Works on Unix-like systems. On some platforms/filesystems this can throw; if it does,
+        // propagate (safer) or change to best-effort depending on your needs.
+        try (FileChannel ch = FileChannel.open(dir, StandardOpenOption.READ)) {
+            ch.force(true);
+        }
     }
 }

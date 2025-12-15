@@ -25,6 +25,8 @@ import nl.knaw.dans.bagit.exceptions.UnsupportedAlgorithmException;
 import nl.knaw.dans.bagit.reader.BagReader;
 
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.nio.channels.FileChannel;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
@@ -69,16 +71,24 @@ public class TransferItem {
         return fileName.getOcflObjectVersion() == null ? 0 : fileName.getOcflObjectVersion();
     }
 
+    public void moveToDir(Path dir) throws IOException {
+        moveToDir(dir, (String) null);
+    }
+
+    public void moveToDir(Path dir, Exception e) throws IOException {
+        moveToDir(dir, writeStackTrace(e));
+    }
+
     /**
      * Moves the DVE to a new directory. If the file already exists with the same MD5 hash, it will be deleted.
      *
-     * @param dir the directory to move the DVE to
-     * @param e   the exception to log in the error log file
+     * @param dir   the directory to move the DVE to
+     * @param error the exception to log in the error log file
      * @throws IOException if an I/O error occurs
      */
-    public void moveToDir(Path dir, Exception e) throws IOException {
+    public void moveToDir(Path dir, String error) throws IOException {
         Path newLocation = dve;
-        if (e == null && new DveFileName(dve).getCreationTime() == null) {  // If there is an error, keep the original name; the error might have to do with naming
+        if (error == null && new DveFileName(dve).getCreationTime() == null) {  // If there is an error, keep the original name; the error might have to do with naming
             newLocation = new DveFileName(dve).withCreationTime(getCreationTimeFromFilesystem(dve)).getPath();
         }
         newLocation = findFreeName(dir, newLocation);
@@ -95,9 +105,9 @@ public class TransferItem {
             Files.move(tempNewLocation, newLocation);
             dve = newLocation;
         }
-        if (e != null) {
+        if (error != null) {
             var errorLogFile = newLocation.resolveSibling(newLocation.getFileName() + ERROR_LOG_SUFFIX);
-            writeStackTrace(errorLogFile, e);
+            Files.writeString(errorLogFile, error);
         }
     }
 
@@ -111,23 +121,20 @@ public class TransferItem {
         }
     }
 
-    private static void writeStackTrace(Path errorLog, Exception e) throws IOException {
-        try (var writer = Files.newBufferedWriter(errorLog)) {
-            e.printStackTrace(new java.io.PrintWriter(writer));
-        }
+    private static String writeStackTrace(Exception e) {
+        var sw = new StringWriter();
+        var pw = new PrintWriter(sw);
+        e.printStackTrace(pw);
+        return sw.toString();
     }
 
-    private Path findFreeName(Path targetDir, Path dve) throws IOException {
+    private Path findFreeName(Path targetDir, Path dve) {
         var dveFileName = new DveFileName(targetDir.resolve(dve.getFileName()));
         int sequenceNumber = 1;
         while (Files.exists(dveFileName.getPath())) {
             dveFileName = dveFileName.withIndex(sequenceNumber++);
         }
         return dveFileName.getPath();
-    }
-
-    public void moveToDir(Path dir) throws IOException {
-        moveToDir(dir, null);
     }
 
     public void setOcflObjectVersion(int ocflObjectVersion) {

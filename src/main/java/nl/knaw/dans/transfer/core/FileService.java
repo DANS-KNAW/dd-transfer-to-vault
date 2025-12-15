@@ -17,13 +17,9 @@ package nl.knaw.dans.transfer.core;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.FileStore;
 import java.nio.file.Path;
-import java.util.concurrent.TimeoutException;
-import java.util.regex.Pattern;
 import java.util.zip.ZipFile;
 
-// TODO: refactor to FileUtils or inline code
 public interface FileService {
 
     ZipFile openZipFile(Path path) throws IOException;
@@ -36,7 +32,21 @@ public interface FileService {
      * @param subpath              the path of the entry under the base folder
      * @return an input stream for the entry
      * @throws IOException              if the entry cannot be read
-     * @throws IllegalArgumentException if the entry is not found or if more than one base folder is found
+     * @throws IllegalArgumentException if the entry is not found, or if more than one base folder is found
      */
     InputStream getEntryUnderBaseFolder(ZipFile datasetVersionExport, Path subpath) throws IOException;
+
+    /**
+     * Moves a file from oldLocation to newLocation. The move is atomic if the underlying file system supports it.
+     *
+     *
+     * @param oldLocation the current location of the file
+     * @param newLocation the new location of the file
+     * @throws IOException if the file cannot be moved
+     */
+    void moveAtomically(Path oldLocation, Path newLocation) throws IOException;
+
+    void fsyncFile(Path file) throws IOException;
+
+    void fsyncDirectory(Path dir) throws IOException;
 }

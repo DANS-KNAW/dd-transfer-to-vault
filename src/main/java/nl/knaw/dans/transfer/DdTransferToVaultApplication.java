@@ -99,6 +99,7 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
                         .outboxRejected(configuration.getTransfer().getExtractMetadata().getOutbox().getRejected())
                         .nbnRegistrationInbox(configuration.getNbnRegistration().getInbox().getPath())
                         .vaultCatalogBaseUri(configuration.getNbnRegistration().getCatalogBaseUrl())
+                        .fileService(fileService)
                         .dveMetadataReader(new DveMetadataReader(
                             fileService,
                             new OaiOreMetadataReader(),
