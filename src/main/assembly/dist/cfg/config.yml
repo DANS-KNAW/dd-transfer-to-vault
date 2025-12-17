@@ -99,7 +99,7 @@ nbnRegistration:
 vaultCatalog:
   url: http://dev.transfer.dans-data.nl:20305
   httpClient:
-    timeout: 10s
+    timeout: 30s
     connectionTimeout: 1min
     # disable chunked encoding because it breaks the multipart/form-data headers:
     chunkedEncodingEnabled: false
@@ -114,7 +114,7 @@ vaultCatalog:
 dataVault:
   url: http://localhost:20365
   httpClient:
-    timeout: 10s
+    timeout: 30s
     connectionTimeout: 1min
     # disable chunked encoding because it breaks the multipart/form-data headers:
     chunkedEncodingEnabled: false
