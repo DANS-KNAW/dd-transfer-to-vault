@@ -20,6 +20,7 @@ import io.dropwizard.core.Application;
 import io.dropwizard.core.setup.Bootstrap;
 import io.dropwizard.core.setup.Environment;
 import nl.knaw.dans.lib.util.ClientProxyBuilder;
+import nl.knaw.dans.lib.util.PingHealthCheck;
 import nl.knaw.dans.lib.util.inbox.Inbox;
 import nl.knaw.dans.transfer.client.DataVaultClient;
 import nl.knaw.dans.transfer.client.GmhClient;
@@ -44,11 +45,12 @@ import nl.knaw.dans.transfer.core.RemoveXmlFilesTask;
 import nl.knaw.dans.transfer.core.SendToVaultTaskFactory;
 import nl.knaw.dans.transfer.core.SequencedTasks;
 import nl.knaw.dans.transfer.core.oaiore.OaiOreMetadataReader;
+import nl.knaw.dans.transfer.health.FileSystemPermissionHealthCheck;
 import nl.knaw.dans.vaultcatalog.client.invoker.ApiClient;
 import nl.knaw.dans.vaultcatalog.client.resources.DefaultApi;
 import org.apache.commons.io.filefilter.FileFilterUtils;
 
-import java.time.Duration;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 
 public class DdTransferToVaultApplication extends Application<DdTransferToVaultConfiguration> {
@@ -69,6 +71,7 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
     @Override
     public void run(final DdTransferToVaultConfiguration configuration, final Environment environment) {
         FileService fileService = new FileServiceImpl();
+        var dataVaultProxy = createDataVaultProxy(configuration);
         environment.lifecycle().manage(Inbox.builder()
             .fileFilter(new DveFileFilter())
             .inbox(configuration.getTransfer().getSendToVault().getInbox().getPath())
@@ -79,13 +82,16 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
                 .outboxProcessed(configuration.getTransfer().getSendToVault().getOutbox().getProcessed())
                 .outboxFailed(configuration.getTransfer().getSendToVault().getOutbox().getFailed())
                 .dataVaultBatchRoot(configuration.getTransfer().getSendToVault().getDataVault().getBatchRoot())
-                .dataVaultClient(createDataVaultClient(configuration))
+                .dataVaultClient(new DataVaultClient(dataVaultProxy))
                 .defaultMessage(configuration.getTransfer().getSendToVault().getDefaultMessage())
                 .build())
             .build());
 
-        VaultCatalogClient vaultCatalogClient = createVaultCatalogClient(configuration);
-        ValidateBagPackClient validateBagPackClient = createValidateBagPackClient(configuration);
+        final var vaultCatalogProxy = createVaultCatalogProxy(configuration);
+        VaultCatalogClient vaultCatalogClient = new VaultCatalogClientImpl(vaultCatalogProxy);
+        var validateBagPackProxy = createValidateBagPackProxy(configuration);
+
+        ValidateBagPackClient validateBagPackClient = new ValidateBagPackClientImpl(validateBagPackProxy, configuration.getValidateBagPack().getPollInterval().toJavaDuration());
         CountDownLatch startCollectInbox = new CountDownLatch(1);
         environment.lifecycle().manage(
             Inbox.builder()
@@ -146,25 +152,39 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
                     .build())
                 .build());
 
+        environment.healthChecks().register("FileSystemPermissions", new FileSystemPermissionHealthCheck(
+            configuration.getTransfer(),
+            configuration.getNbnRegistration(),
+            fileService));
+
+        for (var entry : Map.of(
+            "VaultCatalog", vaultCatalogProxy.getApiClient().getHttpClient(),
+            "DataVault", dataVaultProxy.getApiClient().getHttpClient(),
+            "ValidateBagPack", validateBagPackProxy.getApiClient().getHttpClient()
+        ).entrySet()){
+            var name = entry.getKey();
+            var httpClient = entry.getValue();
+            var pingUrl = configuration.getVaultCatalog().getPingUrl();
+            environment.healthChecks().register(name, new PingHealthCheck(name, httpClient, pingUrl));
+        }
     }
 
-    private VaultCatalogClient createVaultCatalogClient(DdTransferToVaultConfiguration configuration) {
-        final var vaultCatalogProxy = new ClientProxyBuilder<ApiClient, DefaultApi>()
-            .apiClient(new nl.knaw.dans.vaultcatalog.client.invoker.ApiClient())
+    private DefaultApi createVaultCatalogProxy(DdTransferToVaultConfiguration configuration) {
+        return new ClientProxyBuilder<ApiClient, DefaultApi>()
+            .apiClient(new ApiClient())
             .basePath(configuration.getVaultCatalog().getUrl())
             .httpClient(configuration.getVaultCatalog().getHttpClient())
-            .defaultApiCtor(nl.knaw.dans.vaultcatalog.client.resources.DefaultApi::new)
+            .defaultApiCtor(DefaultApi::new)
             .build();
-        return new VaultCatalogClientImpl(vaultCatalogProxy);
     }
 
-    private DataVaultClient createDataVaultClient(DdTransferToVaultConfiguration configuration) {
-        return new DataVaultClient(new ClientProxyBuilder<nl.knaw.dans.datavault.client.invoker.ApiClient, nl.knaw.dans.datavault.client.resources.DefaultApi>()
+    private nl.knaw.dans.datavault.client.resources.DefaultApi createDataVaultProxy(DdTransferToVaultConfiguration configuration) {
+        return new ClientProxyBuilder<nl.knaw.dans.datavault.client.invoker.ApiClient, nl.knaw.dans.datavault.client.resources.DefaultApi>()
             .apiClient(new nl.knaw.dans.datavault.client.invoker.ApiClient())
             .basePath(configuration.getDataVault().getUrl())
             .httpClient(configuration.getDataVault().getHttpClient())
             .defaultApiCtor(nl.knaw.dans.datavault.client.resources.DefaultApi::new)
-            .build());
+            .build();
     }
 
     private GmhClient createGmhClient(DdTransferToVaultConfiguration configuration) {
@@ -176,14 +196,12 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
             .build());
     }
 
-    private ValidateBagPackClient createValidateBagPackClient(DdTransferToVaultConfiguration configuration) {
-        var api = new ClientProxyBuilder<nl.knaw.dans.validatebagpack.client.invoker.ApiClient, nl.knaw.dans.validatebagpack.client.resources.DefaultApi>()
+    private nl.knaw.dans.validatebagpack.client.resources.DefaultApi createValidateBagPackProxy(DdTransferToVaultConfiguration configuration) {
+        return new ClientProxyBuilder<nl.knaw.dans.validatebagpack.client.invoker.ApiClient, nl.knaw.dans.validatebagpack.client.resources.DefaultApi>()
             .apiClient(new nl.knaw.dans.validatebagpack.client.invoker.ApiClient())
             .basePath(configuration.getValidateBagPack().getUrl())
             .httpClient(configuration.getValidateBagPack().getHttpClient())
             .defaultApiCtor(nl.knaw.dans.validatebagpack.client.resources.DefaultApi::new)
             .build();
-
-        return new ValidateBagPackClientImpl(api, configuration.getValidateBagPack().getPollInterval().toJavaDuration());
     }
 }

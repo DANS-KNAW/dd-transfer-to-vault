@@ -27,6 +27,9 @@ public class DataVaultConfig {
     @NotNull
     private URI url;
 
+    @NotNull
+    private URI pingUrl;
+
     @Valid
     @NotNull
     private JerseyClientConfiguration httpClient = new JerseyClientConfiguration();

@@ -49,4 +49,9 @@ public interface FileService {
     void fsyncFile(Path file) throws IOException;
 
     void fsyncDirectory(Path dir) throws IOException;
+
+    boolean isSameFileSystem(Path... paths) throws IOException;
+
+    boolean canWriteTo(Path path);
+
 }

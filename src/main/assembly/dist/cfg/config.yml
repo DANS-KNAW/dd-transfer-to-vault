@@ -95,9 +95,31 @@ nbnRegistration:
       # The GMH server does not handle GZIP compression
       gzipEnabled: false
       userAgent: dd-transfer-to-vault
+health:
+  delayedShutdownHandlerEnabled: false
+  healthChecks:
+    - critical: true
+      name: FileSystemPermissions
+    - name: VaultCatalog
+      critical: true
+      initialState: false
+      schedule:
+        checkInterval: 60s
+    - name: DataVault
+      critical: true
+      initialState: false
+      schedule:
+        checkInterval: 60s
+    - name: ValidateBagPack
+      critical: true
+      initialState: false
+      schedule:
+        checkInterval: 60s
+  initialOverallState: false
 
 vaultCatalog:
   url: http://dev.transfer.dans-data.nl:20305
+  pingUrl: http://dev.transfer.dans-data.nl:20306
   httpClient:
     timeout: 10s
     connectionTimeout: 1min
@@ -113,6 +135,7 @@ vaultCatalog:
 
 dataVault:
   url: http://localhost:20365
+  pingUrl: http://localhost:20366
   httpClient:
     timeout: 10s
     connectionTimeout: 1min
