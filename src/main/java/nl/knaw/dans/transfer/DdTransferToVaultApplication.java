@@ -155,18 +155,23 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
         environment.healthChecks().register("FileSystemPermissions", new FileSystemPermissionHealthCheck(
             configuration.getTransfer(),
             configuration.getNbnRegistration(),
-            fileService));
-
-        for (var entry : Map.of(
-            "VaultCatalog", vaultCatalogProxy.getApiClient().getHttpClient(),
-            "DataVault", dataVaultProxy.getApiClient().getHttpClient(),
-            "ValidateBagPack", validateBagPackProxy.getApiClient().getHttpClient()
-        ).entrySet()){
-            var name = entry.getKey();
-            var httpClient = entry.getValue();
-            var pingUrl = configuration.getVaultCatalog().getPingUrl();
-            environment.healthChecks().register(name, new PingHealthCheck(name, httpClient, pingUrl));
-        }
+            fileService)
+        );
+        environment.healthChecks().register("VaultCatalog", new PingHealthCheck(
+            "VaultCatalog",
+            vaultCatalogProxy.getApiClient().getHttpClient(),
+            configuration.getVaultCatalog().getPingUrl())
+        );
+        environment.healthChecks().register("DataVault", new PingHealthCheck(
+            "DataVault",
+            dataVaultProxy.getApiClient().getHttpClient(),
+            configuration.getDataVault().getPingUrl())
+        );
+        environment.healthChecks().register("ValidateBagPack", new PingHealthCheck(
+            "ValidateBagPack",
+            validateBagPackProxy.getApiClient().getHttpClient(),
+            configuration.getValidateBagPack().getPingUrl())
+        );
     }
 
     private DefaultApi createVaultCatalogProxy(DdTransferToVaultConfiguration configuration) {

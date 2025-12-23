@@ -28,11 +28,12 @@ public class ValidateBagPackConfig {
     @NotNull
     private URI url;
 
+    @NotNull
+    private URI pingUrl;
+
     @Valid
     @NotNull
     private JerseyClientConfiguration httpClient = new JerseyClientConfiguration();
 
     private Duration pollInterval = Duration.seconds(3);
-
-
 }
