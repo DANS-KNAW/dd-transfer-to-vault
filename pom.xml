@@ -22,7 +22,7 @@
     <parent>
         <groupId>nl.knaw.dans</groupId>
         <artifactId>dd-parent</artifactId>
-        <version>1.10.0</version>
+        <version>1.11.0</version>
     </parent>
 
     <artifactId>dd-transfer-to-vault</artifactId>
@@ -35,9 +35,6 @@
 
     <properties>
         <main-class>nl.knaw.dans.transfer.DdTransferToVaultApplication</main-class>
-        <dd-validate-bagpack-api.version>0.2.0</dd-validate-bagpack-api.version>
-        <dans-java-utils.version>2.5.0</dans-java-utils.version>
-        <json-path.version>2.10.0</json-path.version>
     </properties>
 
     <scm>
