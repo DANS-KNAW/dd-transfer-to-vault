@@ -35,7 +35,7 @@ public class FileSystemPermissionHealthCheck extends HealthCheck {
     }
 
     @Override
-    protected Result check() throws Exception {
+    protected Result check() {
         var result = Result.builder();
         var isValid = true;
         var needReadWriteRights = List.of(

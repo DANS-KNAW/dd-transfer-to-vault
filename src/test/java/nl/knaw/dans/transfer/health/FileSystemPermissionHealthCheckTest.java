@@ -19,6 +19,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import nl.knaw.dans.transfer.config.NbnRegistrationConfig;
 import nl.knaw.dans.transfer.config.TransferConfig;
 import nl.knaw.dans.transfer.core.FileService;
+import nl.knaw.dans.transfer.core.FileServiceImpl;
 import org.apache.commons.lang3.NotImplementedException;
 import org.junit.jupiter.api.Test;
 
@@ -71,17 +72,15 @@ class FileSystemPermissionHealthCheckTest {
         """;
 
     @Test
-    void checkNotingWorks() throws Exception {
-        FileService mock = mock(FileService.class);
-        when(mock.canWriteTo(any(Path.class))).thenReturn(false);
-        when(mock.isSameFileSystem(any())).thenReturn(false);
+    void checkNothingExists() throws Exception {
+        FileService fileService = new FileServiceImpl();
 
         ObjectMapper mapper = new ObjectMapper();
 
         var result = new FileSystemPermissionHealthCheck(
             mapper.readValue(TRANSFER_BOXES, TransferConfig.class),
             mapper.readValue(NBN_BOXES, NbnRegistrationConfig.class),
-            mock
+            fileService
         ).check();
 
         assertFalse(result.isHealthy());

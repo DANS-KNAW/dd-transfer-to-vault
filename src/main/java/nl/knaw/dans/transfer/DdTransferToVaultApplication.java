@@ -86,8 +86,6 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
                 .defaultMessage(configuration.getTransfer().getSendToVault().getDefaultMessage())
                 .build())
             .build());
-        var dependenciesReadyCheck = new HealthChecksDependenciesReadyCheck(environment, configuration.getDependenciesReadyCheck());
-        environment.lifecycle().manage(dependenciesReadyCheck);
 
         final var vaultCatalogProxy = createVaultCatalogProxy(configuration);
         VaultCatalogClient vaultCatalogClient = new VaultCatalogClientImpl(vaultCatalogProxy);

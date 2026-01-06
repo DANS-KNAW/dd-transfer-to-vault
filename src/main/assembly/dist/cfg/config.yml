@@ -117,12 +117,12 @@ health:
         checkInterval: 60s
   initialOverallState: false
 
-dependenciesReadyCheck:
-  healthChecks:
-    - vaultCatalog
-    - dataVault
-    - validateBagPack
-  pollInterval: 5s
+#dependenciesReadyCheck:
+#  healthChecks:
+#    - vaultCatalog
+#    - dataVault
+#    - validateBagPack
+#  pollInterval: 5s
 
 vaultCatalog:
   url: http://dev.transfer.dans-data.nl:20305
@@ -158,6 +158,7 @@ dataVault:
 
 validateBagPack:
   url: http://localhost:20375
+  pingUrl: http://localhost:20376
   httpClient:
     timeout: 30s
     connectionTimeout: 15s

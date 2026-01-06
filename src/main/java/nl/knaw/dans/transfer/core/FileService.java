@@ -50,7 +50,7 @@ public interface FileService {
 
     void fsyncDirectory(Path dir) throws IOException;
 
-    boolean isSameFileSystem(Path... paths) throws IOException;
+    boolean isSameFileSystem(Path... paths);
 
     boolean canWriteTo(Path path);
 

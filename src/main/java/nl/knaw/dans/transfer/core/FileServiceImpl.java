@@ -83,14 +83,21 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
-    public boolean isSameFileSystem(Path... paths) throws IOException {
+    public boolean isSameFileSystem(Path... paths) {
         var fileStores = new HashSet<FileStore>();
-
+        var result = true;
         for (var path : paths) {
-            fileStores.add(Files.getFileStore(path));
+            FileStore fileStore = null;
+            try {
+                fileStore = Files.getFileStore(path);
+            }
+            catch (IOException e) {
+                result = false;
+            }
+            fileStores.add(fileStore);
         }
 
-        return fileStores.size() == 1;
+        return result && fileStores.size() == 1;
     }
 
     @Override
