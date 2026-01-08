@@ -63,6 +63,7 @@ transfer:
     # 'Commit message' for each object version created in the Data Vault. Currently, there is no way to set this per DVE, so it is a static message.
     defaultMessage: No message
 
+nbnRegistration:
   catalogBaseUrl: http://dev.catalog.vault.datastations.nl/dataset
   registrationInterval: 1000
   inbox:
@@ -82,9 +83,38 @@ transfer:
       # The GMH server does not handle GZIP compression
       gzipEnabled: false
       userAgent: dd-transfer-to-vault
+health:
+  delayedShutdownHandlerEnabled: false
+  healthChecks:
+    - name: FileSystemPermissions
+      critical: true
+#    - name: VaultCatalog
+#      critical: true
+#      initialState: false
+#      schedule:
+#        checkInterval: 60s
+#    - name: DataVault
+#      critical: true
+#      initialState: false
+#      schedule:
+#        checkInterval: 60s
+#    - name: ValidateBagPack
+#      critical: true
+#      initialState: false
+#      schedule:
+#        checkInterval: 60s
+  initialOverallState: false
+
+dependenciesReadyCheck:
+  healthChecks:
+    - vaultCatalog
+    - dataVault
+    - validateBagPack
+  pollInterval: 5s
 
 vaultCatalog:
   url: http://dev.transfer.dans-data.nl:20305
+  pingUrl: http://dev.transfer.dans-data.nl:20306
   httpClient:
     timeout: 10s
     connectionTimeout: 1min
@@ -100,6 +130,7 @@ vaultCatalog:
 
 dataVault:
   url: http://localhost:20365
+  pingUrl: http://localhost:20366
   httpClient:
     timeout: 10s
     connectionTimeout: 1min
@@ -115,6 +146,7 @@ dataVault:
 
 validateBagPack:
   url: http://localhost:20375
+  pingUrl: http://localhost:20376
   httpClient:
     timeout: 30s
     connectionTimeout: 15s

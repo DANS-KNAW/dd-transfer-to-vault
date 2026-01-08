@@ -22,10 +22,13 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.channels.FileChannel;
+import java.nio.file.FileStore;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
+import java.util.HashSet;
+import java.util.UUID;
 import java.util.zip.ZipFile;
 
 public class FileServiceImpl implements FileService {
@@ -76,6 +79,45 @@ public class FileServiceImpl implements FileService {
         // propagate (safer) or change to best-effort depending on your needs.
         try (FileChannel ch = FileChannel.open(dir, StandardOpenOption.READ)) {
             ch.force(true);
+        }
+    }
+
+    @Override
+    public boolean isSameFileSystem(Path... paths) {
+        var fileStores = new HashSet<FileStore>();
+        var result = true;
+        for (var path : paths) {
+            FileStore fileStore = null;
+            try {
+                fileStore = Files.getFileStore(path);
+            }
+            catch (IOException e) {
+                result = false;
+            }
+            fileStores.add(fileStore);
+        }
+
+        return result && fileStores.size() == 1;
+    }
+
+    @Override
+    public boolean canWriteTo(Path path) {
+        var filename = path.resolve(String.format(".%s", UUID.randomUUID()));
+
+        try {
+            Files.write(filename, new byte[] {});
+            return true;
+        }
+        catch (IOException e) {
+            return false;
+        }
+        finally {
+            try {
+                Files.deleteIfExists(filename);
+            }
+            catch (IOException e) {
+                log.error("Unable to delete file due to IO error", e);
+            }
         }
     }
 }

@@ -15,22 +15,15 @@
  */
 package nl.knaw.dans.transfer.config;
 
-import io.dropwizard.client.JerseyClientConfiguration;
 import lombok.Data;
 
-import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.net.URI;
 
 @Data
-public class DataVaultConfig {
+public class PingHealtCheckConfig {
     @NotNull
-    private URI url;
-
+    private String name;
     @NotNull
     private URI pingUrl;
-
-    @Valid
-    @NotNull
-    private JerseyClientConfiguration httpClient = new JerseyClientConfiguration();
 }
