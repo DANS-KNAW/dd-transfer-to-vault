@@ -28,7 +28,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
+import java.util.Map;
 
 import static org.apache.commons.io.FileUtils.moveDirectory;
 import static org.apache.commons.io.FileUtils.sizeOfDirectory;
@@ -45,7 +45,7 @@ public class SendToVaultTask implements Runnable {
     private final Path outboxFailed;
     private final DataVaultClient dataVaultClient;
     private final String defaultMessage;
-    private final List<CustomPropertyConfig> customProperties;
+    private final Map<String, CustomPropertyConfig> customProperties;
 
     private TransferItem transferItem;
 
@@ -82,12 +82,39 @@ public class SendToVaultTask implements Runnable {
     private void createVersionInfoProperties(Path versionDirectory, String user, String email, String message) throws IOException {
         var versionInfoFile = versionDirectory.resolveSibling(versionDirectory.getFileName().toString() + ".properties");
         log.debug("Creating version info properties file at {}", versionInfoFile);
-        var propertiesContent = String.format("""
+        var sb = new StringBuilder();
+        sb.append(String.format("""
             user.name=%s
             user.email=%s
             message=%s
-            """, user, email, message);
-        Files.writeString(versionInfoFile, propertiesContent, StandardCharsets.UTF_8);
+            """, user, email, message));
+
+        if (customProperties != null) {
+            for (var entry : customProperties.entrySet()) {
+                var name = entry.getKey();
+                var config = entry.getValue();
+                var value = getCustomPropertyValue(config);
+
+                if (value == null || value.isBlank()) {
+                    if (config.getFailIfMissing()) {
+                        throw new IllegalStateException(String.format("Custom property '%s' with source '%s' is missing", name, config.getSource()));
+                    }
+                }
+                else {
+                    sb.append(String.format("%s=%s\n", name, value));
+                }
+            }
+        }
+
+        Files.writeString(versionInfoFile, sb.toString(), StandardCharsets.UTF_8);
+    }
+
+    private String getCustomPropertyValue(CustomPropertyConfig config) throws IOException {
+        return switch (config.getSource()) {
+            case "dansDataversePidVersion" -> transferItem.getDataversePidVersion();
+            case "Has-Organizational-Identifier-Version" -> transferItem.getHasOrganizationalIdentifierVersion();
+            default -> throw new IllegalArgumentException("Unknown custom property source: " + config.getSource());
+        };
     }
 
     private void importIfBatchThresholdReached() throws IOException {

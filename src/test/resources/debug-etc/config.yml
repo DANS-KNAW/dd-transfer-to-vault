@@ -66,7 +66,7 @@ transfer:
       # source can be:
       # - dansDataversePidVersion -> retrieved from the Vault Metadata field with the same name.
       # - Has-Organizational-Identifier-Version -> retrieved from the bag-info.txt element with the same name.
-      - name: dataset-version
+      dataset-version:
         source: dansDataversePidVersion # Has-Organizational-Identifier-Version
         failIfMissing: true
 

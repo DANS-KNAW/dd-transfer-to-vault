@@ -23,9 +23,6 @@ import javax.validation.constraints.NotNull;
 @Data
 public class CustomPropertyConfig {
     @NotEmpty
-    private String name;
-
-    @NotEmpty
     private String source;
 
     @NotNull

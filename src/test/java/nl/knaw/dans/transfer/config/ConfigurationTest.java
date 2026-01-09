@@ -55,8 +55,8 @@ public class ConfigurationTest {
         
         assertNotNull(configuration.getTransfer().getSendToVault().getCustomProperties());
         assertEquals(1, configuration.getTransfer().getSendToVault().getCustomProperties().size());
-        var prop = configuration.getTransfer().getSendToVault().getCustomProperties().get(0);
-        assertEquals("dataset-version", prop.getName());
+        var prop = configuration.getTransfer().getSendToVault().getCustomProperties().get("dataset-version");
+        assertNotNull(prop);
         assertEquals("dansDataversePidVersion", prop.getSource());
         assertEquals(true, prop.getFailIfMissing());
     }
