@@ -20,6 +20,7 @@ import lombok.EqualsAndHashCode;
 import nl.knaw.dans.transfer.core.TransferItem;
 
 import java.io.IOException;
+import java.util.Optional;
 
 @Data
 @EqualsAndHashCode(callSuper = false)
@@ -28,14 +29,14 @@ public class DatasetVersionCustomPropertyConfig extends CustomPropertyConfig {
     private Boolean failIfMissing;
 
     @Override
-    public String getValue(TransferItem transferItem) throws IOException {
+    public Optional<String> getValue(TransferItem transferItem) throws IOException {
         var value = switch (source) {
             case "dansDataversePidVersion" -> transferItem.getDataversePidVersion();
             case "Has-Organizational-Identifier-Version" -> transferItem.getHasOrganizationalIdentifierVersion();
             default -> throw new IllegalArgumentException("Unknown custom property source: " + source);
         };
 
-        if ((value == null || value.isBlank()) && failIfMissing != null && failIfMissing) {
+        if (value.isEmpty() && failIfMissing != null && failIfMissing) {
             throw new IllegalStateException(String.format("Custom property with source '%s' is missing", source));
         }
 

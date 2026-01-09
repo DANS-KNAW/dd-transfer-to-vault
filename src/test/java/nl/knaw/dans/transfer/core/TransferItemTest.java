@@ -247,8 +247,8 @@ public class TransferItemTest extends TestDirFixture {
         assertThat(item.getContactName()).isEqualTo("Contact Name A;Contact Name B");
         assertThat(item.getContactEmail()).isEqualTo("a@example.org;b@example.org");
         assertThat(item.getNbn()).isEqualTo("urn:nbn:nl:ui:13-abcdef");
-        assertThat(item.getDataversePidVersion()).isEqualTo("doi:10.5072/FK2/ABCDEF:1.0");
-        assertThat(item.getHasOrganizationalIdentifierVersion()).isEqualTo("true");
+        assertThat(item.getDataversePidVersion()).contains("doi:10.5072/FK2/ABCDEF:1.0");
+        assertThat(item.getHasOrganizationalIdentifierVersion()).contains("true");
     }
 
     @Test
@@ -268,7 +268,7 @@ public class TransferItemTest extends TestDirFixture {
     }
 
     @Test
-    public void getDataversePidVersion_should_fail_when_metadata_missing() throws Exception {
+    public void getDataversePidVersion_should_return_empty_when_metadata_missing() throws Exception {
         // Given
         var sourceDir = testDir.resolve("transfer-item-zip-pid");
         Files.createDirectories(sourceDir);
@@ -278,9 +278,7 @@ public class TransferItemTest extends TestDirFixture {
         var item = new TransferItem(dve);
 
         // Then
-        assertThatThrownBy(item::getDataversePidVersion)
-            .isInstanceOf(IllegalStateException.class)
-            .hasMessageContaining("No Dataverse PID version found in DVE");
+        assertThat(item.getDataversePidVersion()).isEmpty();
     }
 
     /**

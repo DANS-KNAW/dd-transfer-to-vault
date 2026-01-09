@@ -21,6 +21,7 @@ import lombok.Data;
 import nl.knaw.dans.transfer.core.TransferItem;
 
 import java.io.IOException;
+import java.util.Optional;
 
 @Data
 @JsonTypeInfo(use = JsonTypeInfo.Id.DEDUCTION)
@@ -29,5 +30,5 @@ import java.io.IOException;
     @JsonSubTypes.Type(FixedValueCustomPropertyConfig.class)
 })
 public abstract class CustomPropertyConfig {
-    public abstract String getValue(TransferItem transferItem) throws IOException;
+    public abstract Optional<String> getValue(TransferItem transferItem) throws IOException;
 }

@@ -95,9 +95,11 @@ public class SendToVaultTask implements Runnable {
                 var config = entry.getValue();
                 var value = config.getValue(transferItem);
 
-                if (value != null && !value.isBlank()) {
-                    sb.append(String.format("custom.%s=%s\n", name, value));
-                }
+                value.ifPresent(v -> {
+                    if (!v.isBlank()) {
+                        sb.append(String.format("custom.%s=%s\n", name, v));
+                    }
+                });
             }
         }
 

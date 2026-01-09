@@ -35,6 +35,7 @@ import java.nio.file.Path;
 import java.nio.file.ProviderNotFoundException;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.time.OffsetDateTime;
+import java.util.Optional;
 
 /**
  * A Dataset Version Export (DVE) and auxiliary files. The DVE is the only mandatory file. The other files are searched next to the DVE or constructed from the DVE. This class is intended to provide
@@ -238,9 +239,9 @@ public class TransferItem {
         }
     }
 
-    public String getDataversePidVersion() throws IOException {
+    public Optional<String> getDataversePidVersion() throws IOException {
         readDataversePidVersion();
-        return cachedDataversePidVersion;
+        return Optional.ofNullable(cachedDataversePidVersion);
     }
 
     private void readDataversePidVersion() throws IOException {
@@ -257,14 +258,15 @@ public class TransferItem {
 
                 var metadataPath = topLevelDir.resolve(METADATA_PATH);
                 if (!Files.exists(metadataPath)) {
-                    throw new IllegalStateException("No metadata file found in DVE");
+                    log.warn("No metadata file found in DVE at {}", metadataPath);
+                    return;
                 }
 
                 try (var is = Files.newInputStream(metadataPath)) {
                     cachedDataversePidVersion = JsonPath.read(is, DATAVERSE_PID_VERSION_JSON_PATH);
                 }
                 catch (PathNotFoundException e) {
-                    throw new IllegalStateException("No Dataverse PID version found in DVE", e);
+                    log.warn("No Dataverse PID version found in DVE at {}", metadataPath);
                 }
                 catch (Exception e) {
                     throw new IllegalStateException("Unable to read Dataverse PID version from metadata file", e);
@@ -276,9 +278,9 @@ public class TransferItem {
         }
     }
 
-    public String getHasOrganizationalIdentifierVersion() throws IOException {
+    public Optional<String> getHasOrganizationalIdentifierVersion() throws IOException {
         readHasOrganizationalIdentifierVersion();
-        return cachedHasOrganizationalIdentifierVersion;
+        return Optional.ofNullable(cachedHasOrganizationalIdentifierVersion);
     }
 
     private void readHasOrganizationalIdentifierVersion() throws IOException {
@@ -294,7 +296,10 @@ public class TransferItem {
                     .orElseThrow(() -> new IllegalStateException("No top-level directory found in DVE"));
 
                 var bag = new BagReader().read(topLevelDir);
-                cachedHasOrganizationalIdentifierVersion = String.join(";", bag.getMetadata().get(HAS_ORGANIZATIONAL_IDENTIFIER_VERSION));
+                var values = bag.getMetadata().get(HAS_ORGANIZATIONAL_IDENTIFIER_VERSION);
+                if (values != null && !values.isEmpty()) {
+                    cachedHasOrganizationalIdentifierVersion = values.get(0);
+                }
             }
             catch (MaliciousPathException e) {
                 throw new RuntimeException(e);

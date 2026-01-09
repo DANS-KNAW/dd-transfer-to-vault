@@ -20,6 +20,7 @@ import lombok.EqualsAndHashCode;
 import nl.knaw.dans.transfer.core.TransferItem;
 
 import java.io.IOException;
+import java.util.Optional;
 
 @Data
 @EqualsAndHashCode(callSuper = false)
@@ -27,7 +28,7 @@ public class FixedValueCustomPropertyConfig extends CustomPropertyConfig {
     private String value;
 
     @Override
-    public String getValue(TransferItem transferItem) throws IOException {
-        return value;
+    public Optional<String> getValue(TransferItem transferItem) throws IOException {
+        return Optional.ofNullable(value);
     }
 }
