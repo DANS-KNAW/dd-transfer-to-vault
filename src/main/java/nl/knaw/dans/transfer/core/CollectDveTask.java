@@ -21,7 +21,6 @@ import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import nl.knaw.dans.transfer.config.CollectDveConfig;
-import nl.knaw.dans.transfer.config.CollectDveConfig.NbnSource;
 
 import java.io.IOException;
 import java.nio.file.FileSystem;
@@ -49,7 +48,6 @@ public class CollectDveTask implements Runnable {
     private final Path dve;
     private final Path destinationRoot;
     private final Path failedOutbox;
-    private final CollectDveConfig.NbnSource nbnSource;
 
     @Override
     public void run() {

@@ -45,6 +45,7 @@ public class TransferItem {
     private static final String ERROR_LOG_SUFFIX = "-error.log";
     private static final String METADATA_PATH = "metadata/oai-ore.jsonld";
     private static final String NBN_JSON_PATH = "$.ore:describes.dansDataVaultMetadata:dansNbn";
+    private static final String DATAVERSE_PID_VERSION_JSON_PATH = "$.ore:describes.dansDataVaultMetadata:dansDataversePidVersion";
 
     private Path dve;
 

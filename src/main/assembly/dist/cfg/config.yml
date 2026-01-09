@@ -24,10 +24,6 @@ transfer:
   ocflStorageRoot: null
   # Collect the DVE from the transfer-inbox and determine its target NBN
   collectDve:
-    # Where to find the DVE's NBN. The value 'OAI_ORE' means that the NBN is retrieved from the OAI ORE metadata of the DVE using JSON Path. The alternative value 'PROPERTIES' means
-    # that the NBN is retrieved from the DVE's properties file, which is a properties file with the NBN in the 'nbn' property and named '<dve-name>.properties', e.g. 'dve-12345.zip.properties'.
-    # The 'PROPERTIES' value is only used for VaaS, because Dataverse does not create a properties file for the DVE.
-    nbnSource: OAI_ORE
     inbox:
       path: /var/opt/dans.knaw.nl/tmp/transfer-inboxes/INSTANCE/inbox
       pollingInterval: 500ms

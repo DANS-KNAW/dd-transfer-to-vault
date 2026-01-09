@@ -122,7 +122,6 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
                 .fileFilter(new DveFileFilter())
                 .taskFactory(
                     CollectDveTaskFactory.builder()
-                        .nbnSource(configuration.getTransfer().getCollectDve().getNbnSource())
                         .destinationRoot(configuration.getTransfer().getCollectDve().getOutbox().getProcessed())
                         .failedOutbox(configuration.getTransfer().getCollectDve().getOutbox().getFailed()).build())
                 .inbox(configuration.getTransfer().getCollectDve().getInbox().getPath())
