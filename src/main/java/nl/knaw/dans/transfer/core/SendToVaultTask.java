@@ -93,15 +93,10 @@ public class SendToVaultTask implements Runnable {
             for (var entry : customProperties.entrySet()) {
                 var name = entry.getKey();
                 var config = entry.getValue();
-                var value = getCustomPropertyValue(config);
+                var value = config.getValue(transferItem);
 
-                if (value == null || value.isBlank()) {
-                    if (config.getFailIfMissing()) {
-                        throw new IllegalStateException(String.format("Custom property '%s' with source '%s' is missing", name, config.getSource()));
-                    }
-                }
-                else {
-                    sb.append(String.format("%s=%s\n", name, value));
+                if (value != null && !value.isBlank()) {
+                    sb.append(String.format("custom.%s=%s\n", name, value));
                 }
             }
         }
@@ -109,13 +104,6 @@ public class SendToVaultTask implements Runnable {
         Files.writeString(versionInfoFile, sb.toString(), StandardCharsets.UTF_8);
     }
 
-    private String getCustomPropertyValue(CustomPropertyConfig config) throws IOException {
-        return switch (config.getSource()) {
-            case "dansDataversePidVersion" -> transferItem.getDataversePidVersion();
-            case "Has-Organizational-Identifier-Version" -> transferItem.getHasOrganizationalIdentifierVersion();
-            default -> throw new IllegalArgumentException("Unknown custom property source: " + config.getSource());
-        };
-    }
 
     private void importIfBatchThresholdReached() throws IOException {
         if (sizeOfDirectory(this.currentBatchWorkDir.toFile()) > this.batchThreshold.toBytes()) {

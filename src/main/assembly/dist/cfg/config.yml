@@ -77,8 +77,10 @@ transfer:
       # - dansDataversePidVersion -> retrieved from the Vault Metadata field with the same name.
       # - Has-Organizational-Identifier-Version -> retrieved from the bag-info.txt element with the same name.
       dataset-version:
-        source: dansDataversePidVersion # Has-Organizational-Identifier-Version
+        source: dansDataversePidVersion
         failIfMissing: true
+      packaging-format:
+        value: DANS RDA BagPack Profile/1.0.0
 
 nbnRegistration:
   catalogBaseUrl: https://catalog.vault.datastations.nl/dataset

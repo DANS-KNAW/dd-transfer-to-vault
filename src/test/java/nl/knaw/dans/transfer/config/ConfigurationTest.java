@@ -54,11 +54,17 @@ public class ConfigurationTest {
         var configuration = assertDoesNotThrow(() -> factory.build(FileInputStream::new, cfgFile.toString()));
         
         assertNotNull(configuration.getTransfer().getSendToVault().getCustomProperties());
-        assertEquals(1, configuration.getTransfer().getSendToVault().getCustomProperties().size());
-        var prop = configuration.getTransfer().getSendToVault().getCustomProperties().get("dataset-version");
-        assertNotNull(prop);
-        assertEquals("dansDataversePidVersion", prop.getSource());
-        assertEquals(true, prop.getFailIfMissing());
+        assertEquals(2, configuration.getTransfer().getSendToVault().getCustomProperties().size());
+        var datasetVersion = configuration.getTransfer().getSendToVault().getCustomProperties().get("dataset-version");
+        assertNotNull(datasetVersion);
+        assertEquals(DatasetVersionCustomPropertyConfig.class, datasetVersion.getClass());
+        assertEquals("dansDataversePidVersion", ((DatasetVersionCustomPropertyConfig) datasetVersion).getSource());
+        assertEquals(true, ((DatasetVersionCustomPropertyConfig) datasetVersion).getFailIfMissing());
+
+        var packagingFormat = configuration.getTransfer().getSendToVault().getCustomProperties().get("packaging-format");
+        assertNotNull(packagingFormat);
+        assertEquals(FixedValueCustomPropertyConfig.class, packagingFormat.getClass());
+        assertEquals("DANS RDA BagPack Profile/0.1.0", ((FixedValueCustomPropertyConfig) packagingFormat).getValue());
     }
 
     @Test

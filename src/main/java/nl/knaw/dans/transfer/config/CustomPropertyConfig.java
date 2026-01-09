@@ -15,16 +15,19 @@
  */
 package nl.knaw.dans.transfer.config;
 
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import lombok.Data;
+import nl.knaw.dans.transfer.core.TransferItem;
 
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
+import java.io.IOException;
 
 @Data
-public class CustomPropertyConfig {
-    @NotEmpty
-    private String source;
-
-    @NotNull
-    private Boolean failIfMissing;
+@JsonTypeInfo(use = JsonTypeInfo.Id.DEDUCTION)
+@JsonSubTypes({
+    @JsonSubTypes.Type(DatasetVersionCustomPropertyConfig.class),
+    @JsonSubTypes.Type(FixedValueCustomPropertyConfig.class)
+})
+public abstract class CustomPropertyConfig {
+    public abstract String getValue(TransferItem transferItem) throws IOException;
 }
