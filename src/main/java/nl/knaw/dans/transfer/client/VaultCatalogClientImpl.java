@@ -130,7 +130,7 @@ public class VaultCatalogClientImpl implements VaultCatalogClient {
     }
 
     private void setDataFilesOnVersionExport(DveMetadata dveMetadata, VersionExportDto dveDto) {
-        dveDto.setFileMetas(new ArrayList<>()); // clear existing fileMetas
+        dveDto.setFileMetas(new ArrayList<>()); // clear existing fileMetas. N.B. empty array and not null, to avoid NPE for empty dataset.
         for (var dataFile : dveMetadata.getDataFileAttributes()) {
             var dataFileDto = new FileMetaDto()
                 .filepath(removeBaseFolder(dataFile.getFilepath()).toString())
