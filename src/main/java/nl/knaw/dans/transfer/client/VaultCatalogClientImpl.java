@@ -26,6 +26,7 @@ import nl.knaw.dans.vaultcatalog.client.resources.DefaultApi;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Comparator;
 
 @Slf4j
@@ -129,7 +130,7 @@ public class VaultCatalogClientImpl implements VaultCatalogClient {
     }
 
     private void setDataFilesOnVersionExport(DveMetadata dveMetadata, VersionExportDto dveDto) {
-        dveDto.setFileMetas(null); // clear existing fileMetas
+        dveDto.setFileMetas(new ArrayList<>()); // clear existing fileMetas
         for (var dataFile : dveMetadata.getDataFileAttributes()) {
             var dataFileDto = new FileMetaDto()
                 .filepath(removeBaseFolder(dataFile.getFilepath()).toString())
