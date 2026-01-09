@@ -64,7 +64,7 @@ public class ConfigurationTest {
         var packagingFormat = configuration.getTransfer().getSendToVault().getCustomProperties().get("packaging-format");
         assertNotNull(packagingFormat);
         assertEquals(FixedValueCustomPropertyConfig.class, packagingFormat.getClass());
-        assertEquals("DANS RDA BagPack Profile/0.1.0", ((FixedValueCustomPropertyConfig) packagingFormat).getValue());
+        assertEquals("DANS RDA BagPack Profile/1.0.0", ((FixedValueCustomPropertyConfig) packagingFormat).getValue());
     }
 
     @Test
