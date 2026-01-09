@@ -180,8 +180,13 @@ public class TransferItem {
                     .orElseThrow(() -> new IllegalStateException("No top-level directory found in DVE"));
 
                 var bag = new BagReader().read(topLevelDir);
-                cachedContactName = String.join(";", bag.getMetadata().get("Contact-Name"));
-                cachedContactEmail = String.join(";", bag.getMetadata().get("Contact-Email"));
+                /*
+                 * OCFL only allows one user object for the version info, so we select the first.
+                 */
+                var contactNames = bag.getMetadata().get("Contact-Name");
+                cachedContactName = (contactNames != null && !contactNames.isEmpty()) ? contactNames.get(0) : null;
+                var contactEmails = bag.getMetadata().get("Contact-Email");
+                cachedContactEmail = (contactEmails != null && !contactEmails.isEmpty()) ? contactEmails.get(0) : null;
             }
             catch (MaliciousPathException e) {
                 throw new RuntimeException(e);
