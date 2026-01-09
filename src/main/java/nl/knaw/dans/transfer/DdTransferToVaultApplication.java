@@ -81,6 +81,7 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
                 .dataVaultBatchRoot(configuration.getTransfer().getSendToVault().getDataVault().getBatchRoot())
                 .dataVaultClient(createDataVaultClient(configuration))
                 .defaultMessage(configuration.getTransfer().getSendToVault().getDefaultMessage())
+                .customProperties(configuration.getTransfer().getSendToVault().getCustomProperties())
                 .build())
             .build());
 

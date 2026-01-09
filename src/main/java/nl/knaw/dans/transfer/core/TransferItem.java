@@ -46,7 +46,8 @@ public class TransferItem {
     private static final String METADATA_PATH = "metadata/oai-ore.jsonld";
     private static final String NBN_JSON_PATH = "$.ore:describes.dansDataVaultMetadata:dansNbn";
     private static final String DATAVERSE_PID_VERSION_JSON_PATH = "$.ore:describes.dansDataVaultMetadata:dansDataversePidVersion";
-
+    private static final String HAS_ORGANIZATIONAL_IDENTIFIER_VERSION = "Has-Organizational-Identifier-Version";
+    
     private Path dve;
 
     /**
@@ -57,6 +58,10 @@ public class TransferItem {
     private String cachedContactName;
 
     private String cachedContactEmail;
+
+    private String cachedDataversePidVersion;
+
+    private String cachedHasOrganizationalIdentifierVersion;
 
     public TransferItem(Path dve) {
         this.dve = dve;
@@ -225,6 +230,76 @@ public class TransferItem {
         }
         catch (ProviderNotFoundException e) {
             throw new RuntimeException("The file system provider is not found. Probably not a ZIP file: " + dve, e);
+        }
+    }
+
+    public String getDataversePidVersion() throws IOException {
+        readDataversePidVersion();
+        return cachedDataversePidVersion;
+    }
+
+    private void readDataversePidVersion() throws IOException {
+        if (cachedDataversePidVersion != null) {
+            return;
+        }
+
+        try (FileSystem zipFs = FileSystems.newFileSystem(dve, (ClassLoader) null)) {
+            var rootDir = zipFs.getRootDirectories().iterator().next();
+            try (var topLevelDirStream = Files.list(rootDir)) {
+                var topLevelDir = topLevelDirStream.filter(Files::isDirectory)
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalStateException("No top-level directory found in DVE"));
+
+                var metadataPath = topLevelDir.resolve(METADATA_PATH);
+                if (!Files.exists(metadataPath)) {
+                    throw new IllegalStateException("No metadata file found in DVE");
+                }
+
+                try (var is = Files.newInputStream(metadataPath)) {
+                    cachedDataversePidVersion = JsonPath.read(is, DATAVERSE_PID_VERSION_JSON_PATH);
+                }
+                catch (PathNotFoundException e) {
+                    throw new IllegalStateException("No Dataverse PID version found in DVE", e);
+                }
+                catch (Exception e) {
+                    throw new IllegalStateException("Unable to read Dataverse PID version from metadata file", e);
+                }
+            }
+        }
+        catch (ProviderNotFoundException e) {
+            throw new RuntimeException("The file system provider is not found. Probably not a ZIP file: " + dve, e);
+        }
+    }
+
+    public String getHasOrganizationalIdentifierVersion() throws IOException {
+        readHasOrganizationalIdentifierVersion();
+        return cachedHasOrganizationalIdentifierVersion;
+    }
+
+    private void readHasOrganizationalIdentifierVersion() throws IOException {
+        if (cachedHasOrganizationalIdentifierVersion != null) {
+            return;
+        }
+
+        try (FileSystem zipFs = FileSystems.newFileSystem(dve, (ClassLoader) null)) {
+            var rootDir = zipFs.getRootDirectories().iterator().next();
+            try (var topLevelDirStream = Files.list(rootDir)) {
+                var topLevelDir = topLevelDirStream.filter(Files::isDirectory)
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalStateException("No top-level directory found in DVE"));
+
+                var bag = new BagReader().read(topLevelDir);
+                cachedHasOrganizationalIdentifierVersion = String.join(";", bag.getMetadata().get(HAS_ORGANIZATIONAL_IDENTIFIER_VERSION));
+            }
+            catch (MaliciousPathException e) {
+                throw new RuntimeException(e);
+            }
+            catch (UnparsableVersionException | UnsupportedAlgorithmException | InvalidBagitFileFormatException e) {
+                throw new RuntimeException("Unable to read bag info from DVE: " + dve, e);
+            }
+            catch (ProviderNotFoundException e) {
+                throw new RuntimeException("The file system provider is not found. Probably not a ZIP file: " + dve, e);
+            }
         }
     }
 }

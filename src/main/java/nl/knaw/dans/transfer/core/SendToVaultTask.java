@@ -22,11 +22,13 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import nl.knaw.dans.lib.util.ZipUtil;
 import nl.knaw.dans.transfer.client.DataVaultClient;
+import nl.knaw.dans.transfer.config.CustomPropertyConfig;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
 import static org.apache.commons.io.FileUtils.moveDirectory;
 import static org.apache.commons.io.FileUtils.sizeOfDirectory;
@@ -43,6 +45,7 @@ public class SendToVaultTask implements Runnable {
     private final Path outboxFailed;
     private final DataVaultClient dataVaultClient;
     private final String defaultMessage;
+    private final List<CustomPropertyConfig> customProperties;
 
     private TransferItem transferItem;
 
