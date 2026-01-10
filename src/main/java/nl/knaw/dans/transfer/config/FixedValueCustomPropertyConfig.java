@@ -13,24 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.transfer.core;
+package nl.knaw.dans.transfer.config;
 
-import lombok.Builder;
-import lombok.NonNull;
-import nl.knaw.dans.lib.util.inbox.InboxTaskFactory;
-import nl.knaw.dans.transfer.config.CollectDveConfig;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import nl.knaw.dans.transfer.core.TransferItem;
 
-import java.nio.file.Path;
+import java.io.IOException;
+import java.util.Optional;
 
-@Builder
-public class CollectDveTaskFactory implements InboxTaskFactory {
-    @NonNull
-    private final Path destinationRoot;
-    @NonNull
-    private final Path failedOutbox;
+@Data
+@EqualsAndHashCode(callSuper = false)
+public class FixedValueCustomPropertyConfig extends CustomPropertyConfig {
+    private String value;
 
     @Override
-    public Runnable createInboxTask(Path path) {
-        return new CollectDveTask(path, destinationRoot, failedOutbox);
+    public Optional<String> getValue(TransferItem transferItem) throws IOException {
+        return Optional.ofNullable(value);
     }
 }

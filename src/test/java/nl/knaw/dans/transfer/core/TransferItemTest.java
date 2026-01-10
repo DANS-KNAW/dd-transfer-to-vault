@@ -229,7 +229,7 @@ public class TransferItemTest extends TestDirFixture {
     }
 
     @Test
-    public void getContact_and_getNbn_should_read_from_zip_dve() throws Exception {
+    public void getContact_and_getNbn_and_getDataversePidVersion_and_getHasOrganizationalIdentifierVersion_should_read_from_zip_dve() throws Exception {
         // Given: create a DVE zip with a top-level directory, bagit files, and metadata JSON
         var sourceDir = testDir.resolve("transfer-item-zip");
         Files.createDirectories(sourceDir);
@@ -237,7 +237,9 @@ public class TransferItemTest extends TestDirFixture {
         createDveZip(dve,
             "Contact Name A;Contact Name B",
             "a@example.org;b@example.org",
-            "urn:nbn:nl:ui:13-abcdef");
+            "urn:nbn:nl:ui:13-abcdef",
+            "doi:10.5072/FK2/ABCDEF:1.0",
+            "true");
 
         var item = new TransferItem(dve);
 
@@ -245,6 +247,8 @@ public class TransferItemTest extends TestDirFixture {
         assertThat(item.getContactName()).isEqualTo("Contact Name A;Contact Name B");
         assertThat(item.getContactEmail()).isEqualTo("a@example.org;b@example.org");
         assertThat(item.getNbn()).isEqualTo("urn:nbn:nl:ui:13-abcdef");
+        assertThat(item.getDataversePidVersion()).contains("doi:10.5072/FK2/ABCDEF:1.0");
+        assertThat(item.getHasOrganizationalIdentifierVersion()).contains("true");
     }
 
     @Test
@@ -253,7 +257,7 @@ public class TransferItemTest extends TestDirFixture {
         var sourceDir = testDir.resolve("transfer-item-zip");
         Files.createDirectories(sourceDir);
         var dve = sourceDir.resolve("dataset.zip");
-        createDveZip(dve, "John Doe", "john@example.org", null); // no metadata JSON
+        createDveZip(dve, "John Doe", "john@example.org", null, null, null); // no metadata JSON
 
         var item = new TransferItem(dve);
 
@@ -263,17 +267,33 @@ public class TransferItemTest extends TestDirFixture {
             .hasMessageContaining("No metadata file");
     }
 
+    @Test
+    public void getDataversePidVersion_should_return_empty_when_metadata_missing() throws Exception {
+        // Given
+        var sourceDir = testDir.resolve("transfer-item-zip-pid");
+        Files.createDirectories(sourceDir);
+        var dve = sourceDir.resolve("dataset.zip");
+        createDveZip(dve, "John Doe", "john@example.org", "urn:nbn:nl:ui:13-abcdef", null, null); // no PID version in metadata
+
+        var item = new TransferItem(dve);
+
+        // Then
+        assertThat(item.getDataversePidVersion()).isEmpty();
+    }
+
     /**
      * Helper method to create a DVE zip file for testing purposes. Creates a minimal BagIt structure with bag-info.txt containing contact information and optionally an oai-ore.jsonld metadata file
      * with NBN information.
      *
-     * @param zipPath      the path where the zip file should be created
-     * @param contactName  the contact name to include in bag-info.txt, or null to omit
-     * @param contactEmail the contact email to include in bag-info.txt, or null to omit
-     * @param nbn          the NBN identifier to include in metadata/oai-ore.jsonld, or null to omit metadata file
+     * @param zipPath                                  the path where the zip file should be created
+     * @param contactName                              the contact name to include in bag-info.txt, or null to omit
+     * @param contactEmail                             the contact email to include in bag-info.txt, or null to omit
+     * @param nbn                                      the NBN identifier to include in metadata/oai-ore.jsonld, or null to omit metadata file
+     * @param pidVersion                               the Dataverse PID version to include in metadata/oai-ore.jsonld, or null to omit from metadata file
+     * @param hasOrganizationalIdentifierVersion       the Has-Organizational-Identifier-Version to include in bag-info.txt, or null to omit
      * @throws IOException if an I/O error occurs during zip creation
      */
-    private static void createDveZip(Path zipPath, String contactName, String contactEmail, String nbn) throws IOException {
+    private static void createDveZip(Path zipPath, String contactName, String contactEmail, String nbn, String pidVersion, String hasOrganizationalIdentifierVersion) throws IOException {
         var env = new HashMap<String, String>();
         env.put("create", "true");
         try (var zipfs = FileSystems.newFileSystem(URI.create("jar:" + zipPath.toUri()), env)) {
@@ -291,17 +311,24 @@ public class TransferItemTest extends TestDirFixture {
             if (contactEmail != null) {
                 bagInfo.append("Contact-Email: ").append(contactEmail).append("\n");
             }
+            if (hasOrganizationalIdentifierVersion != null) {
+                bagInfo.append("Has-Organizational-Identifier-Version: ").append(hasOrganizationalIdentifierVersion).append("\n");
+            }
             Files.writeString(top.resolve("bag-info.txt"), bagInfo.toString(), StandardCharsets.UTF_8);
 
-            if (nbn != null) {
+            if (nbn != null || pidVersion != null) {
                 var metadataDir = Files.createDirectories(top.resolve("metadata"));
+                var nbnJson = nbn != null ? "\"dansDataVaultMetadata:dansNbn\": \"%s\"".formatted(nbn) : "";
+                var pidVersionJson = pidVersion != null ? "\"dansDataVaultMetadata:dansDataversePidVersion\": \"%s\"".formatted(pidVersion) : "";
+                var comma = (nbn != null && pidVersion != null) ? "," : "";
+
                 var json = """
                     {
                       "ore:describes": {
-                        "dansDataVaultMetadata:dansNbn": "%s"
+                        %s%s%s
                       }
                     }
-                    """.formatted(nbn);
+                    """.formatted(nbnJson, comma, pidVersionJson);
                 Files.writeString(metadataDir.resolve("oai-ore.jsonld"), json, StandardCharsets.UTF_8);
             }
         }

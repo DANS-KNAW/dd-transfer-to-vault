@@ -22,7 +22,6 @@ transfer:
   ocflStorageRoot: Test Datastation
   # Inbox for incoming DVEs
   collectDve:
-    nbnSource: OAI_ORE
     inbox:
       path: data/01_transfer-inbox/inbox
       pollingInterval: 500ms
@@ -62,7 +61,16 @@ transfer:
       batchRoot: /home/janm/git/dans-core-systems/modules/dd-data-vault/data/ingest/inbox
     # 'Commit message' for each object version created in the Data Vault. Currently, there is no way to set this per DVE, so it is a static message.
     defaultMessage: No message
+    # Send the following custom version properties along. Note that "source" is property-defined.
+    customProperties:
+      # source can be:
+      # - dansDataversePidVersion -> retrieved from the Vault Metadata field with the same name.
+      # - Has-Organizational-Identifier-Version -> retrieved from the bag-info.txt element with the same name.
+      dataset-version:
+        source: dansDataversePidVersion # Has-Organizational-Identifier-Version
+        failIfMissing: true
 
+nbnRegistration:
   catalogBaseUrl: http://dev.catalog.vault.datastations.nl/dataset
   registrationInterval: 1000
   inbox:

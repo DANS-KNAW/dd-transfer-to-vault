@@ -22,11 +22,13 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import nl.knaw.dans.lib.util.ZipUtil;
 import nl.knaw.dans.transfer.client.DataVaultClient;
+import nl.knaw.dans.transfer.config.CustomPropertyConfig;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Map;
 
 import static org.apache.commons.io.FileUtils.moveDirectory;
 import static org.apache.commons.io.FileUtils.sizeOfDirectory;
@@ -43,6 +45,7 @@ public class SendToVaultTask implements Runnable {
     private final Path outboxFailed;
     private final DataVaultClient dataVaultClient;
     private final String defaultMessage;
+    private final Map<String, CustomPropertyConfig> customProperties;
 
     private TransferItem transferItem;
 
@@ -79,13 +82,30 @@ public class SendToVaultTask implements Runnable {
     private void createVersionInfoProperties(Path versionDirectory, String user, String email, String message) throws IOException {
         var versionInfoFile = versionDirectory.resolveSibling(versionDirectory.getFileName().toString() + ".properties");
         log.debug("Creating version info properties file at {}", versionInfoFile);
-        var propertiesContent = String.format("""
+        var sb = new StringBuilder();
+        sb.append(String.format("""
             user.name=%s
             user.email=%s
             message=%s
-            """, user, email, message);
-        Files.writeString(versionInfoFile, propertiesContent, StandardCharsets.UTF_8);
+            """, user, email, message));
+
+        if (customProperties != null) {
+            for (var entry : customProperties.entrySet()) {
+                var name = entry.getKey();
+                var config = entry.getValue();
+                var value = config.getValue(transferItem);
+
+                value.ifPresent(v -> {
+                    if (!v.isBlank()) {
+                        sb.append(String.format("custom.%s=%s\n", name, v));
+                    }
+                });
+            }
+        }
+
+        Files.writeString(versionInfoFile, sb.toString(), StandardCharsets.UTF_8);
     }
+
 
     private void importIfBatchThresholdReached() throws IOException {
         if (sizeOfDirectory(this.currentBatchWorkDir.toFile()) > this.batchThreshold.toBytes()) {
