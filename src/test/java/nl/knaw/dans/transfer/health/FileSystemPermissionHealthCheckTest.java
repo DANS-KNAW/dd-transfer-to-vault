@@ -34,14 +34,14 @@ import static org.mockito.Mockito.when;
 class FileSystemPermissionHealthCheckTest extends TestDirFixture {
 
     private final String NBN_BOXES = String.format("""
-            {
-              "inbox": {"path": "a"},
-              "outbox": {
-                "processed": "%s",
-                "failed": "%s"
-              }
-            }
-            """,
+        {
+          "inbox": {"path": "a"},
+          "outbox": {
+            "processed": "%s",
+            "failed": "%s"
+          }
+        }
+        """,
         testDir.resolve("pb/b"),
         testDir.resolve("pc/c")
     );
@@ -50,29 +50,34 @@ class FileSystemPermissionHealthCheckTest extends TestDirFixture {
             "collectDve": {
                 "inbox": {"path": "d"},
                 "outbox": {
-                "processed": "%s",
-                "failed": "%s"
+                    "processed": "%s",
+                    "failed": "%s"
                 }
             },
             "extractMetadata": {
                 "inbox": {"path": "g"},
                 "outbox": {
-                "processed": "h",
-                "failed": "i",
-                "rejected": "j"
+                    "processed": "h",
+                    "failed": "i",
+                    "rejected": "j"
                 }
             },
             "sendToVault": {
                 "inbox": {"path": "k"},
                 "outbox": {
-                "processed": "l",
-                "failed": "m"
+                    "processed": "l",
+                    "failed": "m"
+                },
+                "dataVault": {
+                    "currentBatchWorkingDir": "n",
+                    "batchRoot": "o"
                 }
             }
-            }
-            """,
+        }
+        """,
         testDir.resolve("pe/e"),
-        testDir.resolve("pf/f"));
+        testDir.resolve("pf/f")
+    );
 
     @Test
     void checkNothingExists() throws Exception {
@@ -93,8 +98,8 @@ class FileSystemPermissionHealthCheckTest extends TestDirFixture {
 
         assertFalse(result.isHealthy());
         assertEquals(17, result.getDetails().size());
-        assertEquals("Paths are not on the same file system", result.getDetails().get("g, h, i, j"));
         assertEquals("Path is not writable", result.getDetails().get("k"));
+        assertEquals("Paths are not on the same file system", result.getDetails().get(String.format("d, %s/pf", testDir)));
     }
 
     @Test

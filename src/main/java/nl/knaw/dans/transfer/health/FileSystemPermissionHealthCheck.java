@@ -39,28 +39,51 @@ public class FileSystemPermissionHealthCheck extends HealthCheck {
         var result = Result.builder();
         var isValid = true;
         var needReadWriteRights = List.of(
-            List.of(transferConfig.getCollectDve().getInbox().getPath(),
-                getParentIfNotExists(transferConfig.getCollectDve().getOutbox().getProcessed()),
-                getParentIfNotExists(transferConfig.getCollectDve().getOutbox().getFailed())),
-            List.of(transferConfig.getExtractMetadata().getInbox().getPath(),
+            transferConfig.getExtractMetadata().getInbox().getPath(),
+            transferConfig.getExtractMetadata().getOutbox().getProcessed(),
+            transferConfig.getExtractMetadata().getOutbox().getFailed(),
+            transferConfig.getExtractMetadata().getOutbox().getRejected(),
+            transferConfig.getSendToVault().getInbox().getPath(),
+            transferConfig.getSendToVault().getOutbox().getProcessed(),
+            transferConfig.getSendToVault().getOutbox().getFailed(),
+            transferConfig.getSendToVault().getDataVault().getCurrentBatchWorkingDir(),
+            transferConfig.getSendToVault().getDataVault().getBatchRoot(),
+            transferConfig.getCollectDve().getInbox().getPath(),
+            getParentIfNotExists(transferConfig.getCollectDve().getOutbox().getProcessed()),
+            getParentIfNotExists(transferConfig.getCollectDve().getOutbox().getFailed()),
+            getParentIfNotExists(nbnRegistrationConfig.getOutbox().getFailed()),
+            getParentIfNotExists(nbnRegistrationConfig.getOutbox().getProcessed()),
+            nbnRegistrationConfig.getInbox().getPath()
+            );
+
+        for (var path : needReadWriteRights) {
+            if (!fileService.canWriteTo(path)) {
+                result.withDetail(path.toString(), "Path is not writable");
+                isValid = false;
+            }
+        }
+        var sameFileSystem = List.of(
+            List.of(
+                transferConfig.getExtractMetadata().getInbox().getPath(),
                 transferConfig.getExtractMetadata().getOutbox().getProcessed(),
                 transferConfig.getExtractMetadata().getOutbox().getFailed(),
-                transferConfig.getExtractMetadata().getOutbox().getRejected()),
-            List.of(transferConfig.getSendToVault().getInbox().getPath(),
+                transferConfig.getExtractMetadata().getOutbox().getRejected(),
+                transferConfig.getSendToVault().getInbox().getPath(),
                 transferConfig.getSendToVault().getOutbox().getProcessed(),
-                transferConfig.getSendToVault().getOutbox().getFailed()),
-            List.of(nbnRegistrationConfig.getInbox().getPath(),
+                transferConfig.getSendToVault().getOutbox().getFailed(),
+                transferConfig.getSendToVault().getDataVault().getCurrentBatchWorkingDir(),
+                getParentIfNotExists(transferConfig.getCollectDve().getOutbox().getProcessed()),
                 getParentIfNotExists(nbnRegistrationConfig.getOutbox().getProcessed()),
-                getParentIfNotExists(nbnRegistrationConfig.getOutbox().getFailed()))
+                getParentIfNotExists(nbnRegistrationConfig.getOutbox().getFailed()),
+                nbnRegistrationConfig.getInbox().getPath()
+                ),
+            List.of(
+                transferConfig.getCollectDve().getInbox().getPath(),
+                getParentIfNotExists(transferConfig.getCollectDve().getOutbox().getFailed())
+            )
+            // transferConfig.getSendToVault().getDataVault().getBatchRoot(),
         );
-
-        for (var pathList : needReadWriteRights) {
-            for (var path : pathList) {
-                if (!fileService.canWriteTo(path)) {
-                    result.withDetail(path.toString(), "Path is not writable");
-                    isValid = false;
-                }
-            }
+        for (var pathList : sameFileSystem) {
             if (!fileService.isSameFileSystem(pathList.toArray(new Path[0]))) {
                 var p = String.join(", ", pathList.stream().map(Path::toString).toList());
                 result.withDetail(p, "Paths are not on the same file system");
