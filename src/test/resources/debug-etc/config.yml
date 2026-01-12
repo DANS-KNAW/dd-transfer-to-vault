@@ -95,33 +95,33 @@ health:
   healthChecks:
     - name: FileSystemPermissions
       critical: true
-#    - name: VaultCatalog
-#      critical: true
-#      initialState: false
-#      schedule:
-#        checkInterval: 60s
-#    - name: DataVault
-#      critical: true
-#      initialState: false
-#      schedule:
-#        checkInterval: 60s
-#    - name: ValidateBagPack
-#      critical: true
-#      initialState: false
-#      schedule:
-#        checkInterval: 60s
+    - name: VaultCatalog
+      critical: true
+      initialState: false
+      schedule:
+        checkInterval: 60s
+    - name: DataVault
+      critical: true
+      initialState: false
+      schedule:
+        checkInterval: 60s
+    - name: ValidateBagPack
+      critical: true
+      initialState: false
+      schedule:
+        checkInterval: 60s
   initialOverallState: false
 
-dependenciesReadyCheck:
-  healthChecks:
-    - vaultCatalog
-    - dataVault
-    - validateBagPack
-  pollInterval: 5s
+#dependenciesReadyCheck:
+#  healthChecks:
+#    - vaultCatalog
+#    - dataVault
+#    - validateBagPack
+#  pollInterval: 5s
 
 vaultCatalog:
   url: http://dev.transfer.dans-data.nl:20305
-  pingUrl: http://dev.transfer.dans-data.nl:20306
+  pingUrl: http://dev.transfer.dans-data.nl:20306/ping
   httpClient:
     timeout: 10s
     connectionTimeout: 1min
@@ -137,7 +137,7 @@ vaultCatalog:
 
 dataVault:
   url: http://localhost:20365
-  pingUrl: http://localhost:20366
+  pingUrl: http://localhost:20366/ping
   httpClient:
     timeout: 10s
     connectionTimeout: 1min
@@ -153,7 +153,7 @@ dataVault:
 
 validateBagPack:
   url: http://localhost:20375
-  pingUrl: http://localhost:20376
+  pingUrl: http://localhost:20376/ping
   httpClient:
     timeout: 30s
     connectionTimeout: 15s

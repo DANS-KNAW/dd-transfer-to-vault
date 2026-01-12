@@ -40,8 +40,8 @@ public class FileSystemPermissionHealthCheck extends HealthCheck {
         var isValid = true;
         var needReadWriteRights = List.of(
             List.of(transferConfig.getCollectDve().getInbox().getPath(),
-                transferConfig.getCollectDve().getOutbox().getProcessed(), // created if it does not exist
-                transferConfig.getCollectDve().getOutbox().getFailed()), // created if it does not exist
+                getParentIfNotExists(transferConfig.getCollectDve().getOutbox().getProcessed()),
+                getParentIfNotExists(transferConfig.getCollectDve().getOutbox().getFailed())),
             List.of(transferConfig.getExtractMetadata().getInbox().getPath(),
                 transferConfig.getExtractMetadata().getOutbox().getProcessed(),
                 transferConfig.getExtractMetadata().getOutbox().getFailed(),
@@ -50,8 +50,8 @@ public class FileSystemPermissionHealthCheck extends HealthCheck {
                 transferConfig.getSendToVault().getOutbox().getProcessed(),
                 transferConfig.getSendToVault().getOutbox().getFailed()),
             List.of(nbnRegistrationConfig.getInbox().getPath(),
-                nbnRegistrationConfig.getOutbox().getProcessed(), // created if it does not exist
-                nbnRegistrationConfig.getOutbox().getFailed()) // created if it does not exist
+                getParentIfNotExists(nbnRegistrationConfig.getOutbox().getProcessed()),
+                getParentIfNotExists(nbnRegistrationConfig.getOutbox().getFailed()))
         );
 
         for (var pathList : needReadWriteRights) {
@@ -73,5 +73,9 @@ public class FileSystemPermissionHealthCheck extends HealthCheck {
         else {
             return result.unhealthy().withMessage("Some in/out-boxes have insufficient rights").build();
         }
+    }
+
+    private Path getParentIfNotExists(Path processed) {
+        return processed.toFile().exists() ? processed : processed.getParent();
     }
 }

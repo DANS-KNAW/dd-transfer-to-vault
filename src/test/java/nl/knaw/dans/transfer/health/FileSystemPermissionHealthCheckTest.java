@@ -39,8 +39,8 @@ class FileSystemPermissionHealthCheckTest {
         {
           "inbox": {"path": "a"},
           "outbox": {
-            "processed": "b",
-            "failed": "c"
+            "processed": "pb/b",
+            "failed": "pc/c"
           }
         }
         """;
@@ -49,8 +49,8 @@ class FileSystemPermissionHealthCheckTest {
             "collectDve": {
                 "inbox": {"path": "d"},
                 "outbox": {
-                "processed": "e",
-                "failed": "f"
+                "processed": "pe/e",
+                "failed": "pf/f"
                 }
             },
             "extractMetadata": {
