@@ -76,6 +76,8 @@ public class FileSystemPermissionHealthCheck extends HealthCheck {
     }
 
     private Path getParentIfNotExists(Path processed) {
-        return processed.toFile().exists() ? processed : processed.getParent();
+        if (processed.toFile().exists())
+            return processed;
+        return getParentIfNotExists(processed.getParent());
     }
 }

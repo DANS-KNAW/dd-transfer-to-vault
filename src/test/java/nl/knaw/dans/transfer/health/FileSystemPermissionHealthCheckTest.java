@@ -16,41 +16,42 @@
 package nl.knaw.dans.transfer.health;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import nl.knaw.dans.transfer.TestDirFixture;
 import nl.knaw.dans.transfer.config.NbnRegistrationConfig;
 import nl.knaw.dans.transfer.config.TransferConfig;
 import nl.knaw.dans.transfer.core.FileService;
-import nl.knaw.dans.transfer.core.FileServiceImpl;
-import org.apache.commons.lang3.NotImplementedException;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Path;
-import java.util.zip.ZipFile;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
-class FileSystemPermissionHealthCheckTest {
+class FileSystemPermissionHealthCheckTest extends TestDirFixture {
 
-    private static final String NBN_BOXES = """
-        {
-          "inbox": {"path": "a"},
-          "outbox": {
-            "processed": "pb/b",
-            "failed": "pc/c"
-          }
-        }
-        """;
-    private static final String TRANSFER_BOXES = """
+    private final String NBN_BOXES = String.format("""
+            {
+              "inbox": {"path": "a"},
+              "outbox": {
+                "processed": "%s",
+                "failed": "%s"
+              }
+            }
+            """,
+        testDir.resolve("pb/b"),
+        testDir.resolve("pc/c")
+    );
+    private final String TRANSFER_BOXES = String.format("""
         {
             "collectDve": {
                 "inbox": {"path": "d"},
                 "outbox": {
-                "processed": "pe/e",
-                "failed": "pf/f"
+                "processed": "%s",
+                "failed": "%s"
                 }
             },
             "extractMetadata": {
@@ -69,11 +70,18 @@ class FileSystemPermissionHealthCheckTest {
                 }
             }
             }
-        """;
+            """,
+        testDir.resolve("pe/e"),
+        testDir.resolve("pf/f"));
 
     @Test
     void checkNothingExists() throws Exception {
-        FileService fileService = new FileServiceImpl();
+        for (var dir : new String[] { "pb", "pc", "pe", "pf" }) {
+            testDir.resolve(dir).toFile().mkdirs();
+        }
+        FileService fileService = mock(FileService.class);
+        when(fileService.canWriteTo(any(Path.class))).thenReturn(false);
+        when(fileService.isSameFileSystem(any(Path[].class))).thenReturn(false);
 
         ObjectMapper mapper = new ObjectMapper();
 
@@ -91,6 +99,9 @@ class FileSystemPermissionHealthCheckTest {
 
     @Test
     void checkEverythingWorks() throws Exception {
+        for (var dir : new String[] { "pb", "pc", "pe", "pf" }) {
+            testDir.resolve(dir).toFile().mkdirs();
+        }
         FileService mock = mock(FileService.class);
         when(mock.canWriteTo(any(Path.class))).thenReturn(true);
         when(mock.isSameFileSystem(any(Path[].class))).thenReturn(true);
