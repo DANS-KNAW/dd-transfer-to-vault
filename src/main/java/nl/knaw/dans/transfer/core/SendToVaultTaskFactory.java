@@ -19,8 +19,10 @@ import io.dropwizard.util.DataSize;
 import lombok.Builder;
 import nl.knaw.dans.lib.util.inbox.InboxTaskFactory;
 import nl.knaw.dans.transfer.client.DataVaultClient;
+import nl.knaw.dans.transfer.config.CustomPropertyConfig;
 
 import java.nio.file.Path;
+import java.util.Map;
 
 @Builder
 public class SendToVaultTaskFactory implements InboxTaskFactory {
@@ -31,9 +33,10 @@ public class SendToVaultTaskFactory implements InboxTaskFactory {
     private final Path outboxFailed;
     private final DataVaultClient dataVaultClient;
     private final String defaultMessage;
+    private final Map<String, CustomPropertyConfig> customProperties;
 
     @Override
     public Runnable createInboxTask(Path path) {
-        return new SendToVaultTask(path, currentBatchWorkDir, dataVaultBatchRoot, batchThreshold, outboxProcessed, outboxFailed, dataVaultClient, defaultMessage);
+        return new SendToVaultTask(path, currentBatchWorkDir, dataVaultBatchRoot, batchThreshold, outboxProcessed, outboxFailed, dataVaultClient, defaultMessage, customProperties);
     }
 }

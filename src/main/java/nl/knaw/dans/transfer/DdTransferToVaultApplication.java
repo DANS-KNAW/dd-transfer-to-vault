@@ -84,6 +84,7 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
                 .dataVaultBatchRoot(configuration.getTransfer().getSendToVault().getDataVault().getBatchRoot())
                 .dataVaultClient(new DataVaultClient(dataVaultProxy))
                 .defaultMessage(configuration.getTransfer().getSendToVault().getDefaultMessage())
+                .customProperties(configuration.getTransfer().getSendToVault().getCustomProperties())
                 .build())
             .build());
 
@@ -128,7 +129,6 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
                 .fileFilter(new DveFileFilter())
                 .taskFactory(
                     CollectDveTaskFactory.builder()
-                        .nbnSource(configuration.getTransfer().getCollectDve().getNbnSource())
                         .destinationRoot(configuration.getTransfer().getCollectDve().getOutbox().getProcessed())
                         .failedOutbox(configuration.getTransfer().getCollectDve().getOutbox().getFailed()).build())
                 .inbox(configuration.getTransfer().getCollectDve().getInbox().getPath())

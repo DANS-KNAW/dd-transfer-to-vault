@@ -13,24 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.transfer.core;
+package nl.knaw.dans.transfer.config;
 
-import lombok.Builder;
-import lombok.NonNull;
-import nl.knaw.dans.lib.util.inbox.InboxTaskFactory;
-import nl.knaw.dans.transfer.config.CollectDveConfig;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import lombok.Data;
+import nl.knaw.dans.transfer.core.TransferItem;
 
-import java.nio.file.Path;
+import java.io.IOException;
+import java.util.Optional;
 
-@Builder
-public class CollectDveTaskFactory implements InboxTaskFactory {
-    @NonNull
-    private final Path destinationRoot;
-    @NonNull
-    private final Path failedOutbox;
-
-    @Override
-    public Runnable createInboxTask(Path path) {
-        return new CollectDveTask(path, destinationRoot, failedOutbox);
-    }
+@Data
+@JsonTypeInfo(use = JsonTypeInfo.Id.DEDUCTION)
+@JsonSubTypes({
+    @JsonSubTypes.Type(DatasetVersionCustomPropertyConfig.class),
+    @JsonSubTypes.Type(FixedValueCustomPropertyConfig.class)
+})
+public abstract class CustomPropertyConfig {
+    public abstract Optional<String> getValue(TransferItem transferItem) throws IOException;
 }

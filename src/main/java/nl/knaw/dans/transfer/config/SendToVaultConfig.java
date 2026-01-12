@@ -19,6 +19,7 @@ import lombok.Data;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import java.util.Map;
 
 @Data
 public class SendToVaultConfig {
@@ -36,5 +37,8 @@ public class SendToVaultConfig {
 
     @NotNull
     private String defaultMessage;
+
+    @Valid
+    private Map<String, CustomPropertyConfig> customProperties;
 
 }
