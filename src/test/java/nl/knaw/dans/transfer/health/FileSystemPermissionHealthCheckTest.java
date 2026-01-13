@@ -97,7 +97,7 @@ class FileSystemPermissionHealthCheckTest extends TestDirFixture {
         ).check();
 
         assertFalse(result.isHealthy());
-        assertEquals(17, result.getDetails().size());
+        assertEquals(20, result.getDetails().size());
         assertEquals("Path is not writable", result.getDetails().get("k"));
         assertEquals("Paths are not on the same file system", result.getDetails().get(String.format("d, %s/pf", testDir)));
     }
