@@ -19,6 +19,7 @@ import lombok.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.channels.FileChannel;
@@ -102,6 +103,13 @@ public class FileServiceImpl implements FileService {
 
     @Override
     public boolean canWriteTo(Path path) {
+        var file = path.toFile();
+        if (!file.exists() || !file.isDirectory() || !Files.isWritable(path)) {
+            // without this check deleteIfExists may cause AccessDeniedException
+            // the rest is copied from dd-sword2
+            return false;
+        }
+
         var filename = path.resolve(String.format(".%s", UUID.randomUUID()));
 
         try {
