@@ -165,7 +165,6 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
                     .gmhClient(createGmhClient(configuration))
                     .outboxProcessed(configuration.getNbnRegistration().getOutbox().getProcessed())
                     .outboxFailed(configuration.getNbnRegistration().getOutbox().getFailed())
-                    .fileService(fileService)
                     .build())
                 .build());
 

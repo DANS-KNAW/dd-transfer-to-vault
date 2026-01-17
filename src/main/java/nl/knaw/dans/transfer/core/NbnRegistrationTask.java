@@ -30,7 +30,6 @@ public class NbnRegistrationTask implements Runnable {
     private final GmhClient gmhClient;
     private final Path outboxProcessed;
     private final Path outboxFailed;
-    private final FileService fileService;
 
     @Override
     public void run() {
@@ -44,7 +43,6 @@ public class NbnRegistrationTask implements Runnable {
         catch (Exception e) {
             log.error("Failed to register NBN", e);
             try {
-                fileService.ensureDirectoryExists(outboxFailed);
                 Files.move(registrationTokenFile, outboxFailed.resolve(registrationTokenFile.getFileName()));
                 log.info("Moved registration token file to outbox failed");
             }

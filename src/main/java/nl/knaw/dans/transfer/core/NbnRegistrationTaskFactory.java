@@ -26,10 +26,9 @@ public class NbnRegistrationTaskFactory implements InboxTaskFactory {
     private final GmhClient gmhClient;
     private final Path outboxProcessed;
     private final Path outboxFailed;
-    private final FileService fileService;
 
     @Override
     public Runnable createInboxTask(Path path) {
-        return new NbnRegistrationTask(path, gmhClient, outboxProcessed, outboxFailed, fileService);
+        return new NbnRegistrationTask(path, gmhClient, outboxProcessed, outboxFailed);
     }
 }
