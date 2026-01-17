@@ -90,7 +90,7 @@ public class FileSystemPermissionHealthCheck extends HealthCheck {
         }
         else {
             var unhealthyMessage = "The following paths are not writable or not on the same file system: " +
-                result.build().getDetails().keySet().stream().collect(Collectors.joining(", "));
+                String.join(", ", result.build().getDetails().keySet());
             return result.unhealthy().withMessage(unhealthyMessage).build();
         }
     }
