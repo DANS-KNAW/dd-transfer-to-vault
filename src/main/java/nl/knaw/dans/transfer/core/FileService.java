@@ -78,7 +78,7 @@ public interface FileService {
      * @param paths the paths to check
      * @return true if all paths are on the same file system, false otherwise
      */
-    boolean isSameFileSystem(Path... paths);
+    boolean isSameFileSystem(java.util.Collection<Path> paths);
 
     /**
      * Checks if the given path is writable by the current user.

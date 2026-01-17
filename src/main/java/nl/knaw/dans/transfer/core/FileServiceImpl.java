@@ -89,7 +89,7 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
-    public boolean isSameFileSystem(Path... paths) {
+    public boolean isSameFileSystem(java.util.Collection<Path> paths) {
         var fileStores = new HashSet<FileStore>();
         var result = true;
         for (var path : paths) {
@@ -108,8 +108,7 @@ public class FileServiceImpl implements FileService {
 
     @Override
     public boolean canWriteTo(Path path) {
-        var file = path.toFile();
-        if (!file.exists() || !file.isDirectory() || !Files.isWritable(path)) {
+        if (!Files.exists(path) || !Files.isDirectory(path) || !Files.isWritable(path)) {
             // without this check deleteIfExists may cause AccessDeniedException
             // the rest is copied from dd-sword2
             return false;

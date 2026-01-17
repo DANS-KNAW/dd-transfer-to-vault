@@ -22,6 +22,8 @@ import nl.knaw.dans.transfer.core.FileService;
 
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -47,42 +49,38 @@ public class FileSystemPermissionHealthCheck extends HealthCheck {
     protected Result check() {
         var result = Result.builder();
         var isValid = true;
-        var sameFileSystem = List.of(
-            new Path[] {
+        var sameFileSystemGroups = List.of(
+            Set.of(
                 transferConfig.getExtractMetadata().getInbox().getPath(),
                 transferConfig.getExtractMetadata().getOutbox().getProcessed(),
                 transferConfig.getExtractMetadata().getOutbox().getFailed(),
                 transferConfig.getExtractMetadata().getOutbox().getRejected()
-            },
-            new Path[] {
+            ),
+            Set.of(
                 transferConfig.getSendToVault().getDataVault().getCurrentBatchWorkingDir(),
                 transferConfig.getSendToVault().getDataVault().getBatchRoot()
-            },
-            new Path[] {
+            ),
+            Set.of(
                 transferConfig.getSendToVault().getInbox().getPath(),
                 transferConfig.getSendToVault().getOutbox().getProcessed(),
-                transferConfig.getSendToVault().getOutbox().getFailed(),
-                getParentIfNotExists(transferConfig.getCollectDve().getOutbox().getProcessed())
-            },
-            new Path[] {
-                getParentIfNotExists(nbnRegistrationConfig.getOutbox().getProcessed()),
-                getParentIfNotExists(nbnRegistrationConfig.getOutbox().getFailed()),
-                nbnRegistrationConfig.getInbox().getPath()
-            },
-            new Path[] {
-                transferConfig.getCollectDve().getInbox().getPath(),
-                getParentIfNotExists(transferConfig.getCollectDve().getOutbox().getFailed())
-            }
+                transferConfig.getSendToVault().getOutbox().getFailed()
+            ),
+            Set.of(
+                nbnRegistrationConfig.getInbox().getPath(),
+                nbnRegistrationConfig.getOutbox().getProcessed(),
+                nbnRegistrationConfig.getOutbox().getFailed()
+            )
         );
-        for (var pathList : sameFileSystem) {
-            for (var path : pathList) {
+
+        for (var pathSet : sameFileSystemGroups) {
+            for (var path : pathSet) {
                 if (!fileService.canWriteTo(path)) {
                     result.withDetail(path.toString(), "Path is not writable");
                     isValid = false;
                 }
             }
-            if (!fileService.isSameFileSystem(pathList)) {
-                var p = String.join(", ", Stream.of(pathList).map(Path::toString).toList());
+            if (!fileService.isSameFileSystem(pathSet)) {
+                var p = pathSet.stream().map(Path::toString).sorted().collect(Collectors.joining(", "));
                 result.withDetail(p, "Paths are not on the same file system");
                 isValid = false;
             }
@@ -91,13 +89,9 @@ public class FileSystemPermissionHealthCheck extends HealthCheck {
             return result.healthy().build();
         }
         else {
-            return result.unhealthy().withMessage("Some in/out-boxes have insufficient rights").build();
+            var unhealthyMessage = "The following paths are not writable or not on the same file system: " +
+                result.build().getDetails().keySet().stream().collect(Collectors.joining(", "));
+            return result.unhealthy().withMessage(unhealthyMessage).build();
         }
-    }
-
-    private Path getParentIfNotExists(Path processed) {
-        if (processed.toFile().exists())
-            return processed;
-        return getParentIfNotExists(processed.getParent());
     }
 }

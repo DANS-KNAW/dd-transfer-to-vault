@@ -38,7 +38,6 @@ public class NbnRegistrationTask implements Runnable {
             log.debug("Loaded registration token: {}", registrationToken);
             gmhClient.registerNbn(registrationToken);
             log.info("Successfully registered NBN {}", registrationToken.getNbn());
-            FileUtils.ensureDirectoryExists(outboxProcessed);
             Files.move(registrationTokenFile, outboxProcessed.resolve(registrationTokenFile.getFileName()));
         }
         catch (Exception e) {
