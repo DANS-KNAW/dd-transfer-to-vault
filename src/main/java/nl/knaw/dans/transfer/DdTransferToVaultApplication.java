@@ -19,6 +19,7 @@ package nl.knaw.dans.transfer;
 import io.dropwizard.core.Application;
 import io.dropwizard.core.setup.Bootstrap;
 import io.dropwizard.core.setup.Environment;
+import lombok.extern.slf4j.Slf4j;
 import nl.knaw.dans.lib.util.ClientProxyBuilder;
 import nl.knaw.dans.lib.util.PingHealthCheck;
 import nl.knaw.dans.lib.util.inbox.Inbox;
@@ -56,6 +57,7 @@ import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 
+@Slf4j
 public class DdTransferToVaultApplication extends Application<DdTransferToVaultConfiguration> {
 
     public static void main(final String[] args) throws Exception {
@@ -173,6 +175,16 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
             configuration.getNbnRegistration(),
             fileService)
         );
+
+        var healthCheckResult = environment.healthChecks()
+            .runHealthCheck("FileSystemPermissions");
+
+        log.info("Running health check 'FileSystemPermissions'");
+        if (!healthCheckResult.isHealthy()) {
+            throw new IllegalStateException("Health check 'FileSystemPermissions' failed: " + healthCheckResult.getMessage());
+        }
+        log.info("Health check 'FileSystemPermissions' passed");
+
         environment.healthChecks().register("VaultCatalog", new PingHealthCheck(
             "VaultCatalog",
             vaultCatalogProxy.getApiClient().getHttpClient(),
