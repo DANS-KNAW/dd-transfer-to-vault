@@ -42,16 +42,19 @@ import nl.knaw.dans.transfer.core.NbnRegistrationTaskFactory;
 import nl.knaw.dans.transfer.core.PropertiesFileFilter;
 import nl.knaw.dans.transfer.core.RemoveEmptyTargetDirsTask;
 import nl.knaw.dans.transfer.core.RemoveXmlFilesTask;
+import nl.knaw.dans.transfer.core.SendToVaultFlushTaskFactory;
 import nl.knaw.dans.transfer.core.SendToVaultTaskFactory;
 import nl.knaw.dans.transfer.core.SequencedTasks;
 import nl.knaw.dans.transfer.core.oaiore.OaiOreMetadataReader;
 import nl.knaw.dans.transfer.health.FileSystemPermissionHealthCheck;
+import nl.knaw.dans.transfer.resources.SendToVaultApiResource;
 import nl.knaw.dans.vaultcatalog.client.invoker.ApiClient;
 import nl.knaw.dans.vaultcatalog.client.resources.DefaultApi;
 import org.apache.commons.io.filefilter.FileFilterUtils;
 
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
 
 public class DdTransferToVaultApplication extends Application<DdTransferToVaultConfiguration> {
 
@@ -72,7 +75,10 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
     public void run(final DdTransferToVaultConfiguration configuration, final Environment environment) {
         FileService fileService = new FileServiceImpl();
         var dataVaultProxy = createDataVaultProxy(configuration);
+        var sendToVaultExecutorService = Executors.newSingleThreadExecutor();
+        var datavaultClient = new DataVaultClient(dataVaultProxy);
         environment.lifecycle().manage(Inbox.builder()
+            .executorService(sendToVaultExecutorService)
             .fileFilter(new DveFileFilter())
             .inbox(configuration.getTransfer().getSendToVault().getInbox().getPath())
             .interval(Math.toIntExact(configuration.getTransfer().getSendToVault().getInbox().getPollingInterval().toMilliseconds()))
@@ -82,11 +88,18 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
                 .outboxProcessed(configuration.getTransfer().getSendToVault().getOutbox().getProcessed())
                 .outboxFailed(configuration.getTransfer().getSendToVault().getOutbox().getFailed())
                 .dataVaultBatchRoot(configuration.getTransfer().getSendToVault().getDataVault().getBatchRoot())
-                .dataVaultClient(new DataVaultClient(dataVaultProxy))
+                .dataVaultClient(datavaultClient)
                 .defaultMessage(configuration.getTransfer().getSendToVault().getDefaultMessage())
                 .customProperties(configuration.getTransfer().getSendToVault().getCustomProperties())
                 .build())
             .build());
+
+        var sendToVaultFlushTaskFactory = SendToVaultFlushTaskFactory.builder()
+            .currentBatchWorkDir(configuration.getTransfer().getSendToVault().getDataVault().getCurrentBatchWorkingDir())
+            .dataVaultBatchRoot(configuration.getTransfer().getSendToVault().getDataVault().getBatchRoot())
+            .dataVaultClient(datavaultClient).build();
+        environment.jersey().register(new SendToVaultApiResource(sendToVaultExecutorService,
+            sendToVaultFlushTaskFactory));
 
         final var vaultCatalogProxy = createVaultCatalogProxy(configuration);
         VaultCatalogClient vaultCatalogClient = new VaultCatalogClientImpl(vaultCatalogProxy);

@@ -46,12 +46,46 @@ public interface FileService {
      */
     void moveAtomically(Path oldLocation, Path newLocation) throws IOException;
 
+    /**
+     * Flushes the file system buffers for the given file, ensuring that all changes are written to the storage device.
+     *
+     * @param file the file to fsync
+     * @throws IOException if the fsync operation fails
+     */
     void fsyncFile(Path file) throws IOException;
 
+    /**
+     * Flushes the file system buffers for the given directory, ensuring that all changes are written to the storage device.
+     *
+     * @param dir the directory to fsync
+     * @throws IOException if the fsync operation fails
+     */
     void fsyncDirectory(Path dir) throws IOException;
 
+
+    /**
+     * Checks if the given path exists.
+     *
+     * @param path the path to check
+     * @return true if the path exists, false otherwise
+     */
+    boolean exists(Path path);
+
+
+    /**
+     * Checks if the given paths are on the same file system.
+     *
+     * @param paths the paths to check
+     * @return true if all paths are on the same file system, false otherwise
+     */
     boolean isSameFileSystem(Path... paths);
 
+    /**
+     * Checks if the given path is writable by the current user.
+     *
+     * @param path the path to check
+     * @return true if the path is writable, false otherwise
+     */
     boolean canWriteTo(Path path);
 
 }

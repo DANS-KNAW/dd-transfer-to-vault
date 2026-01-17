@@ -1,0 +1,11 @@
+{{#isPathParam}}{{!
+
+    }} @PathParam("{{baseName}}"){{!
+
+    }}{{#useBeanValidation}} {{>beanValidation}}{{/useBeanValidation}}{{!
+
+    }}{{#schema.vendorExtensions.x-field-extra-annotation}} {{schema.vendorExtensions.x-field-extra-annotation}}{{/schema.vendorExtensions.x-field-extra-annotation}}{{!
+
+    }} {{{dataType}}} {{paramName}}{{!
+
+}}{{/isPathParam}}

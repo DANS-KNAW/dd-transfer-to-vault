@@ -84,6 +84,11 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
+    public boolean exists(Path path) {
+        return Files.exists(path);
+    }
+
+    @Override
     public boolean isSameFileSystem(Path... paths) {
         var fileStores = new HashSet<FileStore>();
         var result = true;

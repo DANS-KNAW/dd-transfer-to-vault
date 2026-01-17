@@ -24,6 +24,14 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.stream.Stream;
 
+/**
+ * Health check for file system permissions:
+ * <li>
+ *     <ul>All configured directories must be writable by the current user.</ul>
+ *     <ul>All configured directories except the collect inbox must be on the same file system.</ul>
+ * </li>
+ *
+ */
 public class FileSystemPermissionHealthCheck extends HealthCheck {
     private final TransferConfig transferConfig;
     private final NbnRegistrationConfig nbnRegistrationConfig;
