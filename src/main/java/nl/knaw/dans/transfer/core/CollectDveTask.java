@@ -48,6 +48,7 @@ public class CollectDveTask implements Runnable {
     private final Path dve;
     private final Path destinationRoot;
     private final Path failedOutbox;
+    private final FileService fileService;
 
     @Override
     public void run() {
@@ -62,7 +63,7 @@ public class CollectDveTask implements Runnable {
             else {
                 log.debug("Target directory {} already exists, using that", targetDir);
             }
-            FileUtils.ensureDirectoryExists(targetDir);
+            fileService.ensureDirectoryExists(targetDir);
             transferItem.moveToDir(targetDir);
             log.info("Collected {}", dve.getFileName());
         }
@@ -70,7 +71,7 @@ public class CollectDveTask implements Runnable {
             log.error("Unable to process DVE: {}", dve.getFileName(), e);
             try {
                 if (transferItem != null) {
-                    FileUtils.ensureDirectoryExists(failedOutbox);
+                    fileService.ensureDirectoryExists(failedOutbox);
                     transferItem.moveToDir(failedOutbox, e);
                     log.warn("Failed to collect {}", dve.getFileName());
                 }

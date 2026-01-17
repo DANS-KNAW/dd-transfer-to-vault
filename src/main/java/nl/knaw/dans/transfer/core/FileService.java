@@ -88,4 +88,12 @@ public interface FileService {
      */
     boolean canWriteTo(Path path);
 
+    /**
+     * Ensures that the given directory exists, creating it if necessary.
+     *
+     * @param dir the directory to check
+     * @throws IOException if the directory cannot be created
+     */
+    void ensureDirectoryExists(Path dir) throws IOException;
+
 }

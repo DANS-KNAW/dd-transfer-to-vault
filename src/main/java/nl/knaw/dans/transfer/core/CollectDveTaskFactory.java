@@ -28,9 +28,11 @@ public class CollectDveTaskFactory implements InboxTaskFactory {
     private final Path destinationRoot;
     @NonNull
     private final Path failedOutbox;
+    @NonNull
+    private final FileService fileService;
 
     @Override
     public Runnable createInboxTask(Path path) {
-        return new CollectDveTask(path, destinationRoot, failedOutbox);
+        return new CollectDveTask(path, destinationRoot, failedOutbox, fileService);
     }
 }

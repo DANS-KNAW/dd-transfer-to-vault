@@ -34,9 +34,10 @@ public class SendToVaultTaskFactory implements InboxTaskFactory {
     private final DataVaultClient dataVaultClient;
     private final String defaultMessage;
     private final Map<String, CustomPropertyConfig> customProperties;
+    private final FileService fileService;
 
     @Override
     public Runnable createInboxTask(Path path) {
-        return new SendToVaultTask(path, currentBatchWorkDir, dataVaultBatchRoot, batchThreshold, outboxProcessed, outboxFailed, dataVaultClient, defaultMessage, customProperties);
+        return new SendToVaultTask(path, currentBatchWorkDir, dataVaultBatchRoot, batchThreshold, outboxProcessed, outboxFailed, dataVaultClient, defaultMessage, customProperties, fileService);
     }
 }

@@ -91,6 +91,7 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
                 .dataVaultClient(datavaultClient)
                 .defaultMessage(configuration.getTransfer().getSendToVault().getDefaultMessage())
                 .customProperties(configuration.getTransfer().getSendToVault().getCustomProperties())
+                .fileService(fileService)
                 .build())
             .build());
 
@@ -143,7 +144,9 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
                 .taskFactory(
                     CollectDveTaskFactory.builder()
                         .destinationRoot(configuration.getTransfer().getCollectDve().getOutbox().getProcessed())
-                        .failedOutbox(configuration.getTransfer().getCollectDve().getOutbox().getFailed()).build())
+                        .failedOutbox(configuration.getTransfer().getCollectDve().getOutbox().getFailed())
+                        .fileService(fileService)
+                        .build())
                 .inbox(configuration.getTransfer().getCollectDve().getInbox().getPath())
                 // N.B. this MUST be a single-threaded executor to prevent DVEs from out-racing each other via parallel processing, which would mess up the order of the DVEs.
                 .executorService(environment.lifecycle().executorService("transfer-inbox").maxThreads(1).minThreads(1).build())
@@ -162,6 +165,7 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
                     .gmhClient(createGmhClient(configuration))
                     .outboxProcessed(configuration.getNbnRegistration().getOutbox().getProcessed())
                     .outboxFailed(configuration.getNbnRegistration().getOutbox().getFailed())
+                    .fileService(fileService)
                     .build())
                 .build());
 

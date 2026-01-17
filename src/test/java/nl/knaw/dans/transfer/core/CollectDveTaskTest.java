@@ -24,6 +24,7 @@ import java.nio.file.Path;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class CollectDveTaskTest extends TestDirFixture {
+    private final FileService fileService = new FileServiceImpl();
 
     @Test
     public void should_move_dve_to_target_dir() throws Exception {
@@ -39,7 +40,7 @@ public class CollectDveTaskTest extends TestDirFixture {
         var dve = inbox.resolve("dve.zip");
         Files.copy(Path.of("src/test/resources/test-dves/doi-10-5072-dar-zzjh97v1.1.zip"), dve);
 
-        var collectDveTask = new CollectDveTask(dve, dest, failed);
+        var collectDveTask = new CollectDveTask(dve, dest, failed, fileService);
 
         // When
         collectDveTask.run();
@@ -68,7 +69,7 @@ public class CollectDveTaskTest extends TestDirFixture {
         var nonZipFile = inbox.resolve("nonzip.txt");
         Files.writeString(nonZipFile, "This is not a zip file");
 
-        var collectDveTask = new CollectDveTask(nonZipFile, dest, failed);
+        var collectDveTask = new CollectDveTask(nonZipFile, dest, failed, fileService);
 
         // When
         collectDveTask.run();
@@ -92,7 +93,7 @@ public class CollectDveTaskTest extends TestDirFixture {
         var dve = inbox.resolve("dve.zip");
         Files.copy(Path.of("src/test/resources/test-dves/doi-10-5072-dar-zzjh97v1.1-no-oai-ore.zip"), dve);
 
-        var collectDveTask = new CollectDveTask(dve, dest, failed);
+        var collectDveTask = new CollectDveTask(dve, dest, failed, fileService);
 
         // When
         collectDveTask.run();
@@ -116,7 +117,7 @@ public class CollectDveTaskTest extends TestDirFixture {
         var dve = inbox.resolve("dve.zip");
         Files.copy(Path.of("src/test/resources/test-dves/doi-10-5072-dar-zzjh97v1.1-no-nbn.zip"), dve);
 
-        var collectDveTask = new CollectDveTask(dve, dest, failed);
+        var collectDveTask = new CollectDveTask(dve, dest, failed, fileService);
 
         // When
         collectDveTask.run();

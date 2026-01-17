@@ -46,6 +46,7 @@ public class SendToVaultTask implements Runnable {
     private final DataVaultClient dataVaultClient;
     private final String defaultMessage;
     private final Map<String, CustomPropertyConfig> customProperties;
+    private final FileService fileService;
 
     private TransferItem transferItem;
 
@@ -72,7 +73,7 @@ public class SendToVaultTask implements Runnable {
     }
 
     private void addToObjectImportDirectory(Path dvePath, int ocflObjectVersionNumber, Path objectImportDirectory) throws IOException {
-        FileUtils.ensureDirectoryExists(objectImportDirectory);
+        fileService.ensureDirectoryExists(objectImportDirectory);
         var versionDirectory = objectImportDirectory.resolve("v" + ocflObjectVersionNumber);
         log.debug("Extracting DVE {} to {}", dvePath, versionDirectory);
         ZipUtil.extractZipFile(dvePath, versionDirectory);
