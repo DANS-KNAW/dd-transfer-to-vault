@@ -140,13 +140,13 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
             Inbox.builder()
                 .awaitLatch(startCollectInbox)
                 .onPollingHandler(new SequencedTasks(
-                    new RemoveEmptyTargetDirsTask(configuration.getTransfer().getCollectDve().getOutbox().getProcessed()),
+                    new RemoveEmptyTargetDirsTask(configuration.getTransfer().getCollectDve().getProcessed()),
                     new RemoveXmlFilesTask(configuration.getTransfer().getCollectDve().getInbox().getPath())))
                 .fileFilter(new DveFileFilter())
                 .taskFactory(
                     CollectDveTaskFactory.builder()
-                        .destinationRoot(configuration.getTransfer().getCollectDve().getOutbox().getProcessed())
-                        .failedOutbox(configuration.getTransfer().getCollectDve().getOutbox().getFailed())
+                        .destinationRoot(configuration.getTransfer().getCollectDve().getProcessed())
+                        .inboxPath(configuration.getTransfer().getCollectDve().getInbox().getPath())
                         .fileService(fileService)
                         .build())
                 .inbox(configuration.getTransfer().getCollectDve().getInbox().getPath())

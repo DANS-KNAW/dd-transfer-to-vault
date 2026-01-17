@@ -27,9 +27,7 @@ transfer:
     inbox:
       path: /var/opt/dans.knaw.nl/tmp/transfer-inboxes/INSTANCE/inbox
       pollingInterval: 500ms
-    outbox:
-      processed: /var/opt/dans.knaw.nl/dd-transfer-to-vault/INSTANCE/metadata-extraction/inbox
-      failed: /var/opt/dans.knaw.nl/tmp/transfer-inboxes/INSTANCE/failed
+    processed: /var/opt/dans.knaw.nl/dd-transfer-to-vault/INSTANCE/metadata-extraction/inbox
   # Extract metadata from the DVE, register the NBN and update the Vault Catalog
   extractMetadata:
     inbox:

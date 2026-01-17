@@ -66,6 +66,11 @@ public class FileSystemPermissionHealthCheck extends HealthCheck {
                 transferConfig.getSendToVault().getOutbox().getFailed()
             ),
             Set.of(
+                transferConfig.getCollectDve().getInbox().getPath(),
+                transferConfig.getCollectDve().getProcessed(),
+                transferConfig.getCollectDve().getInbox().getPath().resolve("failed")
+            ),
+            Set.of(
                 nbnRegistrationConfig.getInbox().getPath(),
                 nbnRegistrationConfig.getOutbox().getProcessed(),
                 nbnRegistrationConfig.getOutbox().getFailed()

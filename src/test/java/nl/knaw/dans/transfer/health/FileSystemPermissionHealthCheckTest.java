@@ -89,15 +89,12 @@ class FileSystemPermissionHealthCheckTest {
         when(nbnRegistrationConfig.getInbox()).thenReturn(nbnInbox);
         when(nbnRegistrationConfig.getOutbox()).thenReturn(nbnOutbox);
 
-        // Mock CollectDveConfig (although not used in current implementation of health check, good for completeness)
+        // Mock CollectDveConfig
         nl.knaw.dans.transfer.config.CollectDveConfig collectDveConfig = mock(nl.knaw.dans.transfer.config.CollectDveConfig.class);
         InboxConfig cdInbox = mock(InboxConfig.class);
         when(cdInbox.getPath()).thenReturn(Path.of("/cd/inbox"));
-        OutboxConfig cdOutbox = mock(OutboxConfig.class);
-        when(cdOutbox.getProcessed()).thenReturn(Path.of("/cd/outbox/processed"));
-        when(cdOutbox.getFailed()).thenReturn(Path.of("/cd/outbox/failed"));
         when(collectDveConfig.getInbox()).thenReturn(cdInbox);
-        when(collectDveConfig.getOutbox()).thenReturn(cdOutbox);
+        when(collectDveConfig.getProcessed()).thenReturn(Path.of("/cd/processed"));
         when(transferConfig.getCollectDve()).thenReturn(collectDveConfig);
 
         // Default: all writable and same filesystem
