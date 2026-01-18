@@ -30,7 +30,7 @@ import java.util.stream.Stream;
  * Health check for file system permissions:
  * <li>
  *     <ul>All configured directories must be writable by the current user.</ul>
- *     <ul>All configured directories except the collect inbox must be on the same file system.</ul>
+ *     <ul>All configured directories must be on the same file system.</ul>
  * </li>
  *
  */
@@ -49,54 +49,42 @@ public class FileSystemPermissionHealthCheck extends HealthCheck {
     protected Result check() {
         var result = Result.builder();
         var isValid = true;
-        var sameFileSystemGroups = List.of(
-            Set.of(
-                transferConfig.getExtractMetadata().getInbox().getPath(),
-                transferConfig.getExtractMetadata().getOutbox().getProcessed(),
-                transferConfig.getExtractMetadata().getOutbox().getFailed(),
-                transferConfig.getExtractMetadata().getOutbox().getRejected()
-            ),
-            Set.of(
-                transferConfig.getSendToVault().getDataVault().getCurrentBatchWorkingDir(),
-                transferConfig.getSendToVault().getDataVault().getBatchRoot()
-            ),
-            Set.of(
-                transferConfig.getSendToVault().getInbox().getPath(),
-                transferConfig.getSendToVault().getOutbox().getProcessed(),
-                transferConfig.getSendToVault().getOutbox().getFailed()
-            ),
-            Set.of(
-                transferConfig.getCollectDve().getInbox().getPath(),
-                transferConfig.getCollectDve().getProcessed(),
-                transferConfig.getCollectDve().getInbox().getPath().resolve("failed")
-            ),
-            Set.of(
-                nbnRegistrationConfig.getInbox().getPath(),
-                nbnRegistrationConfig.getOutbox().getProcessed(),
-                nbnRegistrationConfig.getOutbox().getFailed()
-            )
-        );
+        var allPaths = Stream.of(
+            transferConfig.getExtractMetadata().getInbox().getPath(),
+            transferConfig.getExtractMetadata().getOutbox().getProcessed(),
+            transferConfig.getExtractMetadata().getOutbox().getFailed(),
+            transferConfig.getExtractMetadata().getOutbox().getRejected(),
+            transferConfig.getSendToVault().getInbox().getPath(),
+            transferConfig.getSendToVault().getOutbox().getProcessed(),
+            transferConfig.getSendToVault().getOutbox().getFailed(),
+            transferConfig.getSendToVault().getDataVault().getCurrentBatchWorkingDir(),
+            transferConfig.getSendToVault().getDataVault().getBatchRoot(),
+            nbnRegistrationConfig.getInbox().getPath(),
+            nbnRegistrationConfig.getOutbox().getProcessed(),
+            nbnRegistrationConfig.getOutbox().getFailed(),
+            transferConfig.getCollectDve().getInbox().getPath(),
+            transferConfig.getCollectDve().getProcessed()
+        ).collect(Collectors.toSet());
 
-        for (var pathSet : sameFileSystemGroups) {
-            for (var path : pathSet) {
-                if (!fileService.canWriteTo(path)) {
-                    result.withDetail(path.toString(), "Path is not writable");
-                    isValid = false;
-                }
-            }
-            if (!fileService.isSameFileSystem(pathSet)) {
-                var p = pathSet.stream().map(Path::toString).sorted().collect(Collectors.joining(", "));
-                result.withDetail(p, "Paths are not on the same file system");
+        for (var path : allPaths) {
+            if (!fileService.canWriteTo(path)) {
+                result.withDetail(path.toString(), "Path is not writable");
                 isValid = false;
             }
         }
+
+        if (!fileService.isSameFileSystem(allPaths)) {
+            var p = allPaths.stream().map(Path::toString).sorted().collect(Collectors.joining(", "));
+            result.withDetail(p, "Paths are not all on the same file system: " + p);
+            isValid = false;
+        }
+
         if (isValid) {
             return result.healthy().build();
         }
         else {
-            var unhealthyMessage = "The following paths are not writable or not on the same file system: " +
-                String.join(", ", result.build().getDetails().keySet());
-            return result.unhealthy().withMessage(unhealthyMessage).build();
+            var failedPaths = result.build().getDetails().keySet();
+            return result.unhealthy().withMessage("File system conditions are invalid: " + String.join(", ", failedPaths)).build();
         }
     }
 }

@@ -122,33 +122,38 @@ class FileSystemPermissionHealthCheckTest {
 
     @Test
     void check_should_return_unhealthy_when_paths_are_not_on_same_filesystem() {
-        Set<Path> problematicGroup = Set.of(
-            Path.of("/em/inbox"),
-            Path.of("/em/outbox/processed"),
-            Path.of("/em/outbox/failed"),
-            Path.of("/em/outbox/rejected")
-        );
-        when(fileService.isSameFileSystem(problematicGroup)).thenReturn(false);
+        when(fileService.isSameFileSystem(any())).thenReturn(false);
 
         HealthCheck.Result result = healthCheck.check();
         assertFalse(result.isHealthy());
 
-        String expectedDetailKey = problematicGroup.stream().map(Path::toString).sorted().collect(java.util.stream.Collectors.joining(", "));
+        Set<Path> allPaths = Set.of(
+            Path.of("/em/inbox"),
+            Path.of("/em/outbox/processed"),
+            Path.of("/em/outbox/failed"),
+            Path.of("/em/outbox/rejected"),
+            Path.of("/sv/working"),
+            Path.of("/sv/batch"),
+            Path.of("/sv/inbox"),
+            Path.of("/sv/outbox/processed"),
+            Path.of("/sv/outbox/failed"),
+            Path.of("/nbn/inbox"),
+            Path.of("/nbn/outbox/processed"),
+            Path.of("/nbn/outbox/failed"),
+            Path.of("/cd/inbox"),
+            Path.of("/cd/processed")
+        );
+
+        String expectedDetailKey = allPaths.stream().map(Path::toString).sorted().collect(java.util.stream.Collectors.joining(", "));
         assertTrue(result.getDetails().containsKey(expectedDetailKey));
-        assertTrue(result.getDetails().get(expectedDetailKey).toString().contains("Paths are not on the same file system"));
+        assertTrue(result.getDetails().get(expectedDetailKey).toString().contains("Paths are not all on the same file system"));
     }
 
     @Test
     void check_should_return_unhealthy_with_multiple_failures() {
         Path nonWritablePath = Path.of("/sv/inbox");
         when(fileService.canWriteTo(nonWritablePath)).thenReturn(false);
-
-        Set<Path> problematicGroup = Set.of(
-            Path.of("/nbn/inbox"),
-            Path.of("/nbn/outbox/processed"),
-            Path.of("/nbn/outbox/failed")
-        );
-        when(fileService.isSameFileSystem(problematicGroup)).thenReturn(false);
+        when(fileService.isSameFileSystem(any())).thenReturn(false);
 
         HealthCheck.Result result = healthCheck.check();
         assertFalse(result.isHealthy());
@@ -157,7 +162,23 @@ class FileSystemPermissionHealthCheckTest {
         assertTrue(result.getDetails().containsKey(nonWritablePath.toString()));
 
         // Check same-filesystem failure
-        String expectedDetailKey = problematicGroup.stream().map(Path::toString).sorted().collect(java.util.stream.Collectors.joining(", "));
+        Set<Path> allPaths = Set.of(
+            Path.of("/em/inbox"),
+            Path.of("/em/outbox/processed"),
+            Path.of("/em/outbox/failed"),
+            Path.of("/em/outbox/rejected"),
+            Path.of("/sv/working"),
+            Path.of("/sv/batch"),
+            Path.of("/sv/inbox"),
+            Path.of("/sv/outbox/processed"),
+            Path.of("/sv/outbox/failed"),
+            Path.of("/nbn/inbox"),
+            Path.of("/nbn/outbox/processed"),
+            Path.of("/nbn/outbox/failed"),
+            Path.of("/cd/inbox"),
+            Path.of("/cd/processed")
+        );
+        String expectedDetailKey = allPaths.stream().map(Path::toString).sorted().collect(java.util.stream.Collectors.joining(", "));
         assertTrue(result.getDetails().containsKey(expectedDetailKey));
 
         // Check message contains both

@@ -114,7 +114,7 @@ public class FileServiceImpl implements FileService {
             return false;
         }
 
-        var filename = path.resolve(String.format(".%s", UUID.randomUUID()));
+        var filename = path.resolve(String.format(".%s", ".write-check-" + UUID.randomUUID()));
 
         try {
             Files.write(filename, new byte[] {});
@@ -128,7 +128,7 @@ public class FileServiceImpl implements FileService {
                 Files.deleteIfExists(filename);
             }
             catch (IOException e) {
-                log.error("Unable to delete file due to IO error", e);
+                log.error("Unable to delete {} due to IO error", filename, e);
             }
         }
     }
