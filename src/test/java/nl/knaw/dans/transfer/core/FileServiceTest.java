@@ -65,6 +65,63 @@ public class FileServiceTest {
     }
 
     @Test
+    void canReadFrom_should_return_false_if_path_does_not_exist() {
+        var fileService = new FileServiceImpl();
+        var path = Path.of("does-not-exist");
+
+        try (var filesMock = mockStatic(Files.class)) {
+            filesMock.when(() -> Files.exists(path)).thenReturn(false);
+
+            var result = fileService.canReadFrom(path);
+            assertFalse(result);
+        }
+    }
+
+    @Test
+    void canReadFrom_should_return_false_if_path_is_not_a_directory() {
+        var fileService = new FileServiceImpl();
+        var path = Path.of("not-a-directory");
+
+        try (var filesMock = mockStatic(Files.class)) {
+            filesMock.when(() -> Files.exists(path)).thenReturn(true);
+            filesMock.when(() -> Files.isDirectory(path)).thenReturn(false);
+
+            var result = fileService.canReadFrom(path);
+            assertFalse(result);
+        }
+    }
+
+    @Test
+    void canReadFrom_should_return_false_if_path_is_not_readable() {
+        var fileService = new FileServiceImpl();
+        var path = Path.of("not-readable");
+
+        try (var filesMock = mockStatic(Files.class)) {
+            filesMock.when(() -> Files.exists(path)).thenReturn(true);
+            filesMock.when(() -> Files.isDirectory(path)).thenReturn(true);
+            filesMock.when(() -> Files.isReadable(path)).thenReturn(false);
+
+            var result = fileService.canReadFrom(path);
+            assertFalse(result);
+        }
+    }
+
+    @Test
+    void canReadFrom_should_return_true_if_all_conditions_are_met() {
+        var fileService = new FileServiceImpl();
+        var path = Path.of("readable-dir");
+
+        try (var filesMock = mockStatic(Files.class)) {
+            filesMock.when(() -> Files.exists(path)).thenReturn(true);
+            filesMock.when(() -> Files.isDirectory(path)).thenReturn(true);
+            filesMock.when(() -> Files.isReadable(path)).thenReturn(true);
+
+            var result = fileService.canReadFrom(path);
+            assertTrue(result);
+        }
+    }
+
+    @Test
     void canWriteTo_should_return_false_if_path_does_not_exist() {
         var fileService = new FileServiceImpl();
         var path = Path.of("does-not-exist");

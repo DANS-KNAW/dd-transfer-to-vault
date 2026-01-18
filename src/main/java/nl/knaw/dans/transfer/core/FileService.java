@@ -81,6 +81,14 @@ public interface FileService {
     boolean isSameFileSystem(java.util.Collection<Path> paths);
 
     /**
+     * Checks if the given path is readable by the current user.
+     *
+     * @param path the path to check
+     * @return true if the path is readable, false otherwise
+     */
+    boolean canReadFrom(Path path);
+
+    /**
      * Checks if the given path is writable by the current user.
      *
      * @param path the path to check

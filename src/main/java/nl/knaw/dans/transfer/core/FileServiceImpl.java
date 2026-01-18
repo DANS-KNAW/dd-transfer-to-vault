@@ -107,6 +107,11 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
+    public boolean canReadFrom(Path path) {
+        return Files.exists(path) && Files.isDirectory(path) && Files.isReadable(path);
+    }
+
+    @Override
     public boolean canWriteTo(Path path) {
         if (!Files.exists(path) || !Files.isDirectory(path) || !Files.isWritable(path)) {
             // without this check deleteIfExists may cause AccessDeniedException

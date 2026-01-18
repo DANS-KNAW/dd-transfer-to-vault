@@ -16,13 +16,13 @@
 package nl.knaw.dans.transfer.health;
 
 import com.codahale.metrics.health.HealthCheck;
+import com.google.common.collect.Sets;
+import lombok.extern.slf4j.Slf4j;
 import nl.knaw.dans.transfer.config.NbnRegistrationConfig;
 import nl.knaw.dans.transfer.config.TransferConfig;
 import nl.knaw.dans.transfer.core.FileService;
 
 import java.nio.file.Path;
-import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -34,6 +34,7 @@ import java.util.stream.Stream;
  * </li>
  *
  */
+@Slf4j
 public class FileSystemPermissionHealthCheck extends HealthCheck {
     private final TransferConfig transferConfig;
     private final NbnRegistrationConfig nbnRegistrationConfig;
@@ -49,7 +50,7 @@ public class FileSystemPermissionHealthCheck extends HealthCheck {
     protected Result check() {
         var result = Result.builder();
         var isValid = true;
-        var allPaths = Stream.of(
+        var sameFileSystemPaths = Stream.of(
             transferConfig.getExtractMetadata().getInbox().getPath(),
             transferConfig.getExtractMetadata().getOutbox().getProcessed(),
             transferConfig.getExtractMetadata().getOutbox().getFailed(),
@@ -66,16 +67,28 @@ public class FileSystemPermissionHealthCheck extends HealthCheck {
             transferConfig.getCollectDve().getProcessed()
         ).collect(Collectors.toSet());
 
-        for (var path : allPaths) {
+        var accessibleDirectories = Sets.union(sameFileSystemPaths, Stream.of(
+            transferConfig.getCollectDve().getInbox().getPath(),
+            transferConfig.getCollectDve().getProcessed()
+        ).collect(Collectors.toSet()));
+
+        for (var path : accessibleDirectories) {
             if (!fileService.canWriteTo(path)) {
                 result.withDetail(path.toString(), "Path is not writable");
+                log.error("Path is not writable: " + path);
+                isValid = false;
+            }
+            if (!fileService.canReadFrom(path)) {
+                result.withDetail(path.toString(), "Path is not readable");
+                log.error("Path is not readable: " + path);
                 isValid = false;
             }
         }
 
-        if (!fileService.isSameFileSystem(allPaths)) {
-            var p = allPaths.stream().map(Path::toString).sorted().collect(Collectors.joining(", "));
+        if (!fileService.isSameFileSystem(sameFileSystemPaths)) {
+            var p = sameFileSystemPaths.stream().map(Path::toString).sorted().collect(Collectors.joining(", "));
             result.withDetail(p, "Paths are not all on the same file system: " + p);
+            log.error("Paths are not all on the same file system: " + p);
             isValid = false;
         }
 
@@ -83,8 +96,9 @@ public class FileSystemPermissionHealthCheck extends HealthCheck {
             return result.healthy().build();
         }
         else {
-            var failedPaths = result.build().getDetails().keySet();
-            return result.unhealthy().withMessage("File system conditions are invalid: " + String.join(", ", failedPaths)).build();
+            var details = result.build().getDetails();
+
+            return result.unhealthy().withMessage("File system conditions are invalid: " + details).build();
         }
     }
 }
