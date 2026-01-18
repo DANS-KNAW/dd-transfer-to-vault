@@ -28,6 +28,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.UUID;
 import java.util.zip.ZipFile;
@@ -89,7 +90,7 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
-    public boolean isSameFileSystem(java.util.Collection<Path> paths) {
+    public boolean isSameFileSystem(Collection<Path> paths) {
         var fileStores = new HashSet<FileStore>();
         var result = true;
         for (var path : paths) {

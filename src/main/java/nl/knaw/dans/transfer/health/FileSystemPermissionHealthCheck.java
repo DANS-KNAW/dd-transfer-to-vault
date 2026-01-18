@@ -62,9 +62,8 @@ public class FileSystemPermissionHealthCheck extends HealthCheck {
             transferConfig.getSendToVault().getDataVault().getBatchRoot(),
             nbnRegistrationConfig.getInbox().getPath(),
             nbnRegistrationConfig.getOutbox().getProcessed(),
-            nbnRegistrationConfig.getOutbox().getFailed(),
-            transferConfig.getCollectDve().getInbox().getPath(),
-            transferConfig.getCollectDve().getProcessed()
+            nbnRegistrationConfig.getOutbox().getFailed()
+            // N.B. the transfer inboxes are on an NFS mount, so they are not on the same file system by design!!
         ).collect(Collectors.toSet());
 
         var accessibleDirectories = Sets.union(sameFileSystemPaths, Stream.of(

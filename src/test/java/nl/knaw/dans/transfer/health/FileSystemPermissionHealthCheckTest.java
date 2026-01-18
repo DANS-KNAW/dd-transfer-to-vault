@@ -152,9 +152,7 @@ class FileSystemPermissionHealthCheckTest {
             Path.of("/sv/outbox/failed"),
             Path.of("/nbn/inbox"),
             Path.of("/nbn/outbox/processed"),
-            Path.of("/nbn/outbox/failed"),
-            Path.of("/cd/inbox"),
-            Path.of("/cd/processed")
+            Path.of("/nbn/outbox/failed")
         );
 
         String expectedDetailKey = allPaths.stream().map(Path::toString).sorted().collect(java.util.stream.Collectors.joining(", "));
@@ -194,9 +192,7 @@ class FileSystemPermissionHealthCheckTest {
             Path.of("/sv/outbox/failed"),
             Path.of("/nbn/inbox"),
             Path.of("/nbn/outbox/processed"),
-            Path.of("/nbn/outbox/failed"),
-            Path.of("/cd/inbox"),
-            Path.of("/cd/processed")
+            Path.of("/nbn/outbox/failed")
         );
         String expectedDetailKey = allPaths.stream().map(Path::toString).sorted().collect(java.util.stream.Collectors.joining(", "));
         assertTrue(result.getDetails().containsKey(expectedDetailKey));
