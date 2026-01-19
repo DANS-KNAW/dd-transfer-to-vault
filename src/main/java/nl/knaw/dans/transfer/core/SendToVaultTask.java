@@ -25,10 +25,10 @@ import nl.knaw.dans.transfer.client.DataVaultClient;
 import nl.knaw.dans.transfer.config.CustomPropertyConfig;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.Properties;
 
 import static org.apache.commons.io.FileUtils.moveDirectory;
 import static org.apache.commons.io.FileUtils.sizeOfDirectory;
@@ -83,12 +83,11 @@ public class SendToVaultTask implements Runnable {
     private void createVersionInfoProperties(Path versionDirectory, String user, String email, String message) throws IOException {
         var versionInfoFile = versionDirectory.resolveSibling(versionDirectory.getFileName().toString() + ".properties");
         log.debug("Creating version info properties file at {}", versionInfoFile);
-        var sb = new StringBuilder();
-        sb.append(String.format("""
-            user.name=%s
-            user.email=%s
-            message=%s
-            """, user, email, message));
+
+        var props = new Properties();
+        props.setProperty("user.name", user == null ? "" : user.replaceAll("[\\n\\t\\r]", "").trim());
+        props.setProperty("user.email", email == null ? "" : email.replaceAll("[\\n\\t\\r]", "").trim());
+        props.setProperty("message", message == null ? "" : message);
 
         if (customProperties != null) {
             for (var entry : customProperties.entrySet()) {
@@ -98,13 +97,15 @@ public class SendToVaultTask implements Runnable {
 
                 value.ifPresent(v -> {
                     if (!v.isBlank()) {
-                        sb.append(String.format("custom.%s=%s\n", name, v));
+                        props.setProperty("custom." + name, v);
                     }
                 });
             }
         }
 
-        Files.writeString(versionInfoFile, sb.toString(), StandardCharsets.UTF_8);
+        try (var os = Files.newOutputStream(versionInfoFile)) {
+            props.store(os, null);
+        }
     }
 
 
