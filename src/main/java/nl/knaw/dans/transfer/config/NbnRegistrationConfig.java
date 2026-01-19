@@ -20,12 +20,13 @@ import lombok.Data;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.net.URI;
+import java.nio.file.Path;
 
 @Data
 public class NbnRegistrationConfig {
     @NotNull
     @Valid
-    private InboxConfig inbox;
+    private Path outbox;
 
     @NotNull
     private URI catalogBaseUrl;

@@ -41,21 +41,20 @@ import static org.mockito.Mockito.when;
 class FileSystemPermissionHealthCheckTest {
 
     private TransferConfig transferConfig;
-    private NbnRegistrationConfig nbnRegistrationConfig;
     private FileService fileService;
     private FileSystemPermissionHealthCheck healthCheck;
 
     @BeforeEach
     void setUp() {
         transferConfig = mock(TransferConfig.class);
-        nbnRegistrationConfig = mock(NbnRegistrationConfig.class);
         fileService = mock(FileService.class);
-        healthCheck = new FileSystemPermissionHealthCheck(transferConfig, nbnRegistrationConfig, fileService);
+        healthCheck = new FileSystemPermissionHealthCheck(transferConfig, fileService);
 
         // Mock NbnRegistrationConfig
-        InboxConfig nbnInbox = mock(InboxConfig.class);
-        when(nbnInbox.getPath()).thenReturn(Path.of("/nbn/inbox"));
-        when(nbnRegistrationConfig.getInbox()).thenReturn(nbnInbox);
+        NbnRegistrationConfig nbnRegistrationConfig = mock(NbnRegistrationConfig.class);
+        when(nbnRegistrationConfig.getOutbox()).thenReturn(Path.of("/nbn/inbox"));
+        when(transferConfig.getNbnRegistration()).thenReturn(nbnRegistrationConfig);
+
 
         // Mock ExtractMetadataConfig
         ExtractMetadataConfig extractMetadataConfig = mock(ExtractMetadataConfig.class);

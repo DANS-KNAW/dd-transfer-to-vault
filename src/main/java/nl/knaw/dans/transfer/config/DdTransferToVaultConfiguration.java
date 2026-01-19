@@ -41,8 +41,4 @@ public class DdTransferToVaultConfiguration extends Configuration {
     @Valid
     @NotNull
     private ValidateBagPackConfig validateBagPack;
-
-    @Valid
-    @NotNull
-    private NbnRegistrationConfig nbnRegistration;
 }

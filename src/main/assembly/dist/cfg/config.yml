@@ -49,7 +49,9 @@ transfer:
       maxThreads: 3
       # Threads will die after 60 seconds of idleness
       keepAliveTime: 60 seconds
-  # Unzip the DVE and send it to the Data Vault
+  nbnRegistration:
+    outbox: /var/opt/dans.knaw.nl/tmp/nbn-registration/inbox
+    catalogBaseUrl: https://resolver-ui.acc.kb.seecr.nl/gmh-registration-service
   sendToVault:
     inbox:
       path: /var/opt/dans.knaw.nl/tmp/dd-transfer-to-vault/INSTANCE/send-to-vault/inbox

@@ -37,12 +37,10 @@ import java.util.stream.Stream;
 @Slf4j
 public class FileSystemPermissionHealthCheck extends HealthCheck {
     private final TransferConfig transferConfig;
-    private final NbnRegistrationConfig nbnRegistrationConfig;
     private final FileService fileService;
 
-    public FileSystemPermissionHealthCheck(TransferConfig transferConfig, NbnRegistrationConfig nbnRegistrationConfig, FileService fileService) {
+    public FileSystemPermissionHealthCheck(TransferConfig transferConfig, FileService fileService) {
         this.transferConfig = transferConfig;
-        this.nbnRegistrationConfig = nbnRegistrationConfig;
         this.fileService = fileService;
     }
 
@@ -66,7 +64,7 @@ public class FileSystemPermissionHealthCheck extends HealthCheck {
         var accessibleDirectories = Sets.union(sameFileSystemPaths, Stream.of(
             transferConfig.getCollectDve().getInbox().getPath(),
             transferConfig.getCollectDve().getProcessed(),
-            nbnRegistrationConfig.getInbox().getPath()
+            transferConfig.getNbnRegistration().getOutbox()
         ).collect(Collectors.toSet()));
 
         for (var path : accessibleDirectories) {

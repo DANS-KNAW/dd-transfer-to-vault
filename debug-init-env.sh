@@ -31,8 +31,8 @@ mkdir -p $EXTRACT_METADATA/inbox
 mkdir -p $EXTRACT_METADATA/outbox/rejected
 mkdir -p $EXTRACT_METADATA/outbox/failed
 mkdir -p $NBN_REGISTRATION/inbox
-mkdir -p $NBN_REGISTRATION/outbox/processed
-mkdir -p $NBN_REGISTRATION/outbox/failed
+mkdir -p $NBN_REGISTRATION/processed
+mkdir -p $NBN_REGISTRATION/failed
 mkdir -p $SEND_TO_VAULT/inbox
 mkdir -p $SEND_TO_VAULT/work
 mkdir -p $SEND_TO_VAULT/outbox/failed

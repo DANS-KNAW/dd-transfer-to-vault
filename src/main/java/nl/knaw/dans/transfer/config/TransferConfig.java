@@ -34,5 +34,9 @@ public class TransferConfig {
 
     @Valid
     @NotNull
+    private NbnRegistrationConfig nbnRegistration;
+
+    @Valid
+    @NotNull
     private SendToVaultConfig sendToVault;
 }

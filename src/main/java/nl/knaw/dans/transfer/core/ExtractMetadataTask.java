@@ -29,6 +29,7 @@ import java.nio.file.StandardOpenOption;
 import java.util.List;
 
 @Slf4j
+@AllArgsConstructor
 public class ExtractMetadataTask implements Runnable {
     private final String ocflStorageRoot;
     private final Path targetNbnDir;
@@ -41,22 +42,6 @@ public class ExtractMetadataTask implements Runnable {
     private final FileService fileService;
     private final VaultCatalogClient vaultCatalogClient;
     private final ValidateBagPackClient validateBagPackClient;
-
-    public ExtractMetadataTask(String ocflStorageRoot, Path targetNbnDir, Path outboxProcessed, Path outboxFailed, Path outboxRejected,
-        Path nbnRegistrationInbox, URI vaultCatalogBaseUri, DveMetadataReader dveMetadataReader, FileService fileService,
-        VaultCatalogClient vaultCatalogClient, ValidateBagPackClient validateBagPackClient) {
-        this.ocflStorageRoot = ocflStorageRoot;
-        this.targetNbnDir = targetNbnDir;
-        this.outboxProcessed = outboxProcessed;
-        this.outboxFailed = outboxFailed;
-        this.outboxRejected = outboxRejected;
-        this.nbnRegistrationInbox = nbnRegistrationInbox;
-        this.vaultCatalogBaseUri = vaultCatalogBaseUri;
-        this.dveMetadataReader = dveMetadataReader;
-        this.fileService = fileService;
-        this.vaultCatalogClient = vaultCatalogClient;
-        this.validateBagPackClient = validateBagPackClient;
-    }
 
     @Override
     public void run() {
@@ -101,7 +86,10 @@ public class ExtractMetadataTask implements Runnable {
                     log.debug("Registering OCFL Object Version in Vault Catalog");
                     transferItem.setOcflObjectVersion(
                         vaultCatalogClient.registerOcflObjectVersion(ocflStorageRoot, dveMetadata, transferItem.getOcflObjectVersion()));
-                    
+                    if (transferItem.getOcflObjectVersion() == 1) {
+                        log.info("First version of dataset {}. Scheduling NBN registration", transferItem.getNbn());
+                        scheduleNbnRegistration(transferItem);
+                    }
                     log.debug("Moving DVE to processed outbox");
                     transferItem.moveToDir(outboxProcessed);
                 }
@@ -144,6 +132,16 @@ public class ExtractMetadataTask implements Runnable {
         }
         finally {
             log.debug("Finished ExtractMetadataTask for {}", targetNbnDir);
+        }
+    }
+
+    private void scheduleNbnRegistration(TransferItem transferItem) {
+        try {
+            new RegistrationToken(transferItem.getNbn(), URI.create(vaultCatalogBaseUri + transferItem.getNbn()))
+                .save(nbnRegistrationInbox.resolve(transferItem.getNbn() + ".properties"));
+        }
+        catch (IOException e) {
+            throw new IllegalArgumentException("Unable to schedule NBN registration because NBN could not be retrieved", e);
         }
     }
 
