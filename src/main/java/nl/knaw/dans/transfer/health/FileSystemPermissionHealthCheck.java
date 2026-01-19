@@ -18,7 +18,6 @@ package nl.knaw.dans.transfer.health;
 import com.codahale.metrics.health.HealthCheck;
 import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
-import nl.knaw.dans.transfer.config.NbnRegistrationConfig;
 import nl.knaw.dans.transfer.config.TransferConfig;
 import nl.knaw.dans.transfer.core.FileService;
 
@@ -37,12 +36,10 @@ import java.util.stream.Stream;
 @Slf4j
 public class FileSystemPermissionHealthCheck extends HealthCheck {
     private final TransferConfig transferConfig;
-    private final NbnRegistrationConfig nbnRegistrationConfig;
     private final FileService fileService;
 
-    public FileSystemPermissionHealthCheck(TransferConfig transferConfig, NbnRegistrationConfig nbnRegistrationConfig, FileService fileService) {
+    public FileSystemPermissionHealthCheck(TransferConfig transferConfig, FileService fileService) {
         this.transferConfig = transferConfig;
-        this.nbnRegistrationConfig = nbnRegistrationConfig;
         this.fileService = fileService;
     }
 
@@ -59,10 +56,7 @@ public class FileSystemPermissionHealthCheck extends HealthCheck {
             transferConfig.getSendToVault().getOutbox().getProcessed(),
             transferConfig.getSendToVault().getOutbox().getFailed(),
             transferConfig.getSendToVault().getDataVault().getCurrentBatchWorkingDir(),
-            transferConfig.getSendToVault().getDataVault().getBatchRoot(),
-            nbnRegistrationConfig.getInbox().getPath(),
-            nbnRegistrationConfig.getOutbox().getProcessed(),
-            nbnRegistrationConfig.getOutbox().getFailed()
+            transferConfig.getSendToVault().getDataVault().getBatchRoot()
             // N.B. the transfer inboxes are on an NFS mount, so they are not on the same file system by design!!
         ).collect(Collectors.toSet());
 

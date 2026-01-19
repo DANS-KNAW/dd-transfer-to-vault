@@ -24,8 +24,6 @@ import nl.knaw.dans.lib.util.ClientProxyBuilder;
 import nl.knaw.dans.lib.util.PingHealthCheck;
 import nl.knaw.dans.lib.util.inbox.Inbox;
 import nl.knaw.dans.transfer.client.DataVaultClient;
-import nl.knaw.dans.transfer.client.GmhClient;
-import nl.knaw.dans.transfer.client.GmhClientImpl;
 import nl.knaw.dans.transfer.client.ValidateBagPackClient;
 import nl.knaw.dans.transfer.client.ValidateBagPackClientImpl;
 import nl.knaw.dans.transfer.client.VaultCatalogClient;
@@ -39,7 +37,6 @@ import nl.knaw.dans.transfer.core.DveMetadataReader;
 import nl.knaw.dans.transfer.core.ExtractMetadataTaskFactory;
 import nl.knaw.dans.transfer.core.FileService;
 import nl.knaw.dans.transfer.core.FileServiceImpl;
-import nl.knaw.dans.transfer.core.NbnRegistrationTaskFactory;
 import nl.knaw.dans.transfer.core.PropertiesFileFilter;
 import nl.knaw.dans.transfer.core.RemoveEmptyTargetDirsTask;
 import nl.knaw.dans.transfer.core.RemoveXmlFilesTask;
@@ -120,8 +117,6 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
                         .outboxProcessed(configuration.getTransfer().getExtractMetadata().getOutbox().getProcessed())
                         .outboxFailed(configuration.getTransfer().getExtractMetadata().getOutbox().getFailed())
                         .outboxRejected(configuration.getTransfer().getExtractMetadata().getOutbox().getRejected())
-                        .nbnRegistrationInbox(configuration.getNbnRegistration().getInbox().getPath())
-                        .vaultCatalogBaseUri(configuration.getNbnRegistration().getCatalogBaseUrl())
                         .fileService(fileService)
                         .dveMetadataReader(new DveMetadataReader(
                             fileService,
@@ -156,23 +151,8 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
                 .inboxItemComparator(CreationTimeComparator.getInstance())
                 .build());
 
-        environment.lifecycle().manage(
-            Inbox.builder()
-                .inbox(configuration.getNbnRegistration().getInbox().getPath())
-                .interval(Math.toIntExact(configuration.getNbnRegistration().getInbox().getPollingInterval().toMilliseconds()))
-                .executorService(environment.lifecycle().executorService("nbn-registration-inbox").maxThreads(1).minThreads(1).build())
-                .inboxItemComparator(CreationTimeComparator.getInstance())
-                .fileFilter(new PropertiesFileFilter())
-                .taskFactory(NbnRegistrationTaskFactory.builder()
-                    .gmhClient(createGmhClient(configuration))
-                    .outboxProcessed(configuration.getNbnRegistration().getOutbox().getProcessed())
-                    .outboxFailed(configuration.getNbnRegistration().getOutbox().getFailed())
-                    .build())
-                .build());
-
         environment.healthChecks().register("FileSystemPermissions", new FileSystemPermissionHealthCheck(
             configuration.getTransfer(),
-            configuration.getNbnRegistration(),
             fileService)
         );
 
@@ -218,15 +198,6 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
             .httpClient(configuration.getDataVault().getHttpClient())
             .defaultApiCtor(nl.knaw.dans.datavault.client.resources.DefaultApi::new)
             .build();
-    }
-
-    private GmhClient createGmhClient(DdTransferToVaultConfiguration configuration) {
-        return new GmhClientImpl(new ClientProxyBuilder<nl.knaw.dans.gmh.client.invoker.ApiClient, nl.knaw.dans.gmh.client.resources.UrnNbnIdentifierApi>()
-            .apiClient(new nl.knaw.dans.gmh.client.invoker.ApiClient().setBearerToken(configuration.getNbnRegistration().getGmh().getToken()))
-            .basePath(configuration.getNbnRegistration().getGmh().getUrl())
-            .httpClient(configuration.getNbnRegistration().getGmh().getHttpClient())
-            .defaultApiCtor(nl.knaw.dans.gmh.client.resources.UrnNbnIdentifierApi::new)
-            .build());
     }
 
     private nl.knaw.dans.validatebagpack.client.resources.DefaultApi createValidateBagPackProxy(DdTransferToVaultConfiguration configuration) {

@@ -19,7 +19,6 @@ import com.codahale.metrics.health.HealthCheck;
 import nl.knaw.dans.transfer.config.DataVaultBatchConfig;
 import nl.knaw.dans.transfer.config.ExtractMetadataConfig;
 import nl.knaw.dans.transfer.config.InboxConfig;
-import nl.knaw.dans.transfer.config.NbnRegistrationConfig;
 import nl.knaw.dans.transfer.config.OutboxConfig;
 import nl.knaw.dans.transfer.config.OutboxWithRejectedConfig;
 import nl.knaw.dans.transfer.config.SendToVaultConfig;
@@ -42,16 +41,14 @@ import static org.mockito.Mockito.when;
 class FileSystemPermissionHealthCheckTest {
 
     private TransferConfig transferConfig;
-    private NbnRegistrationConfig nbnRegistrationConfig;
     private FileService fileService;
     private FileSystemPermissionHealthCheck healthCheck;
 
     @BeforeEach
     void setUp() {
         transferConfig = mock(TransferConfig.class);
-        nbnRegistrationConfig = mock(NbnRegistrationConfig.class);
         fileService = mock(FileService.class);
-        healthCheck = new FileSystemPermissionHealthCheck(transferConfig, nbnRegistrationConfig, fileService);
+        healthCheck = new FileSystemPermissionHealthCheck(transferConfig, fileService);
 
         // Mock ExtractMetadataConfig
         ExtractMetadataConfig extractMetadataConfig = mock(ExtractMetadataConfig.class);
@@ -79,15 +76,6 @@ class FileSystemPermissionHealthCheckTest {
         when(sendToVaultConfig.getInbox()).thenReturn(svInbox);
         when(sendToVaultConfig.getOutbox()).thenReturn(svOutbox);
         when(transferConfig.getSendToVault()).thenReturn(sendToVaultConfig);
-
-        // Mock NbnRegistrationConfig
-        InboxConfig nbnInbox = mock(InboxConfig.class);
-        when(nbnInbox.getPath()).thenReturn(Path.of("/nbn/inbox"));
-        OutboxConfig nbnOutbox = mock(OutboxConfig.class);
-        when(nbnOutbox.getProcessed()).thenReturn(Path.of("/nbn/outbox/processed"));
-        when(nbnOutbox.getFailed()).thenReturn(Path.of("/nbn/outbox/failed"));
-        when(nbnRegistrationConfig.getInbox()).thenReturn(nbnInbox);
-        when(nbnRegistrationConfig.getOutbox()).thenReturn(nbnOutbox);
 
         // Mock CollectDveConfig
         nl.knaw.dans.transfer.config.CollectDveConfig collectDveConfig = mock(nl.knaw.dans.transfer.config.CollectDveConfig.class);
@@ -149,10 +137,7 @@ class FileSystemPermissionHealthCheckTest {
             Path.of("/sv/batch"),
             Path.of("/sv/inbox"),
             Path.of("/sv/outbox/processed"),
-            Path.of("/sv/outbox/failed"),
-            Path.of("/nbn/inbox"),
-            Path.of("/nbn/outbox/processed"),
-            Path.of("/nbn/outbox/failed")
+            Path.of("/sv/outbox/failed")
         );
 
         String expectedDetailKey = allPaths.stream().map(Path::toString).sorted().collect(java.util.stream.Collectors.joining(", "));
@@ -189,10 +174,7 @@ class FileSystemPermissionHealthCheckTest {
             Path.of("/sv/batch"),
             Path.of("/sv/inbox"),
             Path.of("/sv/outbox/processed"),
-            Path.of("/sv/outbox/failed"),
-            Path.of("/nbn/inbox"),
-            Path.of("/nbn/outbox/processed"),
-            Path.of("/nbn/outbox/failed")
+            Path.of("/sv/outbox/failed")
         );
         String expectedDetailKey = allPaths.stream().map(Path::toString).sorted().collect(java.util.stream.Collectors.joining(", "));
         assertTrue(result.getDetails().containsKey(expectedDetailKey));

@@ -81,25 +81,6 @@ transfer:
       packaging-format:
         value: DANS RDA BagPack Profile/1.0.0
 
-nbnRegistration:
-  catalogBaseUrl: https://catalog.vault.datastations.nl/dataset
-  inbox:
-    path: /var/opt/dans.knaw.nl/tmp/dd-transfer-to-vault/INSTANCE/nbn-registration/inbox
-    pollingInterval: 500ms
-  outbox:
-    processed: /var/opt/dans.knaw.nl/tmp/dd-transfer-to-vault/INSTANCE/nbn-registration/processed
-    failed: /var/opt/dans.knaw.nl/tmp/dd-transfer-to-vault/INSTANCE/nbn-registration/failed
-  gmh:
-    url: # Fill in a valid GMH server URL
-    token: # Fill in a valid token, generated via the token endpoint of the GMH server
-    httpClient:
-      timeout: 30s
-      connectionTimeout: 15s
-      timeToLive: 1h
-      retries: 2
-      # The GMH server does not handle GZIP compression
-      gzipEnabled: false
-      userAgent: dd-transfer-to-vault
 health:
   delayedShutdownHandlerEnabled: false
   healthChecks:
@@ -107,19 +88,10 @@ health:
       critical: true
     - name: VaultCatalog
       critical: true
-      initialState: false
-      schedule:
-        checkInterval: 60s
     - name: DataVault
       critical: true
-      initialState: false
-      schedule:
-        checkInterval: 60s
     - name: ValidateBagPack
       critical: true
-      initialState: false
-      schedule:
-        checkInterval: 60s
   initialOverallState: false
 
 #dependenciesReadyCheck:

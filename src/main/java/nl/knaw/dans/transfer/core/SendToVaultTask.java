@@ -109,7 +109,6 @@ public class SendToVaultTask implements Runnable {
         }
     }
 
-
     private void importIfBatchThresholdReached() throws IOException {
         if (sizeOfDirectory(this.currentBatchWorkDir.toFile()) > this.batchThreshold.toBytes()) {
             var batch = dataVaultBatchRoot.resolve("batch-" + System.currentTimeMillis());

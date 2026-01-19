@@ -32,10 +32,6 @@ public class DdTransferToVaultConfiguration extends Configuration {
 
     @Valid
     @NotNull
-    private NbnRegistrationConfig nbnRegistration;
-
-    @Valid
-    @NotNull
     private VaultCatalogConfig vaultCatalog;
 
     @Valid

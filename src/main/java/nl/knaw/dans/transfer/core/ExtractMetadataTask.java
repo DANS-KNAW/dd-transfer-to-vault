@@ -36,8 +36,6 @@ public class ExtractMetadataTask implements Runnable {
     private final Path outboxProcessed;
     private final Path outboxFailed;
     private final Path outboxRejected;
-    private final Path nbnRegistrationInbox;
-    private final URI vaultCatalogBaseUri;
     private final DveMetadataReader dveMetadataReader;
     private final FileService fileService;
     private final VaultCatalogClient vaultCatalogClient;
@@ -86,10 +84,7 @@ public class ExtractMetadataTask implements Runnable {
                     log.debug("Registering OCFL Object Version in Vault Catalog");
                     transferItem.setOcflObjectVersion(
                         vaultCatalogClient.registerOcflObjectVersion(ocflStorageRoot, dveMetadata, transferItem.getOcflObjectVersion()));
-                    if (transferItem.getOcflObjectVersion() == 1) {
-                        log.info("First version of dataset {}. Scheduling NBN registration", transferItem.getNbn());
-                        scheduleNbnRegistration(transferItem);
-                    }
+                    
                     log.debug("Moving DVE to processed outbox");
                     transferItem.moveToDir(outboxProcessed);
                 }
@@ -118,13 +113,13 @@ public class ExtractMetadataTask implements Runnable {
         catch (Exception e) {
             log.error("Error processing DVE files", e);
             try {
+                blockTarget();
                 if (transferItem != null) {
                     transferItem.moveToDir(outboxFailed, e);
                 }
                 else {
                     log.warn("Failed, but no transferItem was set!");
                 }
-                blockTarget();
             }
             catch (IOException ioe) {
                 log.error("Unable to block target directory", ioe);
@@ -132,16 +127,6 @@ public class ExtractMetadataTask implements Runnable {
         }
         finally {
             log.debug("Finished ExtractMetadataTask for {}", targetNbnDir);
-        }
-    }
-
-    private void scheduleNbnRegistration(TransferItem transferItem) {
-        try {
-            new RegistrationToken(transferItem.getNbn(), URI.create(vaultCatalogBaseUri + transferItem.getNbn()))
-                .save(nbnRegistrationInbox.resolve(transferItem.getNbn() + ".properties"));
-        }
-        catch (IOException e) {
-            throw new IllegalArgumentException("Unable to schedule NBN registration because NBN could not be retrieved", e);
         }
     }
 
