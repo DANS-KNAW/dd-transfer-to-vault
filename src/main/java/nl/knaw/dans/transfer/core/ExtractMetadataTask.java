@@ -29,17 +29,34 @@ import java.nio.file.StandardOpenOption;
 import java.util.List;
 
 @Slf4j
-@AllArgsConstructor
 public class ExtractMetadataTask implements Runnable {
     private final String ocflStorageRoot;
     private final Path targetNbnDir;
     private final Path outboxProcessed;
     private final Path outboxFailed;
     private final Path outboxRejected;
+    private final Path nbnRegistrationInbox;
+    private final URI vaultCatalogBaseUri;
     private final DveMetadataReader dveMetadataReader;
     private final FileService fileService;
     private final VaultCatalogClient vaultCatalogClient;
     private final ValidateBagPackClient validateBagPackClient;
+
+    public ExtractMetadataTask(String ocflStorageRoot, Path targetNbnDir, Path outboxProcessed, Path outboxFailed, Path outboxRejected,
+        Path nbnRegistrationInbox, URI vaultCatalogBaseUri, DveMetadataReader dveMetadataReader, FileService fileService,
+        VaultCatalogClient vaultCatalogClient, ValidateBagPackClient validateBagPackClient) {
+        this.ocflStorageRoot = ocflStorageRoot;
+        this.targetNbnDir = targetNbnDir;
+        this.outboxProcessed = outboxProcessed;
+        this.outboxFailed = outboxFailed;
+        this.outboxRejected = outboxRejected;
+        this.nbnRegistrationInbox = nbnRegistrationInbox;
+        this.vaultCatalogBaseUri = vaultCatalogBaseUri;
+        this.dveMetadataReader = dveMetadataReader;
+        this.fileService = fileService;
+        this.vaultCatalogClient = vaultCatalogClient;
+        this.validateBagPackClient = validateBagPackClient;
+    }
 
     @Override
     public void run() {

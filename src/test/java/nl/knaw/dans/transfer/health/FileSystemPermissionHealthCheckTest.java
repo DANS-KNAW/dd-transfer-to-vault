@@ -19,6 +19,7 @@ import com.codahale.metrics.health.HealthCheck;
 import nl.knaw.dans.transfer.config.DataVaultBatchConfig;
 import nl.knaw.dans.transfer.config.ExtractMetadataConfig;
 import nl.knaw.dans.transfer.config.InboxConfig;
+import nl.knaw.dans.transfer.config.NbnRegistrationConfig;
 import nl.knaw.dans.transfer.config.OutboxConfig;
 import nl.knaw.dans.transfer.config.OutboxWithRejectedConfig;
 import nl.knaw.dans.transfer.config.SendToVaultConfig;
@@ -29,7 +30,6 @@ import org.junit.jupiter.api.Test;
 
 import java.nio.file.Path;
 import java.util.Collection;
-import java.util.List;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -41,14 +41,21 @@ import static org.mockito.Mockito.when;
 class FileSystemPermissionHealthCheckTest {
 
     private TransferConfig transferConfig;
+    private NbnRegistrationConfig nbnRegistrationConfig;
     private FileService fileService;
     private FileSystemPermissionHealthCheck healthCheck;
 
     @BeforeEach
     void setUp() {
         transferConfig = mock(TransferConfig.class);
+        nbnRegistrationConfig = mock(NbnRegistrationConfig.class);
         fileService = mock(FileService.class);
-        healthCheck = new FileSystemPermissionHealthCheck(transferConfig, fileService);
+        healthCheck = new FileSystemPermissionHealthCheck(transferConfig, nbnRegistrationConfig, fileService);
+
+        // Mock NbnRegistrationConfig
+        InboxConfig nbnInbox = mock(InboxConfig.class);
+        when(nbnInbox.getPath()).thenReturn(Path.of("/nbn/inbox"));
+        when(nbnRegistrationConfig.getInbox()).thenReturn(nbnInbox);
 
         // Mock ExtractMetadataConfig
         ExtractMetadataConfig extractMetadataConfig = mock(ExtractMetadataConfig.class);

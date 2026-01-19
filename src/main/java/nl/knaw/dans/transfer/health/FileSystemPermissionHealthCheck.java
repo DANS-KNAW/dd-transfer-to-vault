@@ -18,6 +18,7 @@ package nl.knaw.dans.transfer.health;
 import com.codahale.metrics.health.HealthCheck;
 import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
+import nl.knaw.dans.transfer.config.NbnRegistrationConfig;
 import nl.knaw.dans.transfer.config.TransferConfig;
 import nl.knaw.dans.transfer.core.FileService;
 
@@ -36,10 +37,12 @@ import java.util.stream.Stream;
 @Slf4j
 public class FileSystemPermissionHealthCheck extends HealthCheck {
     private final TransferConfig transferConfig;
+    private final NbnRegistrationConfig nbnRegistrationConfig;
     private final FileService fileService;
 
-    public FileSystemPermissionHealthCheck(TransferConfig transferConfig, FileService fileService) {
+    public FileSystemPermissionHealthCheck(TransferConfig transferConfig, NbnRegistrationConfig nbnRegistrationConfig, FileService fileService) {
         this.transferConfig = transferConfig;
+        this.nbnRegistrationConfig = nbnRegistrationConfig;
         this.fileService = fileService;
     }
 
@@ -62,7 +65,8 @@ public class FileSystemPermissionHealthCheck extends HealthCheck {
 
         var accessibleDirectories = Sets.union(sameFileSystemPaths, Stream.of(
             transferConfig.getCollectDve().getInbox().getPath(),
-            transferConfig.getCollectDve().getProcessed()
+            transferConfig.getCollectDve().getProcessed(),
+            nbnRegistrationConfig.getInbox().getPath()
         ).collect(Collectors.toSet()));
 
         for (var path : accessibleDirectories) {

@@ -13,36 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package nl.knaw.dans.transfer.config;
 
-import io.dropwizard.core.Configuration;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import java.net.URI;
 
 @Data
-@EqualsAndHashCode(callSuper = true)
-public class DdTransferToVaultConfiguration extends Configuration {
-    @Valid
+public class NbnRegistrationConfig {
     @NotNull
-    private TransferConfig transfer;
+    @Valid
+    private InboxConfig inbox;
 
-    @Valid
     @NotNull
-    private VaultCatalogConfig vaultCatalog;
-
-    @Valid
-    @NotNull
-    private DataVaultConfig dataVault;
-
-    @Valid
-    @NotNull
-    private ValidateBagPackConfig validateBagPack;
-
-    @Valid
-    @NotNull
-    private NbnRegistrationConfig nbnRegistration;
+    private URI catalogBaseUrl;
 }

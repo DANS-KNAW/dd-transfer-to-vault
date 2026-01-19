@@ -35,6 +35,10 @@ public class ExtractMetadataTaskFactory implements InboxTaskFactory {
     @NonNull
     private final Path outboxRejected;
     @NonNull
+    private final Path nbnRegistrationInbox;
+    @NonNull
+    private final URI vaultCatalogBaseUri;
+    @NonNull
     private final DveMetadataReader dveMetadataReader;
     @NonNull
     private final FileService fileService;
@@ -45,7 +49,8 @@ public class ExtractMetadataTaskFactory implements InboxTaskFactory {
 
     @Override
     public Runnable createInboxTask(Path targetNbnDir) {
-        return new ExtractMetadataTask(ocflStorageRoot, targetNbnDir, outboxProcessed, outboxFailed, outboxRejected, dveMetadataReader, fileService,
+        return new ExtractMetadataTask(ocflStorageRoot, targetNbnDir, outboxProcessed, outboxFailed, outboxRejected,
+            nbnRegistrationInbox, vaultCatalogBaseUri, dveMetadataReader, fileService,
             vaultCatalogClient, validateBagPackClient);
     }
 }
