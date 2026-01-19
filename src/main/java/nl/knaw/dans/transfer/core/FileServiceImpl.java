@@ -144,6 +144,7 @@ public class FileServiceImpl implements FileService {
         if (!Files.exists(dir)) {
             Files.createDirectories(dir);
         }
+        fsyncDirectory(dir);
         // Wait for dir to be detected
         while (!Files.isDirectory(dir)) {
             try {

@@ -118,13 +118,13 @@ public class ExtractMetadataTask implements Runnable {
         catch (Exception e) {
             log.error("Error processing DVE files", e);
             try {
+                blockTarget();
                 if (transferItem != null) {
                     transferItem.moveToDir(outboxFailed, e);
                 }
                 else {
                     log.warn("Failed, but no transferItem was set!");
                 }
-                blockTarget();
             }
             catch (IOException ioe) {
                 log.error("Unable to block target directory", ioe);
