@@ -44,23 +44,20 @@ public class SendToVaultTaskTest extends TestDirFixture {
         String defaultMessage = "Default message with\nnewline";
         Map<String, CustomPropertyConfig> customProperties = new HashMap<>();
 
-        SendToVaultTask task = new SendToVaultTask(
+        var task = new SendToVaultTask(
             dve, currentBatchWorkDir, dataVaultBatchRoot, null, outboxProcessed, outboxFailed,
             dataVaultClient, defaultMessage, customProperties, fileService
         );
 
         Path versionDirectory = testDir.resolve("v1");
         Files.createDirectories(versionDirectory);
-        
+
         String user = "  John Doe \n  ";
         String email = "\tjohn@example.com\r\n";
         String message = "Message with = and : and \n newline";
 
         // When
-        // Using reflection to call private method for testing
-        var method = SendToVaultTask.class.getDeclaredMethod("createVersionInfoProperties", Path.class, String.class, String.class, String.class);
-        method.setAccessible(true);
-        method.invoke(task, versionDirectory, user, email, message);
+        task.createVersionInfoProperties(versionDirectory, user, email, message);
 
         // Then
         Path propertiesFile = testDir.resolve("v1.properties");
