@@ -22,6 +22,8 @@ git remote set-url origin ${REMOTE}
 
 pip install -r .github/workflows/mkdocs/requirements.txt
 
+./add-api-to-docs.sh
+
 echo "START deploying docs to GitHub pages..."
 mkdocs gh-deploy --force
 echo "DONE deploying docs to GitHub pages."
