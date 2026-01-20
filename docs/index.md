@@ -24,6 +24,11 @@ This service has the following interfaces:
 * _Internal or external_: **internal**
 * _Purpose_: to receive DVEs from the Data Stations and other services
 
+#### Command API
+* _Protocol type_: HTTP
+* _Internal or external_: **internal**
+* _Purpose_: to interact with the service programmatically
+
 #### Admin console
 
 * _Protocol type_: HTTP
