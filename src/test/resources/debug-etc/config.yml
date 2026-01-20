@@ -44,7 +44,7 @@ transfer:
       # Threads will die after 60 seconds of idleness
       keepAliveTime: 60 seconds
   nbnRegistration:
-    outbox: data/nbn-registration/inbox
+    outbox: data/dd-register-nbn/inbox
     catalogBaseUrl: https://resolver-ui.acc.kb.seecr.nl/gmh-registration-service
   sendToVault:
     inbox:

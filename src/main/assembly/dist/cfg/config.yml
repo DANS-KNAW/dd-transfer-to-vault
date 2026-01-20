@@ -50,7 +50,7 @@ transfer:
       # Threads will die after 60 seconds of idleness
       keepAliveTime: 60 seconds
   nbnRegistration:
-    outbox: /var/opt/dans.knaw.nl/tmp/nbn-registration/inbox
+    outbox: /var/opt/dans.knaw.nl/tmp/dd-register-nbn/inbox
     catalogBaseUrl: https://resolver-ui.acc.kb.seecr.nl/gmh-registration-service
   sendToVault:
     inbox:
