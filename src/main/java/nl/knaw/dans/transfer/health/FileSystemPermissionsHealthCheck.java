@@ -18,7 +18,6 @@ package nl.knaw.dans.transfer.health;
 import com.codahale.metrics.health.HealthCheck;
 import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
-import nl.knaw.dans.transfer.config.NbnRegistrationConfig;
 import nl.knaw.dans.transfer.config.TransferConfig;
 import nl.knaw.dans.transfer.core.FileService;
 
@@ -35,11 +34,11 @@ import java.util.stream.Stream;
  *
  */
 @Slf4j
-public class FileSystemPermissionHealthCheck extends HealthCheck {
+public class FileSystemPermissionsHealthCheck extends HealthCheck {
     private final TransferConfig transferConfig;
     private final FileService fileService;
 
-    public FileSystemPermissionHealthCheck(TransferConfig transferConfig, FileService fileService) {
+    public FileSystemPermissionsHealthCheck(TransferConfig transferConfig, FileService fileService) {
         this.transferConfig = transferConfig;
         this.fileService = fileService;
     }

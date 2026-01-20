@@ -22,6 +22,8 @@ import io.dropwizard.core.setup.Environment;
 import lombok.extern.slf4j.Slf4j;
 import nl.knaw.dans.lib.util.ClientProxyBuilder;
 import nl.knaw.dans.lib.util.PingHealthCheck;
+import nl.knaw.dans.lib.util.healthcheck.DependenciesReadyCheckConfig;
+import nl.knaw.dans.lib.util.healthcheck.HealthChecksDependenciesReadyCheck;
 import nl.knaw.dans.lib.util.inbox.Inbox;
 import nl.knaw.dans.transfer.client.DataVaultClient;
 import nl.knaw.dans.transfer.client.ValidateBagPackClient;
@@ -37,20 +39,21 @@ import nl.knaw.dans.transfer.core.DveMetadataReader;
 import nl.knaw.dans.transfer.core.ExtractMetadataTaskFactory;
 import nl.knaw.dans.transfer.core.FileService;
 import nl.knaw.dans.transfer.core.FileServiceImpl;
-import nl.knaw.dans.transfer.core.PropertiesFileFilter;
 import nl.knaw.dans.transfer.core.RemoveEmptyTargetDirsTask;
 import nl.knaw.dans.transfer.core.RemoveXmlFilesTask;
 import nl.knaw.dans.transfer.core.SendToVaultFlushTaskFactory;
 import nl.knaw.dans.transfer.core.SendToVaultTaskFactory;
 import nl.knaw.dans.transfer.core.SequencedTasks;
 import nl.knaw.dans.transfer.core.oaiore.OaiOreMetadataReader;
-import nl.knaw.dans.transfer.health.FileSystemPermissionHealthCheck;
+import nl.knaw.dans.transfer.health.FileSystemPermissionsHealthCheck;
+import nl.knaw.dans.transfer.health.HealthChecks;
 import nl.knaw.dans.transfer.resources.SendToVaultApiResource;
 import nl.knaw.dans.vaultcatalog.client.invoker.ApiClient;
 import nl.knaw.dans.vaultcatalog.client.resources.DefaultApi;
 import org.apache.commons.io.filefilter.FileFilterUtils;
 
-import java.util.Map;
+import java.util.HashSet;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 
@@ -73,6 +76,11 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
     @Override
     public void run(final DdTransferToVaultConfiguration configuration, final Environment environment) {
         FileService fileService = new FileServiceImpl();
+
+        checkReadyCheckConfig(configuration.getReadyCheck());
+        var healthCheckReadyCheck = new HealthChecksDependenciesReadyCheck(environment, configuration.getReadyCheck());
+        environment.lifecycle().manage(healthCheckReadyCheck);
+
         var dataVaultProxy = createDataVaultProxy(configuration);
         var sendToVaultExecutorService = Executors.newSingleThreadExecutor();
         var datavaultClient = new DataVaultClient(dataVaultProxy);
@@ -91,13 +99,16 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
                 .defaultMessage(configuration.getTransfer().getSendToVault().getDefaultMessage())
                 .customProperties(configuration.getTransfer().getSendToVault().getCustomProperties())
                 .fileService(fileService)
+                .readyCheck(healthCheckReadyCheck)
                 .build())
             .build());
 
         var sendToVaultFlushTaskFactory = SendToVaultFlushTaskFactory.builder()
             .currentBatchWorkDir(configuration.getTransfer().getSendToVault().getDataVault().getCurrentBatchWorkingDir())
             .dataVaultBatchRoot(configuration.getTransfer().getSendToVault().getDataVault().getBatchRoot())
-            .dataVaultClient(datavaultClient).build();
+            .dataVaultClient(datavaultClient)
+            .readyCheck(healthCheckReadyCheck)
+            .build();
         environment.jersey().register(new SendToVaultApiResource(sendToVaultExecutorService,
             sendToVaultFlushTaskFactory));
 
@@ -126,6 +137,7 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
                             new DataFileMetadataReader(fileService)))
                         .vaultCatalogClient(vaultCatalogClient)
                         .validateBagPackClient(validateBagPackClient)
+                        .readyCheck(healthCheckReadyCheck)
                         .build())
                 .inbox(configuration.getTransfer().getExtractMetadata().getInbox().getPath())
                 .executorService(configuration.getTransfer().getExtractMetadata().getTaskQueue().build(environment))
@@ -145,6 +157,7 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
                         .destinationRoot(configuration.getTransfer().getCollectDve().getProcessed())
                         .inboxPath(configuration.getTransfer().getCollectDve().getInbox().getPath())
                         .fileService(fileService)
+                        .readyCheck(healthCheckReadyCheck)
                         .build())
                 .inbox(configuration.getTransfer().getCollectDve().getInbox().getPath())
                 // N.B. this MUST be a single-threaded executor to prevent DVEs from out-racing each other via parallel processing, which would mess up the order of the DVEs.
@@ -153,32 +166,22 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
                 .inboxItemComparator(CreationTimeComparator.getInstance())
                 .build());
 
-        environment.healthChecks().register("FileSystemPermissions", new FileSystemPermissionHealthCheck(
+        environment.healthChecks().register(HealthChecks.FILESYSTEM_PERMISSIONS, new FileSystemPermissionsHealthCheck(
             configuration.getTransfer(),
             fileService)
         );
-
-        var healthCheckResult = environment.healthChecks()
-            .runHealthCheck("FileSystemPermissions");
-
-        log.info("Running health check 'FileSystemPermissions'");
-        if (!healthCheckResult.isHealthy()) {
-            throw new IllegalStateException("Health check 'FileSystemPermissions' failed: " + healthCheckResult.getMessage());
-        }
-        log.info("Health check 'FileSystemPermissions' passed");
-
-        environment.healthChecks().register("VaultCatalog", new PingHealthCheck(
-            "VaultCatalog",
+        environment.healthChecks().register(HealthChecks.VAULT_CATALOG, new PingHealthCheck(
+            HealthChecks.VAULT_CATALOG,
             vaultCatalogProxy.getApiClient().getHttpClient(),
             configuration.getVaultCatalog().getPingUrl())
         );
-        environment.healthChecks().register("DataVault", new PingHealthCheck(
-            "DataVault",
+        environment.healthChecks().register(HealthChecks.DATA_VAULT, new PingHealthCheck(
+            HealthChecks.DATA_VAULT,
             dataVaultProxy.getApiClient().getHttpClient(),
             configuration.getDataVault().getPingUrl())
         );
-        environment.healthChecks().register("ValidateBagPack", new PingHealthCheck(
-            "ValidateBagPack",
+        environment.healthChecks().register(HealthChecks.VALIDATE_BAG_PACK, new PingHealthCheck(
+            HealthChecks.VALIDATE_BAG_PACK,
             validateBagPackProxy.getApiClient().getHttpClient(),
             configuration.getValidateBagPack().getPingUrl())
         );
@@ -210,4 +213,13 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
             .defaultApiCtor(nl.knaw.dans.validatebagpack.client.resources.DefaultApi::new)
             .build();
     }
+
+    private void checkReadyCheckConfig(DependenciesReadyCheckConfig config) {
+        if (!new HashSet<>(config.getHealthChecks())
+            .containsAll(List.of(HealthChecks.FILESYSTEM_PERMISSIONS, HealthChecks.DATA_VAULT, HealthChecks.VAULT_CATALOG, HealthChecks.VALIDATE_BAG_PACK))) {
+            throw new IllegalArgumentException(String.format("Ready check configuration must include at least: %s",
+                List.of(HealthChecks.FILESYSTEM_PERMISSIONS, HealthChecks.DATA_VAULT, HealthChecks.VAULT_CATALOG, HealthChecks.VALIDATE_BAG_PACK)));
+        }
+    }
+
 }

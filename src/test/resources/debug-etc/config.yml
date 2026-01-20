@@ -93,12 +93,13 @@ health:
         checkInterval: 60s
   initialOverallState: false
 
-#dependenciesReadyCheck:
-#  healthChecks:
-#    - vaultCatalog
-#    - dataVault
-#    - validateBagPack
-#  pollInterval: 5s
+readyCheck:
+  healthChecks:
+    - FileSystemPermissions
+    - VaultCatalog
+    - DataVault
+    - ValidateBagPack
+  pollInterval: 5s
 
 vaultCatalog:
   url: http://dev.transfer.dans-data.nl:20305

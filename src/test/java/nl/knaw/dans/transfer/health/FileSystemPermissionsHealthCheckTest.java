@@ -38,17 +38,17 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-class FileSystemPermissionHealthCheckTest {
+class FileSystemPermissionsHealthCheckTest {
 
     private TransferConfig transferConfig;
     private FileService fileService;
-    private FileSystemPermissionHealthCheck healthCheck;
+    private FileSystemPermissionsHealthCheck healthCheck;
 
     @BeforeEach
     void setUp() {
         transferConfig = mock(TransferConfig.class);
         fileService = mock(FileService.class);
-        healthCheck = new FileSystemPermissionHealthCheck(transferConfig, fileService);
+        healthCheck = new FileSystemPermissionsHealthCheck(transferConfig, fileService);
 
         // Mock NbnRegistrationConfig
         NbnRegistrationConfig nbnRegistrationConfig = mock(NbnRegistrationConfig.class);

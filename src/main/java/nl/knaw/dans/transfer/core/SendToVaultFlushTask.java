@@ -17,7 +17,9 @@ package nl.knaw.dans.transfer.core;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import nl.knaw.dans.lib.util.healthcheck.DependenciesReadyCheck;
 import nl.knaw.dans.transfer.client.DataVaultClient;
+import nl.knaw.dans.transfer.health.HealthChecks;
 import org.apache.commons.io.FileUtils;
 
 import java.io.IOException;
@@ -30,9 +32,14 @@ public class SendToVaultFlushTask implements Runnable {
     private final Path currentBatchWorkDir;
     private final Path dataVaultBatchRoot;
     private final DataVaultClient dataVaultClient;
+    private final DependenciesReadyCheck readyCheck;
 
     @Override
     public void run() {
+        log.debug("Started SendToVaultFlushTask for {}", currentBatchWorkDir);
+        readyCheck.waitUntilReady(HealthChecks.FILESYSTEM_PERMISSIONS, HealthChecks.DATA_VAULT);
+        log.debug("Readycheck complete");
+
         if (isDirEmpty(currentBatchWorkDir)) {
             log.info("FLUSH: current batch is empty; nothing to do...");
         }
