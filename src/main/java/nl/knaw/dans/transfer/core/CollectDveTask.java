@@ -20,7 +20,9 @@ import com.jayway.jsonpath.PathNotFoundException;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import nl.knaw.dans.lib.util.healthcheck.DependenciesReadyCheck;
 import nl.knaw.dans.transfer.config.CollectDveConfig;
+import nl.knaw.dans.transfer.health.HealthChecks;
 
 import java.io.IOException;
 import java.nio.file.FileSystem;
@@ -48,9 +50,13 @@ public class CollectDveTask implements Runnable {
     private final Path destinationRoot;
     private final Path failedOutbox;
     private final FileService fileService;
+    private final DependenciesReadyCheck readyCheck;
 
     @Override
     public void run() {
+        log.debug("Started CollectDveTask for {}", dve);
+        readyCheck.waitUntilReady(HealthChecks.FILESYSTEM_PERMISSIONS);
+        log.debug("Readycheck complete");
         TransferItem transferItem = null;
         try {
             transferItem = new TransferItem(dve);

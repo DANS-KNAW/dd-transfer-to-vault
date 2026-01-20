@@ -15,6 +15,7 @@
  */
 package nl.knaw.dans.transfer.core;
 
+import nl.knaw.dans.lib.util.healthcheck.DependenciesReadyCheck;
 import nl.knaw.dans.transfer.TestDirFixture;
 import nl.knaw.dans.transfer.client.DataVaultClient;
 import nl.knaw.dans.transfer.config.CustomPropertyConfig;
@@ -41,12 +42,13 @@ public class SendToVaultTaskTest extends TestDirFixture {
         Path outboxFailed = testDir.resolve("failed");
         DataVaultClient dataVaultClient = Mockito.mock(DataVaultClient.class);
         FileService fileService = new FileServiceImpl();
+        DependenciesReadyCheck readyCheck = Mockito.mock(DependenciesReadyCheck.class);
         String defaultMessage = "Default message with\nnewline";
         Map<String, CustomPropertyConfig> customProperties = new HashMap<>();
 
         var task = new SendToVaultTask(
             dve, currentBatchWorkDir, dataVaultBatchRoot, null, outboxProcessed, outboxFailed,
-            dataVaultClient, defaultMessage, customProperties, fileService
+            dataVaultClient, defaultMessage, customProperties, fileService, readyCheck
         );
 
         Path versionDirectory = testDir.resolve("v1");

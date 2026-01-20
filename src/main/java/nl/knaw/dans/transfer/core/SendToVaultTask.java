@@ -16,13 +16,14 @@
 package nl.knaw.dans.transfer.core;
 
 import io.dropwizard.util.DataSize;
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import nl.knaw.dans.lib.util.ZipUtil;
+import nl.knaw.dans.lib.util.healthcheck.DependenciesReadyCheck;
 import nl.knaw.dans.transfer.client.DataVaultClient;
 import nl.knaw.dans.transfer.config.CustomPropertyConfig;
+import nl.knaw.dans.transfer.health.HealthChecks;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -48,11 +49,16 @@ public class SendToVaultTask implements Runnable {
     private final String defaultMessage;
     private final Map<String, CustomPropertyConfig> customProperties;
     private final FileService fileService;
+    private final DependenciesReadyCheck readyCheck;
 
     private TransferItem transferItem;
 
     @Override
     public void run() {
+        log.debug("Started SendToVaultTask for {}", dve);
+        readyCheck.waitUntilReady(HealthChecks.FILESYSTEM_PERMISSIONS, HealthChecks.DATA_VAULT);
+        log.debug("Readycheck complete");
+
         try {
             transferItem = new TransferItem(dve);
             addToObjectImportDirectory(dve, transferItem.getOcflObjectVersion(), this.currentBatchWorkDir.resolve(transferItem.getNbn()));

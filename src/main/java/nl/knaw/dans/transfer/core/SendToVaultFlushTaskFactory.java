@@ -16,17 +16,24 @@
 package nl.knaw.dans.transfer.core;
 
 import lombok.Builder;
+import lombok.NonNull;
+import nl.knaw.dans.lib.util.healthcheck.DependenciesReadyCheck;
 import nl.knaw.dans.transfer.client.DataVaultClient;
 
 import java.nio.file.Path;
 
 @Builder
 public class SendToVaultFlushTaskFactory {
+    @NonNull
     private final Path currentBatchWorkDir;
+    @NonNull
     private final Path dataVaultBatchRoot;
+    @NonNull
     private final DataVaultClient dataVaultClient;
+    @NonNull
+    private final DependenciesReadyCheck readyCheck;
 
     public Runnable create() {
-        return new SendToVaultFlushTask(currentBatchWorkDir, dataVaultBatchRoot, dataVaultClient);
+        return new SendToVaultFlushTask(currentBatchWorkDir, dataVaultBatchRoot, dataVaultClient, readyCheck);
     }
 }

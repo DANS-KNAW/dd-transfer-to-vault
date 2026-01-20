@@ -16,6 +16,7 @@
 
 package nl.knaw.dans.transfer.config;
 
+import nl.knaw.dans.lib.util.healthcheck.DependenciesReadyCheckConfig;
 import io.dropwizard.core.Configuration;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -41,4 +42,8 @@ public class DdTransferToVaultConfiguration extends Configuration {
     @Valid
     @NotNull
     private ValidateBagPackConfig validateBagPack;
+
+    @Valid
+    @NotNull
+    private DependenciesReadyCheckConfig readyCheck;
 }

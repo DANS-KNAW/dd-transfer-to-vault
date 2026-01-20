@@ -96,13 +96,6 @@ health:
       critical: true
   initialOverallState: false
 
-#dependenciesReadyCheck:
-#  healthChecks:
-#    - vaultCatalog
-#    - dataVault
-#    - validateBagPack
-#  pollInterval: 5s
-
 vaultCatalog:
   url: http://dev.transfer.dans-data.nl:20305
   pingUrl: http://dev.transfer.dans-data.nl:20306/ping
@@ -144,6 +137,15 @@ validateBagPack:
     timeToLive: 1h
     retries: 2
     userAgent: dd-transfer-to-vault
+
+readyCheck:
+  # Health checks to include in the ready check
+  healthChecks:
+    - FileSystemPermissions
+    - VaultCatalog
+    - DataVault
+    - ValidateBagPack
+  pollInterval: 5s
 
 #
 # See https://www.dropwizard.io/en/latest/manual/configuration.html#logging

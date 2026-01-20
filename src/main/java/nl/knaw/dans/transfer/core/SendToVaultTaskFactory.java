@@ -17,6 +17,8 @@ package nl.knaw.dans.transfer.core;
 
 import io.dropwizard.util.DataSize;
 import lombok.Builder;
+import lombok.NonNull;
+import nl.knaw.dans.lib.util.healthcheck.DependenciesReadyCheck;
 import nl.knaw.dans.lib.util.inbox.InboxTaskFactory;
 import nl.knaw.dans.transfer.client.DataVaultClient;
 import nl.knaw.dans.transfer.config.CustomPropertyConfig;
@@ -26,18 +28,29 @@ import java.util.Map;
 
 @Builder
 public class SendToVaultTaskFactory implements InboxTaskFactory {
+    @NonNull
     private final Path currentBatchWorkDir;
+    @NonNull
     private final Path dataVaultBatchRoot;
+    @NonNull
     private final DataSize batchThreshold;
+    @NonNull
     private final Path outboxProcessed;
+    @NonNull
     private final Path outboxFailed;
+    @NonNull
     private final DataVaultClient dataVaultClient;
+    @NonNull
     private final String defaultMessage;
+    @NonNull
     private final Map<String, CustomPropertyConfig> customProperties;
+    @NonNull
     private final FileService fileService;
+    @NonNull
+    private final DependenciesReadyCheck readyCheck;
 
     @Override
     public Runnable createInboxTask(Path path) {
-        return new SendToVaultTask(path, currentBatchWorkDir, dataVaultBatchRoot, batchThreshold, outboxProcessed, outboxFailed, dataVaultClient, defaultMessage, customProperties, fileService);
+        return new SendToVaultTask(path, currentBatchWorkDir, dataVaultBatchRoot, batchThreshold, outboxProcessed, outboxFailed, dataVaultClient, defaultMessage, customProperties, fileService, readyCheck);
     }
 }

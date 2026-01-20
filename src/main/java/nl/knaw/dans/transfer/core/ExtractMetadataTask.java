@@ -17,8 +17,10 @@ package nl.knaw.dans.transfer.core;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import nl.knaw.dans.lib.util.healthcheck.DependenciesReadyCheck;
 import nl.knaw.dans.transfer.client.ValidateBagPackClient;
 import nl.knaw.dans.transfer.client.VaultCatalogClient;
+import nl.knaw.dans.transfer.health.HealthChecks;
 
 import java.io.IOException;
 import java.net.URI;
@@ -42,9 +44,13 @@ public class ExtractMetadataTask implements Runnable {
     private final FileService fileService;
     private final VaultCatalogClient vaultCatalogClient;
     private final ValidateBagPackClient validateBagPackClient;
+    private final DependenciesReadyCheck readyCheck;
 
     @Override
     public void run() {
+        log.debug("Started ExtractMetadataTask for {}", targetNbnDir);
+        readyCheck.waitUntilReady(HealthChecks.FILESYSTEM_PERMISSIONS, HealthChecks.VALIDATE_BAG_PACK, HealthChecks.VAULT_CATALOG);
+        log.debug("Readycheck complete");
         log.debug("Started ExtractMetadataTask for {}", targetNbnDir);
         try {
             if (isBlocked()) {
