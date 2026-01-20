@@ -141,6 +141,7 @@ validateBagPack:
 readyCheck:
   # Health checks to include in the ready check
   healthChecks:
+    # More checks can potentially be included, but these first four are required. Removing one or more of them will result in a start-up failure.
     - FileSystemPermissions
     - VaultCatalog
     - DataVault
