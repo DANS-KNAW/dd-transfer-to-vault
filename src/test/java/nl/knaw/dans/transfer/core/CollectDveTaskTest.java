@@ -41,7 +41,7 @@ public class CollectDveTaskTest extends TestDirFixture {
         Files.createDirectories(failed);
 
         var dve = inbox.resolve("dve.zip");
-        Files.copy(Path.of("src/test/resources/test-dves/doi-10-5072-dar-zzjh97v1.1.zip"), dve);
+        Files.copy(Path.of("src/test/resources/test-dves/invalid/doi-10-5072-dar-zzjh97v1.1-type-must-be-uri.zip"), dve);
 
         var collectDveTask = new CollectDveTask(dve, dest, failed, fileService, readyCheck);
 
@@ -92,7 +92,7 @@ public class CollectDveTaskTest extends TestDirFixture {
         Files.createDirectories(dest);
 
         var dve = inbox.resolve("dve.zip");
-        Files.copy(Path.of("src/test/resources/test-dves/doi-10-5072-dar-zzjh97v1.1-no-oai-ore.zip"), dve);
+        Files.copy(Path.of("src/test/resources/test-dves/invalid/doi-10-5072-dar-zzjh97v1.1-no-oai-ore.zip"), dve);
 
         var collectDveTask = new CollectDveTask(dve, dest, inbox.resolve("failed"), fileService, readyCheck);
 
@@ -114,7 +114,7 @@ public class CollectDveTaskTest extends TestDirFixture {
         Files.createDirectories(dest);
 
         var dve = inbox.resolve("dve.zip");
-        Files.copy(Path.of("src/test/resources/test-dves/doi-10-5072-dar-zzjh97v1.1-no-nbn.zip"), dve);
+        Files.copy(Path.of("src/test/resources/test-dves/invalid/doi-10-5072-dar-zzjh97v1.1-no-nbn.zip"), dve);
 
         var collectDveTask = new CollectDveTask(dve, dest, inbox.resolve("failed"), fileService, readyCheck);
 

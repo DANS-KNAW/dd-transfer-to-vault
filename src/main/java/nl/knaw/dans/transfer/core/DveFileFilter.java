@@ -18,10 +18,16 @@ package nl.knaw.dans.transfer.core;
 import org.apache.commons.io.filefilter.AbstractFileFilter;
 
 import java.io.File;
+import java.nio.file.Path;
+import java.util.function.Predicate;
 
 public class DveFileFilter extends AbstractFileFilter {
     @Override
     public boolean accept(File file) {
         return file.isFile() && file.getName().endsWith(".zip");
+    }
+
+    public <T extends Path> Predicate<T> toPredicate() {
+        return p -> accept(p.toFile());
     }
 }

@@ -20,7 +20,7 @@ TEMPDIR=data
 TRANSFER_INBOX=$TEMPDIR/01_transfer-inbox
 EXTRACT_METADATA=$TEMPDIR/02_extract-metadata
 SEND_TO_VAULT=$TEMPDIR/03_send-to-vault
-NBN_REGISTRATION=$TEMPDIR/nbn-registration
+DD_REGISTER_NBN=$TEMPDIR/dd-register-nbn
 DATA_VAULT=$TEMPDIR/04_data-vault
 touch $TEMPDIR/dd-transfer-to-vault.log
 echo "OK"
@@ -30,9 +30,9 @@ mkdir -p $TRANSFER_INBOX/failed
 mkdir -p $EXTRACT_METADATA/inbox
 mkdir -p $EXTRACT_METADATA/outbox/rejected
 mkdir -p $EXTRACT_METADATA/outbox/failed
-mkdir -p $NBN_REGISTRATION/inbox
-mkdir -p $NBN_REGISTRATION/processed
-mkdir -p $NBN_REGISTRATION/failed
+mkdir -p $DD_REGISTER_NBN/inbox
+mkdir -p $DD_REGISTER_NBN/processed
+mkdir -p $DD_REGISTER_NBN/failed
 mkdir -p $SEND_TO_VAULT/inbox
 mkdir -p $SEND_TO_VAULT/work
 mkdir -p $SEND_TO_VAULT/outbox/failed

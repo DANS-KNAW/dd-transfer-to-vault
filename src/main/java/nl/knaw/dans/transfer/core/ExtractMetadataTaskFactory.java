@@ -52,7 +52,7 @@ public class ExtractMetadataTaskFactory implements InboxTaskFactory {
 
     @Override
     public Runnable createInboxTask(Path targetNbnDir) {
-        return new ExtractMetadataTask(ocflStorageRoot, targetNbnDir, outboxProcessed, outboxFailed, outboxRejected,
+        return new ExtractMetadataTask2(targetNbnDir, ocflStorageRoot, outboxProcessed, outboxFailed, outboxRejected,
             nbnRegistrationInbox, vaultCatalogBaseUri, dveMetadataReader, fileService,
             vaultCatalogClient, validateBagPackClient, readyCheck);
     }
