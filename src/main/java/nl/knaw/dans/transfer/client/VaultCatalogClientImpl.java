@@ -27,7 +27,6 @@ import nl.knaw.dans.vaultcatalog.client.resources.DefaultApi;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Comparator;
 
 @Slf4j
 @AllArgsConstructor
@@ -88,19 +87,20 @@ public class VaultCatalogClientImpl implements VaultCatalogClient {
         return path.subpath(1, path.getNameCount());
     }
 
-    private void updateExistingSkeletonVersionExport(DatasetDto datasetDto, DveMetadata dveMetadata, int OcflObjectVersion) throws ApiException {
+    private void updateExistingSkeletonVersionExport(DatasetDto datasetDto, DveMetadata dveMetadata, int ocflObjectVersion) throws ApiException {
         assert datasetDto.getVersionExports() != null;
         var dveDto = datasetDto.getVersionExports()
             .stream()
-            .max(Comparator.comparing(VersionExportDto::getOcflObjectVersionNumber))
-            .orElseThrow(() -> new IllegalArgumentException("No version export found for the dataset"));
+            .filter(dve -> dve.getOcflObjectVersionNumber() == ocflObjectVersion)
+            .findFirst()
+            .orElseThrow(() -> new IllegalArgumentException(datasetDto.getNbn() + " has no OCFL Object Version " + ocflObjectVersion + " in the Vault Catalog"));
 
         if (Boolean.FALSE.equals(dveDto.getSkeletonRecord())) {
             throw new IllegalArgumentException("The Dataset Version Export record cannot be updated because it is not a skeleton record.");
         }
         setVersionExportMetadata(dveMetadata, dveDto);
         setDataFilesOnVersionExport(dveMetadata, dveDto);
-        catalogApi.setVersionExport(dveDto.getDatasetNbn(), dveDto.getOcflObjectVersionNumber(), dveDto);
+        catalogApi.updateVersionExport(dveDto.getDatasetNbn(), dveDto.getOcflObjectVersionNumber(), dveDto);
     }
 
     private int addNewVersionExport(DatasetDto datasetDto, DveMetadata dveMetadata) throws ApiException {
@@ -111,7 +111,7 @@ public class VaultCatalogClientImpl implements VaultCatalogClient {
         setVersionExportMetadata(dveMetadata, dveDto);
         setDataFilesOnVersionExport(dveMetadata, dveDto);
         datasetDto.addVersionExportsItem(dveDto);
-        catalogApi.setVersionExport(datasetDto.getNbn(), dveDto.getOcflObjectVersionNumber(), dveDto);
+        catalogApi.addVersionExport(datasetDto.getNbn(), dveDto);
         return ocflObjectVersion;
     }
 

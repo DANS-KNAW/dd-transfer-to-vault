@@ -15,6 +15,7 @@
  */
 package nl.knaw.dans.transfer.config;
 
+import io.dropwizard.util.Duration;
 import lombok.Data;
 import nl.knaw.dans.lib.util.ExecutorServiceFactory;
 
@@ -34,4 +35,7 @@ public class ExtractMetadataConfig {
     @Valid
     @NotNull
     private ExecutorServiceFactory taskQueue;
+
+    @NotNull
+    private Duration delayBetweenProcessingRounds = Duration.seconds(2);
 }

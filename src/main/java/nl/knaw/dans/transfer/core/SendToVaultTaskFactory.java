@@ -48,9 +48,10 @@ public class SendToVaultTaskFactory implements InboxTaskFactory {
     private final FileService fileService;
     @NonNull
     private final DependenciesReadyCheck readyCheck;
+    private final long delayBetweenProcessingRounds;
 
     @Override
     public Runnable createInboxTask(Path path) {
-        return new SendToVaultTask(path, currentBatchWorkDir, dataVaultBatchRoot, batchThreshold, outboxProcessed, outboxFailed, dataVaultClient, defaultMessage, customProperties, fileService, readyCheck);
+        return new SendToVaultTask(path, currentBatchWorkDir, dataVaultBatchRoot, batchThreshold, outboxProcessed, outboxFailed, dataVaultClient, defaultMessage, customProperties, fileService, readyCheck, delayBetweenProcessingRounds);
     }
 }

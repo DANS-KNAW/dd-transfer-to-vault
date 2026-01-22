@@ -34,6 +34,8 @@ transfer:
       processed: data/03_send-to-vault/inbox
       failed: data/02_extract-metadata/outbox/failed
       rejected: data/02_extract-metadata/outbox/rejected
+    # The delay between two rounds of processing the source directory of a DVE.
+    delayBetweenProcessingRounds: 2s
     taskQueue:
       nameFormat: "extract-metadata-worker-%d"
       maxQueueSize: 5000

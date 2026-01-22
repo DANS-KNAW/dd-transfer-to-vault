@@ -86,7 +86,7 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
         var datavaultClient = new DataVaultClient(dataVaultProxy);
         environment.lifecycle().manage(Inbox.builder()
             .executorService(sendToVaultExecutorService)
-            .fileFilter(new DveFileFilter())
+            .fileFilter(FileFilterUtils.directoryFileFilter())
             .inbox(configuration.getTransfer().getSendToVault().getInbox().getPath())
             .interval(Math.toIntExact(configuration.getTransfer().getSendToVault().getInbox().getPollingInterval().toMilliseconds()))
             .taskFactory(SendToVaultTaskFactory.builder()
@@ -100,6 +100,7 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
                 .customProperties(configuration.getTransfer().getSendToVault().getCustomProperties())
                 .fileService(fileService)
                 .readyCheck(healthCheckReadyCheck)
+                .delayBetweenProcessingRounds(configuration.getTransfer().getSendToVault().getDelayBetweenProcessingRounds().toMilliseconds())
                 .build())
             .build());
 
@@ -120,7 +121,9 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
         CountDownLatch startCollectInbox = new CountDownLatch(1);
         environment.lifecycle().manage(
             Inbox.builder()
-                .onPollingHandler(new ReleaseLatch(startCollectInbox))
+                .onPollingHandler(new SequencedTasks(
+                    new ReleaseLatch(startCollectInbox),
+                    new RemoveEmptyTargetDirsTask(configuration.getTransfer().getExtractMetadata().getOutbox().getProcessed())))
                 .fileFilter(FileFilterUtils.directoryFileFilter())
                 .taskFactory(
                     ExtractMetadataTaskFactory.builder()
@@ -138,6 +141,7 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
                         .vaultCatalogClient(vaultCatalogClient)
                         .validateBagPackClient(validateBagPackClient)
                         .readyCheck(healthCheckReadyCheck)
+                        .delayBetweenProcessingRounds(configuration.getTransfer().getExtractMetadata().getDelayBetweenProcessingRounds().toMilliseconds())
                         .build())
                 .inbox(configuration.getTransfer().getExtractMetadata().getInbox().getPath())
                 .executorService(configuration.getTransfer().getExtractMetadata().getTaskQueue().build(environment))
