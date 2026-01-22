@@ -62,7 +62,7 @@ public class ExtractMetadataTask extends SourceDirItemProcessor implements Runna
 
     @Override
     public void run() {
-        log.debug("Started ExtractMetadataTask2 for {}", targetNbnDir);
+        log.debug("Started ExtractMetadataTask for {}", targetNbnDir);
         readyCheck.waitUntilReady(HealthChecks.FILESYSTEM_PERMISSIONS, HealthChecks.VALIDATE_BAG_PACK, HealthChecks.VAULT_CATALOG);
         log.debug("Readycheck complete");
 
