@@ -39,7 +39,7 @@ public abstract class SourceDirItemProcessor {
     private final Predicate<Path> filter;
     private final Comparator<Path> comparator;
 
-    private final FileService fileService;
+    protected final FileService fileService;
 
     private final long delayBetweenProcessingRounds;
 

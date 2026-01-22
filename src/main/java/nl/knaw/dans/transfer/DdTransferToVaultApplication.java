@@ -100,6 +100,7 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
                 .customProperties(configuration.getTransfer().getSendToVault().getCustomProperties())
                 .fileService(fileService)
                 .readyCheck(healthCheckReadyCheck)
+                .delayBetweenProcessingRounds(configuration.getTransfer().getSendToVault().getDelayBetweenProcessingRounds().toMilliseconds())
                 .build())
             .build());
 

@@ -15,6 +15,7 @@
  */
 package nl.knaw.dans.transfer.config;
 
+import io.dropwizard.util.Duration;
 import lombok.Data;
 
 import javax.validation.Valid;
@@ -40,5 +41,8 @@ public class SendToVaultConfig {
 
     @Valid
     private Map<String, CustomPropertyConfig> customProperties;
+
+    @NotNull
+    private Duration delayBetweenProcessingRounds = Duration.seconds(2);
 
 }

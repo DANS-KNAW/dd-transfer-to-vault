@@ -36,10 +36,9 @@ import static org.apache.commons.io.FileUtils.sizeOfDirectory;
 
 @Slf4j
 @ToString
-@RequiredArgsConstructor
-public class SendToVaultTask implements Runnable {
+public class SendToVaultTask extends SourceDirItemProcessor implements Runnable {
     public static final String NEWLINE_TAB_REGEX = "[\\n\\t\\r]";
-    private final Path dve;
+    private final Path targetNbnDir;
     private final Path currentBatchWorkDir;
     private final Path dataVaultBatchRoot;
     private final DataSize batchThreshold;
@@ -51,30 +50,59 @@ public class SendToVaultTask implements Runnable {
     private final FileService fileService;
     private final DependenciesReadyCheck readyCheck;
 
-    private TransferItem transferItem;
+    private TransferItem currentTransferItem;
+
+    public SendToVaultTask(Path srcDir, Path currentBatchWorkDir, Path dataVaultBatchRoot, DataSize batchThreshold, Path outboxProcessed, Path outboxFailed,
+        DataVaultClient dataVaultClient, String defaultMessage, Map<String, CustomPropertyConfig> customProperties, FileService fileService, DependenciesReadyCheck readyCheck,
+        long delayBetweenProcessingRounds) {
+        super(srcDir, "DVE", new DveFileFilter().toPredicate(), CreationTimeComparator.getInstance(), fileService, delayBetweenProcessingRounds);
+        this.targetNbnDir = srcDir;
+        this.currentBatchWorkDir = currentBatchWorkDir;
+        this.dataVaultBatchRoot = dataVaultBatchRoot;
+        this.batchThreshold = batchThreshold;
+        this.outboxProcessed = outboxProcessed;
+        this.outboxFailed = outboxFailed;
+        this.dataVaultClient = dataVaultClient;
+        this.defaultMessage = defaultMessage;
+        this.customProperties = customProperties;
+        this.fileService = fileService;
+        this.readyCheck = readyCheck;
+    }
 
     @Override
     public void run() {
-        log.debug("Started SendToVaultTask for {}", dve);
+        log.debug("Started SendToVaultTask for {}", targetNbnDir);
         readyCheck.waitUntilReady(HealthChecks.FILESYSTEM_PERMISSIONS, HealthChecks.DATA_VAULT);
         log.debug("Readycheck complete");
 
-        try {
-            transferItem = new TransferItem(dve);
-            addToObjectImportDirectory(dve, transferItem.getOcflObjectVersion(), this.currentBatchWorkDir.resolve(transferItem.getNbn()));
-            log.info("Added {} to current batch", dve.getFileName());
-            importIfBatchThresholdReached();
-            transferItem.moveToDir(outboxProcessed);
-        }
-        catch (Exception e) {
-            log.error("Failed to process DVE {}: {}", dve, e.getMessage());
-            if (transferItem != null) {
-                try {
-                    transferItem.moveToDir(outboxFailed, e);
-                }
-                catch (IOException ioException) {
-                    log.error("Unable to move file to outbox failed", ioException);
-                }
+        processUntilRemoved();
+    }
+
+    @Override
+    protected void processItem(Path item) throws IOException {
+        log.debug("Processing DVE {}", item);
+        currentTransferItem = new TransferItem(item);
+        addToObjectImportDirectory(item, currentTransferItem.getOcflObjectVersion(), this.currentBatchWorkDir.resolve(currentTransferItem.getNbn()));
+        log.info("Added {} to current batch", item.getFileName());
+        importIfBatchThresholdReached();
+        currentTransferItem.moveToDir(outboxProcessed);
+    }
+
+    @Override
+    protected void rejectCurrentItem(IllegalArgumentException e) {
+        // There is no validation step for SendToVaultTask, so any exception is considered a failure.
+        failCurrentItem(e);
+    }
+
+    @Override
+    protected void failCurrentItem(Exception e) {
+        log.error("Failed to process item: {}", e.getMessage());
+        if (currentTransferItem != null) {
+            try {
+                currentTransferItem.moveToDir(outboxFailed, e);
+            }
+            catch (IOException ioException) {
+                log.error("Unable to move file to outbox failed", ioException);
             }
         }
     }
@@ -84,7 +112,7 @@ public class SendToVaultTask implements Runnable {
         var versionDirectory = objectImportDirectory.resolve("v" + ocflObjectVersionNumber);
         log.debug("Extracting DVE {} to {}", dvePath, versionDirectory);
         ZipUtil.extractZipFile(dvePath, versionDirectory);
-        createVersionInfoProperties(versionDirectory, transferItem.getContactName(), transferItem.getContactEmail(), defaultMessage);
+        createVersionInfoProperties(versionDirectory, currentTransferItem.getContactName(), currentTransferItem.getContactEmail(), defaultMessage);
     }
 
     void createVersionInfoProperties(Path versionDirectory, String user, String email, String message) throws IOException {
@@ -100,7 +128,7 @@ public class SendToVaultTask implements Runnable {
             for (var entry : customProperties.entrySet()) {
                 var name = entry.getKey();
                 var config = entry.getValue();
-                var value = config.getValue(transferItem);
+                var value = config.getValue(currentTransferItem);
 
                 value.ifPresent(v -> {
                     if (!v.isBlank()) {

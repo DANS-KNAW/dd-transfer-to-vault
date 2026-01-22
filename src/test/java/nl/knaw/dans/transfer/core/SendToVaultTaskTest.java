@@ -48,7 +48,7 @@ public class SendToVaultTaskTest extends TestDirFixture {
 
         var task = new SendToVaultTask(
             dve, currentBatchWorkDir, dataVaultBatchRoot, null, outboxProcessed, outboxFailed,
-            dataVaultClient, defaultMessage, customProperties, fileService, readyCheck
+            dataVaultClient, defaultMessage, customProperties, fileService, readyCheck, 100
         );
 
         Path versionDirectory = testDir.resolve("v1");

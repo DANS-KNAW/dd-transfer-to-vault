@@ -100,7 +100,9 @@ public class ExtractMetadataTask extends SourceDirItemProcessor implements Runna
         }
 
         log.debug("Moving DVE to processed outbox");
-        currentTransferItem.moveToDir(outboxProcessed);
+        var targetDir = fileService.findOrCreateTargetDir(currentTransferItem.getNbn(), outboxProcessed);
+        fileService.ensureDirectoryExists(targetDir);
+        currentTransferItem.moveToDir(targetDir);
 
         try {
             log.debug("Taking a short nap before resuming work");
