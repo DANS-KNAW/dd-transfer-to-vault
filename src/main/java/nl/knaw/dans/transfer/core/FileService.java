@@ -105,12 +105,12 @@ public interface FileService {
     void ensureDirectoryExists(Path dir) throws IOException;
 
     /**
-     * Finds an existing target directory for the given NBN in the destination root. The target directory name consists of
-     * the NBN followed by a random string of 6 uppercase letters.
+     * Finds an existing target directory for the given NBN in the destination root, or creates a new one if none exists.
+     * The target directory name consists of the NBN followed by a random string of 6 uppercase letters.
      *
      * @param targetNbn the NBN to search for
      * @param destinationRoot the root directory to search in
-     * @return the existing target directory, or null if none is found
+     * @return the existing or newly created target directory
      */
     Path findOrCreateTargetDir(String targetNbn, Path destinationRoot);
 }
