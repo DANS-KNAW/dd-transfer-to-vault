@@ -155,4 +155,34 @@ public class FileServiceImpl implements FileService {
             }
         }
     }
+
+    @Override
+    public Path findOrCreateTargetDir(String targetNbn, Path destinationRoot) {
+        try (var stream = Files.list(destinationRoot)) {
+            var existingDir = stream.filter(Files::isDirectory)
+                .filter(path -> path.getFileName().toString().startsWith(targetNbn))
+                .findFirst()
+                .orElse(null);
+            if (existingDir != null) {
+                return existingDir;
+            }
+
+            var newDir = destinationRoot.resolve(targetNbn + "-" + generateRandomString(6, "ABCDEFGHIJKLMNOPQRSTUVWXYZ"));
+            Files.createDirectories(newDir);
+            fsyncDirectory(newDir);
+            return newDir;
+        }
+        catch (IOException e) {
+            throw new IllegalStateException("Unable to list directories in destination root: " + destinationRoot, e);
+        }
+    }
+
+    private String generateRandomString(int length, String alphabet) {
+        StringBuilder sb = new StringBuilder(length);
+        for (int i = 0; i < length; i++) {
+            int randomIndex = (int) (Math.random() * alphabet.length());
+            sb.append(alphabet.charAt(randomIndex));
+        }
+        return sb.toString();
+    }
 }

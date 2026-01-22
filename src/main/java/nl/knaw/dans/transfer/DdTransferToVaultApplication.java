@@ -86,7 +86,7 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
         var datavaultClient = new DataVaultClient(dataVaultProxy);
         environment.lifecycle().manage(Inbox.builder()
             .executorService(sendToVaultExecutorService)
-            .fileFilter(new DveFileFilter())
+            .fileFilter(FileFilterUtils.directoryFileFilter())
             .inbox(configuration.getTransfer().getSendToVault().getInbox().getPath())
             .interval(Math.toIntExact(configuration.getTransfer().getSendToVault().getInbox().getPollingInterval().toMilliseconds()))
             .taskFactory(SendToVaultTaskFactory.builder()
@@ -120,7 +120,9 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
         CountDownLatch startCollectInbox = new CountDownLatch(1);
         environment.lifecycle().manage(
             Inbox.builder()
-                .onPollingHandler(new ReleaseLatch(startCollectInbox))
+                .onPollingHandler(new SequencedTasks(
+                    new ReleaseLatch(startCollectInbox),
+                    new RemoveEmptyTargetDirsTask(configuration.getTransfer().getExtractMetadata().getOutbox().getProcessed())))
                 .fileFilter(FileFilterUtils.directoryFileFilter())
                 .taskFactory(
                     ExtractMetadataTaskFactory.builder()
