@@ -40,6 +40,8 @@ transfer:
       failed: /var/opt/dans.knaw.nl/tmp/dd-transfer-to-vault/INSTANCE/metadata-extraction/failed
       # DVEs that do not comply with the BagPack requirements will be moved to the rejected directory.
       rejected: /var/opt/dans.knaw.nl/tmp/dd-transfer-to-vault/INSTANCE/metadata-extraction/rejected
+    # The delay between two rounds of processing the source directory of a DVE.
+    delayBetweenProcessingRounds: 2s
     taskQueue:
       nameFormat: "extract-metadata-worker-%d"
       maxQueueSize: 5000

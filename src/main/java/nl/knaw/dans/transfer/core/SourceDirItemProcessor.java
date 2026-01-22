@@ -40,7 +40,8 @@ public abstract class SourceDirItemProcessor {
     private final Comparator<Path> comparator;
 
     private final FileService fileService;
-    //private long delayBetweenItems;
+
+    private final long delayBetweenProcessingRounds;
 
     public void processUntilRemoved() {
         try {
@@ -55,6 +56,9 @@ public abstract class SourceDirItemProcessor {
                 for (var item : items) {
                     processItem(item);
                 }
+
+                Thread.sleep(delayBetweenProcessingRounds);
+
                 items = getItems();
             }
         }

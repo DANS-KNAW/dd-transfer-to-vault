@@ -138,6 +138,7 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
                         .vaultCatalogClient(vaultCatalogClient)
                         .validateBagPackClient(validateBagPackClient)
                         .readyCheck(healthCheckReadyCheck)
+                        .delayBetweenProcessingRounds(configuration.getTransfer().getExtractMetadata().getDelayBetweenProcessingRounds().toMilliseconds())
                         .build())
                 .inbox(configuration.getTransfer().getExtractMetadata().getInbox().getPath())
                 .executorService(configuration.getTransfer().getExtractMetadata().getTaskQueue().build(environment))
