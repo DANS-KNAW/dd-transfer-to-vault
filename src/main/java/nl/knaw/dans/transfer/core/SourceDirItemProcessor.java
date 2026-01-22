@@ -83,7 +83,7 @@ public abstract class SourceDirItemProcessor {
             }
         }
         finally {
-            log.debug("Finished ExtractMetadataTask2 for {}", srcDir);
+            log.debug("Finished processing {}s in {}", itemType, srcDir);
         }
     }
 
