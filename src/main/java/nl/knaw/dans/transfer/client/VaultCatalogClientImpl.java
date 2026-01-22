@@ -100,7 +100,7 @@ public class VaultCatalogClientImpl implements VaultCatalogClient {
         }
         setVersionExportMetadata(dveMetadata, dveDto);
         setDataFilesOnVersionExport(dveMetadata, dveDto);
-        catalogApi.updateVersionExport(dveDto.getDatasetNbn(), ocflObjectVersion, dveDto);
+        catalogApi.updateVersionExport(dveDto.getDatasetNbn(), dveDto.getOcflObjectVersionNumber(), dveDto);
     }
 
     private int addNewVersionExport(DatasetDto datasetDto, DveMetadata dveMetadata) throws ApiException {
