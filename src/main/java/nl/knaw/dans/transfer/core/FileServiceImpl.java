@@ -94,7 +94,9 @@ public class FileServiceImpl implements FileService {
         if (isSameFileSystem(List.of(oldLocation, newLocation.getParent()))) {
             Files.move(oldLocation, newLocation, StandardCopyOption.ATOMIC_MOVE);
             // Ensure durability and visibility
-            fsyncFile(newLocation);
+            if (Files.isRegularFile(newLocation)) {
+                fsyncFile(newLocation);
+            }
             fsyncDirectory(newLocation.getParent());
             if (!oldLocation.getParent().equals(newLocation.getParent())) {
                 fsyncDirectory(oldLocation.getParent());
@@ -324,22 +326,26 @@ public class FileServiceImpl implements FileService {
     @Override
     public void moveToTargetFor(Path dve, Path outbox, String targetNbn, boolean addTimestampToFileName) {
         var existingDir = findExistingTargetDir(targetNbn, outbox);
+        String fileName = addTimestampToFileName
+            ? new DveFileName(dve)
+            .withCreationTime(getCreationTimeFromFilesystem(dve))
+            .getFileName()
+            : dve.getFileName().toString();
+
         try {
             if (existingDir != null) {
                 move(dve, existingDir.resolve(
-                    findFreeName(existingDir,
-                        new DveFileName(dve)
-                            .withCreationTime(getCreationTimeFromFilesystem(dve))
-                            .getPath())));
+                    findFreeName(existingDir, outbox.resolve(fileName))));
             }
             else {
-                createAndMoveSafe(dve, outbox.resolve(targetNbn + "-" + generateRandomString(6, "ABCDEFGHIJKLMNOPQRSTUVWXYZ")));
+                createAndMoveSafe(dve,
+                    outbox.resolve(targetNbn + "-" + generateRandomString(6, "ABCDEFGHIJKLMNOPQRSTUVWXYZ")), fileName);
             }
         }
         catch (NoSuchFileException e) {
             log.debug("Existing directory for target NBN was deleted: {}, creating new directory", targetNbn);
             var newDir = outbox.resolve(targetNbn + "-" + generateRandomString(6, "ABCDEFGHIJKLMNOPQRSTUVWXYZ"));
-            createAndMoveSafe(dve, newDir);
+            createAndMoveSafe(dve, newDir, fileName);
         }
         catch (IOException e) {
             throw new IllegalStateException("Unable to move file to existing directory: " + existingDir, e);
@@ -357,13 +363,13 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
-    public Path findFreeName(Path targetDir, Path dve) {
+    public String findFreeName(Path targetDir, Path dve) {
         var dveFileName = new DveFileName(targetDir.resolve(dve.getFileName()));
         int sequenceNumber = 1;
         while (exists(dveFileName.getPath())) {
             dveFileName = dveFileName.withIndex(sequenceNumber++);
         }
-        return dveFileName.getPath();
+        return dveFileName.getPath().getFileName().toString();
     }
 
     /**
@@ -372,11 +378,11 @@ public class FileServiceImpl implements FileService {
      * @param file   the file to move
      * @param outdir the directory to create
      */
-    private void createAndMoveSafe(Path file, Path outdir) {
+    private void createAndMoveSafe(Path file, Path outdir, String fileName) {
         try {
             var tmpOutDir = outdir.resolveSibling(outdir.getFileName() + ".tmp");
             createDirectory(tmpOutDir);
-            move(file, tmpOutDir);
+            move(file, tmpOutDir.resolve(fileName));
             move(tmpOutDir, outdir);
         }
         catch (IOException e) {

@@ -230,5 +230,5 @@ public interface FileService {
 
     void moveToTargetFor(Path dve, Path outbox, String targetNbn, boolean addTimestampToFileName);
 
-    Path findFreeName(Path targetDir, Path dve);
+    String findFreeName(Path targetDir, Path dve);
 }

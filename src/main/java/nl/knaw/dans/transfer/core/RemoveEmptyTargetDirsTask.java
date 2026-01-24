@@ -33,7 +33,7 @@ public class RemoveEmptyTargetDirsTask implements Runnable {
             stream
                 .filter(fileService::isDirectory)
                 // Skip temporary directories, to prevent deletion before the producer can move the first item to them.
-                .filter(p -> !p.getFileName().endsWith(".tmp"))
+                .filter(p -> !p.getFileName().toString().endsWith(".tmp"))
                 .forEach(this::deleteIfEmpty);
         }
         catch (Exception e) {

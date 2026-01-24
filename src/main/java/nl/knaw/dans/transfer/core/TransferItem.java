@@ -91,7 +91,7 @@ public class TransferItem {
 
     public void moveToDir(Path dir) throws IOException {
         var freeName = fileService.findFreeName(dir, dve);
-        fileService.move(dve, freeName);
+        fileService.move(dve, dir.resolve(freeName));
     }
 
     public void moveToErrorBox(Path dir, Exception e) throws IOException {
