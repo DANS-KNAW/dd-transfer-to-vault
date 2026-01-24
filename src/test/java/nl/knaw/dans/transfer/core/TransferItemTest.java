@@ -33,6 +33,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 public class TransferItemTest extends TestDirFixture {
+    private final FileService fileService = new FileServiceImpl();
 
     @Test
     public void getOcflObjectVersion_should_parse_from_name_or_return_zero() {
@@ -41,8 +42,8 @@ public class TransferItemTest extends TestDirFixture {
         var withoutVersion = Path.of("dataset_1710000000000.zip");
 
         // When
-        var itemWithVersion = new TransferItem(withVersion);
-        var itemWithoutVersion = new TransferItem(withoutVersion);
+        var itemWithVersion = new TransferItem(withVersion, fileService);
+        var itemWithoutVersion = new TransferItem(withoutVersion, fileService);
 
         // Then
         assertThat(itemWithVersion.getOcflObjectVersion()).isEqualTo(3);
@@ -61,7 +62,7 @@ public class TransferItemTest extends TestDirFixture {
         var dve = sourceDir.resolve("dataset.zip");
         Files.writeString(dve, "dummy");
 
-        var item = new TransferItem(dve);
+        var item = new TransferItem(dve, fileService);
 
         // Capture filesystem creation time before the move
         var millis = Files.readAttributes(dve, java.nio.file.attribute.BasicFileAttributes.class)
@@ -99,7 +100,7 @@ public class TransferItemTest extends TestDirFixture {
         var existing = targetDir.resolve(timestampedName);
         Files.writeString(existing, "existing");
 
-        var item = new TransferItem(dve);
+        var item = new TransferItem(dve, fileService);
 
         // When
         item.moveToDir(targetDir);
@@ -133,7 +134,7 @@ public class TransferItemTest extends TestDirFixture {
             .getPath();
         Files.move(initial, withCtimePath);
 
-        var item = new TransferItem(withCtimePath);
+        var item = new TransferItem(withCtimePath, fileService);
 
         // When
         item.moveToDir(targetDir);
@@ -163,7 +164,7 @@ public class TransferItemTest extends TestDirFixture {
         var millis = Files.readAttributes(initial, java.nio.file.attribute.BasicFileAttributes.class)
             .creationTime().toMillis();
 
-        var item = new TransferItem(initial);
+        var item = new TransferItem(initial, fileService);
 
         // When
         item.moveToDir(targetDir);
@@ -184,7 +185,7 @@ public class TransferItemTest extends TestDirFixture {
         Files.createDirectories(sourceDir);
         var dve = sourceDir.resolve("dataset.zip");
         Files.writeString(dve, "dummy");
-        var item = new TransferItem(dve);
+        var item = new TransferItem(dve, fileService);
 
         var expectedPath = new DveFileName(dve).withOcflObjectVersion(2).getPath();
 
@@ -211,7 +212,7 @@ public class TransferItemTest extends TestDirFixture {
         var existing = targetDir.resolve(dve.getFileName());
         Files.writeString(existing, "existing");
 
-        var item = new TransferItem(dve);
+        var item = new TransferItem(dve, fileService);
 
         // When
         var error = new IllegalStateException("boom");
@@ -241,7 +242,7 @@ public class TransferItemTest extends TestDirFixture {
             "doi:10.5072/FK2/ABCDEF:1.0",
             "true");
 
-        var item = new TransferItem(dve);
+        var item = new TransferItem(dve, fileService);
 
         // When / Then
         assertThat(item.getContactName()).isEqualTo("Contact Name A;Contact Name B");
@@ -259,7 +260,7 @@ public class TransferItemTest extends TestDirFixture {
         var dve = sourceDir.resolve("dataset.zip");
         createDveZip(dve, "John Doe", "john@example.org", null, null, null); // no metadata JSON
 
-        var item = new TransferItem(dve);
+        var item = new TransferItem(dve, fileService);
 
         // Then
         assertThatThrownBy(item::getNbn)
@@ -275,7 +276,7 @@ public class TransferItemTest extends TestDirFixture {
         var dve = sourceDir.resolve("dataset.zip");
         createDveZip(dve, "John Doe", "john@example.org", "urn:nbn:nl:ui:13-abcdef", null, null); // no PID version in metadata
 
-        var item = new TransferItem(dve);
+        var item = new TransferItem(dve, fileService);
 
         // Then
         assertThat(item.getDataversePidVersion()).isEmpty();

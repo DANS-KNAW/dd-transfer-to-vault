@@ -71,7 +71,7 @@ public class ExtractMetadataTask extends SourceDirItemProcessor implements Runna
 
     @Override
     protected void processItem(Path item) throws IOException {
-        currentTransferItem = new TransferItem(item);
+        currentTransferItem = new TransferItem(item, fileService);
 
         log.debug("Validating DVE {} as BagPack...", item);
         var result = validateBagPackClient.validateBagPack(item);

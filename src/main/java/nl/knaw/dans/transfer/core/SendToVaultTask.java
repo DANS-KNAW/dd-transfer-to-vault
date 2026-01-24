@@ -16,7 +16,6 @@
 package nl.knaw.dans.transfer.core;
 
 import io.dropwizard.util.DataSize;
-import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import nl.knaw.dans.lib.util.ZipUtil;
@@ -26,7 +25,6 @@ import nl.knaw.dans.transfer.config.CustomPropertyConfig;
 import nl.knaw.dans.transfer.health.HealthChecks;
 
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Properties;
@@ -81,7 +79,7 @@ public class SendToVaultTask extends SourceDirItemProcessor implements Runnable 
     @Override
     protected void processItem(Path item) throws IOException {
         log.debug("Processing DVE {}", item);
-        currentTransferItem = new TransferItem(item);
+        currentTransferItem = new TransferItem(item, fileService);
         addToObjectImportDirectory(item, currentTransferItem.getOcflObjectVersion(), this.currentBatchWorkDir.resolve(currentTransferItem.getNbn()));
         log.info("Added {} to current batch", item.getFileName());
         importIfBatchThresholdReached();
@@ -138,7 +136,7 @@ public class SendToVaultTask extends SourceDirItemProcessor implements Runnable 
             }
         }
 
-        try (var os = Files.newOutputStream(versionInfoFile)) {
+        try (var os = fileService.newOutputStream(versionInfoFile)) {
             props.store(os, null);
         }
     }
@@ -151,7 +149,7 @@ public class SendToVaultTask extends SourceDirItemProcessor implements Runnable 
             moveDirectory(currentBatchWorkDir.toFile(), batch.toFile());
             dataVaultClient.sendBatchToVault(batch);
             log.info("Recreating empty current batch directory");
-            Files.createDirectories(this.currentBatchWorkDir);
+            fileService.createDirectories(this.currentBatchWorkDir);
         }
     }
 }

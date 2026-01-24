@@ -123,7 +123,7 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
             Inbox.builder()
                 .onPollingHandler(new SequencedTasks(
                     new ReleaseLatch(startCollectInbox),
-                    new RemoveEmptyTargetDirsTask(configuration.getTransfer().getExtractMetadata().getOutbox().getProcessed())))
+                    new RemoveEmptyTargetDirsTask(configuration.getTransfer().getExtractMetadata().getOutbox().getProcessed(), fileService)))
                 .fileFilter(FileFilterUtils.directoryFileFilter())
                 .taskFactory(
                     ExtractMetadataTaskFactory.builder()
@@ -153,8 +153,8 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
             Inbox.builder()
                 .awaitLatch(startCollectInbox)
                 .onPollingHandler(new SequencedTasks(
-                    new RemoveEmptyTargetDirsTask(configuration.getTransfer().getCollectDve().getProcessed()),
-                    new RemoveXmlFilesTask(configuration.getTransfer().getCollectDve().getInbox().getPath())))
+                    new RemoveEmptyTargetDirsTask(configuration.getTransfer().getCollectDve().getProcessed(), fileService),
+                    new RemoveXmlFilesTask(configuration.getTransfer().getCollectDve().getInbox().getPath(), fileService)))
                 .fileFilter(new DveFileFilter())
                 .taskFactory(
                     CollectDveTaskFactory.builder()

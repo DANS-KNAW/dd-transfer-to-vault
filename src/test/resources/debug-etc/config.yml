@@ -47,7 +47,7 @@ transfer:
       keepAliveTime: 60 seconds
   nbnRegistration:
     outbox: data/dd-register-nbn/inbox
-    catalogBaseUrl: https://resolver-ui.acc.kb.seecr.nl/gmh-registration-service
+    catalogBaseUrl: https://dev.catalog.vault.datastations.nl
   sendToVault:
     inbox:
       path: data/03_send-to-vault/inbox
@@ -104,8 +104,8 @@ readyCheck:
   pollInterval: 5s
 
 vaultCatalog:
-  url: http://dev.transfer.dans-data.nl:20305
-  pingUrl: http://dev.transfer.dans-data.nl:20306/ping
+  url: http://localhost:20305
+  pingUrl: http://localhost:20306/ping
   httpClient:
     timeout: 10s
     connectionTimeout: 1min

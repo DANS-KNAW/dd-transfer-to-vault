@@ -51,7 +51,7 @@ public class CollectDveTask implements Runnable {
         log.debug("Readycheck complete");
         TransferItem transferItem = null;
         try {
-            transferItem = new TransferItem(dve);
+            transferItem = new TransferItem(dve, fileService);
             var targetNbn = transferItem.getNbn();
             var targetDir = fileService.findOrCreateTargetDir(targetNbn, destinationRoot);
             fileService.ensureDirectoryExists(targetDir);

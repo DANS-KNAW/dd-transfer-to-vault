@@ -19,10 +19,8 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 import java.util.Comparator;
 import java.util.List;
 import java.util.function.Predicate;
@@ -51,7 +49,7 @@ public abstract class SourceDirItemProcessor {
             }
 
             var items = getItems();
-            while (Files.exists(srcDir)) {
+            while (fileService.exists(srcDir)) {
                 log.debug("Found {} {}s to process", items.size(), itemType);
                 for (var item : items) {
                     processItem(item);
@@ -95,7 +93,7 @@ public abstract class SourceDirItemProcessor {
 
 
     private List<Path> getItems() throws IOException {
-        try (var dirStream = Files.list(srcDir)) {
+        try (var dirStream = fileService.list(srcDir)) {
             return dirStream.filter(filter).sorted(comparator).toList();
         }
         catch (NoSuchFileException e) {
@@ -109,12 +107,12 @@ public abstract class SourceDirItemProcessor {
     }
 
     private boolean isBlocked() throws IOException {
-        return Files.exists(srcDir.resolve("block"));
+        return fileService.exists(srcDir.resolve("block"));
     }
 
     private void blockTarget() throws IOException {
         var blockFile = srcDir.resolve("block");
-        Files.writeString(blockFile, "", StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        fileService.writeString(blockFile, "");
         fileService.fsyncFile(blockFile);
         fileService.fsyncDirectory(srcDir);
     }

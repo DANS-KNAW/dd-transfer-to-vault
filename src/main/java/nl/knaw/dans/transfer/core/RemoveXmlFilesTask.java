@@ -17,25 +17,31 @@ package nl.knaw.dans.transfer.core;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.FileUtils;
 
-import java.nio.file.Files;
+import java.io.IOException;
 import java.nio.file.Path;
 
 @AllArgsConstructor
 @Slf4j
 public class RemoveXmlFilesTask implements Runnable {
     private final Path path;
+    private final FileService fileService;
 
     @Override
     public void run() {
         log.debug("Deleting XML files in: {}", path);
-        try (var stream = Files.list(path)) {
+        try (var stream = fileService.list(path)) {
             stream
-                .filter(Files::isRegularFile)
+                .filter(fileService::isRegularFile)
                 .filter(p -> p.getFileName().toString().endsWith(".xml"))
-                .map(Path::toFile)
-                .forEach(FileUtils::deleteQuietly);
+                .forEach(p -> {
+                    try {
+                        fileService.delete(p);
+                    }
+                    catch (IOException e) {
+                        log.error("Unable to delete XML file: {}", p, e);
+                    }
+                });
         }
         catch (Exception e) {
             throw new RuntimeException("Failed to list files in: " + path, e);

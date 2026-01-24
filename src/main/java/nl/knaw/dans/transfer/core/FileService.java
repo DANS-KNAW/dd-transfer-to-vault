@@ -18,6 +18,9 @@ package nl.knaw.dans.transfer.core;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.util.Collection;
+import java.util.stream.Stream;
 import java.util.zip.ZipFile;
 
 public interface FileService {
@@ -35,6 +38,61 @@ public interface FileService {
      * @throws IllegalArgumentException if the entry is not found, or if more than one base folder is found
      */
     InputStream getEntryUnderBaseFolder(ZipFile datasetVersionExport, Path subpath) throws IOException;
+
+    /**
+     * Opens a file, returning an input stream to read from the file.
+     *
+     * @param path the path to the file
+     * @return a new input stream
+     * @throws IOException if an I/O error occurs
+     */
+    InputStream newInputStream(Path path) throws IOException;
+
+    /**
+     * Returns a lazily populated Stream, the elements of which are the entries in the directory.
+     *
+     * @param dir the path to the directory
+     * @return the Stream of elements in the directory
+     * @throws IOException if an I/O error occurs
+     */
+    Stream<Path> list(Path dir) throws IOException;
+
+    /**
+     * Write a String to a file.
+     *
+     * @param path    the path to the file
+     * @param content the content to write
+     * @throws IOException if an I/O error occurs
+     */
+    void writeString(Path path, String content) throws IOException;
+
+    /**
+     * Reads a file's attributes as a bulk operation.
+     *
+     * @param path the path to the file
+     * @param type the Class of the file attributes required
+     * @param <A>  the BasicFileAttributes type
+     * @return the file attributes
+     * @throws IOException if an I/O error occurs
+     */
+    <A extends BasicFileAttributes> A readAttributes(Path path, Class<A> type) throws IOException;
+
+    /**
+     * Moves a file from oldLocation to newLocation.
+     *
+     * @param oldLocation the current location of the file
+     * @param newLocation the new location of the file
+     * @throws IOException if the file cannot be moved
+     */
+    void move(Path oldLocation, Path newLocation) throws IOException;
+
+    /**
+     * Deletes a file.
+     *
+     * @param path the path to the file to delete
+     * @throws IOException if the file cannot be deleted
+     */
+    void delete(Path path) throws IOException;
 
     /**
      * Moves a file from oldLocation to newLocation. The move is atomic if the underlying file system supports it.
@@ -62,6 +120,48 @@ public interface FileService {
      */
     void fsyncDirectory(Path dir) throws IOException;
 
+
+    /**
+     * Creates a file system for the given path.
+     *
+     * @param path the path to the file
+     * @return a new file system
+     * @throws IOException if an I/O error occurs
+     */
+    java.nio.file.FileSystem newFileSystem(Path path) throws IOException;
+
+    /**
+     * Opens or creates a file, returning an output stream that may be used to write bytes to the file.
+     *
+     * @param path the path to the file
+     * @return a new output stream
+     * @throws IOException if an I/O error occurs
+     */
+    java.io.OutputStream newOutputStream(Path path) throws IOException;
+
+    /**
+     * Creates a new directory.
+     *
+     * @param dir the directory to create
+     * @throws IOException if an I/O error occurs
+     */
+    void createDirectories(Path dir) throws IOException;
+
+    /**
+     * Checks if the given path is a regular file.
+     *
+     * @param path the path to check
+     * @return true if the path is a regular file, false otherwise
+     */
+    boolean isRegularFile(Path path);
+
+    /**
+     * Checks if the given path is a directory.
+     *
+     * @param path the path to check
+     * @return true if the path is a directory, false otherwise
+     */
+    boolean isDirectory(Path path);
 
     /**
      * Checks if the given path exists.

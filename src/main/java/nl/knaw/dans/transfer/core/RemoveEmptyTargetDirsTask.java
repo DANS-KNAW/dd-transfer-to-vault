@@ -18,20 +18,20 @@ package nl.knaw.dans.transfer.core;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import java.nio.file.Files;
 import java.nio.file.Path;
 
 @Slf4j
 @AllArgsConstructor
 public class RemoveEmptyTargetDirsTask implements Runnable {
     private final Path path;
+    private final FileService fileService;
 
     @Override
     public void run() {
         log.debug("Deleting empty subdirs in: {}", path);
-        try (var stream = Files.list(path)) {
+        try (var stream = fileService.list(path)) {
             stream
-                .filter(Files::isDirectory)
+                .filter(fileService::isDirectory)
                 .forEach(this::deleteIfEmpty);
         }
         catch (Exception e) {
@@ -40,10 +40,10 @@ public class RemoveEmptyTargetDirsTask implements Runnable {
     }
 
     private void deleteIfEmpty(Path subdir) {
-        try (var stream = Files.list(subdir)) {
+        try (var stream = fileService.list(subdir)) {
             if (stream.findAny().isEmpty()) {
                 log.debug("Deleting empty subdir: {}", subdir);
-                Files.delete(subdir);
+                fileService.delete(subdir);
             }
         }
         catch (Exception e) {

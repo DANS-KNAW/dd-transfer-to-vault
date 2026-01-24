@@ -28,9 +28,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.UUID;
+import java.util.stream.Stream;
 import java.util.zip.ZipFile;
 
 public class FileServiceImpl implements FileService {
@@ -69,6 +71,36 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
+    public InputStream newInputStream(Path path) throws IOException {
+        return Files.newInputStream(path);
+    }
+
+    @Override
+    public Stream<Path> list(Path dir) throws IOException {
+        return Files.list(dir);
+    }
+
+    @Override
+    public void writeString(Path path, String content) throws IOException {
+        Files.writeString(path, content);
+    }
+
+    @Override
+    public <A extends BasicFileAttributes> A readAttributes(Path path, Class<A> type) throws IOException {
+        return Files.readAttributes(path, type);
+    }
+
+    @Override
+    public void move(Path oldLocation, Path newLocation) throws IOException {
+        Files.move(oldLocation, newLocation);
+    }
+
+    @Override
+    public void delete(Path path) throws IOException {
+        Files.delete(path);
+    }
+
+    @Override
     public void fsyncFile(Path file) throws IOException {
         try (FileChannel ch = FileChannel.open(file, StandardOpenOption.WRITE)) {
             ch.force(true);
@@ -82,6 +114,31 @@ public class FileServiceImpl implements FileService {
         try (FileChannel ch = FileChannel.open(dir, StandardOpenOption.READ)) {
             ch.force(true);
         }
+    }
+
+    @Override
+    public java.nio.file.FileSystem newFileSystem(Path path) throws IOException {
+        return java.nio.file.FileSystems.newFileSystem(path, (ClassLoader) null);
+    }
+
+    @Override
+    public java.io.OutputStream newOutputStream(Path path) throws IOException {
+        return Files.newOutputStream(path);
+    }
+
+    @Override
+    public void createDirectories(Path dir) throws IOException {
+        Files.createDirectories(dir);
+    }
+
+    @Override
+    public boolean isRegularFile(Path path) {
+        return Files.isRegularFile(path);
+    }
+
+    @Override
+    public boolean isDirectory(Path path) {
+        return Files.isDirectory(path);
     }
 
     @Override

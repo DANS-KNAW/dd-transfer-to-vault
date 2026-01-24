@@ -35,6 +35,9 @@ extra:
   data_station_architecture_overview: https://dans-knaw.github.io/dans-datastation-architecture/datastation/
   data_vault_storage_root: https://dans-knaw.github.io/dans-datastation-architecture/data-vault-storage-root/
   rda_bagpack: http://doi.org/10.15497/RDA00025
+  dd_validate_bagpack_url: https://dans-knaw.github.io/dd-validate-bagpack/
+  dd_vault_catalog_url: https://dans-knaw.github.io/dd-vault-catalog/
+  dd_data_vault_url: https://dans-knaw.github.io/dd-data-vault/
 
 plugins:
   - markdownextradata
