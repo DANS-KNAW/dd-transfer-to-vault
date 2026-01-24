@@ -33,6 +33,7 @@ import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.UUID;
 import java.util.stream.Stream;
 import java.util.zip.ZipFile;
@@ -66,15 +67,6 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
-    public void moveAtomically(@NonNull Path oldLocation, @NonNull Path newLocation) throws IOException {
-        Files.move(oldLocation, newLocation, StandardCopyOption.ATOMIC_MOVE);
-        fsyncDirectory(oldLocation.getParent());
-        if (!oldLocation.getParent().equals(newLocation.getParent())) {
-            fsyncDirectory(newLocation.getParent());
-        }
-    }
-
-    @Override
     public InputStream newInputStream(Path path) throws IOException {
         return Files.newInputStream(path);
     }
@@ -96,13 +88,27 @@ public class FileServiceImpl implements FileService {
 
     @Override
     public Path move(Path oldLocation, Path newLocation) throws IOException {
-        Files.move(oldLocation, newLocation);
-        // Not sure how much of this fsync-ing is necessary, but since we are using the existence of files as signals for other
-        // processes and threads, we do it to be safe.
-        fsyncFile(newLocation);
-        fsyncDirectory(newLocation.getParent());
-        fsyncDirectory(oldLocation.getParent());
-        return newLocation;
+        if (isSameFileSystem(List.of(oldLocation, newLocation))) {
+            Files.move(oldLocation, newLocation, StandardCopyOption.ATOMIC_MOVE);
+            // Ensure durability and visibility
+            fsyncFile(newLocation);
+            fsyncDirectory(newLocation.getParent());
+            if (!oldLocation.getParent().equals(newLocation.getParent())) {
+                fsyncDirectory(oldLocation.getParent());
+            }
+            return newLocation;
+        }
+        else {
+            var targetDir = newLocation.getParent();
+            var temp = targetDir.resolve(newLocation.getFileName().toString() + ".tmp");
+            Files.copy(oldLocation, temp, StandardCopyOption.REPLACE_EXISTING);
+            fsyncFile(temp);
+            Files.move(temp, newLocation, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+            fsyncDirectory(targetDir);
+            Files.delete(oldLocation);
+            fsyncDirectory(oldLocation.getParent());
+            return newLocation;
+        }
     }
 
     @Override

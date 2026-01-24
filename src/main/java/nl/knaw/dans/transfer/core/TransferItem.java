@@ -41,8 +41,8 @@ import java.util.Optional;
 public class TransferItem {
     private static final String ERROR_LOG_SUFFIX = "-error.log";
     private static final String METADATA_PATH = "metadata/oai-ore.jsonld";
-    private static final String NBN_JSON_PATH = "$.ore:describes.dansDataVaultMetadata:dansNbn";
-    private static final String DATAVERSE_PID_VERSION_JSON_PATH = "$.ore:describes.dansDataVaultMetadata:dansDataversePidVersion";
+    private static final String NBN_JSON_PATH = "$['ore:describes']['dansDataVaultMetadata:dansNbn']";
+    private static final String DATAVERSE_PID_VERSION_JSON_PATH = "$['ore:describes']['dansDataVaultMetadata:dansDataversePidVersion']";
     private static final String HAS_ORGANIZATIONAL_IDENTIFIER_VERSION = "Has-Organizational-Identifier-Version";
     
     private Path dve;
@@ -97,14 +97,12 @@ public class TransferItem {
             newLocation = new DveFileName(dve).withCreationTime(getCreationTimeFromFilesystem(dve)).getPath();
         }
         newLocation = findFreeName(dir, newLocation);
-        var tempNewLocation = newLocation.resolveSibling(newLocation.getFileName() + ".tmp");
         if (fileService.exists(newLocation)) {
+            // Should not be possible, as we have just looked for a free name
             throw new IllegalStateException("File already exists: " + newLocation);
         }
         else {
-            fileService.move(dve, tempNewLocation);
-            fileService.moveAtomically(tempNewLocation, newLocation);
-            dve = newLocation;
+            dve = fileService.move(dve, newLocation);
         }
         if (error != null) {
             var errorLogFile = newLocation.resolveSibling(newLocation.getFileName() + ERROR_LOG_SUFFIX);

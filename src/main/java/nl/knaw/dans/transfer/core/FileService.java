@@ -79,11 +79,13 @@ public interface FileService {
     <A extends BasicFileAttributes> A readAttributes(Path path, Class<A> type) throws IOException;
 
     /**
-     * Moves a file from oldLocation to newLocation.
+     * Moves a file from oldLocation to newLocation. If the source and target are on the same filesystem, the move is performed atomically.
+     * If they are on different filesystems, the file is copied to a temporary file in the target directory and then atomically renamed into place.
+     * In all cases, appropriate fsyncs are performed so changes are visible to other processes when this method returns.
      *
      * @param oldLocation the current location of the file
      * @param newLocation the new location of the file
-     * @return
+     * @return the new location
      * @throws IOException if the file cannot be moved
      */
     Path move(Path oldLocation, Path newLocation) throws IOException;
@@ -95,15 +97,6 @@ public interface FileService {
      * @throws IOException if the file cannot be deleted
      */
     void delete(Path path) throws IOException;
-
-    /**
-     * Moves a file from oldLocation to newLocation. The move is atomic if the underlying file system supports it.
-     *
-     * @param oldLocation the current location of the file
-     * @param newLocation the new location of the file
-     * @throws IOException if the file cannot be moved
-     */
-    void moveAtomically(Path oldLocation, Path newLocation) throws IOException;
 
     /**
      * Flushes the file system buffers for the given file, ensuring that all changes are written to the storage device.
