@@ -90,7 +90,8 @@ public class TransferItem {
     }
 
     public void moveToDir(Path dir) throws IOException {
-        fileService.move(dve, dir.resolve(dve.getFileName()));
+        var freeName = fileService.findFreeName(dir, dve);
+        fileService.move(dve, freeName);
     }
 
     public void moveToErrorBox(Path dir, Exception e) throws IOException {

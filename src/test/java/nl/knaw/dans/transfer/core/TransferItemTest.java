@@ -25,9 +25,6 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
-import java.time.Instant;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -64,15 +61,11 @@ public class TransferItemTest extends TestDirFixture {
 
         var item = new TransferItem(dve, fileService);
 
-        // Capture filesystem creation time before the move
-        var millis = Files.readAttributes(dve, java.nio.file.attribute.BasicFileAttributes.class)
-            .creationTime().toMillis();
-
         // When
         item.moveToDir(targetDir);
 
-        // Then: creationTime should be added to the name when missing
-        var expected = targetDir.resolve("dataset_" + millis + ".zip");
+        // Then: file should be moved with the same name; no error log should be written
+        var expected = targetDir.resolve("dataset.zip");
         assertThat(Files.exists(expected)).isTrue();
         assertThat(Files.exists(dve)).isFalse();
 
@@ -80,103 +73,34 @@ public class TransferItemTest extends TestDirFixture {
         assertThat(Files.exists(errorLog)).isFalse();
     }
 
-    @Test
-    public void moveToDir_without_error_should_avoid_collisions_by_index() throws Exception {
-        // Given
-        var sourceDir = testDir.resolve("transfer-item-noerr-collision");
-        var targetDir = testDir.resolve("transfer-item-noerr-collision-target");
-        Files.createDirectories(sourceDir);
-        Files.createDirectories(targetDir);
+   @Test
+   public void moveToDir_should_handle_conflict_by_adding_index() throws Exception {
+       // Given
+       var sourceDir = testDir.resolve("conflict-source");
+       var targetDir = testDir.resolve("conflict-target");
+       Files.createDirectories(sourceDir);
+       Files.createDirectories(targetDir);
 
-        var dve = sourceDir.resolve("dataset.zip");
-        Files.writeString(dve, "dummy");
+       // Create a file in the target dir with the same name as the source file
+       var existing = targetDir.resolve("dataset.zip");
+       Files.writeString(existing, "existing");
 
-        // Determine the expected timestamped name that moveToDir will produce
-        var millis = Files.readAttributes(dve, java.nio.file.attribute.BasicFileAttributes.class)
-            .creationTime().toMillis();
-        var timestampedName = Path.of("dataset_" + millis + ".zip");
+       // Create the source file to move
+       var sourceFile = sourceDir.resolve("dataset.zip");
+       Files.writeString(sourceFile, "dummy");
 
-        // existing file in target to force index suffix (must match the timestamped name)
-        var existing = targetDir.resolve(timestampedName);
-        Files.writeString(existing, "existing");
+       var item = new TransferItem(sourceFile, fileService);
 
-        var item = new TransferItem(dve, fileService);
+       // When
+       item.moveToDir(targetDir);
 
-        // When
-        item.moveToDir(targetDir);
-
-        // Then: should pick an index because the timestamped target name already exists
-        var expected = targetDir.resolve("dataset_" + millis + "-1.zip");
-        assertThat(Files.exists(expected)).isTrue();
-        assertThat(Files.exists(existing)).isTrue();
-
-        var errorLog = expected.resolveSibling(expected.getFileName() + "-error.log");
-        assertThat(Files.exists(errorLog)).isFalse();
-    }
-
-    @Test
-    public void moveToDir_without_error_should_preserve_creationTime_when_matches_filesystem() throws Exception {
-        // Given
-        var sourceDir = testDir.resolve("transfer-item-noerr-ctime");
-        var targetDir = testDir.resolve("transfer-item-noerr-ctime-target");
-        Files.createDirectories(sourceDir);
-        Files.createDirectories(targetDir);
-
-        // Start with a plain file
-        var initial = sourceDir.resolve("dataset.zip");
-        Files.writeString(initial, "dummy");
-
-        // Read its creation time and rename to include that exact millis
-        var millis = Files.readAttributes(initial, java.nio.file.attribute.BasicFileAttributes.class)
-            .creationTime().toMillis();
-        var withCtimePath = new DveFileName(initial)
-            .withCreationTime(OffsetDateTime.ofInstant(Instant.ofEpochMilli(millis), ZoneOffset.UTC))
-            .getPath();
-        Files.move(initial, withCtimePath);
-
-        var item = new TransferItem(withCtimePath, fileService);
-
-        // When
-        item.moveToDir(targetDir);
-
-        // Then: name should stay the same (same creationTime), just moved
-        var expected = targetDir.resolve(withCtimePath.getFileName());
-        assertThat(Files.exists(expected)).isTrue();
-        assertThat(Files.exists(withCtimePath)).isFalse();
-
-        var errorLog = expected.resolveSibling(expected.getFileName() + "-error.log");
-        assertThat(Files.exists(errorLog)).isFalse();
-    }
-
-    @Test
-    public void moveToDir_without_error_should_add_creationTime_when_matches_filesystem() throws Exception {
-        // Given
-        var sourceDir = testDir.resolve("transfer-item-noerr-addctime");
-        var targetDir = testDir.resolve("transfer-item-noerr-addctime-target");
-        Files.createDirectories(sourceDir);
-        Files.createDirectories(targetDir);
-
-        // Start with a plain file without creationTime in the name
-        var initial = sourceDir.resolve("dataset.zip");
-        Files.writeString(initial, "dummy");
-
-        // Read its filesystem creation time (millis)
-        var millis = Files.readAttributes(initial, java.nio.file.attribute.BasicFileAttributes.class)
-            .creationTime().toMillis();
-
-        var item = new TransferItem(initial, fileService);
-
-        // When
-        item.moveToDir(targetDir);
-
-        // Then: name should now include the creationTime from filesystem
-        var expected = targetDir.resolve("dataset_" + millis + ".zip");
-        assertThat(Files.exists(expected)).isTrue();
-        assertThat(Files.exists(initial)).isFalse();
-
-        var errorLog = expected.resolveSibling(expected.getFileName() + "-error.log");
-        assertThat(Files.exists(errorLog)).isFalse();
-    }
+       // Then: the original file in targetDir should remain, and the moved file should have an index appended
+       assertThat(Files.exists(existing)).isTrue();
+       var indexed = targetDir.resolve("dataset-1.zip");
+       assertThat(Files.exists(indexed)).isTrue();
+       assertThat(Files.readString(indexed)).isEqualTo("dummy");
+       assertThat(Files.readString(existing)).isEqualTo("existing");
+   }
 
     @Test
     public void setOcflObjectVersion_should_rename_file() throws IOException {
@@ -198,7 +122,7 @@ public class TransferItemTest extends TestDirFixture {
     }
 
     @Test
-    public void moveToDir_with_error_should_keep_name_and_write_error_log_and_avoid_collisions() throws Exception {
+    public void moveToDir_with_error_should_keep_name_and_write_error_log() throws Exception {
         // Given
         var sourceDir = testDir.resolve("transfer-item-test");
         var targetDir = testDir.resolve("transfer-item-target");
@@ -208,20 +132,15 @@ public class TransferItemTest extends TestDirFixture {
         var dve = sourceDir.resolve("dataset_1710000000000_v1.zip");
         Files.writeString(dve, "dummy");
 
-        // Place a file with the same name in target to force index suffix
-        var existing = targetDir.resolve(dve.getFileName());
-        Files.writeString(existing, "existing");
-
         var item = new TransferItem(dve, fileService);
 
         // When
         var error = new IllegalStateException("boom");
         item.moveToErrorBox(targetDir, error);
 
-        // Then
-        var expectedMoved = targetDir.resolve("dataset_1710000000000_v1-1.zip");
+        // Then: moved file should keep same name and error log should be written next to it
+        var expectedMoved = targetDir.resolve("dataset_1710000000000_v1.zip");
         assertThat(Files.exists(expectedMoved)).isTrue();
-        assertThat(Files.exists(existing)).isTrue(); // original existing untouched
 
         var errorLog = expectedMoved.resolveSibling(expectedMoved.getFileName() + "-error.log");
         assertThat(Files.exists(errorLog)).isTrue();
@@ -280,6 +199,37 @@ public class TransferItemTest extends TestDirFixture {
 
         // Then
         assertThat(item.getDataversePidVersion()).isEmpty();
+    }
+
+    @Test
+    public void moveToDir_should_fail_when_source_does_not_exist() throws Exception {
+        // Given
+        var sourceDir = testDir.resolve("nonexistent-source");
+        var targetDir = testDir.resolve("target-dir");
+        Files.createDirectories(targetDir);
+
+        var dve = sourceDir.resolve("dataset.zip");
+        var item = new TransferItem(dve, fileService);
+
+        // Then
+        assertThatThrownBy(() -> item.moveToDir(targetDir))
+            .isInstanceOf(IOException.class)
+            .hasMessageContaining("nonexistent-source");
+    }
+
+    @Test
+    public void setOcflObjectVersion_should_fail_when_version_is_negative() throws IOException {
+        // Given
+        var sourceDir = testDir.resolve("source-dir");
+        Files.createDirectories(sourceDir);
+        var dve = sourceDir.resolve("dataset.zip");
+        Files.writeString(dve, "dummy");
+        var item = new TransferItem(dve, fileService);
+
+        // Then
+        assertThatThrownBy(() -> item.setOcflObjectVersion(-1))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("OCFL object version must be greater than or equal to 0");
     }
 
     /**

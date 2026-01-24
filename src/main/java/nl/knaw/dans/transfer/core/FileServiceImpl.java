@@ -356,7 +356,8 @@ public class FileServiceImpl implements FileService {
         }
     }
 
-    private Path findFreeName(Path targetDir, Path dve) {
+    @Override
+    public Path findFreeName(Path targetDir, Path dve) {
         var dveFileName = new DveFileName(targetDir.resolve(dve.getFileName()));
         int sequenceNumber = 1;
         while (exists(dveFileName.getPath())) {

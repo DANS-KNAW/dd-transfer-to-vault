@@ -117,6 +117,9 @@ public class DveFileName {
         if (this.ocflObjectVersion != null && this.ocflObjectVersion != ocflObjectVersion) {
             throw new IllegalStateException("OCFL object version is already set for DVE: " + path.getFileName().toString());
         }
+        if (ocflObjectVersion < 0) {
+            throw new IllegalArgumentException("OCFL object version must be greater than or equal to 0");
+        }
         return new DveFileName(
             this.path,
             this.baseName,
