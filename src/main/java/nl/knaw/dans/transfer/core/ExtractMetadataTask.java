@@ -80,7 +80,6 @@ public class ExtractMetadataTask extends SourceDirItemProcessor implements Runna
         }
         else {
             log.warn("DVE {} is not a compliant BagPack: {}. Moving to rejected outbox.", item, result.getRuleViolations());
-            currentTransferItem.moveToDir(outboxRejected, result.getRuleViolations().toString());
             throw new IllegalArgumentException(result.getRuleViolations().toString());
         }
 
@@ -100,9 +99,7 @@ public class ExtractMetadataTask extends SourceDirItemProcessor implements Runna
         }
 
         log.debug("Moving DVE to processed outbox");
-        var targetDir = fileService.findOrCreateTargetDir(currentTransferItem.getNbn(), outboxProcessed);
-        fileService.ensureDirectoryExists(targetDir);
-        currentTransferItem.moveToDir(targetDir);
+        currentTransferItem.moveToTargetDirIn(outboxProcessed);
 
         try {
             log.debug("Taking a short nap before resuming work");
@@ -120,7 +117,7 @@ public class ExtractMetadataTask extends SourceDirItemProcessor implements Runna
         log.warn("Invalid DVE, skipping: {}", e.getMessage());
         try {
             if (currentTransferItem != null) {
-                currentTransferItem.moveToDir(outboxRejected, e);
+                currentTransferItem.moveToErrorBox(outboxRejected, e);
             }
             else {
                 log.warn("Invalid DVE, but no transferItem was set!");
@@ -135,7 +132,7 @@ public class ExtractMetadataTask extends SourceDirItemProcessor implements Runna
     protected void failCurrentItem(Exception e) {
         try {
             if (currentTransferItem != null) {
-                currentTransferItem.moveToDir(outboxFailed, e);
+                currentTransferItem.moveToErrorBox(outboxFailed, e);
             }
             else {
                 log.warn("Failed, but no transferItem was set!");

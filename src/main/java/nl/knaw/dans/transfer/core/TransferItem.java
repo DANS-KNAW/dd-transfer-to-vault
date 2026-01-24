@@ -25,8 +25,6 @@ import nl.knaw.dans.bagit.exceptions.UnsupportedAlgorithmException;
 import nl.knaw.dans.bagit.reader.BagReader;
 
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.nio.file.Path;
 import java.nio.file.ProviderNotFoundException;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -39,14 +37,13 @@ import java.util.Optional;
  */
 @Slf4j
 public class TransferItem {
-    private static final String ERROR_LOG_SUFFIX = "-error.log";
     private static final String METADATA_PATH = "metadata/oai-ore.jsonld";
     private static final String NBN_JSON_PATH = "$['ore:describes']['dansDataVaultMetadata:dansNbn']";
     private static final String DATAVERSE_PID_VERSION_JSON_PATH = "$['ore:describes']['dansDataVaultMetadata:dansDataversePidVersion']";
     private static final String HAS_ORGANIZATIONAL_IDENTIFIER_VERSION = "Has-Organizational-Identifier-Version";
-    
+
     private Path dve;
-    private FileService fileService;
+    private final FileService fileService;
 
     /**
      * The NBN is included in the DVE metadata and thus considered an internal property. It is cached after the first read.
@@ -76,38 +73,28 @@ public class TransferItem {
         return fileName.getOcflObjectVersion() == null ? 0 : fileName.getOcflObjectVersion();
     }
 
+    public void addCreationTimeIfNecessary() throws IOException {
+        var fileName = new DveFileName(dve);
+        if (fileName.getCreationTime() == null) {
+            fileName = fileName.withCreationTime(getCreationTimeFromFilesystem(dve));
+        }
+        dve = fileService.move(dve, fileName.getPath());
+    }
+
+    public void moveToTargetDirIn(Path outboxProcessed) throws IOException {
+        moveToTargetDirIn(outboxProcessed, false);
+    }
+
+    public void moveToTargetDirIn(Path outboxProcessed, boolean addTimestampToFileName) throws IOException {
+        fileService.moveToTargetFor(dve, outboxProcessed, getNbn(), addTimestampToFileName);
+    }
+
     public void moveToDir(Path dir) throws IOException {
-        moveToDir(dir, (String) null);
+        fileService.move(dve, dir.resolve(dve.getFileName()));
     }
 
-    public void moveToDir(Path dir, Exception e) throws IOException {
-        moveToDir(dir, writeStackTrace(e));
-    }
-
-    /**
-     * Moves the DVE to a new directory. If the file already exists with the same MD5 hash, it will be deleted.
-     *
-     * @param dir   the directory to move the DVE to
-     * @param error the exception to log in the error log file
-     * @throws IOException if an I/O error occurs
-     */
-    public void moveToDir(Path dir, String error) throws IOException {
-        Path newLocation = dve;
-        if (error == null && new DveFileName(dve).getCreationTime() == null) {  // If there is an error, keep the original name; the error might have to do with naming
-            newLocation = new DveFileName(dve).withCreationTime(getCreationTimeFromFilesystem(dve)).getPath();
-        }
-        newLocation = findFreeName(dir, newLocation);
-        if (fileService.exists(newLocation)) {
-            // Should not be possible, as we have just looked for a free name
-            throw new IllegalStateException("File already exists: " + newLocation);
-        }
-        else {
-            dve = fileService.move(dve, newLocation);
-        }
-        if (error != null) {
-            var errorLogFile = newLocation.resolveSibling(newLocation.getFileName() + ERROR_LOG_SUFFIX);
-            fileService.writeString(errorLogFile, error);
-        }
+    public void moveToErrorBox(Path dir, Exception e) throws IOException {
+        fileService.moveAndWriteErrorLog(dve, dir, e);
     }
 
     private OffsetDateTime getCreationTimeFromFilesystem(Path file) {
@@ -118,22 +105,6 @@ public class TransferItem {
         catch (IOException ex) {
             throw new IllegalStateException("Unable to read file attributes for: " + file, ex);
         }
-    }
-
-    private static String writeStackTrace(Exception e) {
-        var sw = new StringWriter();
-        var pw = new PrintWriter(sw);
-        e.printStackTrace(pw);
-        return sw.toString();
-    }
-
-    private Path findFreeName(Path targetDir, Path dve) {
-        var dveFileName = new DveFileName(targetDir.resolve(dve.getFileName()));
-        int sequenceNumber = 1;
-        while (fileService.exists(dveFileName.getPath())) {
-            dveFileName = dveFileName.withIndex(sequenceNumber++);
-        }
-        return dveFileName.getPath();
     }
 
     public void setOcflObjectVersion(int ocflObjectVersion) {

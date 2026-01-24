@@ -52,10 +52,7 @@ public class CollectDveTask implements Runnable {
         TransferItem transferItem = null;
         try {
             transferItem = new TransferItem(dve, fileService);
-            var targetNbn = transferItem.getNbn();
-            var targetDir = fileService.findOrCreateTargetDir(targetNbn, destinationRoot);
-            fileService.ensureDirectoryExists(targetDir);
-            transferItem.moveToDir(targetDir);
+            transferItem.moveToTargetDirIn(destinationRoot, true);
             log.info("Collected {}", dve.getFileName());
         }
         catch (Exception e) {
@@ -63,7 +60,7 @@ public class CollectDveTask implements Runnable {
             try {
                 if (transferItem != null) {
                     fileService.ensureDirectoryExists(failedOutbox);
-                    transferItem.moveToDir(failedOutbox, e);
+                    transferItem.moveToErrorBox(failedOutbox, e);
                     log.warn("Failed to collect {}", dve.getFileName());
                 }
                 else {

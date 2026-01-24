@@ -97,7 +97,7 @@ public class SendToVaultTask extends SourceDirItemProcessor implements Runnable 
         log.error("Failed to process item: {}", e.getMessage());
         if (currentTransferItem != null) {
             try {
-                currentTransferItem.moveToDir(outboxFailed, e);
+                currentTransferItem.moveToErrorBox(outboxFailed, e);
             }
             catch (IOException ioException) {
                 log.error("Unable to move file to outbox failed", ioException);

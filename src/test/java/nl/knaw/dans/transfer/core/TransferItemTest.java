@@ -216,7 +216,7 @@ public class TransferItemTest extends TestDirFixture {
 
         // When
         var error = new IllegalStateException("boom");
-        item.moveToDir(targetDir, error);
+        item.moveToErrorBox(targetDir, error);
 
         // Then
         var expectedMoved = targetDir.resolve("dataset_1710000000000_v1-1.zip");

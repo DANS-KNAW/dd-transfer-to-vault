@@ -79,9 +79,9 @@ public interface FileService {
     <A extends BasicFileAttributes> A readAttributes(Path path, Class<A> type) throws IOException;
 
     /**
-     * Moves a file from oldLocation to newLocation. If the source and target are on the same filesystem, the move is performed atomically.
-     * If they are on different filesystems, the file is copied to a temporary file in the target directory and then atomically renamed into place.
-     * In all cases, appropriate fsyncs are performed so changes are visible to other processes when this method returns.
+     * Moves a file from oldLocation to newLocation. If the source and target are on the same filesystem, the move is performed atomically. If they are on different filesystems, the file is copied to
+     * a temporary file in the target directory and then atomically renamed into place. In all cases, appropriate fsyncs are performed so changes are visible to other processes when this method
+     * returns.
      *
      * @param oldLocation the current location of the file
      * @param newLocation the new location of the file
@@ -89,6 +89,8 @@ public interface FileService {
      * @throws IOException if the file cannot be moved
      */
     Path move(Path oldLocation, Path newLocation) throws IOException;
+
+    Path moveAndWriteErrorLog(Path oldLocation, Path newLocation, Exception e);
 
     /**
      * Deletes a file.
@@ -167,8 +169,8 @@ public interface FileService {
     /**
      * Checks if the given path exists, retrying if it does not exist.
      *
-     * @param path the path to check
-     * @param retries the number of times to retry if the path does not exist
+     * @param path             the path to check
+     * @param retries          the number of times to retry if the path does not exist
      * @param retryDelayMillis the delay between retries in milliseconds
      * @return true if the path exists, false otherwise
      */
@@ -215,4 +217,16 @@ public interface FileService {
      * @return the existing or newly created target directory
      */
     Path findOrCreateTargetDir(String targetNbn, Path destinationRoot);
+
+    /**
+     * Finds the subdirectory in outbox, for the targeted NBN. If not found it creates it. Then the file is moved into the target directory. The method handles possible deletion by
+     * RemoveEmptyTargetDirsTask by creating a new target directory if the move fails due to a file not found exception.
+     *
+     * @param file    the file to move
+     * @param outbox  the outbox directory
+     * @param nbn     the NBN for the target directory
+     */
+    void moveToTargetFor(Path file, Path outbox, String nbn);
+
+    void moveToTargetFor(Path dve, Path outbox, String targetNbn, boolean addTimestampToFileName);
 }

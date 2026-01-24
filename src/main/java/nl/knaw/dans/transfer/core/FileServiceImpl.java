@@ -16,9 +16,9 @@
 package nl.knaw.dans.transfer.core;
 
 import lombok.NonNull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -27,10 +27,12 @@ import java.nio.file.FileStore;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.time.OffsetDateTime;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -38,8 +40,9 @@ import java.util.UUID;
 import java.util.stream.Stream;
 import java.util.zip.ZipFile;
 
+@Slf4j
 public class FileServiceImpl implements FileService {
-    private static final Logger log = LoggerFactory.getLogger(FileServiceImpl.class);
+    private static final String ERROR_LOG_SUFFIX = "-error.log";
 
     @Override
     public ZipFile openZipFile(@NonNull Path path) throws IOException {
@@ -88,7 +91,7 @@ public class FileServiceImpl implements FileService {
 
     @Override
     public Path move(Path oldLocation, Path newLocation) throws IOException {
-        if (isSameFileSystem(List.of(oldLocation, newLocation))) {
+        if (isSameFileSystem(List.of(oldLocation, newLocation.getParent()))) {
             Files.move(oldLocation, newLocation, StandardCopyOption.ATOMIC_MOVE);
             // Ensure durability and visibility
             fsyncFile(newLocation);
@@ -108,6 +111,22 @@ public class FileServiceImpl implements FileService {
             Files.delete(oldLocation);
             fsyncDirectory(oldLocation.getParent());
             return newLocation;
+        }
+    }
+
+    @Override
+    public Path moveAndWriteErrorLog(Path dve, Path outbox, Exception e) {
+        log.error("Error moving file from {} to {}: {}", dve, outbox, e.getMessage(), e);
+        try {
+            move(dve, outbox.resolve(dve.getFileName()));
+            var errorLog = outbox.resolve(dve.getFileName().toString() + ERROR_LOG_SUFFIX);
+            Files.writeString(errorLog, e.getMessage(), StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+            fsyncFile(errorLog);
+            return outbox;
+        }
+        catch (IOException ex) {
+            log.error("Error writing error log for file move from {} to {}: {}", dve, outbox, ex.getMessage(), ex);
+            return null;
         }
     }
 
@@ -283,4 +302,85 @@ public class FileServiceImpl implements FileService {
         }
         return sb.toString();
     }
+
+    @Nullable
+    private Path findExistingTargetDir(String targetNbn, Path destinationRoot) {
+        try (var stream = Files.list(destinationRoot)) {
+            return stream.filter(Files::isDirectory)
+                .filter(dir -> dir.getFileName().toString().startsWith(targetNbn + "-"))
+                .findFirst()
+                .orElse(null);
+        }
+        catch (IOException e) {
+            throw new IllegalStateException("Unable to list directories in destination root: " + destinationRoot, e);
+        }
+    }
+
+    @Override
+    public void moveToTargetFor(Path dve, Path outbox, String targetNbn) {
+        moveToTargetFor(dve, outbox, targetNbn, false);
+    }
+
+    @Override
+    public void moveToTargetFor(Path dve, Path outbox, String targetNbn, boolean addTimestampToFileName) {
+        var existingDir = findExistingTargetDir(targetNbn, outbox);
+        try {
+            if (existingDir != null) {
+                move(dve, existingDir.resolve(
+                    findFreeName(existingDir,
+                        new DveFileName(dve)
+                            .withCreationTime(getCreationTimeFromFilesystem(dve))
+                            .getPath())));
+            }
+            else {
+                createAndMoveSafe(dve, outbox.resolve(targetNbn + "-" + generateRandomString(6, "ABCDEFGHIJKLMNOPQRSTUVWXYZ")));
+            }
+        }
+        catch (NoSuchFileException e) {
+            log.debug("Existing directory for target NBN was deleted: {}, creating new directory", targetNbn);
+            var newDir = outbox.resolve(targetNbn + "-" + generateRandomString(6, "ABCDEFGHIJKLMNOPQRSTUVWXYZ"));
+            createAndMoveSafe(dve, newDir);
+        }
+        catch (IOException e) {
+            throw new IllegalStateException("Unable to move file to existing directory: " + existingDir, e);
+        }
+    }
+
+    private OffsetDateTime getCreationTimeFromFilesystem(Path file) {
+        try {
+            var attrs = readAttributes(file, BasicFileAttributes.class);
+            return attrs.creationTime().toInstant().atOffset(OffsetDateTime.now().getOffset());
+        }
+        catch (IOException ex) {
+            throw new IllegalStateException("Unable to read file attributes for: " + file, ex);
+        }
+    }
+
+    private Path findFreeName(Path targetDir, Path dve) {
+        var dveFileName = new DveFileName(targetDir.resolve(dve.getFileName()));
+        int sequenceNumber = 1;
+        while (exists(dveFileName.getPath())) {
+            dveFileName = dveFileName.withIndex(sequenceNumber++);
+        }
+        return dveFileName.getPath();
+    }
+
+    /**
+     * Creates outdir.tmp then moves file into it with move, then renames outdir.tmp to outdir.
+     *
+     * @param file   the file to move
+     * @param outdir the directory to create
+     */
+    private void createAndMoveSafe(Path file, Path outdir) {
+        try {
+            var tmpOutDir = outdir.resolveSibling(outdir.getFileName() + ".tmp");
+            createDirectory(tmpOutDir);
+            move(file, tmpOutDir);
+            move(tmpOutDir, outdir);
+        }
+        catch (IOException e) {
+            throw new IllegalStateException("Unable to create and move file to new directory: " + outdir, e);
+        }
+    }
+
 }
