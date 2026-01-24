@@ -149,7 +149,7 @@ public class SendToVaultTask extends SourceDirItemProcessor implements Runnable 
             moveDirectory(currentBatchWorkDir.toFile(), batch.toFile());
             dataVaultClient.sendBatchToVault(batch);
             log.info("Recreating empty current batch directory");
-            fileService.createDirectories(this.currentBatchWorkDir);
+            fileService.createDirectory(this.currentBatchWorkDir);
         }
     }
 }

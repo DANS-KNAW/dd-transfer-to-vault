@@ -32,21 +32,21 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 class FileSystemPermissionsHealthCheckTest {
 
-    private TransferConfig transferConfig;
     private FileService fileService;
     private FileSystemPermissionsHealthCheck healthCheck;
 
     @BeforeEach
     void setUp() {
-        transferConfig = mock(TransferConfig.class);
+        TransferConfig transferConfig = mock(TransferConfig.class);
         fileService = mock(FileService.class);
         healthCheck = new FileSystemPermissionsHealthCheck(transferConfig, fileService);
 
@@ -92,6 +92,8 @@ class FileSystemPermissionsHealthCheckTest {
         when(transferConfig.getCollectDve()).thenReturn(collectDveConfig);
 
         // Default: all writable/readable and same filesystem
+        when(fileService.exists(any(Path.class))).thenReturn(true);
+        when(fileService.exists(any(Path.class), anyInt(), anyLong())).thenReturn(true);
         when(fileService.canWriteTo(any(Path.class))).thenReturn(true);
         when(fileService.canReadFrom(any(Path.class))).thenReturn(true);
         when(fileService.isSameFileSystem(any(Collection.class))).thenReturn(true);
@@ -100,7 +102,7 @@ class FileSystemPermissionsHealthCheckTest {
     @Test
     void check_should_return_healthy_when_all_conditions_are_met() {
         HealthCheck.Result result = healthCheck.check();
-        assertTrue(result.isHealthy());
+        assertThat(result.isHealthy()).isTrue();
     }
 
     @Test
@@ -109,10 +111,10 @@ class FileSystemPermissionsHealthCheckTest {
         when(fileService.canWriteTo(nonWritablePath)).thenReturn(false);
 
         HealthCheck.Result result = healthCheck.check();
-        assertFalse(result.isHealthy());
-        assertTrue(result.getMessage().contains(nonWritablePath.toString()));
-        assertTrue(result.getDetails().containsKey(nonWritablePath.toString()));
-        assertTrue(result.getDetails().get(nonWritablePath.toString()).toString().contains("Path is not writable"));
+        assertThat(result.isHealthy()).isFalse();
+        assertThat(result.getMessage()).contains(nonWritablePath.toString());
+        assertThat(result.getDetails()).containsKey(nonWritablePath.toString());
+        assertThat(result.getDetails().get(nonWritablePath.toString()).toString()).contains("Path is not writable");
     }
 
     @Test
@@ -121,10 +123,23 @@ class FileSystemPermissionsHealthCheckTest {
         when(fileService.canReadFrom(nonReadablePath)).thenReturn(false);
 
         HealthCheck.Result result = healthCheck.check();
-        assertFalse(result.isHealthy());
-        assertTrue(result.getMessage().contains(nonReadablePath.toString()));
-        assertTrue(result.getDetails().containsKey(nonReadablePath.toString()));
-        assertTrue(result.getDetails().get(nonReadablePath.toString()).toString().contains("Path is not readable"));
+        assertThat(result.isHealthy()).isFalse();
+        assertThat(result.getMessage()).contains(nonReadablePath.toString());
+        assertThat(result.getDetails()).containsKey(nonReadablePath.toString());
+        assertThat(result.getDetails().get(nonReadablePath.toString()).toString()).contains("Path is not readable");
+    }
+
+    @Test
+    void check_should_return_unhealthy_when_a_path_does_not_exist() {
+        Path nonExistentPath = Path.of("/em/inbox");
+        when(fileService.exists(nonExistentPath)).thenReturn(false);
+        when(fileService.exists(nonExistentPath, 5, 1000)).thenReturn(false);
+
+        HealthCheck.Result result = healthCheck.check();
+        assertThat(result.isHealthy()).isFalse();
+        assertThat(result.getMessage()).contains(nonExistentPath.toString());
+        assertThat(result.getDetails()).containsKey(nonExistentPath.toString());
+        assertThat(result.getDetails().get(nonExistentPath.toString()).toString()).contains("Path does not exist");
     }
 
     @Test
@@ -132,7 +147,7 @@ class FileSystemPermissionsHealthCheckTest {
         when(fileService.isSameFileSystem(any())).thenReturn(false);
 
         HealthCheck.Result result = healthCheck.check();
-        assertFalse(result.isHealthy());
+        assertThat(result.isHealthy()).isFalse();
 
         Set<Path> allPaths = Set.of(
             Path.of("/em/inbox"),
@@ -147,8 +162,8 @@ class FileSystemPermissionsHealthCheckTest {
         );
 
         String expectedDetailKey = allPaths.stream().map(Path::toString).sorted().collect(java.util.stream.Collectors.joining(", "));
-        assertTrue(result.getDetails().containsKey(expectedDetailKey));
-        assertTrue(result.getDetails().get(expectedDetailKey).toString().contains("Paths are not all on the same file system"));
+        assertThat(result.getDetails()).containsKey(expectedDetailKey);
+        assertThat(result.getDetails().get(expectedDetailKey).toString()).contains("Paths are not all on the same file system");
     }
 
     @Test
@@ -160,15 +175,15 @@ class FileSystemPermissionsHealthCheckTest {
         when(fileService.isSameFileSystem(any())).thenReturn(false);
 
         HealthCheck.Result result = healthCheck.check();
-        assertFalse(result.isHealthy());
+        assertThat(result.isHealthy()).isFalse();
 
         // Check non-writable path
-        assertTrue(result.getDetails().containsKey(nonWritablePath.toString()));
-        assertTrue(result.getDetails().get(nonWritablePath.toString()).toString().contains("Path is not writable"));
+        assertThat(result.getDetails()).containsKey(nonWritablePath.toString());
+        assertThat(result.getDetails().get(nonWritablePath.toString()).toString()).contains("Path is not writable");
 
         // Check non-readable path
-        assertTrue(result.getDetails().containsKey(nonReadablePath.toString()));
-        assertTrue(result.getDetails().get(nonReadablePath.toString()).toString().contains("Path is not readable"));
+        assertThat(result.getDetails()).containsKey(nonReadablePath.toString());
+        assertThat(result.getDetails().get(nonReadablePath.toString()).toString()).contains("Path is not readable");
 
         // Check same-filesystem failure
         Set<Path> allPaths = Set.of(
@@ -183,11 +198,11 @@ class FileSystemPermissionsHealthCheckTest {
             Path.of("/sv/outbox/failed")
         );
         String expectedDetailKey = allPaths.stream().map(Path::toString).sorted().collect(java.util.stream.Collectors.joining(", "));
-        assertTrue(result.getDetails().containsKey(expectedDetailKey));
+        assertThat(result.getDetails()).containsKey(expectedDetailKey);
 
         // Check message contains all
-        assertTrue(result.getMessage().contains(nonWritablePath.toString()));
-        assertTrue(result.getMessage().contains(nonReadablePath.toString()));
-        assertTrue(result.getMessage().contains(expectedDetailKey));
+        assertThat(result.getMessage()).contains(nonWritablePath.toString());
+        assertThat(result.getMessage()).contains(nonReadablePath.toString());
+        assertThat(result.getMessage()).contains(expectedDetailKey);
     }
 }

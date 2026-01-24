@@ -19,11 +19,13 @@ import lombok.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.channels.FileChannel;
 import java.nio.file.FileStore;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -67,7 +69,9 @@ public class FileServiceImpl implements FileService {
     public void moveAtomically(@NonNull Path oldLocation, @NonNull Path newLocation) throws IOException {
         Files.move(oldLocation, newLocation, StandardCopyOption.ATOMIC_MOVE);
         fsyncDirectory(oldLocation.getParent());
-        fsyncDirectory(newLocation.getParent());
+        if (!oldLocation.getParent().equals(newLocation.getParent())) {
+            fsyncDirectory(newLocation.getParent());
+        }
     }
 
     @Override
@@ -91,13 +95,20 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
-    public void move(Path oldLocation, Path newLocation) throws IOException {
+    public Path move(Path oldLocation, Path newLocation) throws IOException {
         Files.move(oldLocation, newLocation);
+        // Not sure how much of this fsync-ing is necessary, but since we are using the existence of files as signals for other
+        // processes and threads, we do it to be safe.
+        fsyncFile(newLocation);
+        fsyncDirectory(newLocation.getParent());
+        fsyncDirectory(oldLocation.getParent());
+        return newLocation;
     }
 
     @Override
     public void delete(Path path) throws IOException {
         Files.delete(path);
+        fsyncDirectory(path.getParent());
     }
 
     @Override
@@ -117,18 +128,19 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
-    public java.nio.file.FileSystem newFileSystem(Path path) throws IOException {
-        return java.nio.file.FileSystems.newFileSystem(path, (ClassLoader) null);
+    public FileSystem newFileSystem(Path path) throws IOException {
+        return FileSystems.newFileSystem(path, (ClassLoader) null);
     }
 
     @Override
-    public java.io.OutputStream newOutputStream(Path path) throws IOException {
+    public OutputStream newOutputStream(Path path) throws IOException {
         return Files.newOutputStream(path);
     }
 
     @Override
-    public void createDirectories(Path dir) throws IOException {
-        Files.createDirectories(dir);
+    public void createDirectory(Path dir) throws IOException {
+        Files.createDirectory(dir);
+        fsyncDirectory(dir.getParent());
     }
 
     @Override
@@ -144,6 +156,29 @@ public class FileServiceImpl implements FileService {
     @Override
     public boolean exists(Path path) {
         return Files.exists(path);
+    }
+
+    @Override
+    public boolean exists(Path path, int retries, long retryDelayMillis) {
+        if (Files.exists(path)) {
+            return true;
+        }
+
+        for (int attempt = 0; attempt < retries; attempt++) {
+            try {
+                Thread.sleep(retryDelayMillis);
+            }
+            catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return Files.exists(path);
+            }
+
+            if (Files.exists(path)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     @Override
@@ -199,10 +234,10 @@ public class FileServiceImpl implements FileService {
     @Override
     public void ensureDirectoryExists(Path dir) throws IOException {
         if (!Files.exists(dir)) {
-            Files.createDirectories(dir);
+            createDirectory(dir);
         }
-        fsyncDirectory(dir);
-        // Wait for dir to be detected
+        fsyncDirectory(dir.getParent());
+        // Wait for dir to be detected. (Actually, this is probably unnecessary, since we have just fsynced the parent.)
         while (!Files.isDirectory(dir)) {
             try {
                 Thread.sleep(1000);

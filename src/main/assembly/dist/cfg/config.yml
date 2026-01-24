@@ -162,7 +162,7 @@ logging:
       currentLogFilename: /var/opt/dans.knaw.nl/log/dd-transfer-to-vault/dd-transfer-to-vault.log
     - type: console
       # Used in combination with journald, which already adds the timestamp
-      logFormat: "%-5p %c{0}: %m%n%dwREx"
+      logFormat: "%-5p [%t] %c{0}: %m%n%dwREx"
   loggers:
     'org.hibernate.engine.internal.StatisticalLoggingSessionEventListener': 'OFF'
     'nl.knaw.dans.transfer.core.RemoveXmlFilesTask': 'OFF'

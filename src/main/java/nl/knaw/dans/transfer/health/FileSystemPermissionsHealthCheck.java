@@ -67,6 +67,16 @@ public class FileSystemPermissionsHealthCheck extends HealthCheck {
         ).collect(Collectors.toSet()));
 
         for (var path : accessibleDirectories) {
+            /*
+             * Retrying, because in some cases (currently only transferConfig.getSendToVault().getDataVault().getCurrentBatchWorkingDir())
+             * the directory may briefly not exist when it is being recreated after sending off a batch.
+             */
+            if (!fileService.exists(path, 5, 1000)) {
+                result.withDetail(path.toString(), "Path does not exist");
+                log.error("Path does not exist: " + path);
+                isValid = false;
+                continue;
+            }
             if (!fileService.canWriteTo(path)) {
                 result.withDetail(path.toString(), "Path is not writable");
                 log.error("Path is not writable: " + path);

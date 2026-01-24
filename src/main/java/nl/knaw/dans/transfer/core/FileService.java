@@ -17,9 +17,10 @@ package nl.knaw.dans.transfer.core;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.file.FileSystem;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.Collection;
 import java.util.stream.Stream;
 import java.util.zip.ZipFile;
 
@@ -82,9 +83,10 @@ public interface FileService {
      *
      * @param oldLocation the current location of the file
      * @param newLocation the new location of the file
+     * @return
      * @throws IOException if the file cannot be moved
      */
-    void move(Path oldLocation, Path newLocation) throws IOException;
+    Path move(Path oldLocation, Path newLocation) throws IOException;
 
     /**
      * Deletes a file.
@@ -96,7 +98,6 @@ public interface FileService {
 
     /**
      * Moves a file from oldLocation to newLocation. The move is atomic if the underlying file system supports it.
-     *
      *
      * @param oldLocation the current location of the file
      * @param newLocation the new location of the file
@@ -120,7 +121,6 @@ public interface FileService {
      */
     void fsyncDirectory(Path dir) throws IOException;
 
-
     /**
      * Creates a file system for the given path.
      *
@@ -128,7 +128,7 @@ public interface FileService {
      * @return a new file system
      * @throws IOException if an I/O error occurs
      */
-    java.nio.file.FileSystem newFileSystem(Path path) throws IOException;
+    FileSystem newFileSystem(Path path) throws IOException;
 
     /**
      * Opens or creates a file, returning an output stream that may be used to write bytes to the file.
@@ -137,7 +137,7 @@ public interface FileService {
      * @return a new output stream
      * @throws IOException if an I/O error occurs
      */
-    java.io.OutputStream newOutputStream(Path path) throws IOException;
+    OutputStream newOutputStream(Path path) throws IOException;
 
     /**
      * Creates a new directory.
@@ -145,7 +145,7 @@ public interface FileService {
      * @param dir the directory to create
      * @throws IOException if an I/O error occurs
      */
-    void createDirectories(Path dir) throws IOException;
+    void createDirectory(Path dir) throws IOException;
 
     /**
      * Checks if the given path is a regular file.
@@ -171,6 +171,15 @@ public interface FileService {
      */
     boolean exists(Path path);
 
+    /**
+     * Checks if the given path exists, retrying if it does not exist.
+     *
+     * @param path the path to check
+     * @param retries the number of times to retry if the path does not exist
+     * @param retryDelayMillis the delay between retries in milliseconds
+     * @return true if the path exists, false otherwise
+     */
+    boolean exists(Path path, int retries, long retryDelayMillis);
 
     /**
      * Checks if the given paths are on the same file system.
@@ -197,7 +206,7 @@ public interface FileService {
     boolean canWriteTo(Path path);
 
     /**
-     * Ensures that the given directory exists, creating it if necessary.
+     * Ensures that the given directory exists, creating it if necessary. The parent directory must exist.
      *
      * @param dir the directory to check
      * @throws IOException if the directory cannot be created
@@ -205,10 +214,10 @@ public interface FileService {
     void ensureDirectoryExists(Path dir) throws IOException;
 
     /**
-     * Finds an existing target directory for the given NBN in the destination root, or creates a new one if none exists.
-     * The target directory name consists of the NBN followed by a random string of 6 uppercase letters.
+     * Finds an existing target directory for the given NBN in the destination root, or creates a new one if none exists. The target directory name consists of the NBN followed by a random string of 6
+     * uppercase letters.
      *
-     * @param targetNbn the NBN to search for
+     * @param targetNbn       the NBN to search for
      * @param destinationRoot the root directory to search in
      * @return the existing or newly created target directory
      */

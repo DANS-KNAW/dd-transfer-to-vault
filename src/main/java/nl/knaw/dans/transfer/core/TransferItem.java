@@ -102,7 +102,7 @@ public class TransferItem {
             throw new IllegalStateException("File already exists: " + newLocation);
         }
         else {
-            fileService.moveAtomically(dve, tempNewLocation);
+            fileService.move(dve, tempNewLocation);
             fileService.moveAtomically(tempNewLocation, newLocation);
             dve = newLocation;
         }
@@ -141,9 +141,7 @@ public class TransferItem {
     public void setOcflObjectVersion(int ocflObjectVersion) {
         var newDve = new DveFileName(dve).withOcflObjectVersion(ocflObjectVersion).getPath();
         try {
-            fileService.move(dve, newDve);
-            dve = newDve;
-            fileService.fsyncFile(dve);
+            dve = fileService.move(dve, newDve);
         }
         catch (IOException e) {
             throw new RuntimeException("Unable to rename DVE file to include OCFL object version", e);
@@ -228,7 +226,7 @@ public class TransferItem {
                 }
             }
         }
-        catch (IOException | ProviderNotFoundException e) {
+        catch (ProviderNotFoundException e) {
             throw new RuntimeException("The file system provider is not found. Probably not a ZIP file: " + dve, e);
         }
     }
@@ -306,7 +304,7 @@ public class TransferItem {
                 }
             }
         }
-        catch (IOException | ProviderNotFoundException e) {
+        catch (ProviderNotFoundException e) {
             throw new RuntimeException("The file system provider is not found. Probably not a ZIP file: " + dve, e);
         }
     }
