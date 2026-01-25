@@ -19,7 +19,6 @@ import lombok.Builder;
 import lombok.NonNull;
 import nl.knaw.dans.lib.util.healthcheck.DependenciesReadyCheck;
 import nl.knaw.dans.lib.util.inbox.InboxTaskFactory;
-import nl.knaw.dans.transfer.config.CollectDveConfig;
 
 import java.nio.file.Path;
 

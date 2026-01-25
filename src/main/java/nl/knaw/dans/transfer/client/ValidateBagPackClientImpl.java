@@ -17,7 +17,6 @@ package nl.knaw.dans.transfer.client;
 
 import lombok.extern.slf4j.Slf4j;
 import nl.knaw.dans.validatebagpack.client.api.ValidateCommandDto;
-import nl.knaw.dans.validatebagpack.client.api.ValidationJobStatusDto;
 import nl.knaw.dans.validatebagpack.client.api.ValidationResultDto;
 import nl.knaw.dans.validatebagpack.client.resources.DefaultApi;
 

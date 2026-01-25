@@ -21,24 +21,32 @@ import java.io.OutputStream;
 import java.nio.file.FileSystem;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.Collection;
 import java.util.stream.Stream;
 import java.util.zip.ZipFile;
 
 public interface FileService {
 
+    /**
+     * Opens a zip file for reading.
+     *
+     * @param path the path to the zip file
+     * @return the opened zip file
+     * @throws IOException if the zip file cannot be opened
+     */
     ZipFile openZipFile(Path path) throws IOException;
 
     /**
      * Returns an input stream for the entry under the base folder of the given zip file. The ZIP file is assumed to contain a single folder at the root level, and the entry is assumed to be under
      * that folder.
      *
-     * @param datasetVersionExport the zip file
-     * @param subpath              the path of the entry under the base folder
+     * @param zipFile the zip file
+     * @param subpath the path of the entry under the base folder
      * @return an input stream for the entry
      * @throws IOException              if the entry cannot be read
      * @throws IllegalArgumentException if the entry is not found, or if more than one base folder is found
      */
-    InputStream getEntryUnderBaseFolder(ZipFile datasetVersionExport, Path subpath) throws IOException;
+    InputStream getEntryUnderBaseFolder(ZipFile zipFile, Path subpath) throws IOException;
 
     /**
      * Opens a file, returning an input stream to read from the file.
@@ -83,14 +91,21 @@ public interface FileService {
      * a temporary file in the target directory and then atomically renamed into place. In all cases, appropriate fsyncs are performed so changes are visible to other processes when this method
      * returns.
      *
-     * @param oldLocation the current location of the file
-     * @param newLocation the new location of the file
+     * @param from the current location of the file
+     * @param to   the new location of the file
      * @return the new location
      * @throws IOException if the file cannot be moved
      */
-    Path move(Path oldLocation, Path newLocation) throws IOException;
+    Path move(Path from, Path to) throws IOException;
 
-    Path moveAndWriteErrorLog(Path oldLocation, Path newLocation, Exception e);
+    /**
+     * Moves a file from oldLocation to newLocation and writes an error log at the new location if an exception occurs during the move.
+     *
+     * @param from the current location of the file
+     * @param to   the new location of the file
+     * @param e    the exception that occurred during the move
+     */
+    void moveAndWriteErrorLog(Path from, Path to, Exception e);
 
     /**
      * Deletes a file.
@@ -182,7 +197,7 @@ public interface FileService {
      * @param paths the paths to check
      * @return true if all paths are on the same file system, false otherwise
      */
-    boolean isSameFileSystem(java.util.Collection<Path> paths);
+    boolean isSameFileSystem(Collection<Path> paths);
 
     /**
      * Checks if the given path is readable by the current user.
@@ -209,26 +224,22 @@ public interface FileService {
     void ensureDirectoryExists(Path dir) throws IOException;
 
     /**
-     * Finds an existing target directory for the given NBN in the destination root, or creates a new one if none exists. The target directory name consists of the NBN followed by a random string of 6
-     * uppercase letters.
+     * Moves the given DVE to the subdirectory of the outbox for the given target NBN. Optionally adds a timestamp to the file.
      *
-     * @param targetNbn       the NBN to search for
-     * @param destinationRoot the root directory to search in
-     * @return the existing or newly created target directory
+     * @param dve                    the DVE to move
+     * @param outbox                 the outbox directory
+     * @param targetNbn              the target NBN
+     * @param addTimestampToFileName whether to add a timestamp to the file name
      */
-    Path findOrCreateTargetDir(String targetNbn, Path destinationRoot);
-
-    /**
-     * Finds the subdirectory in outbox, for the targeted NBN. If not found it creates it. Then the file is moved into the target directory. The method handles possible deletion by
-     * RemoveEmptyTargetDirsTask by creating a new target directory if the move fails due to a file not found exception.
-     *
-     * @param file    the file to move
-     * @param outbox  the outbox directory
-     * @param nbn     the NBN for the target directory
-     */
-    void moveToTargetFor(Path file, Path outbox, String nbn);
-
     void moveToTargetFor(Path dve, Path outbox, String targetNbn, boolean addTimestampToFileName);
 
+    /**
+     * Finds a free name for the given DVE in the target directory. If a file with the same name as the DVE already exists in the target directory, a suffix is added to the file name to make it
+     * unique.
+     *
+     * @param targetDir the target directory
+     * @param dve       the DVE for which to find a free name
+     * @return a free name for the DVE in the target directory
+     */
     String findFreeName(Path targetDir, Path dve);
 }

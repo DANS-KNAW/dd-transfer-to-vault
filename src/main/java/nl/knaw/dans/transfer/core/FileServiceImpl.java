@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.channels.FileChannel;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileStore;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
@@ -81,7 +82,7 @@ public class FileServiceImpl implements FileService {
 
     @Override
     public void writeString(Path path, String content) throws IOException {
-        Files.writeString(path, content);
+        Files.writeString(path, content, StandardCharsets.UTF_8);
     }
 
     @Override
@@ -90,45 +91,43 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
-    public Path move(Path oldLocation, Path newLocation) throws IOException {
-        if (isSameFileSystem(List.of(oldLocation, newLocation.getParent()))) {
-            Files.move(oldLocation, newLocation, StandardCopyOption.ATOMIC_MOVE);
+    public Path move(Path from, Path to) throws IOException {
+        if (isSameFileSystem(List.of(from, to.getParent()))) {
+            Files.move(from, to, StandardCopyOption.ATOMIC_MOVE);
             // Ensure durability and visibility
-            if (Files.isRegularFile(newLocation)) {
-                fsyncFile(newLocation);
+            if (Files.isRegularFile(to)) {
+                fsyncFile(to);
             }
-            fsyncDirectory(newLocation.getParent());
-            if (!oldLocation.getParent().equals(newLocation.getParent())) {
-                fsyncDirectory(oldLocation.getParent());
+            fsyncDirectory(to.getParent());
+            if (!from.getParent().equals(to.getParent())) {
+                fsyncDirectory(from.getParent());
             }
-            return newLocation;
+            return to;
         }
         else {
-            var targetDir = newLocation.getParent();
-            var temp = targetDir.resolve(newLocation.getFileName().toString() + ".tmp");
-            Files.copy(oldLocation, temp, StandardCopyOption.REPLACE_EXISTING);
+            var targetDir = to.getParent();
+            var temp = targetDir.resolve(to.getFileName().toString() + ".tmp");
+            Files.copy(from, temp, StandardCopyOption.REPLACE_EXISTING);
             fsyncFile(temp);
-            Files.move(temp, newLocation, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+            Files.move(temp, to, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
             fsyncDirectory(targetDir);
-            Files.delete(oldLocation);
-            fsyncDirectory(oldLocation.getParent());
-            return newLocation;
+            Files.delete(from);
+            fsyncDirectory(from.getParent());
+            return to;
         }
     }
 
     @Override
-    public Path moveAndWriteErrorLog(Path dve, Path outbox, Exception e) {
+    public void moveAndWriteErrorLog(Path dve, Path outbox, Exception e) {
         log.error("Error moving file from {} to {}: {}", dve, outbox, e.getMessage(), e);
         try {
             move(dve, outbox.resolve(dve.getFileName()));
             var errorLog = outbox.resolve(dve.getFileName().toString() + ERROR_LOG_SUFFIX);
             Files.writeString(errorLog, e.getMessage(), StandardOpenOption.CREATE, StandardOpenOption.APPEND);
             fsyncFile(errorLog);
-            return outbox;
         }
         catch (IOException ex) {
             log.error("Error writing error log for file move from {} to {}: {}", dve, outbox, ex.getMessage(), ex);
-            return null;
         }
     }
 
@@ -239,7 +238,7 @@ public class FileServiceImpl implements FileService {
             return false;
         }
 
-        var filename = path.resolve(String.format(".%s", ".write-check-" + UUID.randomUUID()));
+        var filename = path.resolve(".write-check-" + UUID.randomUUID());
 
         try {
             Files.write(filename, new byte[] {});
@@ -264,45 +263,6 @@ public class FileServiceImpl implements FileService {
             createDirectory(dir);
         }
         fsyncDirectory(dir.getParent());
-        // Wait for dir to be detected. (Actually, this is probably unnecessary, since we have just fsynced the parent.)
-        while (!Files.isDirectory(dir)) {
-            try {
-                Thread.sleep(1000);
-            }
-            catch (InterruptedException e) {
-                log.warn("Directory was created, but still not visible: {}", dir);
-            }
-        }
-    }
-
-    @Override
-    public Path findOrCreateTargetDir(String targetNbn, Path destinationRoot) {
-        try (var stream = Files.list(destinationRoot)) {
-            var existingDir = stream.filter(Files::isDirectory)
-                .filter(path -> path.getFileName().toString().startsWith(targetNbn))
-                .findFirst()
-                .orElse(null);
-            if (existingDir != null) {
-                return existingDir;
-            }
-
-            var newDir = destinationRoot.resolve(targetNbn + "-" + generateRandomString(6, "ABCDEFGHIJKLMNOPQRSTUVWXYZ"));
-            Files.createDirectories(newDir);
-            fsyncDirectory(newDir);
-            return newDir;
-        }
-        catch (IOException e) {
-            throw new IllegalStateException("Unable to list directories in destination root: " + destinationRoot, e);
-        }
-    }
-
-    private String generateRandomString(int length, String alphabet) {
-        StringBuilder sb = new StringBuilder(length);
-        for (int i = 0; i < length; i++) {
-            int randomIndex = (int) (Math.random() * alphabet.length());
-            sb.append(alphabet.charAt(randomIndex));
-        }
-        return sb.toString();
     }
 
     @Nullable
@@ -316,11 +276,6 @@ public class FileServiceImpl implements FileService {
         catch (IOException e) {
             throw new IllegalStateException("Unable to list directories in destination root: " + destinationRoot, e);
         }
-    }
-
-    @Override
-    public void moveToTargetFor(Path dve, Path outbox, String targetNbn) {
-        moveToTargetFor(dve, outbox, targetNbn, false);
     }
 
     @Override
@@ -350,6 +305,15 @@ public class FileServiceImpl implements FileService {
         catch (IOException e) {
             throw new IllegalStateException("Unable to move file to existing directory: " + existingDir, e);
         }
+    }
+
+    private String generateRandomString(int length, String alphabet) {
+        StringBuilder sb = new StringBuilder(length);
+        for (int i = 0; i < length; i++) {
+            int randomIndex = (int) (Math.random() * alphabet.length());
+            sb.append(alphabet.charAt(randomIndex));
+        }
+        return sb.toString();
     }
 
     private OffsetDateTime getCreationTimeFromFilesystem(Path file) {

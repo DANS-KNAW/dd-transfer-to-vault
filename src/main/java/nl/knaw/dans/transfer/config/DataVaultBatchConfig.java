@@ -17,6 +17,7 @@ package nl.knaw.dans.transfer.config;
 
 import io.dropwizard.util.DataSize;
 import lombok.Data;
+
 import javax.validation.constraints.NotNull;
 import java.nio.file.Path;
 

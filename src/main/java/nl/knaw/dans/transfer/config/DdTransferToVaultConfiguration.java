@@ -16,10 +16,10 @@
 
 package nl.knaw.dans.transfer.config;
 
-import nl.knaw.dans.lib.util.healthcheck.DependenciesReadyCheckConfig;
 import io.dropwizard.core.Configuration;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import nl.knaw.dans.lib.util.healthcheck.DependenciesReadyCheckConfig;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
