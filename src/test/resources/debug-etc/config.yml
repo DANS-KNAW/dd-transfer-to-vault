@@ -61,7 +61,7 @@ transfer:
       # If the batch size exceeds this threshold, move work to a new batch in the batchRoot and issue an import request
       batchThreshold: 1MB
       # Create import batches under this directory
-      batchRoot: /home/janm/git/dans-core-systems/modules/dd-data-vault/data/ingest/inbox
+      batchRoot: data/04_data-vault/inbox
     # 'Commit message' for each object version created in the Data Vault. Currently, there is no way to set this per DVE, so it is a static message.
     defaultMessage: No message
     # Send the following custom version properties along. Note that "source" is property-defined.
