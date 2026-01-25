@@ -35,9 +35,6 @@ import java.nio.file.Path;
 @Slf4j
 @AllArgsConstructor
 public class CollectDveTask implements Runnable {
-    private static final String METADATA_PATH = "metadata/oai-ore.jsonld";
-    private static final String NBN_PATH = "$.ore:describes.dansDataVaultMetadata:dansNbn";
-
     private final Path dve;
     private final Path destinationRoot;
     private final Path failedOutbox;
