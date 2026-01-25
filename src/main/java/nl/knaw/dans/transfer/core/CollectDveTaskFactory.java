@@ -33,8 +33,11 @@ public class CollectDveTaskFactory implements InboxTaskFactory {
     @NonNull
     private final DependenciesReadyCheck readyCheck;
 
+    // Whether to add a timestamp to collected item filenames
+    private final boolean addTimestampToCollectedItems;
+
     @Override
     public Runnable createInboxTask(Path path) {
-        return new CollectDveTask(path, destinationRoot, inboxPath.resolve("failed"), fileService, readyCheck);
+        return new CollectDveTask(path, destinationRoot, inboxPath.resolve("failed"), fileService, readyCheck, addTimestampToCollectedItems);
     }
 }

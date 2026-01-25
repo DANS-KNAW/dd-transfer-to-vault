@@ -29,4 +29,7 @@ public class CollectDveConfig {
 
     @NotNull
     private Path processed;
+
+    // New configuration option to control whether a timestamp is added to collected item filenames
+    private boolean addTimestampToCollectedItems;
 }

@@ -24,6 +24,7 @@ transfer:
   ocflStorageRoot: null
   # Collect the DVE from the transfer-inbox and determine its target NBN
   collectDve:
+    addTimestampToCollectedItems: true
     inbox:
       path: /var/opt/dans.knaw.nl/tmp/transfer-inboxes/INSTANCE/inbox
       pollingInterval: 500ms

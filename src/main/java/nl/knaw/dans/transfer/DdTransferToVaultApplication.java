@@ -162,6 +162,7 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
                         .inboxPath(configuration.getTransfer().getCollectDve().getInbox().getPath())
                         .fileService(fileService)
                         .readyCheck(healthCheckReadyCheck)
+                        .addTimestampToCollectedItems(configuration.getTransfer().getCollectDve().isAddTimestampToCollectedItems())
                         .build())
                 .inbox(configuration.getTransfer().getCollectDve().getInbox().getPath())
                 // N.B. this MUST be a single-threaded executor to prevent DVEs from out-racing each other via parallel processing, which would mess up the order of the DVEs.

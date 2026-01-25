@@ -43,6 +43,12 @@ public class CollectDveTask implements Runnable {
     private final Path failedOutbox;
     private final FileService fileService;
     private final DependenciesReadyCheck readyCheck;
+    private final boolean addTimestampToCollectedItems;
+
+    // Backwards-compatible constructor used by existing tests; defaults timestamping to false
+    public CollectDveTask(Path dve, Path destinationRoot, Path failedOutbox, FileService fileService, DependenciesReadyCheck readyCheck) {
+        this(dve, destinationRoot, failedOutbox, fileService, readyCheck, false);
+    }
 
     @Override
     public void run() {
@@ -52,7 +58,7 @@ public class CollectDveTask implements Runnable {
         TransferItem transferItem = null;
         try {
             transferItem = new TransferItem(dve, fileService);
-            transferItem.moveToTargetDirIn(destinationRoot, true);
+            transferItem.moveToTargetDirIn(destinationRoot, addTimestampToCollectedItems);
             log.info("Collected {}", dve.getFileName());
         }
         catch (Exception e) {
@@ -73,4 +79,3 @@ public class CollectDveTask implements Runnable {
         }
     }
 }
-
