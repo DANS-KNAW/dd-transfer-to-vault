@@ -17,6 +17,7 @@ package nl.knaw.dans.transfer.core;
 
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
@@ -123,7 +124,8 @@ public class FileServiceImpl implements FileService {
         try {
             move(dve, outbox.resolve(dve.getFileName()));
             var errorLog = outbox.resolve(dve.getFileName().toString() + ERROR_LOG_SUFFIX);
-            Files.writeString(errorLog, e.getMessage(), StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+            Files.writeString(errorLog, e.getMessage() + System.lineSeparator()
+                + ExceptionUtils.getStackTrace(e));
             fsyncFile(errorLog);
         }
         catch (IOException ex) {

@@ -159,6 +159,7 @@ logging:
       # Used in combination with journald, which already adds the timestamp
       logFormat: "%-5p %c{0}: %m%n%dwREx"
   loggers:
+    'nl.knaw.dans.transfer': 'DEBUG'
     'org.hibernate.engine.internal.StatisticalLoggingSessionEventListener': 'OFF'
     'nl.knaw.dans.transfer.core.RemoveXmlFilesTask': 'OFF'
     'nl.knaw.dans.transfer.core.RemoveEmptyTargetDirsTask': 'OFF'
