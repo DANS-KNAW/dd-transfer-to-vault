@@ -152,4 +152,63 @@ public class FileServiceTest {
             filesMock.verify(() -> Files.deleteIfExists(any(Path.class)));
         }
     }
+
+    @Test
+    void isSameFileSystem_should_return_true_for_single_path() throws IOException {
+        var fileService = new FileServiceImpl();
+        var path = Path.of("/a");
+        var fileStore = mock(FileStore.class);
+
+        try (var filesMock = mockStatic(Files.class)) {
+            filesMock.when(() -> Files.getFileStore(path)).thenReturn(fileStore);
+
+            var result = fileService.isSameFileSystem(List.of(path));
+            assertTrue(result);
+        }
+    }
+
+    @Test
+    void canWriteTo_should_return_false_if_not_directory() {
+        var fileService = new FileServiceImpl();
+        var path = Path.of("not-a-directory");
+
+        try (var filesMock = mockStatic(Files.class)) {
+            filesMock.when(() -> Files.exists(path)).thenReturn(true);
+            filesMock.when(() -> Files.isDirectory(path)).thenReturn(false);
+
+            var result = fileService.canWriteTo(path);
+            assertFalse(result);
+        }
+    }
+
+    @Test
+    void canWriteTo_should_return_false_if_not_writable() {
+        var fileService = new FileServiceImpl();
+        var path = Path.of("not-writable");
+
+        try (var filesMock = mockStatic(Files.class)) {
+            filesMock.when(() -> Files.exists(path)).thenReturn(true);
+            filesMock.when(() -> Files.isDirectory(path)).thenReturn(true);
+            filesMock.when(() -> Files.isWritable(path)).thenReturn(false);
+
+            var result = fileService.canWriteTo(path);
+            assertFalse(result);
+        }
+    }
+
+    @Test
+    void canWriteTo_should_return_false_if_write_throws_exception() throws IOException {
+        var fileService = new FileServiceImpl();
+        var path = Path.of("exception-dir");
+
+        try (var filesMock = mockStatic(Files.class)) {
+            filesMock.when(() -> Files.exists(path)).thenReturn(true);
+            filesMock.when(() -> Files.isDirectory(path)).thenReturn(true);
+            filesMock.when(() -> Files.isWritable(path)).thenReturn(true);
+            filesMock.when(() -> Files.write(any(Path.class), any(byte[].class))).thenThrow(new IOException("Disk full"));
+
+            var result = fileService.canWriteTo(path);
+            assertFalse(result);
+        }
+    }
 }

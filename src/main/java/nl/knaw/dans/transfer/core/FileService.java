@@ -15,6 +15,8 @@
  */
 package nl.knaw.dans.transfer.core;
 
+import lombok.NonNull;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;

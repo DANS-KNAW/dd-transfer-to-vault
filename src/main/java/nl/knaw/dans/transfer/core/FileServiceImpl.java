@@ -72,27 +72,27 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
-    public InputStream newInputStream(Path path) throws IOException {
+    public InputStream newInputStream(@NonNull Path path) throws IOException {
         return Files.newInputStream(path);
     }
 
     @Override
-    public Stream<Path> list(Path dir) throws IOException {
+    public Stream<Path> list(@NonNull Path dir) throws IOException {
         return Files.list(dir);
     }
 
     @Override
-    public void writeString(Path path, String content) throws IOException {
+    public void writeString(@NonNull Path path, @NonNull String content) throws IOException {
         Files.writeString(path, content, StandardCharsets.UTF_8);
     }
 
     @Override
-    public <A extends BasicFileAttributes> A readAttributes(Path path, Class<A> type) throws IOException {
+    public <A extends BasicFileAttributes> A readAttributes(@NonNull Path path, @NonNull Class<A> type) throws IOException {
         return Files.readAttributes(path, type);
     }
 
     @Override
-    public Path move(Path from, Path to) throws IOException {
+    public Path move(@NonNull Path from, @NonNull Path to) throws IOException {
         if (isSameFileSystem(List.of(from, to.getParent()))) {
             Files.move(from, to, StandardCopyOption.ATOMIC_MOVE);
             // Ensure durability and visibility
@@ -119,7 +119,7 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
-    public void moveAndWriteErrorLog(Path dve, Path outbox, Exception e) {
+    public void moveAndWriteErrorLog(@NonNull Path dve, @NonNull Path outbox, @NonNull Exception e) {
         log.error("Error moving file from {} to {}: {}", dve, outbox, e.getMessage(), e);
         try {
             move(dve, outbox.resolve(dve.getFileName()));
@@ -134,20 +134,20 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
-    public void delete(Path path) throws IOException {
+    public void delete(@NonNull Path path) throws IOException {
         Files.delete(path);
         fsyncDirectory(path.getParent());
     }
 
     @Override
-    public void fsyncFile(Path file) throws IOException {
+    public void fsyncFile(@NonNull Path file) throws IOException {
         try (FileChannel ch = FileChannel.open(file, StandardOpenOption.WRITE)) {
             ch.force(true);
         }
     }
 
     @Override
-    public void fsyncDirectory(Path dir) throws IOException {
+    public void fsyncDirectory(@NonNull Path dir) throws IOException {
         // Works on Unix-like systems. On some platforms/filesystems this can throw; if it does,
         // propagate (safer) or change to best-effort depending on your needs.
         try (FileChannel ch = FileChannel.open(dir, StandardOpenOption.READ)) {
@@ -156,38 +156,38 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
-    public FileSystem newFileSystem(Path path) throws IOException {
+    public FileSystem newFileSystem(@NonNull Path path) throws IOException {
         return FileSystems.newFileSystem(path, (ClassLoader) null);
     }
 
     @Override
-    public OutputStream newOutputStream(Path path) throws IOException {
+    public OutputStream newOutputStream(@NonNull Path path) throws IOException {
         return Files.newOutputStream(path);
     }
 
     @Override
-    public void createDirectory(Path dir) throws IOException {
+    public void createDirectory(@NonNull Path dir) throws IOException {
         Files.createDirectory(dir);
         fsyncDirectory(dir.getParent());
     }
 
     @Override
-    public boolean isRegularFile(Path path) {
+    public boolean isRegularFile(@NonNull Path path) {
         return Files.isRegularFile(path);
     }
 
     @Override
-    public boolean isDirectory(Path path) {
+    public boolean isDirectory(@NonNull Path path) {
         return Files.isDirectory(path);
     }
 
     @Override
-    public boolean exists(Path path) {
+    public boolean exists(@NonNull Path path) {
         return Files.exists(path);
     }
 
     @Override
-    public boolean exists(Path path, int retries, long retryDelayMillis) {
+    public boolean exists(@NonNull Path path, int retries, long retryDelayMillis) {
         if (Files.exists(path)) {
             return true;
         }
@@ -210,7 +210,7 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
-    public boolean isSameFileSystem(Collection<Path> paths) {
+    public boolean isSameFileSystem(@NonNull Collection<Path> paths) {
         var fileStores = new HashSet<FileStore>();
         var result = true;
         for (var path : paths) {
@@ -228,12 +228,12 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
-    public boolean canReadFrom(Path path) {
+    public boolean canReadFrom(@NonNull Path path) {
         return Files.exists(path) && Files.isDirectory(path) && Files.isReadable(path);
     }
 
     @Override
-    public boolean canWriteTo(Path path) {
+    public boolean canWriteTo(@NonNull Path path) {
         if (!Files.exists(path) || !Files.isDirectory(path) || !Files.isWritable(path)) {
             // without this check deleteIfExists may cause AccessDeniedException
             // the rest is copied from dd-sword2
@@ -260,7 +260,7 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
-    public void ensureDirectoryExists(Path dir) throws IOException {
+    public void ensureDirectoryExists(@NonNull Path dir) throws IOException {
         if (!Files.exists(dir)) {
             createDirectory(dir);
         }
@@ -268,7 +268,7 @@ public class FileServiceImpl implements FileService {
     }
 
     @Nullable
-    private Path findExistingTargetDir(String targetNbn, Path destinationRoot) {
+    private Path findExistingTargetDir(@NonNull String targetNbn, @NonNull Path destinationRoot) {
         try (var stream = Files.list(destinationRoot)) {
             return stream.filter(Files::isDirectory)
                 .filter(dir -> dir.getFileName().toString().startsWith(targetNbn + "-"))
@@ -281,7 +281,7 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
-    public void moveToTargetFor(Path dve, Path outbox, String targetNbn, boolean addTimestampToFileName) {
+    public void moveToTargetFor(@NonNull Path dve, @NonNull Path outbox, @NonNull String targetNbn, boolean addTimestampToFileName) {
         var existingDir = findExistingTargetDir(targetNbn, outbox);
         String fileName = addTimestampToFileName
             ? new DveFileName(dve)
@@ -309,7 +309,7 @@ public class FileServiceImpl implements FileService {
         }
     }
 
-    private String generateRandomString(int length, String alphabet) {
+    private String generateRandomString(int length, @NonNull String alphabet) {
         StringBuilder sb = new StringBuilder(length);
         for (int i = 0; i < length; i++) {
             int randomIndex = (int) (Math.random() * alphabet.length());
@@ -318,7 +318,7 @@ public class FileServiceImpl implements FileService {
         return sb.toString();
     }
 
-    private OffsetDateTime getCreationTimeFromFilesystem(Path file) {
+    private OffsetDateTime getCreationTimeFromFilesystem(@NonNull Path file) {
         try {
             var attrs = readAttributes(file, BasicFileAttributes.class);
             return attrs.creationTime().toInstant().atOffset(OffsetDateTime.now().getOffset());
@@ -329,7 +329,7 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
-    public String findFreeName(Path targetDir, Path dve) {
+    public String findFreeName(@NonNull Path targetDir, @NonNull Path dve) {
         var dveFileName = new DveFileName(targetDir.resolve(dve.getFileName()));
         int sequenceNumber = 1;
         while (exists(dveFileName.getPath())) {
@@ -344,7 +344,7 @@ public class FileServiceImpl implements FileService {
      * @param file   the file to move
      * @param outdir the directory to create
      */
-    private void createAndMoveSafe(Path file, Path outdir, String fileName) {
+    private void createAndMoveSafe(@NonNull Path file, @NonNull Path outdir, @NonNull String fileName) {
         try {
             var tmpOutDir = outdir.resolveSibling(outdir.getFileName() + ".tmp");
             createDirectory(tmpOutDir);
