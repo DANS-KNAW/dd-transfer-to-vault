@@ -101,7 +101,12 @@ public class FileServiceImpl implements FileService {
             }
             fsyncDirectory(to.getParent());
             if (!from.getParent().equals(to.getParent())) {
-                fsyncDirectory(from.getParent());
+                try {
+                    fsyncDirectory(from.getParent());
+                }
+                catch (NoSuchFileException e) {
+                    // parent dir of 'from' no longer exists, nothing to fsync
+                }
             }
             return to;
         }
@@ -113,7 +118,11 @@ public class FileServiceImpl implements FileService {
             Files.move(temp, to, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
             fsyncDirectory(targetDir);
             Files.delete(from);
-            fsyncDirectory(from.getParent());
+            try {
+                fsyncDirectory(from.getParent());
+            } catch (NoSuchFileException e) {
+                // parent dir of 'from' no longer exists, nothing to fsync
+            }
             return to;
         }
     }

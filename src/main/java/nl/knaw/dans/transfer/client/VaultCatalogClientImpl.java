@@ -116,6 +116,9 @@ public class VaultCatalogClientImpl implements VaultCatalogClient {
     }
 
     private void setVersionExportMetadata(DveMetadata dveMetadata, VersionExportDto dveDto) {
+        if (dveMetadata.getCreationTime() == null) {
+            throw new IllegalArgumentException(dveMetadata.getNbn() + " has no creation time");
+        }
         dveDto.setCreatedTimestamp(dveMetadata.getCreationTime());
         dveDto.setBagId(dveMetadata.getBagId());
         dveDto.setDatasetNbn(dveMetadata.getNbn());

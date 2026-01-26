@@ -39,6 +39,7 @@ import nl.knaw.dans.transfer.core.DveMetadataReader;
 import nl.knaw.dans.transfer.core.ExtractMetadataTaskFactory;
 import nl.knaw.dans.transfer.core.FileService;
 import nl.knaw.dans.transfer.core.FileServiceImpl;
+import nl.knaw.dans.transfer.core.NbnDirectoryFilter;
 import nl.knaw.dans.transfer.core.RemoveEmptyTargetDirsTask;
 import nl.knaw.dans.transfer.core.RemoveXmlFilesTask;
 import nl.knaw.dans.transfer.core.SendToVaultFlushTaskFactory;
@@ -86,7 +87,7 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
         var datavaultClient = new DataVaultClient(dataVaultProxy);
         environment.lifecycle().manage(Inbox.builder()
             .executorService(sendToVaultExecutorService)
-            .fileFilter(FileFilterUtils.directoryFileFilter())
+            .fileFilter(new NbnDirectoryFilter())
             .inbox(configuration.getTransfer().getSendToVault().getInbox().getPath())
             .interval(Math.toIntExact(configuration.getTransfer().getSendToVault().getInbox().getPollingInterval().toMilliseconds()))
             .taskFactory(SendToVaultTaskFactory.builder()
@@ -124,7 +125,7 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
                 .onPollingHandler(new SequencedTasks(
                     new ReleaseLatch(startCollectInbox),
                     new RemoveEmptyTargetDirsTask(configuration.getTransfer().getExtractMetadata().getOutbox().getProcessed(), fileService)))
-                .fileFilter(FileFilterUtils.directoryFileFilter())
+                .fileFilter(new NbnDirectoryFilter())
                 .taskFactory(
                     ExtractMetadataTaskFactory.builder()
                         .ocflStorageRoot(configuration.getTransfer().getOcflStorageRoot())
