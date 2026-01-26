@@ -18,6 +18,7 @@ package nl.knaw.dans.transfer.core;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import java.nio.file.DirectoryNotEmptyException;
 import java.nio.file.Path;
 
 @Slf4j
@@ -47,6 +48,9 @@ public class RemoveEmptyTargetDirsTask implements Runnable {
                 log.debug("Deleting empty subdir: {}", subdir);
                 fileService.delete(subdir);
             }
+        }
+        catch (DirectoryNotEmptyException e) {
+            log.debug("Subdir not empty, skipping delete: {}", subdir);
         }
         catch (Exception e) {
             throw new RuntimeException("Failed to delete empty subdir: " + subdir, e);

@@ -55,7 +55,6 @@ import org.apache.commons.io.filefilter.FileFilterUtils;
 import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Executors;
 
 @Slf4j
 public class DdTransferToVaultApplication extends Application<DdTransferToVaultConfiguration> {
@@ -82,7 +81,8 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
         environment.lifecycle().manage(healthCheckReadyCheck);
 
         var dataVaultProxy = createDataVaultProxy(configuration);
-        var sendToVaultExecutorService = Executors.newSingleThreadExecutor();
+        // Single-threaded executor to coordinate batch threshold checks
+        var sendToVaultExecutorService = environment.lifecycle().executorService("send-to-vault-worker").minThreads(1).maxThreads(1).build();
         var datavaultClient = new DataVaultClient(dataVaultProxy);
         environment.lifecycle().manage(Inbox.builder()
             .executorService(sendToVaultExecutorService)
