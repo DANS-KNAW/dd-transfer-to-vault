@@ -16,6 +16,7 @@
 package nl.knaw.dans.transfer.core;
 
 import io.dropwizard.util.DataSize;
+import lombok.NonNull;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import nl.knaw.dans.lib.util.ZipUtil;
@@ -77,7 +78,7 @@ public class SendToVaultTask extends SourceDirItemProcessor implements Runnable 
     }
 
     @Override
-    protected void processItem(Path item) throws IOException {
+    protected void processItem(@NonNull Path item) throws IOException {
         log.debug("Processing DVE {}", item);
         currentTransferItem = new TransferItem(item, fileService);
         addToObjectImportDirectory(item, currentTransferItem.getOcflObjectVersion(), this.currentBatchWorkDir.resolve(currentTransferItem.getNbn()));
@@ -87,13 +88,13 @@ public class SendToVaultTask extends SourceDirItemProcessor implements Runnable 
     }
 
     @Override
-    protected void rejectCurrentItem(IllegalArgumentException e) {
+    protected void rejectCurrentItem(@NonNull IllegalArgumentException e) {
         // There is no validation step for SendToVaultTask, so any exception is considered a failure.
         failCurrentItem(e);
     }
 
     @Override
-    protected void failCurrentItem(Exception e) {
+    protected void failCurrentItem(@NonNull Exception e) {
         log.error("Failed to process item: {}", e.getMessage());
         if (currentTransferItem != null) {
             try {
@@ -105,7 +106,7 @@ public class SendToVaultTask extends SourceDirItemProcessor implements Runnable 
         }
     }
 
-    private void addToObjectImportDirectory(Path dvePath, int ocflObjectVersionNumber, Path objectImportDirectory) throws IOException {
+    private void addToObjectImportDirectory(@NonNull Path dvePath, int ocflObjectVersionNumber, @NonNull Path objectImportDirectory) throws IOException {
         fileService.ensureDirectoryExists(objectImportDirectory);
         var versionDirectory = objectImportDirectory.resolve("v" + ocflObjectVersionNumber);
         log.debug("Extracting DVE {} to {}", dvePath, versionDirectory);
@@ -113,14 +114,14 @@ public class SendToVaultTask extends SourceDirItemProcessor implements Runnable 
         createVersionInfoProperties(versionDirectory, currentTransferItem.getContactName(), currentTransferItem.getContactEmail(), defaultMessage);
     }
 
-    void createVersionInfoProperties(Path versionDirectory, String user, String email, String message) throws IOException {
+    void createVersionInfoProperties(@NonNull Path versionDirectory, @NonNull String user, @NonNull String email, @NonNull String message) throws IOException {
         var versionInfoFile = versionDirectory.resolveSibling(versionDirectory.getFileName().toString() + ".properties");
         log.debug("Creating version info properties file at {}", versionInfoFile);
 
         var props = new Properties();
-        props.setProperty("user.name", user == null ? "" : user.replaceAll(NEWLINE_TAB_REGEX, "").trim());
-        props.setProperty("user.email", email == null ? "" : email.replaceAll(NEWLINE_TAB_REGEX, "").trim());
-        props.setProperty("message", message == null ? "" : message);
+        props.setProperty("user.name", user.replaceAll(NEWLINE_TAB_REGEX, "").trim());
+        props.setProperty("user.email", email.replaceAll(NEWLINE_TAB_REGEX, "").trim());
+        props.setProperty("message", message);
 
         if (customProperties != null) {
             for (var entry : customProperties.entrySet()) {

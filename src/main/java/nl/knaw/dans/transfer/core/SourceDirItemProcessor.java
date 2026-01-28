@@ -16,6 +16,7 @@
 package nl.knaw.dans.transfer.core;
 
 import lombok.AllArgsConstructor;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -31,12 +32,15 @@ import java.util.function.Predicate;
 @AllArgsConstructor
 @Slf4j
 public abstract class SourceDirItemProcessor {
+    @NonNull
     private final Path srcDir;
+    @NonNull
     private final String itemType;
-
+    @NonNull
     private final Predicate<Path> filter;
+    @NonNull
     private final Comparator<Path> comparator;
-
+    @NonNull
     protected final FileService fileService;
 
     private final long delayBetweenProcessingRounds;
@@ -90,7 +94,6 @@ public abstract class SourceDirItemProcessor {
     protected abstract void failCurrentItem(Exception e);
 
     protected abstract void rejectCurrentItem(IllegalArgumentException e);
-
 
     private List<Path> getItems() throws IOException {
         try (var dirStream = fileService.list(srcDir)) {
