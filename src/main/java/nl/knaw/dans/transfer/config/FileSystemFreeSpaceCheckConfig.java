@@ -13,12 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.transfer.health;
+package nl.knaw.dans.transfer.config;
 
-public interface HealthChecks {
-    String FILESYSTEM_PERMISSIONS = "FileSystemPermissions";
-    String FILESYSTEM_FREE_SPACE = "FileSystemFreeSpace";
-    String DATA_VAULT = "DataVault";
-    String VALIDATE_BAG_PACK = "ValidateBagPack";
-    String VAULT_CATALOG = "VaultCatalog";
+import io.dropwizard.util.DataSize;
+import lombok.Data;
+
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
+
+@Data
+public class FileSystemFreeSpaceCheckConfig {
+    /** Path whose containing filesystem free space must exceed minFreeSpace */
+    @NotBlank
+    private String path;
+
+    /** Minimum free space required on the filesystem containing the path */
+    @NotNull
+    private DataSize minFreeSpace;
 }

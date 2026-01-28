@@ -93,6 +93,8 @@ health:
       initialState: false
       schedule:
         checkInterval: 60s
+    - name: FileSystemFreeSpace
+      critical: true
   initialOverallState: false
 
 readyCheck:
@@ -101,7 +103,12 @@ readyCheck:
     - VaultCatalog
     - DataVault
     - ValidateBagPack
+    - FileSystemFreeSpace
   pollInterval: 5s
+
+fileSystemFreeSpaceChecks:
+  - path: data
+    minFreeSpace: 10MB
 
 vaultCatalog:
   url: http://localhost:20305

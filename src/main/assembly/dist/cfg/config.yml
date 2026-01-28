@@ -91,6 +91,8 @@ health:
   healthChecks:
     - name: FileSystemPermissions
       critical: true
+    - name: FileSystemFreeSpace
+      critical: true
     - name: VaultCatalog
       critical: true
     - name: DataVault
@@ -149,7 +151,12 @@ readyCheck:
     - VaultCatalog
     - DataVault
     - ValidateBagPack
+    - FileSystemFreeSpace
   pollInterval: 5s
+
+fileSystemFreeSpaceChecks:
+  - path: /var/opt/dans.knaw.nl/tmp
+    minFreeSpace: 10GB
 
 #
 # See https://www.dropwizard.io/en/latest/manual/configuration.html#logging
