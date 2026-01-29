@@ -17,8 +17,8 @@ package nl.knaw.dans.transfer.health;
 
 public interface HealthChecks {
     String FILESYSTEM_PERMISSIONS = "FileSystemPermissions";
+    String FILESYSTEM_FREE_SPACE = "FileSystemFreeSpace";
     String DATA_VAULT = "DataVault";
     String VALIDATE_BAG_PACK = "ValidateBagPack";
     String VAULT_CATALOG = "VaultCatalog";
 }
-

@@ -50,7 +50,7 @@ public class CollectDveTask implements Runnable {
     @Override
     public void run() {
         log.debug("Started CollectDveTask for {}", dve);
-        readyCheck.waitUntilReady(HealthChecks.FILESYSTEM_PERMISSIONS);
+        readyCheck.waitUntilReady(HealthChecks.FILESYSTEM_PERMISSIONS, HealthChecks.FILESYSTEM_FREE_SPACE);
         log.debug("Readycheck complete");
         TransferItem transferItem = null;
         try {

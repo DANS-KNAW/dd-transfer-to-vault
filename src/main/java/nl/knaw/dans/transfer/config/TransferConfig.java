@@ -16,6 +16,7 @@
 package nl.knaw.dans.transfer.config;
 
 import lombok.Data;
+import io.dropwizard.util.DataSize;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -23,6 +24,10 @@ import javax.validation.constraints.NotNull;
 @Data
 public class TransferConfig {
     private String ocflStorageRoot;
+
+    // Single threshold for workspace free space
+    @NotNull
+    private DataSize workspaceFreeSpaceThreshold;
 
     @Valid
     @NotNull

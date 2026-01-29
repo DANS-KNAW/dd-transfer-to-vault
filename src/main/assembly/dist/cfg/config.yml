@@ -19,6 +19,9 @@ server:
         currentLogFilename: /var/opt/dans.knaw.nl/log/dd-transfer-to-vault/request.log
 
 transfer:
+  # Minimum free space that must be available in the workspace before processing a new DVE. This uses the FileSystemFreeSpace health check
+  # to determine the available free space.
+  workspaceFreeSpaceThreshold: 1GB
   # Value to store in the 'ocfl_storage_root' field of the dataset's vault catalog record. Not required for VaaS, because dd-vault-ingest
   # already adds this column in the skeleton record.
   ocflStorageRoot: null
@@ -91,12 +94,29 @@ health:
   healthChecks:
     - name: FileSystemPermissions
       critical: true
+      initialState: false
+      schedule:
+        checkInterval: 60s
+    - name: FileSystemFreeSpace
+      critical: true
+      initialState: false
+      schedule:
+        checkInterval: 60s
     - name: VaultCatalog
       critical: true
+      initialState: false
+      schedule:
+        checkInterval: 60s
     - name: DataVault
       critical: true
+      initialState: false
+      schedule:
+        checkInterval: 60s
     - name: ValidateBagPack
       critical: true
+      initialState: false
+      schedule:
+        checkInterval: 60s
   initialOverallState: false
 
 vaultCatalog:
@@ -144,8 +164,9 @@ validateBagPack:
 readyCheck:
   # Health checks to include in the ready check
   healthChecks:
-    # More checks can potentially be included, but these first four are required. Removing one or more of them will result in a start-up failure.
+    # More checks can potentially be included, but these are required. Removing one or more of them will result in a start-up failure.
     - FileSystemPermissions
+    - FileSystemFreeSpace
     - VaultCatalog
     - DataVault
     - ValidateBagPack

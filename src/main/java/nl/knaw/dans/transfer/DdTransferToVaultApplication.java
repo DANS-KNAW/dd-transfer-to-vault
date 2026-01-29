@@ -23,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 import nl.knaw.dans.lib.util.ClientProxyBuilder;
 import nl.knaw.dans.lib.util.PingHealthCheck;
 import nl.knaw.dans.lib.util.healthcheck.DependenciesReadyCheckConfig;
+import nl.knaw.dans.lib.util.healthcheck.FileSystemFreeSpaceHealthCheck;
 import nl.knaw.dans.lib.util.healthcheck.HealthChecksDependenciesReadyCheck;
 import nl.knaw.dans.lib.util.inbox.Inbox;
 import nl.knaw.dans.transfer.client.DataVaultClient;
@@ -51,7 +52,6 @@ import nl.knaw.dans.transfer.health.HealthChecks;
 import nl.knaw.dans.transfer.resources.SendToVaultApiResource;
 import nl.knaw.dans.vaultcatalog.client.invoker.ApiClient;
 import nl.knaw.dans.vaultcatalog.client.resources.DefaultApi;
-import org.apache.commons.io.filefilter.FileFilterUtils;
 
 import java.util.HashSet;
 import java.util.List;
@@ -172,6 +172,12 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
                 .inboxItemComparator(CreationTimeComparator.getInstance())
                 .build());
 
+        environment.healthChecks().register(HealthChecks.FILESYSTEM_FREE_SPACE,
+            new FileSystemFreeSpaceHealthCheck(
+                // The extract-metadata inbox is on the same file system as the other working dirs used during transfer (except the collect-DVE inbox)
+                configuration.getTransfer().getExtractMetadata().getInbox().getPath(),
+                configuration.getTransfer().getWorkspaceFreeSpaceThreshold()));
+
         environment.healthChecks().register(HealthChecks.FILESYSTEM_PERMISSIONS, new FileSystemPermissionsHealthCheck(
             configuration.getTransfer(),
             fileService)
@@ -222,9 +228,9 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
 
     private void checkReadyCheckConfig(DependenciesReadyCheckConfig config) {
         if (!new HashSet<>(config.getHealthChecks())
-            .containsAll(List.of(HealthChecks.FILESYSTEM_PERMISSIONS, HealthChecks.DATA_VAULT, HealthChecks.VAULT_CATALOG, HealthChecks.VALIDATE_BAG_PACK))) {
+            .containsAll(List.of(HealthChecks.FILESYSTEM_PERMISSIONS, HealthChecks.DATA_VAULT, HealthChecks.VAULT_CATALOG, HealthChecks.VALIDATE_BAG_PACK, HealthChecks.FILESYSTEM_FREE_SPACE))) {
             throw new IllegalArgumentException(String.format("Ready check configuration must include at least: %s",
-                List.of(HealthChecks.FILESYSTEM_PERMISSIONS, HealthChecks.DATA_VAULT, HealthChecks.VAULT_CATALOG, HealthChecks.VALIDATE_BAG_PACK)));
+                List.of(HealthChecks.FILESYSTEM_PERMISSIONS, HealthChecks.DATA_VAULT, HealthChecks.VAULT_CATALOG, HealthChecks.VALIDATE_BAG_PACK, HealthChecks.FILESYSTEM_FREE_SPACE)));
         }
     }
 
