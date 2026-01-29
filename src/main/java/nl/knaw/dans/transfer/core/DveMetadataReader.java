@@ -22,6 +22,7 @@ import org.apache.commons.io.IOUtils;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.util.List;
 
 @AllArgsConstructor
 public class DveMetadataReader {
@@ -40,8 +41,17 @@ public class DveMetadataReader {
             var baginfoInputstream = fileService.getEntryUnderBaseFolder(datasetVersionExport, Path.of("bag-info.txt"));
             var bagInfo = IOUtils.toString(baginfoInputstream, StandardCharsets.UTF_8);
             var bagInfoMap = bagInfoReader.readBagInfo(bagInfo);
-            bagInfoMap.get("Contact-Name").stream().findFirst().ifPresent(dveMetadata::setContactName);
-            bagInfoMap.get("Contact-Email").stream().findFirst().ifPresent(dveMetadata::setContactEmail);
+
+            var contactEmail = bagInfoMap.getOrDefault("Contact-Email", List.of()).stream()
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Contact-Email is missing in bag-info.txt"));
+            dveMetadata.setContactEmail(contactEmail);
+
+            var contactName = bagInfoMap.getOrDefault("Contact-Name", List.of()).stream()
+                .findFirst()
+                .orElse(contactEmail);
+            dveMetadata.setContactName(contactName);
+
             dveMetadata.setCreationTime(new DveFileName(path).getCreationTime());
             var dataFileAttributes = dataFileMetadataReader.readDataFileAttributes(path);
             dveMetadata.setDataFileAttributes(dataFileAttributes);
