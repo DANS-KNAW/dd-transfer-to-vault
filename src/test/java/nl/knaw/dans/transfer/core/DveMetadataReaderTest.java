@@ -17,6 +17,7 @@ package nl.knaw.dans.transfer.core;
 
 import nl.knaw.dans.transfer.core.oaiore.OaiOreMetadataReader;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -43,7 +44,7 @@ public class DveMetadataReaderTest {
         var fileService = mock(FileService.class);
         var oaiReader = mock(OaiOreMetadataReader.class);
         var dataFileReader = new DataFileMetadataReader(fileService);
-        var dataFileReaderSpy = org.mockito.Mockito.spy(dataFileReader);
+        var dataFileReaderSpy = Mockito.spy(dataFileReader);
         var reader = new DveMetadataReader(fileService, oaiReader, dataFileReaderSpy);
 
         var path = Path.of("dataset_1735689600000_v2-1.zip"); // 2025-01-01T00:00:00Z
@@ -85,7 +86,7 @@ public class DveMetadataReaderTest {
             "abc123",
             123L
         ));
-        org.mockito.Mockito.doReturn(dfList).when(dataFileReaderSpy).readDataFileAttributes(path);
+        Mockito.doReturn(dfList).when(dataFileReaderSpy).readDataFileAttributes(path);
 
         // Act
         var result = reader.readDveMetadata(path);
@@ -144,32 +145,32 @@ public class DveMetadataReaderTest {
 
         // Act / Assert
         assertThatThrownBy(() -> reader.readDveMetadata(path))
-            .isInstanceOfAny(IllegalArgumentException.class, NullPointerException.class);
+            .isInstanceOfAny(IllegalArgumentException.class);
     }
 
     @Test
     void readDveMetadata_missingContactName_usesEmailAsFallback() throws Exception {
         // Arrange
         var fileService = mock(FileService.class);
-        var oaiReader = mock(nl.knaw.dans.transfer.core.oaiore.OaiOreMetadataReader.class);
+        var oaiReader = mock(OaiOreMetadataReader.class);
         var dataFileReader = mock(DataFileMetadataReader.class);
         var reader = new DveMetadataReader(fileService, oaiReader, dataFileReader);
 
-        var path = java.nio.file.Path.of("dataset_1735689600000.zip");
-        var zip = mock(java.util.zip.ZipFile.class);
+        var path = Path.of("dataset_1735689600000.zip");
+        var zip = mock(ZipFile.class);
         when(fileService.openZipFile(path)).thenReturn(zip);
 
-        when(fileService.getEntryUnderBaseFolder(zip, java.nio.file.Path.of("metadata/oai-ore.jsonld")))
-            .thenReturn(new java.io.ByteArrayInputStream("{}".getBytes(java.nio.charset.StandardCharsets.UTF_8)));
+        when(fileService.getEntryUnderBaseFolder(zip, Path.of("metadata/oai-ore.jsonld")))
+            .thenReturn(new ByteArrayInputStream("{}".getBytes(StandardCharsets.UTF_8)));
         when(oaiReader.readMetadata(anyString())).thenReturn(DveMetadata.builder().build());
 
         // Only Contact-Email present
         var bagInfo = String.join("\n",
             "Contact-Email: user@example.org"
         );
-        when(fileService.getEntryUnderBaseFolder(zip, java.nio.file.Path.of("bag-info.txt")))
-            .thenReturn(new java.io.ByteArrayInputStream(bagInfo.getBytes(java.nio.charset.StandardCharsets.UTF_8)));
-        when(dataFileReader.readDataFileAttributes(path)).thenReturn(java.util.List.of());
+        when(fileService.getEntryUnderBaseFolder(zip, Path.of("bag-info.txt")))
+            .thenReturn(new ByteArrayInputStream(bagInfo.getBytes(StandardCharsets.UTF_8)));
+        when(dataFileReader.readDataFileAttributes(path)).thenReturn(List.of());
 
         // Act
         var result = reader.readDveMetadata(path);
