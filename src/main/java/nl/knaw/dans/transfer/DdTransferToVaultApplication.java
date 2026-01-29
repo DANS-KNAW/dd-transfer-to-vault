@@ -23,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 import nl.knaw.dans.lib.util.ClientProxyBuilder;
 import nl.knaw.dans.lib.util.PingHealthCheck;
 import nl.knaw.dans.lib.util.healthcheck.DependenciesReadyCheckConfig;
+import nl.knaw.dans.lib.util.healthcheck.FileSystemFreeSpaceHealthCheck;
 import nl.knaw.dans.lib.util.healthcheck.HealthChecksDependenciesReadyCheck;
 import nl.knaw.dans.lib.util.inbox.Inbox;
 import nl.knaw.dans.transfer.client.DataVaultClient;
@@ -48,12 +49,9 @@ import nl.knaw.dans.transfer.core.SequencedTasks;
 import nl.knaw.dans.transfer.core.oaiore.OaiOreMetadataReader;
 import nl.knaw.dans.transfer.health.FileSystemPermissionsHealthCheck;
 import nl.knaw.dans.transfer.health.HealthChecks;
-import nl.knaw.dans.lib.util.healthcheck.FileSystemFreeSpaceHealthCheck;
-import java.nio.file.Path;
 import nl.knaw.dans.transfer.resources.SendToVaultApiResource;
 import nl.knaw.dans.vaultcatalog.client.invoker.ApiClient;
 import nl.knaw.dans.vaultcatalog.client.resources.DefaultApi;
-import org.apache.commons.io.filefilter.FileFilterUtils;
 
 import java.util.HashSet;
 import java.util.List;
@@ -174,12 +172,11 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
                 .inboxItemComparator(CreationTimeComparator.getInstance())
                 .build());
 
-        // Register one FileSystemFreeSpaceHealthCheck per configured item
-        configuration.getFileSystemFreeSpaceChecks().forEach(cfg -> {
-            var name = String.format("%s(%s)", HealthChecks.FILESYSTEM_FREE_SPACE, cfg.getPath());
-            environment.healthChecks().register(name,
-                new FileSystemFreeSpaceHealthCheck(Path.of(cfg.getPath()), cfg.getMinFreeSpace()));
-        });
+        environment.healthChecks().register(HealthChecks.FILESYSTEM_FREE_SPACE,
+            new FileSystemFreeSpaceHealthCheck(
+                // The extract-metadata inbox is on the same file system as the other working dirs used during transfer (except the collect-DVE inbox)
+                configuration.getTransfer().getExtractMetadata().getInbox().getPath(),
+                configuration.getTransfer().getWorkspaceFreeSpaceThreshold()));
 
         environment.healthChecks().register(HealthChecks.FILESYSTEM_PERMISSIONS, new FileSystemPermissionsHealthCheck(
             configuration.getTransfer(),

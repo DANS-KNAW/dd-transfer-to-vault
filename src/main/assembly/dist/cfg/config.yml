@@ -19,6 +19,7 @@ server:
         currentLogFilename: /var/opt/dans.knaw.nl/log/dd-transfer-to-vault/request.log
 
 transfer:
+  workspaceFreeSpaceThreshold: 1GB
   # Value to store in the 'ocfl_storage_root' field of the dataset's vault catalog record. Not required for VaaS, because dd-vault-ingest
   # already adds this column in the skeleton record.
   ocflStorageRoot: null
@@ -91,14 +92,29 @@ health:
   healthChecks:
     - name: FileSystemPermissions
       critical: true
+      initialState: false
+      schedule:
+        checkInterval: 60s
     - name: FileSystemFreeSpace
       critical: true
+      initialState: false
+      schedule:
+        checkInterval: 60s
     - name: VaultCatalog
       critical: true
+      initialState: false
+      schedule:
+        checkInterval: 60s
     - name: DataVault
       critical: true
+      initialState: false
+      schedule:
+        checkInterval: 60s
     - name: ValidateBagPack
       critical: true
+      initialState: false
+      schedule:
+        checkInterval: 60s
   initialOverallState: false
 
 vaultCatalog:
@@ -153,10 +169,6 @@ readyCheck:
     - ValidateBagPack
     - FileSystemFreeSpace
   pollInterval: 5s
-
-fileSystemFreeSpaceChecks:
-  - path: /var/opt/dans.knaw.nl/tmp
-    minFreeSpace: 10GB
 
 #
 # See https://www.dropwizard.io/en/latest/manual/configuration.html#logging

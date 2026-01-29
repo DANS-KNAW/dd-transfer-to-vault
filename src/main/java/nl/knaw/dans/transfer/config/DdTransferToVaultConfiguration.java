@@ -23,7 +23,6 @@ import nl.knaw.dans.lib.util.healthcheck.DependenciesReadyCheckConfig;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
-import java.util.List;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -47,9 +46,4 @@ public class DdTransferToVaultConfiguration extends Configuration {
     @Valid
     @NotNull
     private DependenciesReadyCheckConfig readyCheck;
-
-    // Bind list of file system free space checks from YAML: fileSystemFreeSpaceChecks: [ { path, minFreeSpace } ]
-    @Valid
-    @NotNull
-    private List<FileSystemFreeSpaceCheckConfig> fileSystemFreeSpaceChecks;
 }

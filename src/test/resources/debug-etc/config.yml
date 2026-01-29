@@ -19,6 +19,7 @@ server:
         currentLogFilename: data/request.log
 
 transfer:
+  workspaceFreeSpaceThreshold: 1GB
   ocflStorageRoot: Test Datastation
   # Inbox for incoming DVEs
   collectDve:
@@ -78,6 +79,14 @@ health:
   healthChecks:
     - name: FileSystemPermissions
       critical: true
+      initialState: false
+      schedule:
+        checkInterval: 60s
+    - name: FileSystemFreeSpace
+      critical: true
+      initialState: false
+      schedule:
+        checkInterval: 60s
     - name: VaultCatalog
       critical: true
       initialState: false
@@ -93,8 +102,6 @@ health:
       initialState: false
       schedule:
         checkInterval: 60s
-    - name: FileSystemFreeSpace
-      critical: true
   initialOverallState: false
 
 readyCheck:
@@ -105,10 +112,6 @@ readyCheck:
     - ValidateBagPack
     - FileSystemFreeSpace
   pollInterval: 5s
-
-fileSystemFreeSpaceChecks:
-  - path: data
-    minFreeSpace: 10MB
 
 vaultCatalog:
   url: http://localhost:20305

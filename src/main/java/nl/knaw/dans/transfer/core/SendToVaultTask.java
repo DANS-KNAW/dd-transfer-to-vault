@@ -71,7 +71,7 @@ public class SendToVaultTask extends SourceDirItemProcessor implements Runnable 
     @Override
     public void run() {
         log.debug("Started SendToVaultTask for {}", targetNbnDir);
-        readyCheck.waitUntilReady(HealthChecks.FILESYSTEM_PERMISSIONS, HealthChecks.DATA_VAULT);
+        readyCheck.waitUntilReady(HealthChecks.FILESYSTEM_PERMISSIONS, HealthChecks.FILESYSTEM_FREE_SPACE, HealthChecks.DATA_VAULT);
         log.debug("Readycheck complete");
 
         processUntilRemoved();
