@@ -85,9 +85,6 @@ public class ExtractMetadataTask extends SourceDirItemProcessor implements Runna
 
         log.debug("Reading metadata from dve");
         var dveMetadata = dveMetadataReader.readDveMetadata(item);
-        if (dveMetadata.getContactName() == null || dveMetadata.getContactEmail() == null) {
-            throw new IllegalArgumentException("Missing contact information in DVE metadata");
-        }
 
         log.debug("Registering OCFL Object Version in Vault Catalog");
         currentTransferItem.setOcflObjectVersion(

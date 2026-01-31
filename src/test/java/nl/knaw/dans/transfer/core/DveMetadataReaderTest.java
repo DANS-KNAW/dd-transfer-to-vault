@@ -55,14 +55,6 @@ public class DveMetadataReaderTest {
         when(fileService.getEntryUnderBaseFolder(zip, Path.of("metadata/oai-ore.jsonld")))
             .thenReturn(new ByteArrayInputStream(oaiOreJson.getBytes(StandardCharsets.UTF_8)));
 
-        var bagInfo = String.join("\n",
-            "Contact-Email: user@example.org",
-            "Contact-Name: Jane Doe",
-            "Some-Other: value"
-        );
-        when(fileService.getEntryUnderBaseFolder(zip, Path.of("bag-info.txt")))
-            .thenReturn(new ByteArrayInputStream(bagInfo.getBytes(StandardCharsets.UTF_8)));
-
         var baseMetadata = DveMetadata.builder()
             .dataversePid("doi:10.5072/FK2/ABC")
             .dataversePidVersion("2")
@@ -92,8 +84,6 @@ public class DveMetadataReaderTest {
         var result = reader.readDveMetadata(path);
 
         // Assert
-        assertThat(result.getContactEmail()).isEqualTo("user@example.org");
-        assertThat(result.getContactName()).isEqualTo("Jane Doe");
         assertThat(result.getDataFileAttributes()).containsExactlyElementsOf(dfList);
         assertThat(result.getCreationTime()).isEqualTo(OffsetDateTime.ofInstant(Instant.ofEpochMilli(1735689600000L), ZoneOffset.UTC));
         // fields originating from OAI-ORE should be preserved
@@ -118,65 +108,5 @@ public class DveMetadataReaderTest {
             .isInstanceOf(RuntimeException.class)
             .hasMessageContaining("unable to read metadata from file")
             .hasCauseInstanceOf(IOException.class);
-    }
-
-    @Test
-    void readDveMetadata_missingContactEmail_throws() throws Exception {
-        // Arrange
-        var fileService = mock(FileService.class);
-        var oaiReader = mock(OaiOreMetadataReader.class);
-        var dataFileReader = mock(DataFileMetadataReader.class);
-        var reader = new DveMetadataReader(fileService, oaiReader, dataFileReader);
-
-        var path = Path.of("dataset_1735689600000.zip");
-        var zip = mock(ZipFile.class);
-        when(fileService.openZipFile(path)).thenReturn(zip);
-
-        when(fileService.getEntryUnderBaseFolder(zip, Path.of("metadata/oai-ore.jsonld")))
-            .thenReturn(new ByteArrayInputStream("{}".getBytes(StandardCharsets.UTF_8)));
-        when(oaiReader.readMetadata(anyString())).thenReturn(DveMetadata.builder().build());
-
-        // No Contact-Email in bag-info
-        var bagInfo = String.join("\n",
-            "Contact-Name: Jane Doe"
-        );
-        when(fileService.getEntryUnderBaseFolder(zip, Path.of("bag-info.txt")))
-            .thenReturn(new ByteArrayInputStream(bagInfo.getBytes(StandardCharsets.UTF_8)));
-
-        // Act / Assert
-        assertThatThrownBy(() -> reader.readDveMetadata(path))
-            .isInstanceOfAny(IllegalArgumentException.class);
-    }
-
-    @Test
-    void readDveMetadata_missingContactName_usesEmailAsFallback() throws Exception {
-        // Arrange
-        var fileService = mock(FileService.class);
-        var oaiReader = mock(OaiOreMetadataReader.class);
-        var dataFileReader = mock(DataFileMetadataReader.class);
-        var reader = new DveMetadataReader(fileService, oaiReader, dataFileReader);
-
-        var path = Path.of("dataset_1735689600000.zip");
-        var zip = mock(ZipFile.class);
-        when(fileService.openZipFile(path)).thenReturn(zip);
-
-        when(fileService.getEntryUnderBaseFolder(zip, Path.of("metadata/oai-ore.jsonld")))
-            .thenReturn(new ByteArrayInputStream("{}".getBytes(StandardCharsets.UTF_8)));
-        when(oaiReader.readMetadata(anyString())).thenReturn(DveMetadata.builder().build());
-
-        // Only Contact-Email present
-        var bagInfo = String.join("\n",
-            "Contact-Email: user@example.org"
-        );
-        when(fileService.getEntryUnderBaseFolder(zip, Path.of("bag-info.txt")))
-            .thenReturn(new ByteArrayInputStream(bagInfo.getBytes(StandardCharsets.UTF_8)));
-        when(dataFileReader.readDataFileAttributes(path)).thenReturn(List.of());
-
-        // Act
-        var result = reader.readDveMetadata(path);
-
-        // Assert
-        assertThat(result.getContactEmail()).isEqualTo("user@example.org");
-        assertThat(result.getContactName()).isEqualTo("user@example.org");
     }
 }

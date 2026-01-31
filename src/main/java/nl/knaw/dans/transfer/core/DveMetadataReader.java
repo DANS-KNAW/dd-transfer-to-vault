@@ -29,7 +29,6 @@ public class DveMetadataReader {
     private final FileService fileService;
     private final OaiOreMetadataReader oaiOreMetadataReader;
     private final DataFileMetadataReader dataFileMetadataReader;
-    private final BagInfoReader bagInfoReader = new BagInfoReader();
 
     public DveMetadata readDveMetadata(Path path) {
 
@@ -38,20 +37,6 @@ public class DveMetadataReader {
             var metadataInputstream = fileService.getEntryUnderBaseFolder(datasetVersionExport, Path.of("metadata/oai-ore.jsonld"));
             var oaiOre = IOUtils.toString(metadataInputstream, StandardCharsets.UTF_8);
             var dveMetadata = oaiOreMetadataReader.readMetadata(oaiOre);
-            var baginfoInputstream = fileService.getEntryUnderBaseFolder(datasetVersionExport, Path.of("bag-info.txt"));
-            var bagInfo = IOUtils.toString(baginfoInputstream, StandardCharsets.UTF_8);
-            var bagInfoMap = bagInfoReader.readBagInfo(bagInfo);
-
-            var contactEmail = bagInfoMap.getOrDefault("Contact-Email", List.of()).stream()
-                .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("Contact-Email is missing in bag-info.txt"));
-            dveMetadata.setContactEmail(contactEmail);
-
-            var contactName = bagInfoMap.getOrDefault("Contact-Name", List.of()).stream()
-                .findFirst()
-                .orElse(contactEmail);
-            dveMetadata.setContactName(contactName);
-
             dveMetadata.setCreationTime(new DveFileName(path).getCreationTime());
             var dataFileAttributes = dataFileMetadataReader.readDataFileAttributes(path);
             dveMetadata.setDataFileAttributes(dataFileAttributes);

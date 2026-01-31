@@ -232,6 +232,25 @@ public class TransferItemTest extends TestDirFixture {
             .hasMessageContaining("OCFL object version must be greater than or equal to 0");
     }
 
+    @Test
+    public void getContactName_should_default_to_ContactEmail_when_ContactName_missing() throws Exception {
+        // Given: create a DVE zip with only Contact-Email in bag-info.txt
+        var sourceDir = testDir.resolve("transfer-item-zip-contact-email-only");
+        Files.createDirectories(sourceDir);
+        var dve = sourceDir.resolve("dataset_v1.zip");
+        createDveZip(dve,
+            null, // Contact-Name missing
+            "contact@example.org", // Contact-Email present
+            null, null, null);
+
+        var item = new TransferItem(dve, fileService);
+
+        // When / Then
+        assertThat(item.getContactName()).isEqualTo("contact@example.org");
+        assertThat(item.getContactEmail()).isEqualTo("contact@example.org");
+    }
+
+
     /**
      * Helper method to create a DVE zip file for testing purposes. Creates a minimal BagIt structure with bag-info.txt containing contact information and optionally an oai-ore.jsonld metadata file
      * with NBN information.
