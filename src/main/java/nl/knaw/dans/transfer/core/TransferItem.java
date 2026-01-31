@@ -144,10 +144,11 @@ public class TransferItem {
                 /*
                  * OCFL only allows one user object for the version info, so we select the first.
                  */
-                var contactNames = bag.getMetadata().get("Contact-Name");
-                cachedContactName = (contactNames != null && !contactNames.isEmpty()) ? contactNames.get(0) : null;
                 var contactEmails = bag.getMetadata().get("Contact-Email");
                 cachedContactEmail = (contactEmails != null && !contactEmails.isEmpty()) ? contactEmails.get(0) : null;
+                var contactNames = bag.getMetadata().get("Contact-Name");
+                // Fallback to contact email when contact name is not available
+                cachedContactName = (contactNames != null && !contactNames.isEmpty()) ? contactNames.get(0) : cachedContactEmail;
             }
             catch (MaliciousPathException e) {
                 throw new RuntimeException(e);
