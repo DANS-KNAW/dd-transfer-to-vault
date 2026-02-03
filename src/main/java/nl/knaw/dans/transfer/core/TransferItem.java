@@ -73,14 +73,6 @@ public class TransferItem {
         return fileName.getOcflObjectVersion() == null ? 0 : fileName.getOcflObjectVersion();
     }
 
-    public void addCreationTimeIfNecessary() throws IOException {
-        var fileName = new DveFileName(dve);
-        if (fileName.getCreationTime() == null) {
-            fileName = fileName.withCreationTime(getCreationTimeFromFilesystem(dve));
-        }
-        dve = fileService.move(dve, fileName.getPath());
-    }
-
     public void moveToTargetDirIn(Path outboxProcessed) throws IOException {
         moveToTargetDirIn(outboxProcessed, false);
     }
@@ -96,16 +88,6 @@ public class TransferItem {
 
     public void moveToErrorBox(Path dir, Exception e) throws IOException {
         fileService.moveAndWriteErrorLog(dve, dir, e);
-    }
-
-    private OffsetDateTime getCreationTimeFromFilesystem(Path file) {
-        try {
-            var attrs = fileService.readAttributes(file, BasicFileAttributes.class);
-            return attrs.creationTime().toInstant().atOffset(OffsetDateTime.now().getOffset());
-        }
-        catch (IOException ex) {
-            throw new IllegalStateException("Unable to read file attributes for: " + file, ex);
-        }
     }
 
     public void setOcflObjectVersion(int ocflObjectVersion) {

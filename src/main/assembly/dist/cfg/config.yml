@@ -88,6 +88,8 @@ transfer:
       # Sets 'packaging-format' to the same value for every object version
       packaging-format:
         value: DANS RDA BagPack Profile/1.0.0
+      deaccessioned:
+        source:
 
 health:
   delayedShutdownHandlerEnabled: false
