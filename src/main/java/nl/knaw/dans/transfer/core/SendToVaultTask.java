@@ -15,6 +15,7 @@
  */
 package nl.knaw.dans.transfer.core;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.dropwizard.util.DataSize;
 import lombok.NonNull;
 import lombok.ToString;
@@ -27,8 +28,8 @@ import nl.knaw.dans.transfer.health.HealthChecks;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 
 import static org.apache.commons.io.FileUtils.moveDirectory;
 import static org.apache.commons.io.FileUtils.sizeOfDirectory;
@@ -111,18 +112,24 @@ public class SendToVaultTask extends SourceDirItemProcessor implements Runnable 
         var versionDirectory = objectImportDirectory.resolve("v" + ocflObjectVersionNumber);
         log.debug("Extracting DVE {} to {}", dvePath, versionDirectory);
         ZipUtil.extractZipFile(dvePath, versionDirectory);
-        createVersionInfoProperties(versionDirectory, currentTransferItem.getContactName(), currentTransferItem.getContactEmail(), defaultMessage);
+        createVersionInfoJson(versionDirectory, currentTransferItem.getContactName(), currentTransferItem.getContactEmail(), defaultMessage);
     }
 
-    void createVersionInfoProperties(@NonNull Path versionDirectory, @NonNull String user, @NonNull String email, @NonNull String message) throws IOException {
-        var versionInfoFile = versionDirectory.resolveSibling(versionDirectory.getFileName().toString() + ".properties");
-        log.debug("Creating version info properties file at {}", versionInfoFile);
+    void createVersionInfoJson(@NonNull Path versionDirectory, @NonNull String user, @NonNull String email, @NonNull String message) throws IOException {
+        var versionInfoFile = versionDirectory.resolveSibling(versionDirectory.getFileName().toString() + ".json");
+        log.debug("Creating version info JSON file at {}", versionInfoFile);
 
-        var props = new Properties();
-        props.setProperty("user.name", user.replaceAll(NEWLINE_TAB_REGEX, "").trim());
-        props.setProperty("user.email", email.replaceAll(NEWLINE_TAB_REGEX, "").trim());
-        props.setProperty("message", message);
+        var mapper = new ObjectMapper();
+        Map<String, Object> root = new HashMap<>();
+        Map<String, Object> versionInfo = new HashMap<>();
+        Map<String, Object> userObj = new HashMap<>();
+        userObj.put("name", user.replaceAll(NEWLINE_TAB_REGEX, "").trim());
+        userObj.put("email", email.replaceAll(NEWLINE_TAB_REGEX, "").trim());
+        versionInfo.put("user", userObj);
+        versionInfo.put("message", message);
+        root.put("version-info", versionInfo);
 
+        Map<String, String> custom = new HashMap<>();
         if (customProperties != null) {
             for (var entry : customProperties.entrySet()) {
                 var name = entry.getKey();
@@ -131,14 +138,17 @@ public class SendToVaultTask extends SourceDirItemProcessor implements Runnable 
 
                 value.ifPresent(v -> {
                     if (!v.isBlank()) {
-                        props.setProperty("custom." + name, v);
+                        custom.put(name, v);
                     }
                 });
             }
         }
+        if (!custom.isEmpty()) {
+            root.put("object-version-properties", custom);
+        }
 
         try (var os = fileService.newOutputStream(versionInfoFile)) {
-            props.store(os, null);
+            mapper.writerWithDefaultPrettyPrinter().writeValue(os, root);
         }
     }
 
