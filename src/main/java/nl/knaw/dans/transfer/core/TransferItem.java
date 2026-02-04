@@ -41,6 +41,8 @@ public class TransferItem {
     private static final String NBN_JSON_PATH = "$['ore:describes']['dansDataVaultMetadata:dansNbn']";
     private static final String DATAVERSE_PID_VERSION_JSON_PATH = "$['ore:describes']['dansDataVaultMetadata:dansDataversePidVersion']";
     private static final String DATAVERSE_WORK_STATUS_JSON_PATH = "$['ore:describes']['schema:creativeWorkStatus']";
+    private static final String DATAVERSE_WORK_STATUS_NAME_JSON_PATH = DATAVERSE_WORK_STATUS_JSON_PATH + "['schema:name']";
+    private static final String DATAVERSE_DEACCESSIONED_REASON_JSON_PATH = DATAVERSE_WORK_STATUS_JSON_PATH + "['dvcore:reason']";
     private static final String HAS_ORGANIZATIONAL_IDENTIFIER_VERSION = "Has-Organizational-Identifier-Version";
 
     private Path dve;
@@ -206,12 +208,12 @@ public class TransferItem {
                 }
 
                 // Read name and reason
-                var statusNameOpt = readMetadataValue(json, "$['ore:describes']['schema:creativeWorkStatus']['schema:name']");
+                var statusNameOpt = readMetadataValue(json, DATAVERSE_WORK_STATUS_NAME_JSON_PATH);
                 if (statusNameOpt.isEmpty()) {
                     return Optional.empty();
                 }
                 if ("DEACCESSIONED".equalsIgnoreCase(statusNameOpt.get())) {
-                    var reasonOpt = readMetadataValue(json, "$['ore:describes']['schema:creativeWorkStatus']['dvcore:reason']");
+                    var reasonOpt = readMetadataValue(json, DATAVERSE_DEACCESSIONED_REASON_JSON_PATH);
                     return Optional.of(reasonOpt.filter(s -> !s.isBlank()).orElse("N/a"));
                 }
                 return Optional.empty();
@@ -240,7 +242,7 @@ public class TransferItem {
         var result = withTopLevelDir(topLevelDir -> {
             var emailOpt = readBagInfoFirstValue(topLevelDir, "Contact-Email");
             var nameOpt = readBagInfoFirstValue(topLevelDir, "Contact-Name");
-            return new String[]{emailOpt.orElse(null), nameOpt.orElse(null)};
+            return new String[] { emailOpt.orElse(null), nameOpt.orElse(null) };
         });
         cachedContactEmail = result[0];
         // Fallback to contact email when contact name is not available
