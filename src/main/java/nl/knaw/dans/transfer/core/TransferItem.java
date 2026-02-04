@@ -27,8 +27,6 @@ import nl.knaw.dans.bagit.reader.BagReader;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.ProviderNotFoundException;
-import java.nio.file.attribute.BasicFileAttributes;
-import java.time.OffsetDateTime;
 import java.util.Optional;
 
 /**
@@ -40,6 +38,7 @@ public class TransferItem {
     private static final String METADATA_PATH = "metadata/oai-ore.jsonld";
     private static final String NBN_JSON_PATH = "$['ore:describes']['dansDataVaultMetadata:dansNbn']";
     private static final String DATAVERSE_PID_VERSION_JSON_PATH = "$['ore:describes']['dansDataVaultMetadata:dansDataversePidVersion']";
+    private static final String DATAVERSE_WORK_STATUS_JSON_PATH = "$['ore:describes']['schema:creativeWorkStatus']";
     private static final String HAS_ORGANIZATIONAL_IDENTIFIER_VERSION = "Has-Organizational-Identifier-Version";
 
     private Path dve;
@@ -98,6 +97,78 @@ public class TransferItem {
         catch (IOException e) {
             throw new RuntimeException("Unable to rename DVE file to include OCFL object version", e);
         }
+    }
+
+    /**
+     * Returns the reason for deaccessioning the dataset version if the dataset version is deaccessioned. If it is not deaccessioned, it returns an empty Optional.
+     *
+     * @return the reason for deaccessioning, or empty if not deaccessioned
+     */
+    public Optional<String> getDeaccessionedReason() {
+        try {
+            try (var zipFs = fileService.newFileSystem(dve)) {
+                var rootDir = zipFs.getRootDirectories().iterator().next();
+                try (var topLevelDirStream = fileService.list(rootDir)) {
+                    var topLevelDir = topLevelDirStream.filter(fileService::isDirectory)
+                        .findFirst()
+                        .orElseThrow(() -> new IllegalStateException("No top-level directory found in DVE"));
+
+                    var metadataPath = topLevelDir.resolve(METADATA_PATH);
+                    if (!fileService.exists(metadataPath)) {
+                        log.warn("No metadata file found in DVE at {}", metadataPath);
+                        return Optional.empty();
+                    }
+
+                    try (var is = fileService.newInputStream(metadataPath)) {
+                        // First check if a creativeWorkStatus object exists under ore:describes
+                        Object statusObj = null;
+                        try {
+                            statusObj = JsonPath.read(is, DATAVERSE_WORK_STATUS_JSON_PATH);
+                        }
+                        catch (PathNotFoundException e) {
+                            log.warn("No creativeWorkStatus found in DVE at {}", metadataPath);
+                        }
+
+                        if (statusObj == null) {
+                            return Optional.empty();
+                        }
+
+                        // Need a fresh stream to read more JSON paths
+                        try (var is2 = fileService.newInputStream(metadataPath)) {
+                            String statusName = null;
+                            try {
+                                statusName = JsonPath.read(is2, "$['ore:describes']['schema:creativeWorkStatus']['schema:name']");
+                            }
+                            catch (PathNotFoundException e) {
+                                // If name missing, treat as not deaccessioned
+                                return Optional.empty();
+                            }
+
+                            if ("DEACCESSIONED".equalsIgnoreCase(statusName)) {
+                                try (var is3 = fileService.newInputStream(metadataPath)) {
+                                    String reason = null;
+                                    try {
+                                        reason = JsonPath.read(is3, "$['ore:describes']['schema:creativeWorkStatus']['dvcore:reason']");
+                                    }
+                                    catch (PathNotFoundException e) {
+                                        // Reason missing, return N/a
+                                        return Optional.of("N/a");
+                                    }
+                                    return Optional.of(reason != null && !reason.isBlank() ? reason : "N/a");
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception e) {
+                        throw new IllegalStateException("Unable to read creativeWorkStatus from metadata file", e);
+                    }
+                }
+            }
+        }
+        catch (IOException | ProviderNotFoundException e) {
+            throw new RuntimeException("The file system provider is not found. Probably not a ZIP file: " + dve, e);
+        }
+        return Optional.empty();
     }
 
     public String getContactName() throws IOException {

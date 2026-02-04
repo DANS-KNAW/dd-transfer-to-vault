@@ -250,6 +250,58 @@ public class TransferItemTest extends TestDirFixture {
         assertThat(item.getContactEmail()).isEqualTo("contact@example.org");
     }
 
+    @Test
+    public void getDeaccessionedReason_should_return_reason_when_deaccessioned() throws Exception {
+        var sourceDir = testDir.resolve("transfer-item-deacc");
+        Files.createDirectories(sourceDir);
+        var dve = sourceDir.resolve("dataset_v1.zip");
+        createDveZip(dve,
+            "Contact Name",
+            "contact@example.org",
+            "urn:nbn:nl:ui:13-abcdef",
+            "doi:10.5072/FK2/ABCDEF:1.0",
+            null,
+            "DEACCESSIONED",
+            "There is identifiable data in one or more files.");
+
+        var item = new TransferItem(dve, new FileServiceImpl());
+        assertThat(item.getDeaccessionedReason()).contains("There is identifiable data in one or more files.");
+    }
+
+    @Test
+    public void getDeaccessionedReason_should_return_empty_when_not_deaccessioned_or_missing() throws Exception {
+        var sourceDir = testDir.resolve("transfer-item-not-deacc");
+        Files.createDirectories(sourceDir);
+        var dve = sourceDir.resolve("dataset_v1.zip");
+        // creativeWorkStatus present but not DEACCESSIONED
+        createDveZip(dve,
+            null,
+            null,
+            "urn:nbn:nl:ui:13-xyz",
+            null,
+            null,
+            "PUBLISHED",
+            null);
+
+        var item = new TransferItem(dve, new FileServiceImpl());
+        assertThat(item.getDeaccessionedReason()).isEmpty();
+
+        var sourceDir2 = testDir.resolve("transfer-item-no-status");
+        Files.createDirectories(sourceDir2);
+        var dve2 = sourceDir2.resolve("dataset_v2.zip");
+        // No creativeWorkStatus at all
+        createDveZip(dve2,
+            null,
+            null,
+            "urn:nbn:nl:ui:13-xyz",
+            null,
+            null,
+            null,
+            null);
+        var item2 = new TransferItem(dve2, new FileServiceImpl());
+        assertThat(item2.getDeaccessionedReason()).isEmpty();
+    }
+
 
     /**
      * Helper method to create a DVE zip file for testing purposes. Creates a minimal BagIt structure with bag-info.txt containing contact information and optionally an oai-ore.jsonld metadata file
@@ -264,6 +316,11 @@ public class TransferItemTest extends TestDirFixture {
      * @throws IOException if an I/O error occurs during zip creation
      */
     private static void createDveZip(Path zipPath, String contactName, String contactEmail, String nbn, String pidVersion, String hasOrganizationalIdentifierVersion) throws IOException {
+        createDveZip(zipPath, contactName, contactEmail, nbn, pidVersion, hasOrganizationalIdentifierVersion, null, null);
+    }
+
+    private static void createDveZip(Path zipPath, String contactName, String contactEmail, String nbn, String pidVersion, String hasOrganizationalIdentifierVersion,
+                                     String creativeWorkStatusName, String deaccessionReason) throws IOException {
         var env = new HashMap<String, String>();
         env.put("create", "true");
         try (var zipfs = FileSystems.newFileSystem(URI.create("jar:" + zipPath.toUri()), env)) {
@@ -286,19 +343,34 @@ public class TransferItemTest extends TestDirFixture {
             }
             Files.writeString(top.resolve("bag-info.txt"), bagInfo.toString(), StandardCharsets.UTF_8);
 
-            if (nbn != null || pidVersion != null) {
+            if (nbn != null || pidVersion != null || creativeWorkStatusName != null) {
                 var metadataDir = Files.createDirectories(top.resolve("metadata"));
                 var nbnJson = nbn != null ? "\"dansDataVaultMetadata:dansNbn\": \"%s\"".formatted(nbn) : "";
                 var pidVersionJson = pidVersion != null ? "\"dansDataVaultMetadata:dansDataversePidVersion\": \"%s\"".formatted(pidVersion) : "";
-                var comma = (nbn != null && pidVersion != null) ? "," : "";
+                var statusJson = creativeWorkStatusName != null ? "\"schema:creativeWorkStatus\": { \"schema:name\": \"%s\"%s }".formatted(
+                    creativeWorkStatusName,
+                    deaccessionReason != null ? ", \"dvcore:reason\": \"%s\"".formatted(deaccessionReason) : ""
+                ) : "";
+
+                // Build JSON parts with commas properly
+                var parts = new StringBuilder();
+                if (!nbnJson.isEmpty()) parts.append(nbnJson);
+                if (!pidVersionJson.isEmpty()) {
+                    if (!parts.isEmpty()) parts.append(", ");
+                    parts.append(pidVersionJson);
+                }
+                if (!statusJson.isEmpty()) {
+                    if (!parts.isEmpty()) parts.append(", ");
+                    parts.append(statusJson);
+                }
 
                 var json = """
                     {
                       "ore:describes": {
-                        %s%s%s
+                        %s
                       }
                     }
-                    """.formatted(nbnJson, comma, pidVersionJson);
+                    """.formatted(parts.toString());
                 Files.writeString(metadataDir.resolve("oai-ore.jsonld"), json, StandardCharsets.UTF_8);
             }
         }
