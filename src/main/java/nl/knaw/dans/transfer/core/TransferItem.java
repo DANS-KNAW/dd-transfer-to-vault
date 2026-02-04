@@ -15,6 +15,7 @@
  */
 package nl.knaw.dans.transfer.core;
 
+import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.PathNotFoundException;
 import lombok.extern.slf4j.Slf4j;
@@ -28,6 +29,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.ProviderNotFoundException;
 import java.util.Optional;
+import java.util.function.Function;
 
 /**
  * A Dataset Version Export (DVE) and auxiliary files. The DVE is the only mandatory file. The other files are searched next to the DVE or constructed from the DVE. This class is intended to provide
@@ -99,6 +101,77 @@ public class TransferItem {
         }
     }
 
+    // Helper: open zip filesystem and provide the discovered top-level dataset directory
+    private <T> T withTopLevelDir(Function<Path, T> action) throws IOException {
+        try (var zipFs = fileService.newFileSystem(dve)) {
+            var rootDir = zipFs.getRootDirectories().iterator().next();
+            try (var topLevelDirStream = fileService.list(rootDir)) {
+                var topLevelDir = topLevelDirStream
+                    .filter(fileService::isDirectory)
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalStateException("No top-level directory found in DVE"));
+                return action.apply(topLevelDir);
+            }
+        }
+        catch (ProviderNotFoundException e) {
+            throw new RuntimeException("The file system provider is not found. Probably not a ZIP file: " + dve, e);
+        }
+    }
+
+    // Helper: resolve metadata file path and ensure it exists
+    private Path resolveMetadataPath(Path topLevelDir) {
+        var metadataPath = topLevelDir.resolve(METADATA_PATH);
+        if (!fileService.exists(metadataPath)) {
+            throw new IllegalStateException("No metadata file found in DVE at " + metadataPath);
+        }
+        return metadataPath;
+    }
+
+    // Helper: read metadata json into a JsonPath DocumentContext once, to avoid reopening streams
+    private DocumentContext readMetadata(Path metadataPath) {
+        try (var is = fileService.newInputStream(metadataPath)) {
+            return JsonPath.parse(is);
+        }
+        catch (IOException e) {
+            throw new IllegalStateException("Unable to read metadata file: " + metadataPath, e);
+        }
+    }
+
+    // Helper: read a single JSON path value as String from metadata, returns Optional.empty on missing path
+    private Optional<String> readMetadataValue(DocumentContext json, String jsonPath) {
+        try {
+            var value = json.read(jsonPath, String.class);
+            return Optional.ofNullable(value);
+        }
+        catch (PathNotFoundException e) {
+            return Optional.empty();
+        }
+        catch (Exception e) {
+            throw new IllegalStateException("Unable to read value from metadata json path: " + jsonPath, e);
+        }
+    }
+
+    // Helper: read first value of a BagInfo key
+    private Optional<String> readBagInfoFirstValue(Path topLevelDir, String key) {
+        try {
+            var bag = new BagReader().read(topLevelDir);
+            var values = bag.getMetadata().get(key);
+            if (values != null && !values.isEmpty()) {
+                return Optional.ofNullable(values.get(0));
+            }
+            return Optional.empty();
+        }
+        catch (IOException e) {
+            throw new RuntimeException("Unable to read bag from DVE: " + dve, e);
+        }
+        catch (MaliciousPathException e) {
+            throw new RuntimeException(e);
+        }
+        catch (UnparsableVersionException | UnsupportedAlgorithmException | InvalidBagitFileFormatException e) {
+            throw new RuntimeException("Unable to read bag info from DVE: " + dve, e);
+        }
+    }
+
     /**
      * Returns the reason for deaccessioning the dataset version if the dataset version is deaccessioned. If it is not deaccessioned, it returns an empty Optional.
      *
@@ -106,69 +179,47 @@ public class TransferItem {
      */
     public Optional<String> getDeaccessionedReason() {
         try {
-            try (var zipFs = fileService.newFileSystem(dve)) {
-                var rootDir = zipFs.getRootDirectories().iterator().next();
-                try (var topLevelDirStream = fileService.list(rootDir)) {
-                    var topLevelDir = topLevelDirStream.filter(fileService::isDirectory)
-                        .findFirst()
-                        .orElseThrow(() -> new IllegalStateException("No top-level directory found in DVE"));
+            return withTopLevelDir(topLevelDir -> {
+                Path metadataPath;
+                try {
+                    metadataPath = resolveMetadataPath(topLevelDir);
+                }
+                catch (IllegalStateException e) {
+                    log.warn(e.getMessage());
+                    return Optional.empty();
+                }
+                var json = readMetadata(metadataPath);
 
-                    var metadataPath = topLevelDir.resolve(METADATA_PATH);
-                    if (!fileService.exists(metadataPath)) {
-                        log.warn("No metadata file found in DVE at {}", metadataPath);
+                // Check if creativeWorkStatus exists
+                try {
+                    Object statusObj = json.read(DATAVERSE_WORK_STATUS_JSON_PATH);
+                    if (statusObj == null) {
                         return Optional.empty();
                     }
-
-                    try (var is = fileService.newInputStream(metadataPath)) {
-                        // First check if a creativeWorkStatus object exists under ore:describes
-                        Object statusObj = null;
-                        try {
-                            statusObj = JsonPath.read(is, DATAVERSE_WORK_STATUS_JSON_PATH);
-                        }
-                        catch (PathNotFoundException e) {
-                            log.warn("No creativeWorkStatus found in DVE at {}", metadataPath);
-                        }
-
-                        if (statusObj == null) {
-                            return Optional.empty();
-                        }
-
-                        // Need a fresh stream to read more JSON paths
-                        try (var is2 = fileService.newInputStream(metadataPath)) {
-                            String statusName = null;
-                            try {
-                                statusName = JsonPath.read(is2, "$['ore:describes']['schema:creativeWorkStatus']['schema:name']");
-                            }
-                            catch (PathNotFoundException e) {
-                                // If name missing, treat as not deaccessioned
-                                return Optional.empty();
-                            }
-
-                            if ("DEACCESSIONED".equalsIgnoreCase(statusName)) {
-                                try (var is3 = fileService.newInputStream(metadataPath)) {
-                                    String reason = null;
-                                    try {
-                                        reason = JsonPath.read(is3, "$['ore:describes']['schema:creativeWorkStatus']['dvcore:reason']");
-                                    }
-                                    catch (PathNotFoundException e) {
-                                        // Reason missing, return N/a
-                                        return Optional.of("N/a");
-                                    }
-                                    return Optional.of(reason != null && !reason.isBlank() ? reason : "N/a");
-                                }
-                            }
-                        }
-                    }
-                    catch (Exception e) {
-                        throw new IllegalStateException("Unable to read creativeWorkStatus from metadata file", e);
-                    }
                 }
-            }
+                catch (PathNotFoundException e) {
+                    log.warn("No creativeWorkStatus found in DVE at {}", metadataPath);
+                    return Optional.empty();
+                }
+                catch (Exception e) {
+                    throw new IllegalStateException("Unable to read creativeWorkStatus from metadata file", e);
+                }
+
+                // Read name and reason
+                var statusNameOpt = readMetadataValue(json, "$['ore:describes']['schema:creativeWorkStatus']['schema:name']");
+                if (statusNameOpt.isEmpty()) {
+                    return Optional.empty();
+                }
+                if ("DEACCESSIONED".equalsIgnoreCase(statusNameOpt.get())) {
+                    var reasonOpt = readMetadataValue(json, "$['ore:describes']['schema:creativeWorkStatus']['dvcore:reason']");
+                    return Optional.of(reasonOpt.filter(s -> !s.isBlank()).orElse("N/a"));
+                }
+                return Optional.empty();
+            });
         }
-        catch (IOException | ProviderNotFoundException e) {
-            throw new RuntimeException("The file system provider is not found. Probably not a ZIP file: " + dve, e);
+        catch (IOException e) {
+            throw new RuntimeException(e);
         }
-        return Optional.empty();
     }
 
     public String getContactName() throws IOException {
@@ -186,33 +237,14 @@ public class TransferItem {
             return;
         }
 
-        try (var zipFs = fileService.newFileSystem(dve)) {
-            var rootDir = zipFs.getRootDirectories().iterator().next();
-            try (var topLevelDirStream = fileService.list(rootDir)) {
-                var topLevelDir = topLevelDirStream.filter(fileService::isDirectory)
-                    .findFirst()
-                    .orElseThrow(() -> new IllegalStateException("No top-level directory found in DVE"));
-
-                var bag = new BagReader().read(topLevelDir);
-                /*
-                 * OCFL only allows one user object for the version info, so we select the first.
-                 */
-                var contactEmails = bag.getMetadata().get("Contact-Email");
-                cachedContactEmail = (contactEmails != null && !contactEmails.isEmpty()) ? contactEmails.get(0) : null;
-                var contactNames = bag.getMetadata().get("Contact-Name");
-                // Fallback to contact email when contact name is not available
-                cachedContactName = (contactNames != null && !contactNames.isEmpty()) ? contactNames.get(0) : cachedContactEmail;
-            }
-            catch (MaliciousPathException e) {
-                throw new RuntimeException(e);
-            }
-            catch (UnparsableVersionException | UnsupportedAlgorithmException | InvalidBagitFileFormatException e) {
-                throw new RuntimeException("Unable to read bag info from DVE: " + dve, e);
-            }
-        }
-        catch (IOException e) {
-            throw new RuntimeException("The file system provider is not found. Probably not a ZIP file: " + dve, e);
-        }
+        var result = withTopLevelDir(topLevelDir -> {
+            var emailOpt = readBagInfoFirstValue(topLevelDir, "Contact-Email");
+            var nameOpt = readBagInfoFirstValue(topLevelDir, "Contact-Name");
+            return new String[]{emailOpt.orElse(null), nameOpt.orElse(null)};
+        });
+        cachedContactEmail = result[0];
+        // Fallback to contact email when contact name is not available
+        cachedContactName = (result[1] != null && !result[1].isBlank()) ? result[1] : cachedContactEmail;
     }
 
     public String getNbn() throws IOException {
@@ -225,34 +257,15 @@ public class TransferItem {
             return;
         }
 
-        try {
-            try (var zipFs = fileService.newFileSystem(dve)) {
-                var rootDir = zipFs.getRootDirectories().iterator().next();
-                try (var topLevelDirStream = fileService.list(rootDir)) {
-                    var topLevelDir = topLevelDirStream.filter(fileService::isDirectory)
-                        .findFirst()
-                        .orElseThrow(() -> new IllegalStateException("No top-level directory found in DVE"));
-
-                    var metadataPath = topLevelDir.resolve(METADATA_PATH);
-                    if (!fileService.exists(metadataPath)) {
-                        throw new IllegalStateException("No metadata file found in DVE");
-                    }
-
-                    try (var is = fileService.newInputStream(metadataPath)) {
-                        cachedNbn = JsonPath.read(is, NBN_JSON_PATH);
-                    }
-                    catch (PathNotFoundException e) {
-                        throw new IllegalStateException("No NBN found in DVE", e);
-                    }
-                    catch (Exception e) {
-                        throw new IllegalStateException("Unable to read NBN from metadata file", e);
-                    }
-                }
+        cachedNbn = withTopLevelDir(topLevelDir -> {
+            var metadataPath = resolveMetadataPath(topLevelDir);
+            var json = readMetadata(metadataPath);
+            var nbnOpt = readMetadataValue(json, NBN_JSON_PATH);
+            if (nbnOpt.isEmpty()) {
+                throw new IllegalStateException("No NBN found in DVE");
             }
-        }
-        catch (ProviderNotFoundException e) {
-            throw new RuntimeException("The file system provider is not found. Probably not a ZIP file: " + dve, e);
-        }
+            return nbnOpt.get();
+        });
     }
 
     public Optional<String> getDataversePidVersion() throws IOException {
@@ -265,35 +278,15 @@ public class TransferItem {
             return;
         }
 
-        try {
-            try (var zipFs = fileService.newFileSystem(dve)) {
-                var rootDir = zipFs.getRootDirectories().iterator().next();
-                try (var topLevelDirStream = fileService.list(rootDir)) {
-                    var topLevelDir = topLevelDirStream.filter(fileService::isDirectory)
-                        .findFirst()
-                        .orElseThrow(() -> new IllegalStateException("No top-level directory found in DVE"));
-
-                    var metadataPath = topLevelDir.resolve(METADATA_PATH);
-                    if (!fileService.exists(metadataPath)) {
-                        log.warn("No metadata file found in DVE at {}", metadataPath);
-                        return;
-                    }
-
-                    try (var is = fileService.newInputStream(metadataPath)) {
-                        cachedDataversePidVersion = JsonPath.read(is, DATAVERSE_PID_VERSION_JSON_PATH);
-                    }
-                    catch (PathNotFoundException e) {
-                        log.warn("No Dataverse PID version found in DVE at {}", metadataPath);
-                    }
-                    catch (Exception e) {
-                        throw new IllegalStateException("Unable to read Dataverse PID version from metadata file", e);
-                    }
-                }
+        cachedDataversePidVersion = withTopLevelDir(topLevelDir -> {
+            var metadataPath = topLevelDir.resolve(METADATA_PATH);
+            if (!fileService.exists(metadataPath)) {
+                log.warn("No metadata file found in DVE at {}", metadataPath);
+                return null;
             }
-        }
-        catch (IOException | ProviderNotFoundException e) {
-            throw new RuntimeException("The file system provider is not found. Probably not a ZIP file: " + dve, e);
-        }
+            var json = readMetadata(metadataPath);
+            return readMetadataValue(json, DATAVERSE_PID_VERSION_JSON_PATH).orElse(null);
+        });
     }
 
     public Optional<String> getHasOrganizationalIdentifierVersion() throws IOException {
@@ -306,30 +299,9 @@ public class TransferItem {
             return;
         }
 
-        try {
-            try (var zipFs = fileService.newFileSystem(dve)) {
-                var rootDir = zipFs.getRootDirectories().iterator().next();
-                try (var topLevelDirStream = fileService.list(rootDir)) {
-                    var topLevelDir = topLevelDirStream.filter(fileService::isDirectory)
-                        .findFirst()
-                        .orElseThrow(() -> new IllegalStateException("No top-level directory found in DVE"));
-
-                    var bag = new BagReader().read(topLevelDir);
-                    var values = bag.getMetadata().get(HAS_ORGANIZATIONAL_IDENTIFIER_VERSION);
-                    if (values != null && !values.isEmpty()) {
-                        cachedHasOrganizationalIdentifierVersion = values.get(0);
-                    }
-                }
-                catch (MaliciousPathException e) {
-                    throw new RuntimeException(e);
-                }
-                catch (UnparsableVersionException | UnsupportedAlgorithmException | InvalidBagitFileFormatException e) {
-                    throw new RuntimeException("Unable to read bag info from DVE: " + dve, e);
-                }
-            }
-        }
-        catch (ProviderNotFoundException e) {
-            throw new RuntimeException("The file system provider is not found. Probably not a ZIP file: " + dve, e);
-        }
+        var opt = withTopLevelDir(topLevelDir ->
+            readBagInfoFirstValue(topLevelDir, HAS_ORGANIZATIONAL_IDENTIFIER_VERSION)
+        );
+        cachedHasOrganizationalIdentifierVersion = opt.orElse(null);
     }
 }
