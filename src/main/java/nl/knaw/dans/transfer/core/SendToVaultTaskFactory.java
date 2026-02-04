@@ -24,7 +24,7 @@ import nl.knaw.dans.transfer.client.DataVaultClient;
 import nl.knaw.dans.transfer.config.CustomPropertyConfig;
 
 import java.nio.file.Path;
-import java.util.Map;
+import java.util.List;
 
 @Builder
 public class SendToVaultTaskFactory implements InboxTaskFactory {
@@ -43,7 +43,7 @@ public class SendToVaultTaskFactory implements InboxTaskFactory {
     @NonNull
     private final String defaultMessage;
     @NonNull
-    private final Map<String, CustomPropertyConfig> customProperties;
+    private final List<CustomPropertyConfig> customProperties;
     @NonNull
     private final FileService fileService;
     @NonNull

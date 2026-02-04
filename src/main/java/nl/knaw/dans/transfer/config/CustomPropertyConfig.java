@@ -24,11 +24,13 @@ import java.io.IOException;
 import java.util.Optional;
 
 @Data
-@JsonTypeInfo(use = JsonTypeInfo.Id.DEDUCTION)
+@JsonTypeInfo(use = JsonTypeInfo.Id.DEDUCTION, defaultImpl = DeaccessionedCustomPropertyConfig.class)
 @JsonSubTypes({
     @JsonSubTypes.Type(DatasetVersionCustomPropertyConfig.class),
-    @JsonSubTypes.Type(FixedValueCustomPropertyConfig.class)
+    @JsonSubTypes.Type(FixedValueCustomPropertyConfig.class),
+    @JsonSubTypes.Type(DeaccessionedCustomPropertyConfig.class)
 })
 public abstract class CustomPropertyConfig {
-    public abstract Optional<String> getValue(TransferItem transferItem) throws IOException;
+    private String name;
+    public abstract Optional<Object> getValue(TransferItem transferItem) throws IOException;
 }

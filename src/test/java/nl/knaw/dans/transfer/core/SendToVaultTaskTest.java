@@ -16,6 +16,7 @@
 package nl.knaw.dans.transfer.core;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.dropwizard.util.DataSize;
 import nl.knaw.dans.lib.util.healthcheck.DependenciesReadyCheck;
 import nl.knaw.dans.transfer.TestDirFixture;
 import nl.knaw.dans.transfer.client.DataVaultClient;
@@ -25,7 +26,8 @@ import org.mockito.Mockito;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -44,10 +46,10 @@ public class SendToVaultTaskTest extends TestDirFixture {
         FileService fileService = new FileServiceImpl();
         DependenciesReadyCheck readyCheck = Mockito.mock(DependenciesReadyCheck.class);
         String defaultMessage = "Default message with\nnewline";
-        Map<String, CustomPropertyConfig> customProperties = new HashMap<>();
+        List<CustomPropertyConfig> customProperties = new ArrayList<>();
 
         var task = new SendToVaultTask(
-            dve, currentBatchWorkDir, dataVaultBatchRoot, null, outboxProcessed, outboxFailed,
+            dve, currentBatchWorkDir, dataVaultBatchRoot, DataSize.bytes(0), outboxProcessed, outboxFailed,
             dataVaultClient, defaultMessage, customProperties, fileService, readyCheck, 100
         );
 

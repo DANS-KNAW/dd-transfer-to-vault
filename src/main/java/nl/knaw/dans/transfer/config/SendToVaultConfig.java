@@ -20,7 +20,7 @@ import lombok.Data;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
-import java.util.Map;
+import java.util.List;
 
 @Data
 public class SendToVaultConfig {
@@ -40,7 +40,7 @@ public class SendToVaultConfig {
     private String defaultMessage;
 
     @Valid
-    private Map<String, CustomPropertyConfig> customProperties;
+    private List<CustomPropertyConfig> customProperties;
 
     @NotNull
     private Duration delayBetweenProcessingRounds = Duration.seconds(2);

@@ -29,6 +29,7 @@ import nl.knaw.dans.transfer.health.HealthChecks;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static org.apache.commons.io.FileUtils.moveDirectory;
@@ -46,14 +47,14 @@ public class SendToVaultTask extends SourceDirItemProcessor implements Runnable 
     private final Path outboxFailed;
     private final DataVaultClient dataVaultClient;
     private final String defaultMessage;
-    private final Map<String, CustomPropertyConfig> customProperties;
+    private final List<CustomPropertyConfig> customProperties;
     private final FileService fileService;
     private final DependenciesReadyCheck readyCheck;
 
     private TransferItem currentTransferItem;
 
-    public SendToVaultTask(Path srcDir, Path currentBatchWorkDir, Path dataVaultBatchRoot, DataSize batchThreshold, Path outboxProcessed, Path outboxFailed,
-        DataVaultClient dataVaultClient, String defaultMessage, Map<String, CustomPropertyConfig> customProperties, FileService fileService, DependenciesReadyCheck readyCheck,
+    public SendToVaultTask(@NonNull Path srcDir, @NonNull Path currentBatchWorkDir, @NonNull Path dataVaultBatchRoot, @NonNull DataSize batchThreshold, @NonNull Path outboxProcessed, @NonNull Path outboxFailed,
+        @NonNull DataVaultClient dataVaultClient, @NonNull String defaultMessage, @NonNull List<CustomPropertyConfig> customProperties, @NonNull FileService fileService, @NonNull DependenciesReadyCheck readyCheck,
         long delayBetweenProcessingRounds) {
         super(srcDir, "DVE", new DveFileFilter().toPredicate(), CreationTimeComparator.getInstance(), fileService, delayBetweenProcessingRounds);
         this.targetNbnDir = srcDir;
@@ -129,18 +130,12 @@ public class SendToVaultTask extends SourceDirItemProcessor implements Runnable 
         versionInfo.put("message", message);
         root.put("version-info", versionInfo);
 
-        Map<String, String> custom = new HashMap<>();
+        Map<String, Object> custom = new HashMap<>();
         if (customProperties != null) {
-            for (var entry : customProperties.entrySet()) {
-                var name = entry.getKey();
-                var config = entry.getValue();
+            for (var config : customProperties) {
+                var name = config.getName();
                 var value = config.getValue(currentTransferItem);
-
-                value.ifPresent(v -> {
-                    if (!v.isBlank()) {
-                        custom.put(name, v);
-                    }
-                });
+                value.ifPresent(v -> custom.put(name, v));
             }
         }
         if (!custom.isEmpty()) {

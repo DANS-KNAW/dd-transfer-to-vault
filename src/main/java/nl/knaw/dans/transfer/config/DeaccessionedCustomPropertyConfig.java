@@ -20,15 +20,15 @@ import lombok.EqualsAndHashCode;
 import nl.knaw.dans.transfer.core.TransferItem;
 
 import java.io.IOException;
+import java.util.Map;
 import java.util.Optional;
 
 @Data
-@EqualsAndHashCode(callSuper = false)
-public class FixedValueCustomPropertyConfig extends CustomPropertyConfig {
-    private String value;
-
+@EqualsAndHashCode(callSuper = true)
+public class DeaccessionedCustomPropertyConfig extends CustomPropertyConfig {
     @Override
     public Optional<Object> getValue(TransferItem transferItem) throws IOException {
-        return Optional.ofNullable(value);
+        return transferItem.getDeaccessionedReason().map(reason ->
+            Map.of("reason", reason));
     }
 }
