@@ -67,12 +67,12 @@ transfer:
     defaultMessage: No message
     # Send the following custom version properties along. Note that "source" is property-defined.
     customProperties:
-      # source can be:
-      # - dansDataversePidVersion -> retrieved from the Vault Metadata field with the same name.
-      # - Has-Organizational-Identifier-Version -> retrieved from the bag-info.txt element with the same name.
-      dataset-version:
-        source: dansDataversePidVersion # Has-Organizational-Identifier-Version
+      - name: dataset-version
+        source: dansDataversePidVersion
         failIfMissing: true
+      - name: packaging-format
+        value: DANS RDA BagPack Profile/1.0.0
+      - name: deaccessioned
 
 health:
   delayedShutdownHandlerEnabled: false

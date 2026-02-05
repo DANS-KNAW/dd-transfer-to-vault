@@ -15,23 +15,20 @@
  */
 package nl.knaw.dans.transfer.config;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import nl.knaw.dans.transfer.core.TransferItem;
 
 import java.io.IOException;
+import java.util.Map;
 import java.util.Optional;
 
 @Data
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = As.EXISTING_PROPERTY, property = "name", visible = true)
-@JsonSubTypes({
-    @JsonSubTypes.Type(name = "dataset-version", value = DatasetVersionCustomPropertyConfig.class),
-    @JsonSubTypes.Type(name = "packaging-format", value = FixedValueCustomPropertyConfig.class),
-    @JsonSubTypes.Type(name = "deaccessioned", value = DeaccessionedCustomPropertyConfig.class)
-})
-public abstract class CustomPropertyConfig {
-    private String name;
-    public abstract Optional<Object> getValue(TransferItem transferItem) throws IOException;
+@EqualsAndHashCode(callSuper = true)
+public class DeaccessionedCustomPropertyConfig extends CustomPropertyConfig {
+    @Override
+    public Optional<Object> getValue(TransferItem transferItem) throws IOException {
+        return transferItem.getDeaccessionedReason().map(reason ->
+            Map.of("reason", reason));
+    }
 }

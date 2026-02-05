@@ -28,7 +28,7 @@ public class FixedValueCustomPropertyConfig extends CustomPropertyConfig {
     private String value;
 
     @Override
-    public Optional<String> getValue(TransferItem transferItem) throws IOException {
+    public Optional<Object> getValue(TransferItem transferItem) throws IOException {
         return Optional.ofNullable(value);
     }
 }

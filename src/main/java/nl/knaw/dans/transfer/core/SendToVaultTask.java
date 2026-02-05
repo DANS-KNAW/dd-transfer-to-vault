@@ -15,6 +15,7 @@
  */
 package nl.knaw.dans.transfer.core;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.dropwizard.util.DataSize;
 import lombok.NonNull;
 import lombok.ToString;
@@ -27,8 +28,9 @@ import nl.knaw.dans.transfer.health.HealthChecks;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 
 import static org.apache.commons.io.FileUtils.moveDirectory;
 import static org.apache.commons.io.FileUtils.sizeOfDirectory;
@@ -45,14 +47,14 @@ public class SendToVaultTask extends SourceDirItemProcessor implements Runnable 
     private final Path outboxFailed;
     private final DataVaultClient dataVaultClient;
     private final String defaultMessage;
-    private final Map<String, CustomPropertyConfig> customProperties;
+    private final List<CustomPropertyConfig> customProperties;
     private final FileService fileService;
     private final DependenciesReadyCheck readyCheck;
 
     private TransferItem currentTransferItem;
 
-    public SendToVaultTask(Path srcDir, Path currentBatchWorkDir, Path dataVaultBatchRoot, DataSize batchThreshold, Path outboxProcessed, Path outboxFailed,
-        DataVaultClient dataVaultClient, String defaultMessage, Map<String, CustomPropertyConfig> customProperties, FileService fileService, DependenciesReadyCheck readyCheck,
+    public SendToVaultTask(@NonNull Path srcDir, @NonNull Path currentBatchWorkDir, @NonNull Path dataVaultBatchRoot, @NonNull DataSize batchThreshold, @NonNull Path outboxProcessed, @NonNull Path outboxFailed,
+        @NonNull DataVaultClient dataVaultClient, @NonNull String defaultMessage, @NonNull List<CustomPropertyConfig> customProperties, @NonNull FileService fileService, @NonNull DependenciesReadyCheck readyCheck,
         long delayBetweenProcessingRounds) {
         super(srcDir, "DVE", new DveFileFilter().toPredicate(), CreationTimeComparator.getInstance(), fileService, delayBetweenProcessingRounds);
         this.targetNbnDir = srcDir;
@@ -111,34 +113,37 @@ public class SendToVaultTask extends SourceDirItemProcessor implements Runnable 
         var versionDirectory = objectImportDirectory.resolve("v" + ocflObjectVersionNumber);
         log.debug("Extracting DVE {} to {}", dvePath, versionDirectory);
         ZipUtil.extractZipFile(dvePath, versionDirectory);
-        createVersionInfoProperties(versionDirectory, currentTransferItem.getContactName(), currentTransferItem.getContactEmail(), defaultMessage);
+        createVersionInfoJson(versionDirectory, currentTransferItem.getContactName(), currentTransferItem.getContactEmail(), defaultMessage);
     }
 
-    void createVersionInfoProperties(@NonNull Path versionDirectory, @NonNull String user, @NonNull String email, @NonNull String message) throws IOException {
-        var versionInfoFile = versionDirectory.resolveSibling(versionDirectory.getFileName().toString() + ".properties");
-        log.debug("Creating version info properties file at {}", versionInfoFile);
+    void createVersionInfoJson(@NonNull Path versionDirectory, @NonNull String user, @NonNull String email, @NonNull String message) throws IOException {
+        var versionInfoFile = versionDirectory.resolveSibling(versionDirectory.getFileName().toString() + ".json");
+        log.debug("Creating version info JSON file at {}", versionInfoFile);
 
-        var props = new Properties();
-        props.setProperty("user.name", user.replaceAll(NEWLINE_TAB_REGEX, "").trim());
-        props.setProperty("user.email", email.replaceAll(NEWLINE_TAB_REGEX, "").trim());
-        props.setProperty("message", message);
+        var mapper = new ObjectMapper();
+        Map<String, Object> root = new HashMap<>();
+        Map<String, Object> versionInfo = new HashMap<>();
+        Map<String, Object> userObj = new HashMap<>();
+        userObj.put("name", user.replaceAll(NEWLINE_TAB_REGEX, "").trim());
+        userObj.put("email", email.replaceAll(NEWLINE_TAB_REGEX, "").trim());
+        versionInfo.put("user", userObj);
+        versionInfo.put("message", message);
+        root.put("version-info", versionInfo);
 
+        Map<String, Object> custom = new HashMap<>();
         if (customProperties != null) {
-            for (var entry : customProperties.entrySet()) {
-                var name = entry.getKey();
-                var config = entry.getValue();
+            for (var config : customProperties) {
+                var name = config.getName();
                 var value = config.getValue(currentTransferItem);
-
-                value.ifPresent(v -> {
-                    if (!v.isBlank()) {
-                        props.setProperty("custom." + name, v);
-                    }
-                });
+                value.ifPresent(v -> custom.put(name, v));
             }
+        }
+        if (!custom.isEmpty()) {
+            root.put("object-version-properties", custom);
         }
 
         try (var os = fileService.newOutputStream(versionInfoFile)) {
-            props.store(os, null);
+            mapper.writerWithDefaultPrettyPrinter().writeValue(os, root);
         }
     }
 

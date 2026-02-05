@@ -15,6 +15,8 @@
  */
 package nl.knaw.dans.transfer.core;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.dropwizard.util.DataSize;
 import nl.knaw.dans.lib.util.healthcheck.DependenciesReadyCheck;
 import nl.knaw.dans.transfer.TestDirFixture;
 import nl.knaw.dans.transfer.client.DataVaultClient;
@@ -24,9 +26,9 @@ import org.mockito.Mockito;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -44,10 +46,10 @@ public class SendToVaultTaskTest extends TestDirFixture {
         FileService fileService = new FileServiceImpl();
         DependenciesReadyCheck readyCheck = Mockito.mock(DependenciesReadyCheck.class);
         String defaultMessage = "Default message with\nnewline";
-        Map<String, CustomPropertyConfig> customProperties = new HashMap<>();
+        List<CustomPropertyConfig> customProperties = new ArrayList<>();
 
         var task = new SendToVaultTask(
-            dve, currentBatchWorkDir, dataVaultBatchRoot, null, outboxProcessed, outboxFailed,
+            dve, currentBatchWorkDir, dataVaultBatchRoot, DataSize.bytes(0), outboxProcessed, outboxFailed,
             dataVaultClient, defaultMessage, customProperties, fileService, readyCheck, 100
         );
 
@@ -59,19 +61,21 @@ public class SendToVaultTaskTest extends TestDirFixture {
         String message = "Message with = and : and \n newline";
 
         // When
-        task.createVersionInfoProperties(versionDirectory, user, email, message);
+        task.createVersionInfoJson(versionDirectory, user, email, message);
 
         // Then
-        Path propertiesFile = testDir.resolve("v1.properties");
-        assertThat(propertiesFile).exists();
+        Path jsonFile = testDir.resolve("v1.json");
+        assertThat(jsonFile).exists();
 
-        Properties props = new Properties();
-        try (var is = Files.newInputStream(propertiesFile)) {
-            props.load(is);
+        var mapper = new ObjectMapper();
+        Map<?,?> root;
+        try (var is = Files.newInputStream(jsonFile)) {
+            root = mapper.readValue(is, Map.class);
         }
-
-        assertThat(props.getProperty("user.name")).isEqualTo("John Doe");
-        assertThat(props.getProperty("user.email")).isEqualTo("john@example.com");
-        assertThat(props.getProperty("message")).isEqualTo(message);
+        Map<?,?> versionInfo = (Map<?,?>) root.get("version-info");
+        Map<?,?> userObj = (Map<?,?>) versionInfo.get("user");
+        assertThat(userObj.get("name")).isEqualTo("John Doe");
+        assertThat(userObj.get("email")).isEqualTo("john@example.com");
+        assertThat(versionInfo.get("message")).isEqualTo(message);
     }
 }

@@ -29,10 +29,10 @@ public class DatasetVersionCustomPropertyConfig extends CustomPropertyConfig {
     private Boolean failIfMissing;
 
     @Override
-    public Optional<String> getValue(TransferItem transferItem) throws IOException {
+    public Optional<Object> getValue(TransferItem transferItem) throws IOException {
         var value = switch (source) {
-            case "dansDataversePidVersion" -> transferItem.getDataversePidVersion();
-            case "Has-Organizational-Identifier-Version" -> transferItem.getHasOrganizationalIdentifierVersion();
+            case "dansDataversePidVersion" -> transferItem.getDataversePidVersion().map(v -> (Object) v);
+            case "Has-Organizational-Identifier-Version" -> transferItem.getHasOrganizationalIdentifierVersion().map(v -> (Object) v);
             default -> throw new IllegalArgumentException("Unknown custom property source: " + source);
         };
 
