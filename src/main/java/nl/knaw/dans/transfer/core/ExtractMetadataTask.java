@@ -87,8 +87,9 @@ public class ExtractMetadataTask extends SourceDirItemProcessor implements Runna
         var dveMetadata = dveMetadataReader.readDveMetadata(item);
 
         log.debug("Registering OCFL Object Version in Vault Catalog");
+        boolean deaccessioned = currentTransferItem.getDeaccessionedReason().isPresent();
         currentTransferItem.setOcflObjectVersion(
-            vaultCatalogClient.registerOcflObjectVersion(ocflStorageRoot, dveMetadata, currentTransferItem.getOcflObjectVersion()));
+            vaultCatalogClient.registerOcflObjectVersion(ocflStorageRoot, dveMetadata, currentTransferItem.getOcflObjectVersion(), deaccessioned));
 
         if (currentTransferItem.getOcflObjectVersion() == 1) {
             log.info("First version of dataset {}. Scheduling NBN registration", currentTransferItem.getNbn());
