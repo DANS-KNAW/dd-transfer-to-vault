@@ -34,18 +34,18 @@ public class VaultCatalogClientImpl implements VaultCatalogClient {
     private final DefaultApi catalogApi;
 
     @Override
-    public int registerOcflObjectVersion(String ocflStorageRoot, DveMetadata dveMetadata, int ocflObjectVersion) throws IOException {
+    public int registerOcflObjectVersion(String ocflStorageRoot, DveMetadata dveMetadata, int ocflObjectVersion, boolean deaccessioned) throws IOException {
         try {
             var datasetDto = getDataset(dveMetadata.getNbn());
             if (datasetDto == null) { // Data Stations only
-                addNewDataset(ocflStorageRoot, dveMetadata);
+                addNewDataset(ocflStorageRoot, dveMetadata, deaccessioned);
                 return 1;
             }
             else if (ocflObjectVersion == 0) { // Data Stations only
-                return addNewVersionExport(datasetDto, dveMetadata);
+                return addNewVersionExport(datasetDto, dveMetadata, deaccessioned);
             }
             else { // VaaS only
-                updateExistingSkeletonVersionExport(datasetDto, dveMetadata, ocflObjectVersion);
+                updateExistingSkeletonVersionExport(datasetDto, dveMetadata, ocflObjectVersion, deaccessioned);
                 return ocflObjectVersion;
             }
         }
@@ -66,7 +66,7 @@ public class VaultCatalogClientImpl implements VaultCatalogClient {
         }
     }
 
-    private void addNewDataset(String ocflStorageRoot, DveMetadata dveMetadata) throws ApiException {
+    private void addNewDataset(String ocflStorageRoot, DveMetadata dveMetadata, boolean deaccessioned) throws ApiException {
         var datasetDto = new DatasetDto()
             .nbn(dveMetadata.getNbn())
             .dataversePid(dveMetadata.getDataversePid())
@@ -76,7 +76,7 @@ public class VaultCatalogClientImpl implements VaultCatalogClient {
 
         var dveDto = new VersionExportDto();
         dveDto.setOcflObjectVersionNumber(1);
-        setVersionExportMetadata(dveMetadata, dveDto);
+        setVersionExportMetadata(dveMetadata, dveDto, deaccessioned);
         setDataFilesOnVersionExport(dveMetadata, dveDto);
         datasetDto.addVersionExportsItem(dveDto);
         dveDto.setDatasetNbn(datasetDto.getNbn());
@@ -87,7 +87,7 @@ public class VaultCatalogClientImpl implements VaultCatalogClient {
         return path.subpath(1, path.getNameCount());
     }
 
-    private void updateExistingSkeletonVersionExport(DatasetDto datasetDto, DveMetadata dveMetadata, int ocflObjectVersion) throws ApiException {
+    private void updateExistingSkeletonVersionExport(DatasetDto datasetDto, DveMetadata dveMetadata, int ocflObjectVersion, boolean deaccessioned) throws ApiException {
         assert datasetDto.getVersionExports() != null;
         var dveDto = datasetDto.getVersionExports()
             .stream()
@@ -98,24 +98,24 @@ public class VaultCatalogClientImpl implements VaultCatalogClient {
         if (Boolean.FALSE.equals(dveDto.getSkeletonRecord())) {
             throw new IllegalArgumentException("The Dataset Version Export record cannot be updated because it is not a skeleton record.");
         }
-        setVersionExportMetadata(dveMetadata, dveDto);
+        setVersionExportMetadata(dveMetadata, dveDto, deaccessioned);
         setDataFilesOnVersionExport(dveMetadata, dveDto);
         catalogApi.updateVersionExport(dveDto.getDatasetNbn(), dveDto.getOcflObjectVersionNumber(), dveDto);
     }
 
-    private int addNewVersionExport(DatasetDto datasetDto, DveMetadata dveMetadata) throws ApiException {
+    private int addNewVersionExport(DatasetDto datasetDto, DveMetadata dveMetadata, boolean deaccessioned) throws ApiException {
         var dveDto = new VersionExportDto();
         assert datasetDto.getVersionExports() != null;
         int ocflObjectVersion = datasetDto.getVersionExports().size() + 1;
         dveDto.setOcflObjectVersionNumber(ocflObjectVersion);
-        setVersionExportMetadata(dveMetadata, dveDto);
+        setVersionExportMetadata(dveMetadata, dveDto, deaccessioned);
         setDataFilesOnVersionExport(dveMetadata, dveDto);
         datasetDto.addVersionExportsItem(dveDto);
         catalogApi.addVersionExport(datasetDto.getNbn(), dveDto);
         return ocflObjectVersion;
     }
 
-    private void setVersionExportMetadata(DveMetadata dveMetadata, VersionExportDto dveDto) {
+    private void setVersionExportMetadata(DveMetadata dveMetadata, VersionExportDto dveDto, boolean deaccessioned) {
         if (dveMetadata.getCreationTime() == null) {
             throw new IllegalArgumentException(dveMetadata.getNbn() + " has no creation time");
         }
@@ -130,6 +130,7 @@ public class VaultCatalogClientImpl implements VaultCatalogClient {
         dveDto.setTitle(dveMetadata.getTitle());
         dveDto.setExporter(dveMetadata.getExporter());
         dveDto.setExporterVersion(dveMetadata.getExporterVersion());
+        dveDto.setDeaccessioned(deaccessioned);
     }
 
     private void setDataFilesOnVersionExport(DveMetadata dveMetadata, VersionExportDto dveDto) {
