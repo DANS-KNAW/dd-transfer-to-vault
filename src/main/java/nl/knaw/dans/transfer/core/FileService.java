@@ -241,7 +241,7 @@ public interface FileService {
      *
      * @param targetDir the target directory
      * @param fileName  the desired file name
-     * @return a free name for the DVE in the target directory
+     * @return a free filename based on the desired file name in the target directory
      */
     String findFreeName(Path targetDir, String fileName);
 }
