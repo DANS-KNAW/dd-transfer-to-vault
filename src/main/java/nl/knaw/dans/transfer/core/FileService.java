@@ -240,8 +240,8 @@ public interface FileService {
      * unique.
      *
      * @param targetDir the target directory
-     * @param dve       the DVE for which to find a free name
+     * @param fileName  the desired file name
      * @return a free name for the DVE in the target directory
      */
-    String findFreeName(Path targetDir, Path dve);
+    String findFreeName(Path targetDir, String fileName);
 }

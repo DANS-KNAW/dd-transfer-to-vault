@@ -120,7 +120,8 @@ public class FileServiceImpl implements FileService {
             Files.delete(from);
             try {
                 fsyncDirectory(from.getParent());
-            } catch (NoSuchFileException e) {
+            }
+            catch (NoSuchFileException e) {
                 // parent dir of 'from' no longer exists, nothing to fsync
             }
             return to;
@@ -300,8 +301,7 @@ public class FileServiceImpl implements FileService {
 
         try {
             if (existingDir != null) {
-                move(dve, existingDir.resolve(
-                    findFreeName(existingDir, outbox.resolve(fileName))));
+                move(dve, existingDir.resolve(findFreeName(existingDir, fileName)));
             }
             else {
                 createAndMoveSafe(dve,
@@ -338,8 +338,8 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
-    public String findFreeName(@NonNull Path targetDir, @NonNull Path dve) {
-        var dveFileName = new DveFileName(targetDir.resolve(dve.getFileName()));
+    public String findFreeName(@NonNull Path targetDir, @NonNull String fileName) {
+        var dveFileName = new DveFileName(targetDir.resolve(fileName));
         int sequenceNumber = 1;
         while (exists(dveFileName.getPath())) {
             dveFileName = dveFileName.withIndex(sequenceNumber++);

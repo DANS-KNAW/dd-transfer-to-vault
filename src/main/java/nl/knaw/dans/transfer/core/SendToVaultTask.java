@@ -86,7 +86,7 @@ public class SendToVaultTask extends SourceDirItemProcessor implements Runnable 
         addToObjectImportDirectory(item, currentTransferItem.getOcflObjectVersion(), this.currentBatchWorkDir.resolve(currentTransferItem.getNbn()));
         log.info("Added {} to current batch", item.getFileName());
         importIfBatchThresholdReached();
-        currentTransferItem.moveToDir(outboxProcessed);
+        currentTransferItem.moveToDir(outboxProcessed, true);
     }
 
     @Override
