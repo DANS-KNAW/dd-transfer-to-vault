@@ -339,6 +339,10 @@ public class FileServiceImpl implements FileService {
 
     @Override
     public String findFreeName(@NonNull Path targetDir, @NonNull String fileName) {
+        // Validate that fileName does not contain path separators to prevent directory traversal issues
+        if (fileName.contains("/") || fileName.contains("\\") || fileName.contains(FileSystems.getDefault().getSeparator())) {
+            throw new IllegalArgumentException("fileName must not contain path separators: " + fileName);
+        }
         var dveFileName = new DveFileName(targetDir.resolve(fileName));
         int sequenceNumber = 1;
         while (exists(dveFileName.getPath())) {
