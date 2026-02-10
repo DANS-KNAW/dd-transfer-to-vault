@@ -85,7 +85,19 @@ public class TransferItem {
     }
 
     public void moveToDir(Path dir) throws IOException {
-        var freeName = fileService.findFreeName(dir, dve);
+        var freeName = fileService.findFreeName(dir, dve.getFileName().toString());
+        fileService.move(dve, dir.resolve(freeName));
+    }
+
+    public void moveToDir(Path dir, boolean renameWithNbnAndVersion) throws IOException {
+        if (!renameWithNbnAndVersion) {
+            moveToDir(dir);
+            return;
+        }
+        var nbn = getNbn();
+        var version = getOcflObjectVersion();
+        var baseName = nbn + "_v" + version + ".zip";
+        var freeName = fileService.findFreeName(dir, baseName);
         fileService.move(dve, dir.resolve(freeName));
     }
 
