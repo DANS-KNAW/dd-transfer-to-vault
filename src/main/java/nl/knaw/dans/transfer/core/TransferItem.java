@@ -96,7 +96,7 @@ public class TransferItem {
         }
         var nbn = getNbn();
         var version = getOcflObjectVersion();
-        var baseName = nbn + "_" + version + ".zip";
+        var baseName = nbn + "_v" + version + ".zip";
         var freeName = fileService.findFreeName(dir, baseName);
         fileService.move(dve, dir.resolve(freeName));
     }
