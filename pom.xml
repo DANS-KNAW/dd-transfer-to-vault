@@ -36,7 +36,7 @@
     <properties>
         <main-class>nl.knaw.dans.transfer.DdTransferToVaultApplication</main-class>
         <dd-transfer-to-vault-api.version>0.1.0</dd-transfer-to-vault-api.version>
-        <dans-java-utils.version>2.7.0</dans-java-utils.version>
+        <dans-java-utils.version>2.9.0</dans-java-utils.version>
         <dd-vault-catalog-api.version>1.0.0</dd-vault-catalog-api.version>
     </properties>
 
