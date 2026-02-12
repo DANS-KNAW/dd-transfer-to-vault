@@ -72,7 +72,7 @@ public class ValidateBagPackClientImpl implements ValidateBagPackClient {
         while (true) {
             var status = api.getValidationStatus(jobId);
             
-            log.trace("Job {} status: {}", jobId, status.getStatus());
+            log.debug("Job {} status: {}", jobId, status.getStatus());
             
             switch (status.getStatus()) {
                 case DONE:
