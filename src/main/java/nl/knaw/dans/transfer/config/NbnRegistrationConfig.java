@@ -15,7 +15,9 @@
  */
 package nl.knaw.dans.transfer.config;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.Data;
+import nl.knaw.dans.convert.jackson.UriAddTrailingSlashConverter;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -29,5 +31,6 @@ public class NbnRegistrationConfig {
     private Path outbox;
 
     @NotNull
+    @JsonDeserialize(converter = UriAddTrailingSlashConverter.class)
     private URI catalogBaseUrl;
 }
