@@ -77,7 +77,9 @@ public class FileSystemPermissionsHealthCheck extends HealthCheck {
                 isValid = false;
                 continue;
             }
-            if (!fileService.canWriteTo(path)) {
+            // Only do deep check on collect inbox
+            boolean doDeepCheck = path.equals(transferConfig.getCollectDve().getInbox().getPath());
+            if (!fileService.canWriteTo(path, doDeepCheck)) {
                 result.withDetail(path.toString(), "Path is not writable");
                 log.error("Path is not writable: " + path);
                 isValid = false;

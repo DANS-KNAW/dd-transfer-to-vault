@@ -244,14 +244,17 @@ public class FileServiceImpl implements FileService {
 
     @Override
     public boolean canWriteTo(@NonNull Path path) {
-        if (!Files.exists(path) || !Files.isDirectory(path) || !Files.isWritable(path)) {
-            // without this check deleteIfExists may cause AccessDeniedException
-            // the rest is copied from dd-sword2
-            return false;
-        }
+        return canWriteTo(path, false);
+    }
 
+    @Override
+    public boolean canWriteTo(@NonNull Path path, boolean deep) {
+        return Files.exists(path) && Files.isDirectory(path) && Files.isWritable(path)
+            && (!deep || canWriteTestFileTo(path));
+    }
+
+    private boolean canWriteTestFileTo(Path path) {
         var filename = path.resolve(".write-check-" + UUID.randomUUID());
-
         try {
             Files.write(filename, new byte[] {});
             return true;
