@@ -213,6 +213,15 @@ public interface FileService {
      * Checks if the given path is writable by the current user.
      *
      * @param path the path to check
+     * @param deep whether to check by writing a temporary file in the directory
+     * @return true if the path is writable, false otherwise
+     */
+    boolean canWriteTo(Path path, boolean deep);
+
+    /**
+     * Checks if the given path is writable by the current user. Only checks the permission bits and does not write a temporary file.
+     *
+     * @param path the path to check
      * @return true if the path is writable, false otherwise
      */
     boolean canWriteTo(Path path);

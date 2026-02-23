@@ -23,8 +23,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
@@ -32,7 +31,7 @@ import static org.mockito.Mockito.mockStatic;
 public class FileServiceTest {
 
     @Test
-    void isSameFileSystem_should_return_false_when_FileStores_different() throws IOException {
+    void isSameFileSystem_should_return_false_when_FileStores_different() {
         var fileService = new FileServiceImpl();
         var path1 = Path.of("/a");
         var path2 = Path.of("/b");
@@ -44,12 +43,12 @@ public class FileServiceTest {
             filesMock.when(() -> Files.getFileStore(path2)).thenReturn(fileStore2);
 
             var result = fileService.isSameFileSystem(List.of(path1, path2));
-            assertFalse(result);
+            assertThat(result).isFalse();
         }
     }
 
     @Test
-    void isSameFileSystem_should_return_true_when_FileStores_the_same() throws IOException {
+    void isSameFileSystem_should_return_true_when_FileStores_the_same() {
         var fileService = new FileServiceImpl();
         var path1 = Path.of("/a");
         var path2 = Path.of("/b");
@@ -60,7 +59,7 @@ public class FileServiceTest {
             filesMock.when(() -> Files.getFileStore(path2)).thenReturn(fileStore);
 
             var result = fileService.isSameFileSystem(List.of(path1, path2));
-            assertTrue(result);
+            assertThat(result).isTrue();
         }
     }
 
@@ -73,7 +72,7 @@ public class FileServiceTest {
             filesMock.when(() -> Files.exists(path)).thenReturn(false);
 
             var result = fileService.canReadFrom(path);
-            assertFalse(result);
+            assertThat(result).isFalse();
         }
     }
 
@@ -87,7 +86,7 @@ public class FileServiceTest {
             filesMock.when(() -> Files.isDirectory(path)).thenReturn(false);
 
             var result = fileService.canReadFrom(path);
-            assertFalse(result);
+            assertThat(result).isFalse();
         }
     }
 
@@ -102,7 +101,7 @@ public class FileServiceTest {
             filesMock.when(() -> Files.isReadable(path)).thenReturn(false);
 
             var result = fileService.canReadFrom(path);
-            assertFalse(result);
+            assertThat(result).isFalse();
         }
     }
 
@@ -117,7 +116,7 @@ public class FileServiceTest {
             filesMock.when(() -> Files.isReadable(path)).thenReturn(true);
 
             var result = fileService.canReadFrom(path);
-            assertTrue(result);
+            assertThat(result).isTrue();
         }
     }
 
@@ -129,13 +128,13 @@ public class FileServiceTest {
         try (var filesMock = mockStatic(Files.class)) {
             filesMock.when(() -> Files.exists(path)).thenReturn(false);
 
-            var result = fileService.canWriteTo(path);
-            assertFalse(result);
+            var result = fileService.canWriteTo(path, false);
+            assertThat(result).isFalse();
         }
     }
 
     @Test
-    void canWriteTo_should_return_true_if_all_conditions_are_met() throws IOException {
+    void canWriteTo_should_return_true_if_all_conditions_are_met() {
         var fileService = new FileServiceImpl();
         var path = Path.of("writable-dir");
 
@@ -146,15 +145,15 @@ public class FileServiceTest {
             filesMock.when(() -> Files.write(any(Path.class), any(byte[].class))).thenReturn(path);
             filesMock.when(() -> Files.deleteIfExists(any(Path.class))).thenReturn(true);
 
-            var result = fileService.canWriteTo(path);
-            assertTrue(result);
+            var result = fileService.canWriteTo(path, true);
+            assertThat(result).isTrue();
             filesMock.verify(() -> Files.write(any(Path.class), any(byte[].class)));
             filesMock.verify(() -> Files.deleteIfExists(any(Path.class)));
         }
     }
 
     @Test
-    void isSameFileSystem_should_return_true_for_single_path() throws IOException {
+    void isSameFileSystem_should_return_true_for_single_path() {
         var fileService = new FileServiceImpl();
         var path = Path.of("/a");
         var fileStore = mock(FileStore.class);
@@ -163,7 +162,7 @@ public class FileServiceTest {
             filesMock.when(() -> Files.getFileStore(path)).thenReturn(fileStore);
 
             var result = fileService.isSameFileSystem(List.of(path));
-            assertTrue(result);
+            assertThat(result).isTrue();
         }
     }
 
@@ -176,8 +175,8 @@ public class FileServiceTest {
             filesMock.when(() -> Files.exists(path)).thenReturn(true);
             filesMock.when(() -> Files.isDirectory(path)).thenReturn(false);
 
-            var result = fileService.canWriteTo(path);
-            assertFalse(result);
+            var result = fileService.canWriteTo(path, false);
+            assertThat(result).isFalse();
         }
     }
 
@@ -191,13 +190,13 @@ public class FileServiceTest {
             filesMock.when(() -> Files.isDirectory(path)).thenReturn(true);
             filesMock.when(() -> Files.isWritable(path)).thenReturn(false);
 
-            var result = fileService.canWriteTo(path);
-            assertFalse(result);
+            var result = fileService.canWriteTo(path, false);
+            assertThat(result).isFalse();
         }
     }
 
     @Test
-    void canWriteTo_should_return_false_if_write_throws_exception() throws IOException {
+    void canWriteTo_should_return_false_if_write_throws_exception() {
         var fileService = new FileServiceImpl();
         var path = Path.of("exception-dir");
 
@@ -207,8 +206,8 @@ public class FileServiceTest {
             filesMock.when(() -> Files.isWritable(path)).thenReturn(true);
             filesMock.when(() -> Files.write(any(Path.class), any(byte[].class))).thenThrow(new IOException("Disk full"));
 
-            var result = fileService.canWriteTo(path);
-            assertFalse(result);
+            var result = fileService.canWriteTo(path, true);
+            assertThat(result).isFalse();
         }
     }
 }
