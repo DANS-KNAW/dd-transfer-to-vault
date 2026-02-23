@@ -210,6 +210,14 @@ public interface FileService {
     boolean canReadFrom(Path path);
 
     /**
+     * Checks if the given path is writable by the current user. Only checks the permission bits and does not write a temporary file.
+     *
+     * @param path the path to check
+     * @return true if the path is writable, false otherwise
+     */
+    boolean canWriteTo(Path path);
+
+    /**
      * Checks if the given path is writable by the current user.
      *
      * @param path the path to check
@@ -217,14 +225,6 @@ public interface FileService {
      * @return true if the path is writable, false otherwise
      */
     boolean canWriteTo(Path path, boolean deep);
-
-    /**
-     * Checks if the given path is writable by the current user. Only checks the permission bits and does not write a temporary file.
-     *
-     * @param path the path to check
-     * @return true if the path is writable, false otherwise
-     */
-    boolean canWriteTo(Path path);
 
     /**
      * Ensures that the given directory exists, creating it if necessary. The parent directory must exist.
