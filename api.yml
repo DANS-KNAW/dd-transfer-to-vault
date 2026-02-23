@@ -1,0 +1,73 @@
+#
+# Copyright (C) 2026 DANS - Data Archiving and Networked Services (info@dans.knaw.nl)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+openapi: 3.0.1
+
+servers:
+  - url: http://localhost:20350/
+
+info:
+  description: Service for ...
+  version: 0.1.0
+  title: dd-transfer-to-vault-api
+  contact:
+    email: info@dans.knaw.nl
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+
+paths:
+  /:
+    get:
+      summary: Returns a description of the service.
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: string
+                description: a plain text, human readable description of the service
+                example: |
+                  Transfer To Vault API Running (v0.1.0)
+
+  /send-to-vault/flush:
+    post:
+      summary: Sends the currently staged batch to the Data Vault, regardless of its size
+      responses:
+        '202':
+          description: Accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusMessage'
+
+
+components:
+  # Reusable schemas
+  schemas:
+    StatusMessage:
+      type: object
+      properties:
+        status:
+          type: string
+          example: OK
+        message:
+          type: string
+          example: Action completed successfully
+      required:
+        - status
+        - message
