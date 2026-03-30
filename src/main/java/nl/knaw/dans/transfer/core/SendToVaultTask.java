@@ -131,7 +131,8 @@ public class SendToVaultTask extends SourceDirItemProcessor implements Runnable 
             if (objectImportDirIsEmptyOrHasOnlyThisVersion) {
                 log.info("Only version directory {} present in {}, deleting parent directory", versionDirectory.getFileName(), objectImportDirectory);
                 FileUtils.deleteQuietly(objectImportDirectory.toFile());
-            } else {
+            }
+            else {
                 log.info("Deleting version directory {} if present", versionDirectory);
                 FileUtils.deleteQuietly(versionDirectory.toFile());
             }
