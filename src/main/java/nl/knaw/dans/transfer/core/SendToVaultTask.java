@@ -25,8 +25,10 @@ import nl.knaw.dans.lib.util.healthcheck.DependenciesReadyCheck;
 import nl.knaw.dans.transfer.client.DataVaultClient;
 import nl.knaw.dans.transfer.config.CustomPropertyConfig;
 import nl.knaw.dans.transfer.health.HealthChecks;
+import org.apache.commons.io.FileUtils;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
@@ -53,8 +55,10 @@ public class SendToVaultTask extends SourceDirItemProcessor implements Runnable 
 
     private TransferItem currentTransferItem;
 
-    public SendToVaultTask(@NonNull Path srcDir, @NonNull Path currentBatchWorkDir, @NonNull Path dataVaultBatchRoot, @NonNull DataSize batchThreshold, @NonNull Path outboxProcessed, @NonNull Path outboxFailed,
-        @NonNull DataVaultClient dataVaultClient, @NonNull String defaultMessage, @NonNull List<CustomPropertyConfig> customProperties, @NonNull FileService fileService, @NonNull DependenciesReadyCheck readyCheck,
+    public SendToVaultTask(@NonNull Path srcDir, @NonNull Path currentBatchWorkDir, @NonNull Path dataVaultBatchRoot, @NonNull DataSize batchThreshold, @NonNull Path outboxProcessed,
+        @NonNull Path outboxFailed,
+        @NonNull DataVaultClient dataVaultClient, @NonNull String defaultMessage, @NonNull List<CustomPropertyConfig> customProperties, @NonNull FileService fileService,
+        @NonNull DependenciesReadyCheck readyCheck,
         long delayBetweenProcessingRounds) {
         super(srcDir, "DVE", new DveFileFilter().toPredicate(), CreationTimeComparator.getInstance(), fileService, delayBetweenProcessingRounds);
         this.targetNbnDir = srcDir;
@@ -112,7 +116,28 @@ public class SendToVaultTask extends SourceDirItemProcessor implements Runnable 
         fileService.ensureDirectoryExists(objectImportDirectory);
         var versionDirectory = objectImportDirectory.resolve("v" + ocflObjectVersionNumber);
         log.debug("Extracting DVE {} to {}", dvePath, versionDirectory);
-        ZipUtil.extractZipFile(dvePath, versionDirectory);
+        try {
+            ZipUtil.extractZipFile(dvePath, versionDirectory);
+        }
+        catch (Exception e) { // Any exception!
+            log.error("Failed to extract DVE {}, deleting version directory {}", dvePath, versionDirectory, e);
+            boolean objectImportDirIsEmptyOrHasOnlyThisVersion = false;
+            if (Files.isDirectory(objectImportDirectory)) {
+                try (var entries = Files.list(objectImportDirectory)) {
+                    var entryList = entries.toList();
+                    objectImportDirIsEmptyOrHasOnlyThisVersion = (entryList.size() == 1 && entryList.get(0).equals(versionDirectory)) || entryList.isEmpty();
+                }
+            }
+            if (objectImportDirIsEmptyOrHasOnlyThisVersion) {
+                log.info("Only version directory {} present in {}, deleting parent directory", versionDirectory.getFileName(), objectImportDirectory);
+                FileUtils.deleteQuietly(objectImportDirectory.toFile());
+            }
+            else {
+                log.info("Deleting version directory {} if present", versionDirectory);
+                FileUtils.deleteQuietly(versionDirectory.toFile());
+            }
+            throw e;
+        }
         createVersionInfoJson(versionDirectory, currentTransferItem.getContactName(), currentTransferItem.getContactEmail(), defaultMessage);
     }
 
