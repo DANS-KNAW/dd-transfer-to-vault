@@ -119,16 +119,16 @@ public class SendToVaultTask extends SourceDirItemProcessor implements Runnable 
         try {
             ZipUtil.extractZipFile(dvePath, versionDirectory);
         }
-        catch (IOException e) {
+        catch (Exception e) { // Any exception!
             log.error("Failed to extract DVE {}, deleting version directory {}", dvePath, versionDirectory, e);
-            boolean onlyVersionDirPresent = false;
+            boolean objectImportDirIsEmptyOrHasOnlyThisVersion = false;
             if (Files.isDirectory(objectImportDirectory)) {
                 try (var entries = Files.list(objectImportDirectory)) {
                     var entryList = entries.toList();
-                    onlyVersionDirPresent = entryList.size() == 1 && entryList.get(0).equals(versionDirectory);
+                    objectImportDirIsEmptyOrHasOnlyThisVersion = (entryList.size() == 1 && entryList.get(0).equals(versionDirectory)) || entryList.isEmpty();
                 }
             }
-            if (onlyVersionDirPresent) {
+            if (objectImportDirIsEmptyOrHasOnlyThisVersion) {
                 log.info("Only version directory {} present in {}, deleting parent directory", versionDirectory.getFileName(), objectImportDirectory);
                 FileUtils.deleteQuietly(objectImportDirectory.toFile());
             } else {
