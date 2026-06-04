@@ -43,6 +43,16 @@ public class DataFileMetadataReader {
             var pathToSha1Map = readPathToSha1Mapping(sha1Manifest);
             var pathToSizeMap = readPathToSizeMapping(datasetVersionExport);
 
+            try {
+                var fetchContentStream = fileService.getEntryUnderBaseFolder(datasetVersionExport, Path.of("fetch.txt"));
+                var fetchContent = IOUtils.toString(fetchContentStream, StandardCharsets.UTF_8);
+                var fetchSizeMap = readPathToFetchSizeMapping(fetchContent);
+                pathToSizeMap.putAll(fetchSizeMap);
+            }
+            catch (IllegalArgumentException e) {
+                // fetch.txt not found, ignore
+            }
+
             return pathToPidMap.entrySet().stream()
                 .filter(e -> pathToSha1Map.containsKey(e.getKey()))
                 .map(entry -> {
@@ -54,6 +64,20 @@ public class DataFileMetadataReader {
                 })
                 .toList();
         }
+    }
+
+    private Map<Path, Long> readPathToFetchSizeMapping(String fetchContent) {
+        var fetchSizeMap = new HashMap<Path, Long>();
+        fetchContent.lines().forEach(line -> {
+            if (!line.isBlank()) {
+                var parts = line.split("\\s+", 3);
+                if (parts.length == 3) {
+                    var size = parts[1].equals("-") ? -1L : Long.parseLong(parts[1]);
+                    fetchSizeMap.put(Path.of(parts[2]), size);
+                }
+            }
+        });
+        return fetchSizeMap;
     }
 
     Map<Path, Long> readPathToSizeMapping(ZipFile dve) throws IOException {
