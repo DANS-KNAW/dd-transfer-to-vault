@@ -247,7 +247,9 @@ public class SendToVaultTaskTest extends TestDirFixture {
         try (var is = Files.newInputStream(jsonFile)) {
             root = mapper.readValue(is, Map.class);
         }
-        Map<?,?> externalLargeObjects = (Map<?,?>) root.get("external-large-objects");
+        Map<?,?> objectVersionProperties = (Map<?,?>) root.get("object-version-properties");
+        assertThat(objectVersionProperties).isNotNull();
+        Map<?,?> externalLargeObjects = (Map<?,?>) objectVersionProperties.get("external-large-objects");
         assertThat(externalLargeObjects).isNotNull();
         assertThat(externalLargeObjects.get("checksum-algorithm")).isEqualTo("sha1");
         assertThat((List<String>) externalLargeObjects.get("lobs")).containsExactlyInAnyOrder("sha1-1", "sha1-2");

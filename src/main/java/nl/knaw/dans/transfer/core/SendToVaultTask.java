@@ -163,22 +163,23 @@ public class SendToVaultTask extends SourceDirItemProcessor implements Runnable 
                 value.ifPresent(v -> custom.put(name, v));
             }
         }
-        if (!custom.isEmpty()) {
-            root.put("object-version-properties", custom);
-        }
-
         try {
             var lobs = currentTransferItem.getFetchSha1s();
             if (lobs != null && !lobs.isEmpty()) {
                 Map<String, Object> externalLargeObjects = new HashMap<>();
                 externalLargeObjects.put("checksum-algorithm", "sha1");
                 externalLargeObjects.put("lobs", lobs);
-                root.put("external-large-objects", externalLargeObjects);
+                custom.put("external-large-objects", externalLargeObjects);
             }
         }
         catch (IOException e) {
             log.error("Failed to read fetch SHA-1s from DVE", e);
         }
+
+        if (!custom.isEmpty()) {
+            root.put("object-version-properties", custom);
+        }
+
 
         try (var os = fileService.newOutputStream(versionInfoFile)) {
             mapper.writerWithDefaultPrettyPrinter().writeValue(os, root);
