@@ -137,7 +137,7 @@ public class VaultCatalogClientImpl implements VaultCatalogClient {
         dveDto.setFileMetas(new ArrayList<>()); // clear existing fileMetas. N.B. empty array and not null, to avoid NPE for empty dataset.
         for (var dataFile : dveMetadata.getDataFileAttributes()) {
             var dataFileDto = new FileMetaDto()
-                .filepath(removeBaseFolder(dataFile.getFilepath()).toString())
+                .filepath(removeBaseFolder(Path.of(dataFile.getFilepath())).toString())
                 .fileUri(dataFile.getUri())
                 .byteSize(dataFile.getSize())
                 .sha1sum(dataFile.getSha1Checksum());

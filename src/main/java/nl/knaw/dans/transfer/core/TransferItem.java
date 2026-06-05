@@ -19,17 +19,28 @@ import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.PathNotFoundException;
 import lombok.extern.slf4j.Slf4j;
+import nl.knaw.dans.bagit.domain.Bag;
+import nl.knaw.dans.bagit.domain.FetchItem;
+import nl.knaw.dans.bagit.exceptions.InvalidBagMetadataException;
 import nl.knaw.dans.bagit.exceptions.InvalidBagitFileFormatException;
 import nl.knaw.dans.bagit.exceptions.MaliciousPathException;
 import nl.knaw.dans.bagit.exceptions.UnparsableVersionException;
 import nl.knaw.dans.bagit.exceptions.UnsupportedAlgorithmException;
+import nl.knaw.dans.bagit.hash.StandardSupportedAlgorithms;
 import nl.knaw.dans.bagit.reader.BagReader;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.file.Path;
 import java.nio.file.ProviderNotFoundException;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * A Dataset Version Export (DVE) and auxiliary files. The DVE is the only mandatory file. The other files are searched next to the DVE or constructed from the DVE. This class is intended to provide
@@ -44,6 +55,8 @@ public class TransferItem {
     private static final String DATAVERSE_WORK_STATUS_NAME_JSON_PATH = DATAVERSE_WORK_STATUS_JSON_PATH + "['schema:name']";
     private static final String DATAVERSE_DEACCESSIONED_REASON_JSON_PATH = DATAVERSE_WORK_STATUS_JSON_PATH + "['dvcore:reason']";
     private static final String HAS_ORGANIZATIONAL_IDENTIFIER_VERSION = "Has-Organizational-Identifier-Version";
+    private static final String FETCH_TXT = "fetch.txt";
+    private static final String MANIFEST_SHA1_TXT = "manifest-sha1.txt";
 
     private Path dve;
     private final FileService fileService;
@@ -60,6 +73,8 @@ public class TransferItem {
     private String cachedDataversePidVersion;
 
     private String cachedHasOrganizationalIdentifierVersion;
+
+    private List<String> cachedFetchSha1s;
 
     public TransferItem(Path dve, FileService fileService) {
         this.dve = dve;
@@ -317,5 +332,41 @@ public class TransferItem {
             readBagInfoFirstValue(topLevelDir, HAS_ORGANIZATIONAL_IDENTIFIER_VERSION)
         );
         cachedHasOrganizationalIdentifierVersion = opt.orElse(null);
+    }
+
+    public List<String> getFetchSha1s() throws IOException {
+        if (cachedFetchSha1s == null) {
+            cachedFetchSha1s = withTopLevelDir(this::readFetchSha1sUsingBagitLib);
+        }
+        return cachedFetchSha1s;
+    }
+
+    private List<String> readFetchSha1sUsingBagitLib(Path topLevelDir) {
+        try {
+            BagReader reader = new BagReader();
+            Bag bag = reader.read(topLevelDir);
+
+            Set<Path> fetchPaths = bag.getItemsToFetch().stream()
+                .map(FetchItem::getPath)
+                .collect(Collectors.toSet());
+
+            if (fetchPaths.isEmpty()) {
+                return List.of();
+            }
+
+            return bag.getPayLoadManifests().stream()
+                .filter(m -> m.getAlgorithm() == StandardSupportedAlgorithms.SHA1)
+                .findFirst()
+                .map(m -> m.getFileToChecksumMap().entrySet().stream()
+                    .filter(entry -> fetchPaths.contains(entry.getKey()))
+                    .map(java.util.Map.Entry::getValue)
+                    .collect(Collectors.toCollection(TreeSet::new)))
+                .map(List::copyOf)
+                .orElse(List.of());
+        }
+        catch (Exception e) {
+            log.error("Error reading bag with BagReader", e);
+            return List.of();
+        }
     }
 }

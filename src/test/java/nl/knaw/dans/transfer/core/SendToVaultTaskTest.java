@@ -116,6 +116,13 @@ public class SendToVaultTaskTest extends TestDirFixture {
             dataVaultClient, defaultMessage, customProperties, fileService, readyCheck, 100
         );
 
+        // Set up a TransferItem
+        var transferItem = Mockito.mock(TransferItem.class);
+        Mockito.when(transferItem.getFetchSha1s()).thenReturn(List.of());
+        var field = SendToVaultTask.class.getDeclaredField("currentTransferItem");
+        field.setAccessible(true);
+        field.set(task, transferItem);
+
         Path versionDirectory = testDir.resolve("v1");
         Files.createDirectories(versionDirectory);
 
@@ -197,5 +204,52 @@ public class SendToVaultTaskTest extends TestDirFixture {
             // Directory should be deleted (parent or version dir)
             assertThat(Files.exists(objectImportDirectory)).isFalse();
         }
+    }
+    @Test
+    public void createVersionInfoJson_should_include_external_large_objects_when_fetch_sha1s_present() throws Exception {
+        // Given
+        Path dve = testDir.resolve("test.zip");
+        Path currentBatchWorkDir = testDir.resolve("batch");
+        Path dataVaultBatchRoot = testDir.resolve("vault");
+        Path outboxProcessed = testDir.resolve("processed");
+        Path outboxFailed = testDir.resolve("failed");
+        DataVaultClient dataVaultClient = Mockito.mock(DataVaultClient.class);
+        FileService fileService = new FileServiceImpl();
+        DependenciesReadyCheck readyCheck = Mockito.mock(DependenciesReadyCheck.class);
+        String defaultMessage = "msg";
+        List<CustomPropertyConfig> customProperties = new ArrayList<>();
+
+        var task = new SendToVaultTask(
+            dve, currentBatchWorkDir, dataVaultBatchRoot, DataSize.bytes(0), outboxProcessed, outboxFailed,
+            dataVaultClient, defaultMessage, customProperties, fileService, readyCheck, 100
+        );
+
+        Path versionDirectory = testDir.resolve("v1");
+        Files.createDirectories(versionDirectory);
+
+        // Set up a TransferItem with fetch sha1s
+        var transferItem = Mockito.mock(TransferItem.class);
+        Mockito.when(transferItem.getFetchSha1s()).thenReturn(List.of("sha1-1", "sha1-2"));
+        // Set currentTransferItem via reflection
+        var field = SendToVaultTask.class.getDeclaredField("currentTransferItem");
+        field.setAccessible(true);
+        field.set(task, transferItem);
+
+        // When
+        task.createVersionInfoJson(versionDirectory, "user", "email", "message");
+
+        // Then
+        Path jsonFile = testDir.resolve("v1.json");
+        assertThat(jsonFile).exists();
+
+        var mapper = new ObjectMapper();
+        Map<?,?> root;
+        try (var is = Files.newInputStream(jsonFile)) {
+            root = mapper.readValue(is, Map.class);
+        }
+        Map<?,?> externalLargeObjects = (Map<?,?>) root.get("external-large-objects");
+        assertThat(externalLargeObjects).isNotNull();
+        assertThat(externalLargeObjects.get("checksum-algorithm")).isEqualTo("sha1");
+        assertThat((List<String>) externalLargeObjects.get("lobs")).containsExactlyInAnyOrder("sha1-1", "sha1-2");
     }
 }

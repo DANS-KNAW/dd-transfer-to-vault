@@ -22,7 +22,7 @@ import java.nio.file.Path;
 
 @Value
 public class DataFileMetadata {
-    Path filepath;
+    String filepath;
     URI uri;
     String sha1Checksum;
     long size;
