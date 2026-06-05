@@ -38,7 +38,7 @@
         <dd-transfer-to-vault-api.version>0.1.0</dd-transfer-to-vault-api.version>
         <dans-java-utils.version>2.10.1</dans-java-utils.version>
         <dd-vault-catalog-api.version>1.0.0</dd-vault-catalog-api.version>
-        <dd-lob-store-api.version>0.2.1-SNAPSHOT</dd-lob-store-api.version>
+        <dd-lob-store-api.version>0.2.0</dd-lob-store-api.version>
     </properties>
 
     <scm>
