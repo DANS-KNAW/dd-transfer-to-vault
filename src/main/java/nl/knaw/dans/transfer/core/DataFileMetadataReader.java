@@ -50,8 +50,10 @@ public class DataFileMetadataReader {
                     .findFirst() // This relies on bag validation having rejected any packages with multiple toplevel dirs.
                     .orElseThrow(() -> new IllegalStateException("No top-level directory found in DVE"));
 
-                var pidMappingContent = fileService.newInputStream(topLevelDir.resolve("metadata/pid-mapping.txt"));
-                var pidMapping = IOUtils.toString(pidMappingContent, StandardCharsets.UTF_8);
+                String pidMapping;
+                try (var pidMappingContent = fileService.newInputStream(topLevelDir.resolve("metadata/pid-mapping.txt"))) {
+                    pidMapping = IOUtils.toString(pidMappingContent, StandardCharsets.UTF_8);
+                }
                 var pathToPidMap = readPathToPidMapping(pidMapping);
 
                 BagReader reader = new BagReader();
