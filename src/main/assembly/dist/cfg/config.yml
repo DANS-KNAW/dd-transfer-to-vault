@@ -22,9 +22,11 @@ transfer:
   # Minimum free space that must be available in the workspace before processing a new DVE. This uses the FileSystemFreeSpace health check
   # to determine the available free space.
   workspaceFreeSpaceThreshold: 1GB
-  # Value to store in the 'ocfl_storage_root' field of the dataset's vault catalog record. Not required for VaaS, because dd-vault-ingest
-  # already adds this column in the skeleton record.
-  ocflStorageRoot: null
+  # For Data Stations: set to the name of the data station. This will be used as the 'ocfl_storage_root'
+  # in the dataset's vault catalog record, and to retrieve LOBs from the LOB Store.
+  # For VaaS: leave null, as the storage root is pre-configured in the Vault Catalog.
+  # Note: Holey bags (fetch.txt) are only supported if this value is provided.
+  datastationName: null
   # Collect the DVE from the transfer-inbox and determine its target NBN
   collectDve:
     addTimestampToCollectedItems: true

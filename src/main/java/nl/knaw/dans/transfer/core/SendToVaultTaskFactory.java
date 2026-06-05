@@ -52,7 +52,7 @@ public class SendToVaultTaskFactory implements InboxTaskFactory {
     @NonNull
     private final LobStoreClient lobStoreClient;
     @NonNull
-    private final String datastation;
+    private final String datastationName;
     @NonNull
     private final DependenciesReadyCheck readyCheck;
     private final long delayBetweenProcessingRounds;
@@ -60,6 +60,6 @@ public class SendToVaultTaskFactory implements InboxTaskFactory {
     @Override
     public Runnable createInboxTask(Path path) {
         return new SendToVaultTask(path, currentBatchWorkDir, dataVaultBatchRoot, batchThreshold, outboxProcessed, outboxFailed, dataVaultClient, defaultMessage, customProperties, fileService,
-            dveMetadataReader, lobStoreClient, datastation, readyCheck, delayBetweenProcessingRounds);
+            dveMetadataReader, lobStoreClient, datastationName, readyCheck, delayBetweenProcessingRounds);
     }
 }

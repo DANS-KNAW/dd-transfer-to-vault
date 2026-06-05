@@ -112,7 +112,7 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
                 .fileService(fileService)
                 .dveMetadataReader(dveMetadataReader)
                 .lobStoreClient(lobStoreClient)
-                .datastation(configuration.getTransfer().getOcflStorageRoot())
+                .datastationName(configuration.getTransfer().getDatastationName())
                 .readyCheck(healthCheckReadyCheck)
                 .delayBetweenProcessingRounds(configuration.getTransfer().getSendToVault().getDelayBetweenProcessingRounds().toMilliseconds())
                 .build())
@@ -141,7 +141,7 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
                 .fileFilter(new NbnDirectoryFilter())
                 .taskFactory(
                     ExtractMetadataTaskFactory.builder()
-                        .ocflStorageRoot(configuration.getTransfer().getOcflStorageRoot())
+                        .datastationName(configuration.getTransfer().getDatastationName())
                         .outboxProcessed(configuration.getTransfer().getExtractMetadata().getOutbox().getProcessed())
                         .outboxFailed(configuration.getTransfer().getExtractMetadata().getOutbox().getFailed())
                         .outboxRejected(configuration.getTransfer().getExtractMetadata().getOutbox().getRejected())

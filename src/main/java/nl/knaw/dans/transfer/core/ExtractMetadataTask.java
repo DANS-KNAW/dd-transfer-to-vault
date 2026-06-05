@@ -27,7 +27,7 @@ import java.nio.file.Path;
 
 @Slf4j
 public class ExtractMetadataTask extends SourceDirItemProcessor implements Runnable {
-    private final String ocflStorageRoot;
+    private final String datastationName;
     private final Path targetNbnDir;
     private final Path outboxProcessed;
     private final Path outboxFailed;
@@ -41,14 +41,14 @@ public class ExtractMetadataTask extends SourceDirItemProcessor implements Runna
 
     private TransferItem currentTransferItem;
 
-    public ExtractMetadataTask(Path srcDir, String ocflStorageRoot, Path outboxProcessed, Path outboxFailed, Path outboxRejected,
+    public ExtractMetadataTask(Path srcDir, String datastationName, Path outboxProcessed, Path outboxFailed, Path outboxRejected,
         Path nbnRegistrationInbox, URI vaultCatalogBaseUri, DveMetadataReader dveMetadataReader,
         FileService fileService, VaultCatalogClient vaultCatalogClient,
         ValidateBagPackClient validateBagPackClient, DependenciesReadyCheck readyCheck,
         long delayBetweenProcessingRounds) {
         super(srcDir, "DVE", new DveFileFilter().toPredicate(), CreationTimeComparator.getInstance(), fileService, delayBetweenProcessingRounds);
         this.targetNbnDir = srcDir;
-        this.ocflStorageRoot = ocflStorageRoot;
+        this.datastationName = datastationName;
         this.outboxProcessed = outboxProcessed;
         this.outboxFailed = outboxFailed;
         this.outboxRejected = outboxRejected;
@@ -71,7 +71,7 @@ public class ExtractMetadataTask extends SourceDirItemProcessor implements Runna
 
     @Override
     protected void processItem(Path item) throws IOException {
-        currentTransferItem = new TransferItem(item, fileService);
+        currentTransferItem = createTransferItem(item);
 
         log.debug("Validating DVE {} as BagPack...", item);
         var result = validateBagPackClient.validateBagPack(item);
@@ -86,10 +86,14 @@ public class ExtractMetadataTask extends SourceDirItemProcessor implements Runna
         log.debug("Reading metadata from dve");
         var dveMetadata = dveMetadataReader.readDveMetadata(item);
 
+        if (!currentTransferItem.getFetchSha1s().isEmpty() && datastationName == null) {
+            throw new IllegalArgumentException("Holey bags (with fetch.txt) are not supported for VaaS customers yet.");
+        }
+
         log.debug("Registering OCFL Object Version in Vault Catalog");
         boolean deaccessioned = currentTransferItem.getDeaccessionedReason().isPresent();
         currentTransferItem.setOcflObjectVersion(
-            vaultCatalogClient.registerOcflObjectVersion(ocflStorageRoot, dveMetadata, currentTransferItem.getOcflObjectVersion(), deaccessioned));
+            vaultCatalogClient.registerOcflObjectVersion(datastationName, dveMetadata, currentTransferItem.getOcflObjectVersion(), deaccessioned));
 
         if (currentTransferItem.getOcflObjectVersion() == 1) {
             log.info("First version of dataset {}. Scheduling NBN registration", currentTransferItem.getNbn());
@@ -108,6 +112,10 @@ public class ExtractMetadataTask extends SourceDirItemProcessor implements Runna
             Thread.currentThread().interrupt();
             throw new IOException("Interrupted while processing items", e);
         }
+    }
+
+    protected TransferItem createTransferItem(Path item) throws IOException {
+        return new TransferItem(item, fileService);
     }
 
     @Override

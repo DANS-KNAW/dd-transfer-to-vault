@@ -23,7 +23,7 @@ import javax.validation.constraints.NotNull;
 
 @Data
 public class TransferConfig {
-    private String ocflStorageRoot;
+    private String datastationName;
 
     // Single threshold for workspace free space
     @NotNull

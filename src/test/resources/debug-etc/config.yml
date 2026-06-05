@@ -20,7 +20,7 @@ server:
 
 transfer:
   workspaceFreeSpaceThreshold: 1GB
-  ocflStorageRoot: Test Datastation
+  datastationName: Test Datastation
   # Inbox for incoming DVEs
   collectDve:
     inbox:

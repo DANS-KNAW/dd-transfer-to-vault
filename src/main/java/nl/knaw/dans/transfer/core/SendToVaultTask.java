@@ -54,7 +54,7 @@ public class SendToVaultTask extends SourceDirItemProcessor implements Runnable 
     private final FileService fileService;
     private final DveMetadataReader dveMetadataReader;
     private final LobStoreClient lobStoreClient;
-    private final String datastation;
+    private final String datastationName;
     private final DependenciesReadyCheck readyCheck;
 
     private TransferItem currentTransferItem;
@@ -64,7 +64,7 @@ public class SendToVaultTask extends SourceDirItemProcessor implements Runnable 
         @NonNull DataVaultClient dataVaultClient, @NonNull String defaultMessage, @NonNull List<CustomPropertyConfig> customProperties, @NonNull FileService fileService,
         @NonNull DveMetadataReader dveMetadataReader,
         @NonNull LobStoreClient lobStoreClient,
-        @NonNull String datastation,
+        @NonNull String datastationName,
         @NonNull DependenciesReadyCheck readyCheck,
         long delayBetweenProcessingRounds) {
         super(srcDir, "DVE", new DveFileFilter().toPredicate(), CreationTimeComparator.getInstance(), fileService, delayBetweenProcessingRounds);
@@ -80,7 +80,7 @@ public class SendToVaultTask extends SourceDirItemProcessor implements Runnable 
         this.fileService = fileService;
         this.dveMetadataReader = dveMetadataReader;
         this.lobStoreClient = lobStoreClient;
-        this.datastation = datastation;
+        this.datastationName = datastationName;
         this.readyCheck = readyCheck;
     }
 
@@ -100,7 +100,7 @@ public class SendToVaultTask extends SourceDirItemProcessor implements Runnable 
         addToObjectImportDirectory(item, currentTransferItem.getOcflObjectVersion(), this.currentBatchWorkDir.resolve(currentTransferItem.getNbn()));
 
         var dveMetadata = dveMetadataReader.readDveMetadata(item);
-        var lobRequests = currentTransferItem.getLobRequests(dveMetadata, this.datastation);
+        var lobRequests = currentTransferItem.getLobRequests(dveMetadata, this.datastationName);
         if (!lobRequests.isEmpty()) {
             lobStoreClient.requestTransfers(lobRequests);
         }
