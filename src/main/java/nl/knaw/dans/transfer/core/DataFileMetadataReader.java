@@ -47,7 +47,7 @@ public class DataFileMetadataReader {
             try (var topLevelDirStream = fileService.list(rootDir)) {
                 var topLevelDir = topLevelDirStream
                     .filter(fileService::isDirectory)
-                    .findFirst()
+                    .findFirst() // This relies on bag validation having rejected any packages with multiple toplevel dirs.
                     .orElseThrow(() -> new IllegalStateException("No top-level directory found in DVE"));
 
                 var pidMappingContent = fileService.newInputStream(topLevelDir.resolve("metadata/pid-mapping.txt"));
