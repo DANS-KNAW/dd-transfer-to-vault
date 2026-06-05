@@ -66,7 +66,6 @@ public class DveMetadataReaderTest {
             .otherIdVersion("1")
             .swordToken("token")
             .dataSupplier("supplier")
-            .datastation("station")
             .exporter("exporter")
             .exporterVersion("1.0")
             .build();

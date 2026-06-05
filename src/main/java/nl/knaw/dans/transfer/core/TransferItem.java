@@ -34,13 +34,17 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Path;
 import java.nio.file.ProviderNotFoundException;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import nl.knaw.dans.lobstore.client.api.TransferRequestDto;
 
 /**
  * A Dataset Version Export (DVE) and auxiliary files. The DVE is the only mandatory file. The other files are searched next to the DVE or constructed from the DVE. This class is intended to provide
@@ -341,6 +345,40 @@ public class TransferItem {
         return cachedFetchSha1s;
     }
 
+    public List<TransferRequestDto> getLobRequests(DveMetadata metadata, String datastation) throws IOException {
+        var fetchSha1s = new HashSet<>(getFetchSha1s());
+        if (fetchSha1s.isEmpty()) {
+            return List.of();
+        }
+
+        return metadata.getDataFileAttributes().stream()
+            .filter(attr -> fetchSha1s.contains(attr.getSha1Checksum()))
+            .map(attr -> {
+                var uri = attr.getUri();
+                var query = uri.getQuery();
+                if (query == null) {
+                    throw new IllegalArgumentException("No query parameters found in URI: " + uri);
+                }
+                var fileIdStr = Arrays.stream(query.split("&"))
+                    .filter(s -> s.startsWith("fileId="))
+                    .map(s -> s.substring("fileId=".length()))
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalArgumentException("No fileId found in URI: " + uri));
+
+                try {
+                    var fileId = Long.parseLong(fileIdStr);
+                    return new TransferRequestDto()
+                        .dataverseFileId(fileId)
+                        .sha1Sum(attr.getSha1Checksum())
+                        .datastation(datastation);
+                }
+                catch (NumberFormatException e) {
+                    throw new IllegalArgumentException("Invalid fileId found in URI: " + uri, e);
+                }
+            })
+            .toList();
+    }
+
     private List<String> readFetchSha1sUsingBagitLib(Path topLevelDir) {
         try {
             BagReader reader = new BagReader();
@@ -359,7 +397,7 @@ public class TransferItem {
                 .findFirst()
                 .map(m -> m.getFileToChecksumMap().entrySet().stream()
                     .filter(entry -> fetchPaths.contains(entry.getKey()))
-                    .map(java.util.Map.Entry::getValue)
+                    .map(Map.Entry::getValue)
                     .collect(Collectors.toCollection(TreeSet::new)))
                 .map(List::copyOf)
                 .orElse(List.of());

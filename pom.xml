@@ -26,7 +26,7 @@
     </parent>
 
     <artifactId>dd-transfer-to-vault</artifactId>
-    <version>3.3.5-SNAPSHOT</version>
+    <version>3.4.0-SNAPSHOT</version>
 
     <name>DD Transfer To Vault</name>
     <url>https://github.com/DANS-KNAW/dd-transfer-to-vault</url>
@@ -38,6 +38,7 @@
         <dd-transfer-to-vault-api.version>0.1.0</dd-transfer-to-vault-api.version>
         <dans-java-utils.version>2.10.1</dans-java-utils.version>
         <dd-vault-catalog-api.version>1.0.0</dd-vault-catalog-api.version>
+        <dd-lob-store-api.version>0.2.1-SNAPSHOT</dd-lob-store-api.version>
     </properties>
 
     <scm>
@@ -210,6 +211,12 @@
                                     <version>${dd-validate-bagpack-api.version}</version>
                                     <outputDirectory>${project.build.directory}/openapi</outputDirectory>
                                 </artifactItem>
+                                <artifactItem>
+                                    <groupId>nl.knaw.dans</groupId>
+                                    <artifactId>dd-lob-store-api</artifactId>
+                                    <version>${dd-lob-store-api.version}</version>
+                                    <outputDirectory>${project.build.directory}/openapi</outputDirectory>
+                                </artifactItem>
                             </artifactItems>
                         </configuration>
                     </execution>
@@ -308,6 +315,24 @@
                                 <apiPackage>nl.knaw.dans.validatebagpack.client.resources</apiPackage>
                                 <modelPackage>nl.knaw.dans.validatebagpack.client.api</modelPackage>
                                 <invokerPackage>nl.knaw.dans.validatebagpack.client.invoker</invokerPackage>
+                                <annotationLibrary>none</annotationLibrary>
+                                <library>jersey2</library>
+                                <openApiNullable>false</openApiNullable>
+                            </configOptions>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>lob-store-client</id>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <configuration>
+                            <inputSpec>${project.build.directory}/openapi/dd-lob-store-api.yml</inputSpec>
+                            <generatorName>java</generatorName>
+                            <apiPackage>nl.knaw.dans.lobstore.client.resources</apiPackage>
+                            <modelPackage>nl.knaw.dans.lobstore.client.api</modelPackage>
+                            <invokerPackage>nl.knaw.dans.lobstore.client.invoker</invokerPackage>
+                            <configOptions>
                                 <annotationLibrary>none</annotationLibrary>
                                 <library>jersey2</library>
                                 <openApiNullable>false</openApiNullable>

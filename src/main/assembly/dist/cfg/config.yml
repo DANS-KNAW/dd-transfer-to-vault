@@ -123,6 +123,11 @@ health:
       initialState: false
       schedule:
         checkInterval: 60s
+    - name: LobStore
+      critical: true
+      initialState: false
+      schedule:
+        checkInterval: 60s
   initialOverallState: false
 
 vaultCatalog:
@@ -167,6 +172,16 @@ validateBagPack:
     retries: 2
     userAgent: dd-transfer-to-vault
 
+lobStore:
+  url: http://localhost:20385
+  pingUrl: http://localhost:20386/ping
+  httpClient:
+    timeout: 30s
+    connectionTimeout: 15s
+    timeToLive: 1h
+    retries: 2
+    userAgent: dd-transfer-to-vault
+
 readyCheck:
   # Health checks to include in the ready check
   healthChecks:
@@ -176,6 +191,7 @@ readyCheck:
     - VaultCatalog
     - DataVault
     - ValidateBagPack
+    - LobStore
   pollInterval: 5s
 
 #

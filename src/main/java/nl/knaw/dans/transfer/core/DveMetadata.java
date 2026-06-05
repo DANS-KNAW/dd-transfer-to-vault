@@ -38,7 +38,6 @@ public class DveMetadata {
     private String otherIdVersion;
     private String swordToken;
     private String dataSupplier;
-    private String datastation;
     private String exporter;
     private String exporterVersion;
     private List<DataFileMetadata> dataFileAttributes;

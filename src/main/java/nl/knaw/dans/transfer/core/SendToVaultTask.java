@@ -23,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 import nl.knaw.dans.lib.util.ZipUtil;
 import nl.knaw.dans.lib.util.healthcheck.DependenciesReadyCheck;
 import nl.knaw.dans.transfer.client.DataVaultClient;
+import nl.knaw.dans.transfer.client.LobStoreClient;
 import nl.knaw.dans.transfer.config.CustomPropertyConfig;
 import nl.knaw.dans.transfer.health.HealthChecks;
 import org.apache.commons.io.FileUtils;
@@ -51,6 +52,9 @@ public class SendToVaultTask extends SourceDirItemProcessor implements Runnable 
     private final String defaultMessage;
     private final List<CustomPropertyConfig> customProperties;
     private final FileService fileService;
+    private final DveMetadataReader dveMetadataReader;
+    private final LobStoreClient lobStoreClient;
+    private final String datastation;
     private final DependenciesReadyCheck readyCheck;
 
     private TransferItem currentTransferItem;
@@ -58,6 +62,9 @@ public class SendToVaultTask extends SourceDirItemProcessor implements Runnable 
     public SendToVaultTask(@NonNull Path srcDir, @NonNull Path currentBatchWorkDir, @NonNull Path dataVaultBatchRoot, @NonNull DataSize batchThreshold, @NonNull Path outboxProcessed,
         @NonNull Path outboxFailed,
         @NonNull DataVaultClient dataVaultClient, @NonNull String defaultMessage, @NonNull List<CustomPropertyConfig> customProperties, @NonNull FileService fileService,
+        @NonNull DveMetadataReader dveMetadataReader,
+        @NonNull LobStoreClient lobStoreClient,
+        @NonNull String datastation,
         @NonNull DependenciesReadyCheck readyCheck,
         long delayBetweenProcessingRounds) {
         super(srcDir, "DVE", new DveFileFilter().toPredicate(), CreationTimeComparator.getInstance(), fileService, delayBetweenProcessingRounds);
@@ -71,6 +78,9 @@ public class SendToVaultTask extends SourceDirItemProcessor implements Runnable 
         this.defaultMessage = defaultMessage;
         this.customProperties = customProperties;
         this.fileService = fileService;
+        this.dveMetadataReader = dveMetadataReader;
+        this.lobStoreClient = lobStoreClient;
+        this.datastation = datastation;
         this.readyCheck = readyCheck;
     }
 
@@ -86,11 +96,22 @@ public class SendToVaultTask extends SourceDirItemProcessor implements Runnable 
     @Override
     protected void processItem(@NonNull Path item) throws IOException {
         log.debug("Processing DVE {}", item);
-        currentTransferItem = new TransferItem(item, fileService);
+        currentTransferItem = createTransferItem(item);
         addToObjectImportDirectory(item, currentTransferItem.getOcflObjectVersion(), this.currentBatchWorkDir.resolve(currentTransferItem.getNbn()));
+
+        var dveMetadata = dveMetadataReader.readDveMetadata(item);
+        var lobRequests = currentTransferItem.getLobRequests(dveMetadata, this.datastation);
+        if (!lobRequests.isEmpty()) {
+            lobStoreClient.requestTransfers(lobRequests);
+        }
+
         log.info("Added {} to current batch", item.getFileName());
         importIfBatchThresholdReached();
         currentTransferItem.moveToDir(outboxProcessed, true);
+    }
+
+    TransferItem createTransferItem(Path item) throws IOException {
+        return new TransferItem(item, fileService);
     }
 
     @Override
@@ -112,7 +133,7 @@ public class SendToVaultTask extends SourceDirItemProcessor implements Runnable 
         }
     }
 
-    private void addToObjectImportDirectory(@NonNull Path dvePath, int ocflObjectVersionNumber, @NonNull Path objectImportDirectory) throws IOException {
+    void addToObjectImportDirectory(@NonNull Path dvePath, int ocflObjectVersionNumber, @NonNull Path objectImportDirectory) throws IOException {
         fileService.ensureDirectoryExists(objectImportDirectory);
         var versionDirectory = objectImportDirectory.resolve("v" + ocflObjectVersionNumber);
         log.debug("Extracting DVE {} to {}", dvePath, versionDirectory);
@@ -186,7 +207,7 @@ public class SendToVaultTask extends SourceDirItemProcessor implements Runnable 
         }
     }
 
-    private void importIfBatchThresholdReached() throws IOException {
+    void importIfBatchThresholdReached() throws IOException {
         if (sizeOfDirectory(this.currentBatchWorkDir.toFile()) > this.batchThreshold.toBytes()) {
             var batch = dataVaultBatchRoot.resolve("batch-" + System.currentTimeMillis());
             log.info("Batch threshold ({}) reached, sending batch {} to Data Vault", this.batchThreshold, batch);

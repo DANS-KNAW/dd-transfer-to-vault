@@ -28,6 +28,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystem;
 import java.nio.file.Path;
 import java.nio.file.ProviderNotFoundException;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -79,7 +80,7 @@ public class DataFileMetadataReader {
                         }
                         else {
                             try {
-                                size = fileService.readAttributes(topLevelDir.resolve(path), java.nio.file.attribute.BasicFileAttributes.class).size();
+                                size = fileService.readAttributes(topLevelDir.resolve(path), BasicFileAttributes.class).size();
                             }
                             catch (IOException e) {
                                 size = -1L;

@@ -27,6 +27,7 @@ import nl.knaw.dans.lib.util.healthcheck.FileSystemFreeSpaceHealthCheck;
 import nl.knaw.dans.lib.util.healthcheck.HealthChecksDependenciesReadyCheck;
 import nl.knaw.dans.lib.util.inbox.Inbox;
 import nl.knaw.dans.transfer.client.DataVaultClient;
+import nl.knaw.dans.transfer.client.LobStoreClient;
 import nl.knaw.dans.transfer.client.ValidateBagPackClient;
 import nl.knaw.dans.transfer.client.ValidateBagPackClientImpl;
 import nl.knaw.dans.transfer.client.VaultCatalogClient;
@@ -85,6 +86,15 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
         // Single-threaded executor to coordinate batch threshold checks
         var sendToVaultExecutorService = environment.lifecycle().executorService("send-to-vault-worker").minThreads(1).maxThreads(1).build();
         var datavaultClient = new DataVaultClient(dataVaultProxy);
+
+        var lobStoreProxy = createLobStoreProxy(configuration);
+        var lobStoreClient = new LobStoreClient(lobStoreProxy);
+
+        var dveMetadataReader = new DveMetadataReader(
+            fileService,
+            new OaiOreMetadataReader(),
+            new DataFileMetadataReader(fileService));
+
         environment.lifecycle().manage(Inbox.builder()
             .executorService(sendToVaultExecutorService)
             .fileFilter(new NbnDirectoryFilter())
@@ -100,6 +110,9 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
                 .defaultMessage(configuration.getTransfer().getSendToVault().getDefaultMessage())
                 .customProperties(configuration.getTransfer().getSendToVault().getCustomProperties())
                 .fileService(fileService)
+                .dveMetadataReader(dveMetadataReader)
+                .lobStoreClient(lobStoreClient)
+                .datastation(configuration.getTransfer().getOcflStorageRoot())
                 .readyCheck(healthCheckReadyCheck)
                 .delayBetweenProcessingRounds(configuration.getTransfer().getSendToVault().getDelayBetweenProcessingRounds().toMilliseconds())
                 .build())
@@ -197,6 +210,12 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
             validateBagPackProxy.getApiClient().getHttpClient(),
             configuration.getValidateBagPack().getPingUrl())
         );
+        environment.healthChecks().register(HealthChecks.LOB_STORE, new PingHealthCheck(
+            HealthChecks.LOB_STORE,
+            lobStoreProxy.getApiClient().getHttpClient(),
+            configuration.getLobStore().getPingUrl())
+        );
+        
     }
 
     private DefaultApi createVaultCatalogProxy(DdTransferToVaultConfiguration configuration) {
@@ -226,11 +245,20 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
             .build();
     }
 
+    private nl.knaw.dans.lobstore.client.resources.DefaultApi createLobStoreProxy(DdTransferToVaultConfiguration configuration) {
+        return new ClientProxyBuilder<nl.knaw.dans.lobstore.client.invoker.ApiClient, nl.knaw.dans.lobstore.client.resources.DefaultApi>()
+            .apiClient(new nl.knaw.dans.lobstore.client.invoker.ApiClient())
+            .basePath(configuration.getLobStore().getUrl())
+            .httpClient(configuration.getLobStore().getHttpClient())
+            .defaultApiCtor(nl.knaw.dans.lobstore.client.resources.DefaultApi::new)
+            .build();
+    }
+
     private void checkReadyCheckConfig(DependenciesReadyCheckConfig config) {
         if (!new HashSet<>(config.getHealthChecks())
-            .containsAll(List.of(HealthChecks.FILESYSTEM_PERMISSIONS, HealthChecks.DATA_VAULT, HealthChecks.VAULT_CATALOG, HealthChecks.VALIDATE_BAG_PACK, HealthChecks.FILESYSTEM_FREE_SPACE))) {
+            .containsAll(List.of(HealthChecks.FILESYSTEM_PERMISSIONS, HealthChecks.DATA_VAULT, HealthChecks.VAULT_CATALOG, HealthChecks.VALIDATE_BAG_PACK, HealthChecks.FILESYSTEM_FREE_SPACE, HealthChecks.LOB_STORE))) {
             throw new IllegalArgumentException(String.format("Ready check configuration must include at least: %s",
-                List.of(HealthChecks.FILESYSTEM_PERMISSIONS, HealthChecks.DATA_VAULT, HealthChecks.VAULT_CATALOG, HealthChecks.VALIDATE_BAG_PACK, HealthChecks.FILESYSTEM_FREE_SPACE)));
+                List.of(HealthChecks.FILESYSTEM_PERMISSIONS, HealthChecks.DATA_VAULT, HealthChecks.VAULT_CATALOG, HealthChecks.VALIDATE_BAG_PACK, HealthChecks.FILESYSTEM_FREE_SPACE, HealthChecks.LOB_STORE)));
         }
     }
 
