@@ -41,6 +41,10 @@ public class DdTransferToVaultConfiguration extends Configuration {
 
     @Valid
     @NotNull
+    private LobStoreConfig lobStore;
+
+    @Valid
+    @NotNull
     private ValidateBagPackConfig validateBagPack;
 
     @Valid

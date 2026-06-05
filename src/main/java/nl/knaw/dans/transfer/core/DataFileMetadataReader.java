@@ -16,98 +16,104 @@
 package nl.knaw.dans.transfer.core;
 
 import lombok.AllArgsConstructor;
+import nl.knaw.dans.bagit.domain.Bag;
+import nl.knaw.dans.bagit.domain.FetchItem;
+import nl.knaw.dans.bagit.hash.StandardSupportedAlgorithms;
+import nl.knaw.dans.bagit.reader.BagReader;
 import org.apache.commons.io.IOUtils;
 
 import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.FileSystem;
 import java.nio.file.Path;
+import java.nio.file.ProviderNotFoundException;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 
 @AllArgsConstructor
 public class DataFileMetadataReader {
     private final FileService fileService;
 
     public List<DataFileMetadata> readDataFileAttributes(Path dveZip) throws IOException {
-        try (var datasetVersionExport = fileService.openZipFile(dveZip)) {
-            var pidMappingContent = fileService.getEntryUnderBaseFolder(datasetVersionExport, Path.of("metadata/pid-mapping.txt"));
-            var sha1ManifestContent = fileService.getEntryUnderBaseFolder(datasetVersionExport, Path.of("manifest-sha1.txt"));
-            var pidMapping = IOUtils.toString(pidMappingContent, StandardCharsets.UTF_8);
-            var sha1Manifest = IOUtils.toString(sha1ManifestContent, StandardCharsets.UTF_8);
-            var pathToPidMap = readPathToPidMapping(pidMapping);
-            var pathToSha1Map = readPathToSha1Mapping(sha1Manifest);
-            var pathToSizeMap = readPathToSizeMapping(datasetVersionExport);
+        try (var zipFs = fileService.newFileSystem(dveZip)) {
+            if (zipFs == null) {
+                throw new IOException("Failed to open file system for " + dveZip);
+            }
+            var rootDir = zipFs.getRootDirectories().iterator().next();
+            try (var topLevelDirStream = fileService.list(rootDir)) {
+                var topLevelDir = topLevelDirStream
+                    .filter(fileService::isDirectory)
+                    .findFirst() // This relies on bag validation having rejected any packages with multiple toplevel dirs.
+                    .orElseThrow(() -> new IllegalStateException("No top-level directory found in DVE"));
 
-            return pathToPidMap.entrySet().stream()
-                .filter(e -> pathToSha1Map.containsKey(e.getKey()))
-                .map(entry -> {
-                    var path = entry.getKey();
-                    var pid = entry.getValue();
-                    var sha1 = pathToSha1Map.get(path);
-                    var size = pathToSizeMap.get(path);
-                    return new DataFileMetadata(path, pid, sha1, size);
-                })
-                .toList();
+                String pidMapping;
+                try (var pidMappingContent = fileService.newInputStream(topLevelDir.resolve("metadata/pid-mapping.txt"))) {
+                    pidMapping = IOUtils.toString(pidMappingContent, StandardCharsets.UTF_8);
+                }
+                var pathToPidMap = readPathToPidMapping(pidMapping);
+
+                BagReader reader = new BagReader();
+                Bag bag = reader.read(topLevelDir);
+
+                var pathToSha1Map = bag.getPayLoadManifests().stream()
+                    .filter(m -> m.getAlgorithm() == StandardSupportedAlgorithms.SHA1)
+                    .findFirst()
+                    .map(m -> m.getFileToChecksumMap().entrySet().stream()
+                        .collect(Collectors.toMap(entry -> topLevelDir.relativize(entry.getKey()).toString(), Map.Entry::getValue)))
+                    .orElse(Map.of());
+
+                var pathToFetchItemMap = bag.getItemsToFetch().stream()
+                    .collect(Collectors.toMap(item -> topLevelDir.relativize(item.getPath()).toString(), item -> item));
+
+                return pathToPidMap.entrySet().stream()
+                    .filter(e -> pathToSha1Map.containsKey(e.getKey()))
+                    .map(entry -> {
+                        var path = entry.getKey();
+                        var pid = entry.getValue();
+                        var sha1 = pathToSha1Map.get(path);
+                        var fetchItem = pathToFetchItemMap.get(path);
+                        long size;
+                        if (fetchItem != null) {
+                            size = fetchItem.length == null ? -1L : fetchItem.length;
+                        }
+                        else {
+                            try {
+                                size = fileService.readAttributes(topLevelDir.resolve(path), BasicFileAttributes.class).size();
+                            }
+                            catch (IOException e) {
+                                size = -1L;
+                            }
+                        }
+                        return new DataFileMetadata(path, pid, sha1, size);
+                    })
+                    .toList();
+            }
+        }
+        catch (ProviderNotFoundException e) {
+            throw new RuntimeException("The file system provider is not found. Probably not a ZIP file: " + dveZip, e);
+        }
+        catch (Exception e) {
+            throw new IOException("Error reading data file attributes from " + dveZip, e);
         }
     }
 
-    Map<Path, Long> readPathToSizeMapping(ZipFile dve) throws IOException {
-        var pathToSizeMap = new HashMap<Path, Long>();
-        var dveEntries = dve.stream().toList();
-        var baseFolder = findBaseFolder(dveEntries);
-        dveEntries.stream()
-            .filter(entry -> !entry.isDirectory())
-            .forEach(entry -> {
-                var entryPath = Path.of(entry.getName());
-                var size = entry.getSize();
-                pathToSizeMap.put(baseFolder.relativize(entryPath), size);
-            });
-        return pathToSizeMap;
-    }
-
-    /*
-     * There should be a common base folder for the whole ZIP file. If there are multiple base folders, an exception should be thrown.
-     * Inside the common base folder there should be a "data" folder. Return the path to the "data" folder.
-     */
-    Path findBaseFolder(List<? extends ZipEntry> entries) {
-        var baseFolders = entries.stream()
-            .map(ZipEntry::getName)
-            .map(name -> name.split("/")[0])
-            .distinct()
-            .toList();
-        if (baseFolders.size() != 1) {
-            throw new IllegalArgumentException("There should be a common base folder for the whole ZIP file.");
-        }
-        return Path.of(baseFolders.get(0));
-    }
-
-    Map<Path, URI> readPathToPidMapping(String pidToPathMapping) throws IOException {
-        var pathToPidMap = new HashMap<Path, URI>();
+    Map<String, URI> readPathToPidMapping(String pidToPathMapping) throws IOException {
+        var pathToPidMap = new HashMap<String, URI>();
         try (var lines = pidToPathMapping.lines()) {
             lines.map(line -> line.split("\\s+", 2))
                 .forEach(parts -> {
                     if (parts[1].equals("data/")) {
-                        return;
+                        return; // Entry for the complete dataset can be ignored
                     }
-                    pathToPidMap.put(Path.of(parts[1]), URI.create(parts[0]));
+                    var pathStr = parts[1];
+                    pathToPidMap.put(pathStr, URI.create(parts[0]));
                 });
 
         }
         return pathToPidMap;
-    }
-
-    Map<Path, String> readPathToSha1Mapping(String sha1ToPathMapping) throws IOException {
-        HashMap<Path, String> pathToSha1Map;
-        try (var lines = sha1ToPathMapping.lines()) {
-            pathToSha1Map = lines
-                .map(line -> line.split("\\s+", 2))
-                .collect(Collectors.toMap(parts -> Path.of(parts[1]), parts -> parts[0], (a, b) -> b, HashMap::new));
-        }
-        return pathToSha1Map;
     }
 }

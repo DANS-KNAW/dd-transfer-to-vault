@@ -20,7 +20,7 @@ server:
 
 transfer:
   workspaceFreeSpaceThreshold: 1GB
-  ocflStorageRoot: Test Datastation
+  datastationName: Test Datastation
   # Inbox for incoming DVEs
   collectDve:
     inbox:
@@ -102,6 +102,11 @@ health:
       initialState: false
       schedule:
         checkInterval: 60s
+    - name: LobStore
+      critical: true
+      initialState: false
+      schedule:
+        checkInterval: 60s
   initialOverallState: false
 
 readyCheck:
@@ -110,6 +115,7 @@ readyCheck:
     - VaultCatalog
     - DataVault
     - ValidateBagPack
+    - LobStore
     - FileSystemFreeSpace
   pollInterval: 5s
 
@@ -148,6 +154,16 @@ dataVault:
 validateBagPack:
   url: http://localhost:20375
   pingUrl: http://localhost:20376/ping
+  httpClient:
+    timeout: 30s
+    connectionTimeout: 15s
+    timeToLive: 1h
+    retries: 2
+    userAgent: dd-transfer-to-vault
+
+lobStore:
+  url: http://localhost:20385
+  pingUrl: http://localhost:20386/ping
   httpClient:
     timeout: 30s
     connectionTimeout: 15s

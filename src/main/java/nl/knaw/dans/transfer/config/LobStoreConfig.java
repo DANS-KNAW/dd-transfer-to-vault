@@ -15,33 +15,22 @@
  */
 package nl.knaw.dans.transfer.config;
 
+import io.dropwizard.client.JerseyClientConfiguration;
 import lombok.Data;
-import io.dropwizard.util.DataSize;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import java.net.URI;
 
 @Data
-public class TransferConfig {
-    private String datastationName;
-
-    // Single threshold for workspace free space
+public class LobStoreConfig {
     @NotNull
-    private DataSize workspaceFreeSpaceThreshold;
+    private URI url;
 
-    @Valid
     @NotNull
-    private CollectDveConfig collectDve;
+    private URI pingUrl;
 
     @Valid
     @NotNull
-    private ExtractMetadataConfig extractMetadata;
-
-    @Valid
-    @NotNull
-    private NbnRegistrationConfig nbnRegistration;
-
-    @Valid
-    @NotNull
-    private SendToVaultConfig sendToVault;
+    private JerseyClientConfiguration httpClient = new JerseyClientConfiguration();
 }

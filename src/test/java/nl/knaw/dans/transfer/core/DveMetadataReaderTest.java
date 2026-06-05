@@ -66,14 +66,13 @@ public class DveMetadataReaderTest {
             .otherIdVersion("1")
             .swordToken("token")
             .dataSupplier("supplier")
-            .datastation("station")
             .exporter("exporter")
             .exporterVersion("1.0")
             .build();
         when(oaiReader.readMetadata(anyString())).thenReturn(baseMetadata);
 
         var dfList = List.of(new DataFileMetadata(
-            Path.of("data/file1.txt"),
+            "data/file1.txt",
             URI.create("https://doi.org/10.5072/FK2/FILE1"),
             "abc123",
             123L

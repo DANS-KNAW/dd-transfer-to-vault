@@ -21,4 +21,5 @@ public interface HealthChecks {
     String DATA_VAULT = "DataVault";
     String VALIDATE_BAG_PACK = "ValidateBagPack";
     String VAULT_CATALOG = "VaultCatalog";
+    String LOB_STORE = "LobStore";
 }

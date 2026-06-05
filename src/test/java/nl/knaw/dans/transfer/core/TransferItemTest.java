@@ -302,6 +302,46 @@ public class TransferItemTest extends TestDirFixture {
         assertThat(item2.getDeaccessionedReason()).isEmpty();
     }
 
+    @Test
+    public void getFetchSha1s_should_return_sha1s_from_manifest_for_files_in_fetch_txt() throws Exception {
+        // Given
+        var sourceDir = testDir.resolve("transfer-item-fetch");
+        Files.createDirectories(sourceDir);
+        var dve = sourceDir.resolve("dataset_v1.zip");
+        var fetchTxt = "http://example.com/file1 100 data/file1\n" +
+                       "http://example.com/file2 200 data/file2\n";
+        var manifestSha1 = "sha1-value-1  data/file1\n" +
+                           "sha1-value-2  data/file2\n" +
+                           "sha1-value-3  data/file3\n";
+        createDveZip(dve, null, null, "urn:nbn:nl:ui:13-fetch", null, null, null, null, fetchTxt, manifestSha1);
+
+        var item = new TransferItem(dve, fileService);
+
+        // When
+        var sha1s = item.getFetchSha1s();
+
+        // Then
+        assertThat(sha1s).containsExactlyInAnyOrder("sha1-value-1", "sha1-value-2");
+    }
+
+    @Test
+    public void getFetchSha1s_should_return_empty_list_when_fetch_txt_missing() throws Exception {
+        // Given
+        var sourceDir = testDir.resolve("transfer-item-no-fetch");
+        Files.createDirectories(sourceDir);
+        var dve = sourceDir.resolve("dataset_v1.zip");
+        var manifestSha1 = "sha1-value-1  data/file1\n";
+        createDveZip(dve, null, null, "urn:nbn:nl:ui:13-no-fetch", null, null, null, null, null, manifestSha1);
+
+        var item = new TransferItem(dve, fileService);
+
+        // When
+        var sha1s = item.getFetchSha1s();
+
+        // Then
+        assertThat(sha1s).isEmpty();
+    }
+
 
     /**
      * Helper method to create a DVE zip file for testing purposes. Creates a minimal BagIt structure with bag-info.txt containing contact information and optionally an oai-ore.jsonld metadata file
@@ -316,11 +356,16 @@ public class TransferItemTest extends TestDirFixture {
      * @throws IOException if an I/O error occurs during zip creation
      */
     private static void createDveZip(Path zipPath, String contactName, String contactEmail, String nbn, String pidVersion, String hasOrganizationalIdentifierVersion) throws IOException {
-        createDveZip(zipPath, contactName, contactEmail, nbn, pidVersion, hasOrganizationalIdentifierVersion, null, null);
+        createDveZip(zipPath, contactName, contactEmail, nbn, pidVersion, hasOrganizationalIdentifierVersion, null, null, null, null);
     }
 
     private static void createDveZip(Path zipPath, String contactName, String contactEmail, String nbn, String pidVersion, String hasOrganizationalIdentifierVersion,
                                      String creativeWorkStatusName, String deaccessionReason) throws IOException {
+        createDveZip(zipPath, contactName, contactEmail, nbn, pidVersion, hasOrganizationalIdentifierVersion, creativeWorkStatusName, deaccessionReason, null, null);
+    }
+
+    private static void createDveZip(Path zipPath, String contactName, String contactEmail, String nbn, String pidVersion, String hasOrganizationalIdentifierVersion,
+                                     String creativeWorkStatusName, String deaccessionReason, String fetchTxt, String manifestSha1) throws IOException {
         var env = new HashMap<String, String>();
         env.put("create", "true");
         try (var zipfs = FileSystems.newFileSystem(URI.create("jar:" + zipPath.toUri()), env)) {
@@ -342,6 +387,13 @@ public class TransferItemTest extends TestDirFixture {
                 bagInfo.append("Has-Organizational-Identifier-Version: ").append(hasOrganizationalIdentifierVersion).append("\n");
             }
             Files.writeString(top.resolve("bag-info.txt"), bagInfo.toString(), StandardCharsets.UTF_8);
+
+            if (fetchTxt != null) {
+                Files.writeString(top.resolve("fetch.txt"), fetchTxt, StandardCharsets.UTF_8);
+            }
+            if (manifestSha1 != null) {
+                Files.writeString(top.resolve("manifest-sha1.txt"), manifestSha1, StandardCharsets.UTF_8);
+            }
 
             if (nbn != null || pidVersion != null || creativeWorkStatusName != null) {
                 var metadataDir = Files.createDirectories(top.resolve("metadata"));

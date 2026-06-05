@@ -21,6 +21,7 @@ import lombok.NonNull;
 import nl.knaw.dans.lib.util.healthcheck.DependenciesReadyCheck;
 import nl.knaw.dans.lib.util.inbox.InboxTaskFactory;
 import nl.knaw.dans.transfer.client.DataVaultClient;
+import nl.knaw.dans.transfer.client.LobStoreClient;
 import nl.knaw.dans.transfer.config.CustomPropertyConfig;
 
 import java.nio.file.Path;
@@ -47,11 +48,18 @@ public class SendToVaultTaskFactory implements InboxTaskFactory {
     @NonNull
     private final FileService fileService;
     @NonNull
+    private final DveMetadataReader dveMetadataReader;
+    @NonNull
+    private final LobStoreClient lobStoreClient;
+    @NonNull
+    private final String datastationName;
+    @NonNull
     private final DependenciesReadyCheck readyCheck;
     private final long delayBetweenProcessingRounds;
 
     @Override
     public Runnable createInboxTask(Path path) {
-        return new SendToVaultTask(path, currentBatchWorkDir, dataVaultBatchRoot, batchThreshold, outboxProcessed, outboxFailed, dataVaultClient, defaultMessage, customProperties, fileService, readyCheck, delayBetweenProcessingRounds);
+        return new SendToVaultTask(path, currentBatchWorkDir, dataVaultBatchRoot, batchThreshold, outboxProcessed, outboxFailed, dataVaultClient, defaultMessage, customProperties, fileService,
+            dveMetadataReader, lobStoreClient, datastationName, readyCheck, delayBetweenProcessingRounds);
     }
 }
