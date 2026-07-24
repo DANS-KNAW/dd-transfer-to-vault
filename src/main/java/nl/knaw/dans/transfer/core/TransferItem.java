@@ -21,30 +21,27 @@ import com.jayway.jsonpath.PathNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import nl.knaw.dans.bagit.domain.Bag;
 import nl.knaw.dans.bagit.domain.FetchItem;
-import nl.knaw.dans.bagit.exceptions.InvalidBagMetadataException;
+import nl.knaw.dans.bagit.domain.Metadata;
 import nl.knaw.dans.bagit.exceptions.InvalidBagitFileFormatException;
 import nl.knaw.dans.bagit.exceptions.MaliciousPathException;
 import nl.knaw.dans.bagit.exceptions.UnparsableVersionException;
 import nl.knaw.dans.bagit.exceptions.UnsupportedAlgorithmException;
 import nl.knaw.dans.bagit.hash.StandardSupportedAlgorithms;
 import nl.knaw.dans.bagit.reader.BagReader;
+import nl.knaw.dans.lobstore.client.api.TransferRequestDto;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.nio.file.Path;
 import java.nio.file.ProviderNotFoundException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import nl.knaw.dans.lobstore.client.api.TransferRequestDto;
 
 /**
  * A Dataset Version Export (DVE) and auxiliary files. The DVE is the only mandatory file. The other files are searched next to the DVE or constructed from the DVE. This class is intended to provide
@@ -188,11 +185,7 @@ public class TransferItem {
     private Optional<String> readBagInfoFirstValue(Path topLevelDir, String key) {
         try {
             var bag = new BagReader().read(topLevelDir);
-            var values = bag.getMetadata().get(key);
-            if (values != null && !values.isEmpty()) {
-                return Optional.ofNullable(values.get(0));
-            }
-            return Optional.empty();
+            return getFirstValue(bag.getMetadata(), key);
         }
         catch (IOException e) {
             throw new RuntimeException("Unable to read bag from DVE: " + dve, e);
@@ -203,6 +196,11 @@ public class TransferItem {
         catch (UnparsableVersionException | UnsupportedAlgorithmException | InvalidBagitFileFormatException e) {
             throw new RuntimeException("Unable to read bag info from DVE: " + dve, e);
         }
+    }
+
+    private Optional<String> getFirstValue(Metadata metadata, String key) {
+        var values = metadata.get(key);
+        return (values != null && !values.isEmpty()) ? Optional.ofNullable(values.get(0)) : Optional.empty();
     }
 
     /**
@@ -270,14 +268,29 @@ public class TransferItem {
             return;
         }
 
-        var result = withTopLevelDir(topLevelDir -> {
-            var emailOpt = readBagInfoFirstValue(topLevelDir, "Contact-Email");
-            var nameOpt = readBagInfoFirstValue(topLevelDir, "Contact-Name");
-            return new String[] { emailOpt.orElse(null), nameOpt.orElse(null) };
+        withTopLevelDir(topLevelDir -> {
+            try {
+                var metadata = new BagReader().read(topLevelDir).getMetadata();
+                final var defaultEmail = "no.email@dummy.org";
+
+                cachedContactEmail = getFirstValue(metadata, "Contact-Email")
+                    .map(String::trim)
+                    .filter(s -> !s.isBlank() && !s.equalsIgnoreCase("N/A"))
+                    .or(() -> getFirstValue(metadata, "Organization-Email")
+                        .map(String::trim)
+                        .filter(s -> !s.isBlank() && !s.equalsIgnoreCase("N/A")))
+                    .orElse(defaultEmail);
+
+                cachedContactName = getFirstValue(metadata, "Contact-Name")
+                    .filter(s -> !s.isBlank())
+                    .orElse(cachedContactEmail);
+
+                return null;
+            }
+            catch (IOException | MaliciousPathException | UnparsableVersionException | UnsupportedAlgorithmException | InvalidBagitFileFormatException e) {
+                throw new RuntimeException("Unable to read contact details from DVE bag", e);
+            }
         });
-        cachedContactEmail = result[0];
-        // Fallback to contact email when contact name is not available
-        cachedContactName = (result[1] != null && !result[1].isBlank()) ? result[1] : cachedContactEmail;
     }
 
     public String getNbn() throws IOException {

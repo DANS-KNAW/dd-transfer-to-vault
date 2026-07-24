@@ -269,6 +269,24 @@ public class TransferItemTest extends TestDirFixture {
     }
 
     @Test
+    public void getDeaccessionedReason_should_return_default_when_reason_is_blank() throws Exception {
+        var sourceDir = testDir.resolve("transfer-item-deacc-blank");
+        Files.createDirectories(sourceDir);
+        var dve = sourceDir.resolve("dataset_v1.zip");
+        createDveZip(dve,
+            "Contact Name",
+            "contact@example.org",
+            "urn:nbn:nl:ui:13-abcdef",
+            "doi:10.5072/FK2/ABCDEF:1.0",
+            null,
+            "DEACCESSIONED",
+            " ");
+
+        var item = new TransferItem(dve, new FileServiceImpl());
+        assertThat(item.getDeaccessionedReason()).contains("N/a");
+    }
+
+    @Test
     public void getDeaccessionedReason_should_return_empty_when_not_deaccessioned_or_missing() throws Exception {
         var sourceDir = testDir.resolve("transfer-item-not-deacc");
         Files.createDirectories(sourceDir);
@@ -313,7 +331,7 @@ public class TransferItemTest extends TestDirFixture {
         var manifestSha1 = "sha1-value-1  data/file1\n" +
                            "sha1-value-2  data/file2\n" +
                            "sha1-value-3  data/file3\n";
-        createDveZip(dve, null, null, "urn:nbn:nl:ui:13-fetch", null, null, null, null, fetchTxt, manifestSha1);
+        createDveZip(dve, null, null, null, "urn:nbn:nl:ui:13-fetch", null, null, null, null, fetchTxt, manifestSha1);
 
         var item = new TransferItem(dve, fileService);
 
@@ -331,7 +349,7 @@ public class TransferItemTest extends TestDirFixture {
         Files.createDirectories(sourceDir);
         var dve = sourceDir.resolve("dataset_v1.zip");
         var manifestSha1 = "sha1-value-1  data/file1\n";
-        createDveZip(dve, null, null, "urn:nbn:nl:ui:13-no-fetch", null, null, null, null, null, manifestSha1);
+        createDveZip(dve, null, null, null, "urn:nbn:nl:ui:13-no-fetch", null, null, null, null, null, manifestSha1);
 
         var item = new TransferItem(dve, fileService);
 
@@ -342,6 +360,62 @@ public class TransferItemTest extends TestDirFixture {
         assertThat(sha1s).isEmpty();
     }
 
+
+    @Test
+    public void getContactEmail_should_fallback_to_OrganizationEmail_when_ContactEmail_is_NA() throws Exception {
+        var sourceDir = testDir.resolve("contact-fallback-org");
+        Files.createDirectories(sourceDir);
+        var dve = sourceDir.resolve("dataset.zip");
+        createDveZip(dve, null, "N/A", "org@example.org", null, null, null);
+
+        var item = new TransferItem(dve, fileService);
+        assertThat(item.getContactEmail()).isEqualTo("org@example.org");
+        assertThat(item.getContactName()).isEqualTo("org@example.org");
+    }
+
+    @Test
+    public void getContactEmail_should_fallback_to_dummy_when_both_emails_are_NA() throws Exception {
+        var sourceDir = testDir.resolve("contact-fallback-dummy");
+        Files.createDirectories(sourceDir);
+        var dve = sourceDir.resolve("dataset.zip");
+        createDveZip(dve, null, "N/A", "N/A", null, null, null);
+
+        var item = new TransferItem(dve, fileService);
+        assertThat(item.getContactEmail()).isEqualTo("no.email@dummy.org");
+    }
+
+    @Test
+    public void getContactEmail_should_fallback_to_dummy_when_both_emails_are_blank_or_NA() throws Exception {
+        var sourceDir = testDir.resolve("contact-fallback-blank-na");
+        Files.createDirectories(sourceDir);
+        var dve = sourceDir.resolve("dataset.zip");
+        createDveZip(dve, null, " ", " N/A ", null, null, null);
+
+        var item = new TransferItem(dve, fileService);
+        assertThat(item.getContactEmail()).isEqualTo("no.email@dummy.org");
+    }
+
+    @Test
+    public void getContactEmail_should_trim_NA_case_insensitive() throws Exception {
+        var sourceDir = testDir.resolve("contact-fallback-trim");
+        Files.createDirectories(sourceDir);
+        var dve = sourceDir.resolve("dataset.zip");
+        createDveZip(dve, null, " n/a ", "org@example.org", null, null, null);
+
+        var item = new TransferItem(dve, fileService);
+        assertThat(item.getContactEmail()).isEqualTo("org@example.org");
+    }
+
+    @Test
+    public void getContactName_should_fallback_to_ContactEmail_when_ContactName_is_blank() throws Exception {
+        var sourceDir = testDir.resolve("contact-name-fallback-blank");
+        Files.createDirectories(sourceDir);
+        var dve = sourceDir.resolve("dataset.zip");
+        createDveZip(dve, " ", "contact@example.org", null, null, null);
+
+        var item = new TransferItem(dve, fileService);
+        assertThat(item.getContactName()).isEqualTo("contact@example.org");
+    }
 
     /**
      * Helper method to create a DVE zip file for testing purposes. Creates a minimal BagIt structure with bag-info.txt containing contact information and optionally an oai-ore.jsonld metadata file
@@ -356,15 +430,19 @@ public class TransferItemTest extends TestDirFixture {
      * @throws IOException if an I/O error occurs during zip creation
      */
     private static void createDveZip(Path zipPath, String contactName, String contactEmail, String nbn, String pidVersion, String hasOrganizationalIdentifierVersion) throws IOException {
-        createDveZip(zipPath, contactName, contactEmail, nbn, pidVersion, hasOrganizationalIdentifierVersion, null, null, null, null);
+        createDveZip(zipPath, contactName, contactEmail, null, nbn, pidVersion, hasOrganizationalIdentifierVersion, null, null, null, null);
+    }
+
+    private static void createDveZip(Path zipPath, String contactName, String contactEmail, String organizationEmail, String nbn, String pidVersion, String hasOrganizationalIdentifierVersion) throws IOException {
+        createDveZip(zipPath, contactName, contactEmail, organizationEmail, nbn, pidVersion, hasOrganizationalIdentifierVersion, null, null, null, null);
     }
 
     private static void createDveZip(Path zipPath, String contactName, String contactEmail, String nbn, String pidVersion, String hasOrganizationalIdentifierVersion,
                                      String creativeWorkStatusName, String deaccessionReason) throws IOException {
-        createDveZip(zipPath, contactName, contactEmail, nbn, pidVersion, hasOrganizationalIdentifierVersion, creativeWorkStatusName, deaccessionReason, null, null);
+        createDveZip(zipPath, contactName, contactEmail, null, nbn, pidVersion, hasOrganizationalIdentifierVersion, creativeWorkStatusName, deaccessionReason, null, null);
     }
 
-    private static void createDveZip(Path zipPath, String contactName, String contactEmail, String nbn, String pidVersion, String hasOrganizationalIdentifierVersion,
+    private static void createDveZip(Path zipPath, String contactName, String contactEmail, String organizationEmail, String nbn, String pidVersion, String hasOrganizationalIdentifierVersion,
                                      String creativeWorkStatusName, String deaccessionReason, String fetchTxt, String manifestSha1) throws IOException {
         var env = new HashMap<String, String>();
         env.put("create", "true");
@@ -382,6 +460,9 @@ public class TransferItemTest extends TestDirFixture {
             }
             if (contactEmail != null) {
                 bagInfo.append("Contact-Email: ").append(contactEmail).append("\n");
+            }
+            if (organizationEmail != null) {
+                bagInfo.append("Organization-Email: ").append(organizationEmail).append("\n");
             }
             if (hasOrganizationalIdentifierVersion != null) {
                 bagInfo.append("Has-Organizational-Identifier-Version: ").append(hasOrganizationalIdentifierVersion).append("\n");
