@@ -271,11 +271,15 @@ public class TransferItem {
         withTopLevelDir(topLevelDir -> {
             try {
                 var metadata = new BagReader().read(topLevelDir).getMetadata();
+                final var defaultEmail = "no.email@dummy.org";
 
                 cachedContactEmail = getFirstValue(metadata, "Contact-Email")
-                    .filter(s -> !s.equalsIgnoreCase("N/A"))
-                    .or(() -> getFirstValue(metadata, "Organization-Email"))
-                    .orElse("no.email@dummy.org");
+                    .map(String::trim)
+                    .filter(s -> !s.isBlank() && !s.equalsIgnoreCase("N/A"))
+                    .or(() -> getFirstValue(metadata, "Organization-Email")
+                        .map(String::trim)
+                        .filter(s -> !s.isBlank() && !s.equalsIgnoreCase("N/A")))
+                    .orElse(defaultEmail);
 
                 cachedContactName = getFirstValue(metadata, "Contact-Name")
                     .filter(s -> !s.isBlank())
