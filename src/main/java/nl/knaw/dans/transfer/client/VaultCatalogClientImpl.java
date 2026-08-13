@@ -152,6 +152,7 @@ public class VaultCatalogClientImpl implements VaultCatalogClient {
     }
 
     private String gzipBase64Encode(String metadata) {
+        log.debug("Compressing metadata");
         try {
             var baos = new ByteArrayOutputStream();
             try (var gzipOut = new GZIPOutputStream(baos)) {
