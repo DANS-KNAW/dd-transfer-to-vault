@@ -21,12 +21,17 @@ import nl.knaw.dans.transfer.core.DveMetadata;
 import nl.knaw.dans.vaultcatalog.client.api.DatasetDto;
 import nl.knaw.dans.vaultcatalog.client.api.FileMetaDto;
 import nl.knaw.dans.vaultcatalog.client.api.VersionExportDto;
+import nl.knaw.dans.vaultcatalog.client.api.VersionExportDto.MetadataEncodingEnum;
 import nl.knaw.dans.vaultcatalog.client.invoker.ApiException;
 import nl.knaw.dans.vaultcatalog.client.resources.DefaultApi;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Base64;
+import java.util.zip.GZIPOutputStream;
 
 @Slf4j
 @AllArgsConstructor
@@ -125,7 +130,8 @@ public class VaultCatalogClientImpl implements VaultCatalogClient {
         dveDto.setDataversePidVersion(dveMetadata.getDataversePidVersion());
         dveDto.setOtherId(dveMetadata.getOtherId());
         dveDto.setOtherIdVersion(dveMetadata.getOtherIdVersion());
-        dveDto.setMetadata(dveMetadata.getMetadata());
+        dveDto.setMetadataEncoding(MetadataEncodingEnum.GZIP_BASE64);
+        dveDto.setMetadata(gzipBase64Encode(dveMetadata.getMetadata()));
         dveDto.setSkeletonRecord(false);
         dveDto.setTitle(dveMetadata.getTitle());
         dveDto.setExporter(dveMetadata.getExporter());
@@ -142,6 +148,20 @@ public class VaultCatalogClientImpl implements VaultCatalogClient {
                 .byteSize(dataFile.getSize())
                 .sha1sum(dataFile.getSha1Checksum());
             dveDto.addFileMetasItem(dataFileDto);
+        }
+    }
+
+    private String gzipBase64Encode(String metadata) {
+        log.debug("Compressing metadata");
+        try {
+            var baos = new ByteArrayOutputStream();
+            try (var gzipOut = new GZIPOutputStream(baos)) {
+                gzipOut.write(metadata.getBytes(StandardCharsets.UTF_8));
+            }
+            return Base64.getEncoder().encodeToString(baos.toByteArray());
+        }
+        catch (IOException e) {
+            throw new RuntimeException("Failed to compress metadata", e);
         }
     }
 

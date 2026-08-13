@@ -51,8 +51,6 @@ import nl.knaw.dans.transfer.core.oaiore.OaiOreMetadataReader;
 import nl.knaw.dans.transfer.health.FileSystemPermissionsHealthCheck;
 import nl.knaw.dans.transfer.health.HealthChecks;
 import nl.knaw.dans.transfer.resources.SendToVaultApiResource;
-import nl.knaw.dans.vaultcatalog.client.invoker.ApiClient;
-import nl.knaw.dans.vaultcatalog.client.resources.DefaultApi;
 
 import java.util.HashSet;
 import java.util.List;
@@ -218,39 +216,39 @@ public class DdTransferToVaultApplication extends Application<DdTransferToVaultC
         
     }
 
-    private DefaultApi createVaultCatalogProxy(DdTransferToVaultConfiguration configuration) {
-        return new ClientProxyBuilder<ApiClient, DefaultApi>()
-            .apiClient(new ApiClient())
+    private nl.knaw.dans.vaultcatalog.client.resources.DefaultApi createVaultCatalogProxy(DdTransferToVaultConfiguration configuration) {
+        return new ClientProxyBuilder<nl.knaw.dans.vaultcatalog.client.invoker.ApiClient, nl.knaw.dans.vaultcatalog.client.resources.DefaultApi>()
+            .apiClientCtor(nl.knaw.dans.vaultcatalog.client.invoker.ApiClient::new)
             .basePath(configuration.getVaultCatalog().getUrl())
             .httpClient(configuration.getVaultCatalog().getHttpClient())
-            .defaultApiCtor(DefaultApi::new)
+            .proxyCtor(nl.knaw.dans.vaultcatalog.client.resources.DefaultApi::new)
             .build();
     }
 
     private nl.knaw.dans.datavault.client.resources.DefaultApi createDataVaultProxy(DdTransferToVaultConfiguration configuration) {
         return new ClientProxyBuilder<nl.knaw.dans.datavault.client.invoker.ApiClient, nl.knaw.dans.datavault.client.resources.DefaultApi>()
-            .apiClient(new nl.knaw.dans.datavault.client.invoker.ApiClient())
+            .apiClientCtor(nl.knaw.dans.datavault.client.invoker.ApiClient::new)
             .basePath(configuration.getDataVault().getUrl())
             .httpClient(configuration.getDataVault().getHttpClient())
-            .defaultApiCtor(nl.knaw.dans.datavault.client.resources.DefaultApi::new)
+            .proxyCtor(nl.knaw.dans.datavault.client.resources.DefaultApi::new)
             .build();
     }
 
     private nl.knaw.dans.validatebagpack.client.resources.DefaultApi createValidateBagPackProxy(DdTransferToVaultConfiguration configuration) {
         return new ClientProxyBuilder<nl.knaw.dans.validatebagpack.client.invoker.ApiClient, nl.knaw.dans.validatebagpack.client.resources.DefaultApi>()
-            .apiClient(new nl.knaw.dans.validatebagpack.client.invoker.ApiClient())
+            .apiClientCtor(nl.knaw.dans.validatebagpack.client.invoker.ApiClient::new)
             .basePath(configuration.getValidateBagPack().getUrl())
             .httpClient(configuration.getValidateBagPack().getHttpClient())
-            .defaultApiCtor(nl.knaw.dans.validatebagpack.client.resources.DefaultApi::new)
+            .proxyCtor(nl.knaw.dans.validatebagpack.client.resources.DefaultApi::new)
             .build();
     }
 
     private nl.knaw.dans.lobstore.client.resources.DefaultApi createLobStoreProxy(DdTransferToVaultConfiguration configuration) {
         return new ClientProxyBuilder<nl.knaw.dans.lobstore.client.invoker.ApiClient, nl.knaw.dans.lobstore.client.resources.DefaultApi>()
-            .apiClient(new nl.knaw.dans.lobstore.client.invoker.ApiClient())
+            .apiClientCtor(nl.knaw.dans.lobstore.client.invoker.ApiClient::new)
             .basePath(configuration.getLobStore().getUrl())
             .httpClient(configuration.getLobStore().getHttpClient())
-            .defaultApiCtor(nl.knaw.dans.lobstore.client.resources.DefaultApi::new)
+            .proxyCtor(nl.knaw.dans.lobstore.client.resources.DefaultApi::new)
             .build();
     }
 

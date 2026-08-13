@@ -18,7 +18,6 @@ package nl.knaw.dans.transfer.core;
 import lombok.Value;
 
 import java.net.URI;
-import java.nio.file.Path;
 
 @Value
 public class DataFileMetadata {
