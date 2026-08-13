@@ -17,7 +17,6 @@ package nl.knaw.dans.transfer.core;
 
 import lombok.AllArgsConstructor;
 import nl.knaw.dans.bagit.domain.Bag;
-import nl.knaw.dans.bagit.domain.FetchItem;
 import nl.knaw.dans.bagit.hash.StandardSupportedAlgorithms;
 import nl.knaw.dans.bagit.reader.BagReader;
 import org.apache.commons.io.IOUtils;
@@ -25,7 +24,6 @@ import org.apache.commons.io.IOUtils;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.FileSystem;
 import java.nio.file.Path;
 import java.nio.file.ProviderNotFoundException;
 import java.nio.file.attribute.BasicFileAttributes;
