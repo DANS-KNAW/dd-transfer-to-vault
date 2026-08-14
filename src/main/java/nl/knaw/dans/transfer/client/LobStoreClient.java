@@ -38,6 +38,10 @@ public class LobStoreClient {
         try {
             var results = api.addTransfers(requests);
             log.debug("dd-lob-store processed {} requests", results.size());
+            for (var result : results) {
+                log.debug("dd-lob-store processed request for fileId {} / sha1Sum {} / status -> {} / message -> {}", result.getDataverseFileId(), result.getSha1Sum(), result.getStatus(),
+                    result.getMessage());
+            }
         }
         catch (Exception e) {
             log.error("Error communicating with dd-lob-store", e);
