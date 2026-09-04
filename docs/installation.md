@@ -9,8 +9,8 @@ Building from source
 
 Prerequisites:
 
-* Java 17 or higher
-* Maven 3.3.3 or higher
+* Java 21 or higher
+* Maven 3.8.7 or higher
 * RPM
 
 Steps:
