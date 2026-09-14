@@ -16,7 +16,8 @@
     limitations under the License.
 
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
@@ -219,7 +220,23 @@
                             </artifactItems>
                         </configuration>
                     </execution>
+                    <execution>
+                        <!-- Required to set @{org.mockito:mockito-core:jar} which is needed by surefire -->
+                        <id>resolve-local-dependency-paths</id>
+                        <goals>
+                            <goal>properties</goal>
+                        </goals>
+                        <phase>initialize</phase>
+                    </execution>
                 </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <argLine>-javaagent:@{org.mockito:mockito-core:jar} -Xshare:off</argLine>
+                </configuration>
             </plugin>
 
             <plugin>
