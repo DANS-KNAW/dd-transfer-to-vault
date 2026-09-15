@@ -30,7 +30,7 @@
 
     <name>DD Transfer To Vault</name>
     <description>Processes dataset version exports for inclusion in the DANS Data Vault</description>
-    <url>https://github.com/DANS-KNAW/dd-transfer-to-vault</url>
+    <url>https://dans-knaw.github.io/dd-transfer-to-vault</url>
     <inceptionYear>2025</inceptionYear>
 
     <scm>
