@@ -16,8 +16,7 @@
     limitations under the License.
 
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
@@ -41,10 +40,6 @@
 
     <properties>
         <main-class>nl.knaw.dans.transfer.DdTransferToVaultApplication</main-class>
-        <dd-transfer-to-vault-api.version>0.1.0</dd-transfer-to-vault-api.version>
-        <dans-java-utils.version>4.1.0</dans-java-utils.version>
-        <dd-vault-catalog-api.version>1.1.0</dd-vault-catalog-api.version>
-        <dd-lob-store-api.version>1.3.0</dd-lob-store-api.version>
     </properties>
 
     <dependencies>
@@ -99,7 +94,7 @@
             <artifactId>jackson-databind</artifactId>
         </dependency>
         <dependency>
-            <groupId>nl.knaw.dans</groupId>
+            <groupId>nl.datastations</groupId>
             <artifactId>dans-validation-lib</artifactId>
         </dependency>
 
@@ -108,7 +103,7 @@
             <artifactId>jersey-media-json-jackson</artifactId>
         </dependency>
         <dependency>
-            <groupId>nl.knaw.dans</groupId>
+            <groupId>nl.datastations</groupId>
             <artifactId>dans-bagit-lib</artifactId>
         </dependency>
         <dependency>
