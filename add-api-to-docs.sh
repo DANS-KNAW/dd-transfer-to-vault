@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 #
 # Copyright (C) 2025 DANS - Data Archiving and Networked Services (info@dans.knaw.nl)
 #
@@ -14,11 +15,12 @@
 # limitations under the License.
 #
 
-# Fail on error
-set -e
+set -euo pipefail
 
-mvn dans-build-resources:get-helper-script
-mvn initialize # To ensure API definition is downloaded
+export MAVEN_ARGS="-s .github/ci-settings.xml"
+
+mvn $MAVEN_ARGS dans-build-resources:get-helper-script
+mvn $MAVEN_ARGS initialize # To ensure API definition is downloaded
 
 echo "Deploying Swagger UI and API definition..."
 sh target/add-swagger-ui.sh
