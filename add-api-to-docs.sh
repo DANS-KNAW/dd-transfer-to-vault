@@ -23,6 +23,7 @@ mvn $MAVEN_ARGS dans-build-resources:get-helper-script
 mvn $MAVEN_ARGS initialize # To ensure API definition is downloaded
 
 echo "Deploying Swagger UI and API definition..."
+ARTIFACT_ID=$(mvn $MAVEN_ARGS help:evaluate -Dexpression=project.artifactId -q -DforceStdout)
 sh target/add-swagger-ui.sh
-cp target/openapi/dd-transfer-to-vault-api.yml docs/api.yml
+cp target/openapi/${ARTIFACT_ID}-api.yml docs/api.yml
 echo "DONE"
