@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>Overview - dd-transfer-to-vault</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Overview";
+        var mkdocs_page_input_path = "dev.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href=".." class="icon icon-home"> dd-transfer-to-vault
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption"><span class="caption-text">Manual</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="..">Description</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../installation/">Installation</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../config/">Configuration</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../to-api/">API</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../context/">Context</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Development</span></p>
+              <ul class="current">
+                  <li class="toctree-l1 current"><a class="reference internal current" href="#">Overview</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#local-testing">Local testing</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#vaas-deposits-require-a-skeleton-record-in-the-vault-catalog">VaaS deposits require a skeleton record in the Vault Catalog</a>
+    </li>
+        </ul>
+    </li>
+    </ul>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="..">dd-transfer-to-vault</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".." class="icon icon-home" aria-label="Docs"></a></li>
+          <li class="breadcrumb-item">Development</li>
+      <li class="breadcrumb-item active">Overview</li>
+    <li class="wy-breadcrumbs-aside">
+          <a href="https://github.com/DANS-KNAW/dd-transfer-to-vault/edit/master/docs/dev.md">Edit on DANS-KNAW/dd-transfer-to-vault</a>
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="development">Development<a class="headerlink" href="#development" title="Permanent link">&para;</a></h1>
+<p>General information about developing DANS modules can be found <a href="https://dans-knaw.github.io/dans-datastation-architecture/dev/" target="_blank">here</a>.</p>
+<h2 id="local-testing">Local testing<a class="headerlink" href="#local-testing" title="Permanent link">&para;</a></h2>
+<p>Local testing uses the same <a href="https://dans-knaw.github.io/dans-datastation-architecture/dev/#local-testing" target="_blank">set-up</a> as other DANS microservices.</p>
+<p>However, this service requires some other services to be running:</p>
+<ul>
+<li><a href="https://dans-knaw.github.io/dd-validate-bagpack/" target="_blank">dd-validate-bagpack</a></li>
+<li><a href="https://dans-knaw.github.io/dd-vault-catalog/" target="_blank">dd-vault-catalog</a></li>
+<li><a href="https://dans-knaw.github.io/dd-data-vault/" target="_blank">dd-data-vault</a></li>
+</ul>
+<p>What follows is a step-by-step instruction for how to process one test-deposit. This is not the only way you can do it, but it is a good starting point.</p>
+<ol>
+<li>Start <code>dd-validate-bagpack</code>. Make sure that <code>validation.baseFolder</code> is set to the root folder of the <code>dd-transfer-to-vault</code> module. If you are using the
+   <code>config.yml</code> copied by <code>start-env.sh</code>, the <code>validation.baseFolder</code> assumes that the <code>dd-transfer-to-vault</code> module is located in the same parent directory.</li>
+<li>Start <code>dd-vault-catalog</code>. The default <code>config.yml</code> assumes that you have created a database named <code>dd_vault_catalog_local_test</code> on a machine called
+   <code>dev.transfer.dans-data.nl</code> which is the case if you are using the DANS vagrant box for the transfer server. (Otherwise, you will have to create a database
+   yourself and adjust the JDBC-config.)</li>
+<li>Start <code>dd-data-vault</code>. The default <code>config.yml</code> assumes that you have created a database named <code>dd_data_vault_local_test</code> on a machine called
+   <code>dev.transfer.dans-data.nl</code> which is the case if you are using the DANS vagrant box for the transfer server. (Otherwise, you will have to create a database
+   yourself and adjust the JDBC-config.)</li>
+<li>Start <code>dd-transfer-to-vault</code> itself.</li>
+</ol>
+<p>The working directories of the service are located under <code>&lt;dd-transfer-to-vault-root&gt;/data/</code>:</p>
+<pre><code class="language-text">data
+├── 01_transfer-inbox
+│   ├── failed
+│   └── inbox
+├── 02_extract-metadata
+│   ├── inbox
+│   └── outbox
+│       ├── failed
+│       └── rejected
+├── 03_send-to-vault
+│   ├── inbox
+│   ├── outbox
+│   │   ├── failed
+│   │   └── processed
+│   └── work
+├── 04_data-vault
+│   └── inbox
+├── dd-register-nbn
+│   ├── failed
+│   ├── inbox
+│   └── processed
+└── dd-transfer-to-vault.log
+</code></pre>
+<p>Once the service is running, you can copy test-DVEs to <code>01_transfer-inbox/inbox</code> and follow in the logs (or with the debugger) what happens. In a happy-case
+scenario the DVE is collected from the inbox and placed in a directory named after the dataset's NBN in <code>02_extract-metadata/inbox</code>. The extract-metadata task
+will then pick it up and process it, placing it in <code>03_send-to-vault/inbox</code>, also in a directory named after the dataset's NBN. It will also place a request to
+register the NBN in <code>dd-register-nbn/inbox</code>, if the DVE is the first one for this dataset. </p>
+<p>Note that each step performs a ready check before starting to ensure that the services it depends on are available. For the send-to-vault step this means that
+the <code>dd-data-vault</code> service API must be available. If you don't want <code>dd-data-vault</code> to pick up the result of send-to-vault, just configure it to look in a
+different inbox directory (so <strong>not</strong> in <code>04_data-vault/inbox</code>).</p>
+<h3 id="vaas-deposits-require-a-skeleton-record-in-the-vault-catalog">VaaS deposits require a skeleton record in the Vault Catalog<a class="headerlink" href="#vaas-deposits-require-a-skeleton-record-in-the-vault-catalog" title="Permanent link">&para;</a></h3>
+<p>In the Vault-as-a-Service pipeline a skeleton-record is created for the DVE as soon as it arrives. This then also assigns an OCFL object version number to the 
+DVE by including it in the file name. The fact that the OCFL object version number is included in the name signals to <code>dd-transfer-to-vault</code> to update an 
+existing record rather than creating a new one. Therefore, before put a VaaS-type DVE in the inbox, you must add a skeleton record for it in the Data Vault.
+This can be done with the <code>dd-vault-catalog-cli</code>:</p>
+<pre><code>
+
+
+</code></pre>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../context/" class="btn btn-neutral float-left" title="Context"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+        <span>
+          <a href="https://github.com/DANS-KNAW/dd-transfer-to-vault" class="fa fa-code-fork" style="color: #fcfcfc"> DANS-KNAW/dd-transfer-to-vault</a>
+        </span>
+    
+    
+      <span><a href="../context/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+  </span>
+</div>
+    <script src="../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "..";</script>
+    <script src="../js/theme_extra.js"></script>
+    <script src="../js/theme.js"></script>
+      <script src="../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>
