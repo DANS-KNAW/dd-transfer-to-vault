@@ -34,6 +34,7 @@
     <inceptionYear>2025</inceptionYear>
 
     <scm>
+        <connection>scm:git:https://github.com/DANS-KNAW/dd-transfer-to-vault</connection>
         <developerConnection>scm:git:ssh://github.com/DANS-KNAW/dd-transfer-to-vault</developerConnection>
         <tag>HEAD</tag>
         <url>https://github.com/DANS-KNAW/${project.artifactId}</url>
